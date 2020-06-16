@@ -455,7 +455,7 @@ DA <- alt_glm_results$logFC < log2(1-d) | alt_glm_results$logFC > log2(1+d)
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("Total number of unique, differentially abundant proteins:",
 	      sum(DA & sig)))
-message(paste("...Percent Change +/-", round(100*fold_change_delta,2)))
+message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",DA_alpha))
 
 # Save.

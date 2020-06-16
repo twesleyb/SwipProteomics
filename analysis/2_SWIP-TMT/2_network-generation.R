@@ -50,7 +50,7 @@ message("\nGenerating protein co-variation matrix using bicor().")
 adjm <- WGCNA::bicor(dm)
 
 # Enhanced network.
-message("\nPerforming network enhancement to denoise network....")
+message("\nPerforming network enhancement with to denoise network.")
 ne_adjm <- neten::neten(adjm)
 
 #--------------------------------------------------------------------

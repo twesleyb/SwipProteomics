@@ -46,14 +46,14 @@ echo "Analyzing modules for GO enrichment."
 ./6_module-go-analysis.R &>> "$REPORT" & spin
 
 # STEP 7.
-echo "Analyzing modules for WASH BioID enrichment."
+echo "Analyzing modules for enrichment of WASH BioID proteins."
 ./7_module-wash-enrichment.R &>> "$REPORT" & spin
 
 # STEP 8.
-echo "Analyzing modules for NDD gene enrichment."
+echo "Analyzing modules for enrichment of NDD-associated genes."
 ./8_module-ndd-enrichment.R &>> "$REPORT" & spin
 
 # STEP 9.
-#echo "Clustering protein network using Leiden algorithm."
+echo "Generating Cytoscape networks."
 #9_create-cytoscape-graphs.R &>> "$REPORT" & spin
 

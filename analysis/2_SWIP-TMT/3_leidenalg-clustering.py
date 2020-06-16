@@ -17,7 +17,7 @@ adjm_file = 'ne_adjm.csv'
 ## Output:
 # Saved in root/rdata/
 # [output_name]_partitions.csv
-output_name = 'Swip-Initial' # Prefix out output partition, saved as .csv.
+output_name = 'Swip' # Prefix out output partition, saved as .csv.
 
 #------------------------------------------------------------------------------
 ## Prepare the workspace.
