@@ -458,10 +458,6 @@ message(paste("Total number of unique, differentially abundant proteins:",
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",DA_alpha))
 
-# Save.
-#myfile <- file.path(rdatdir,"alt_glm_results.RData")
-#saveRDS(alt_glm_results,myfile)
-
 #----------------------------------------------------------------------
 ## Plot commonly dysregulated prots, adjusted for fraction differences.
 #----------------------------------------------------------------------
@@ -687,6 +683,11 @@ tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>%
 # Rename Intensity column.
 idy <- which(colnames(adjusted_prot) == "Intensity")
 colnames(adjusted_prot)[idy] <- "Adjusted.Intensity"
+
+# Add stats to adjusted protein data.
+colnames(alt_glm_results)[-c(1,2)] <- paste0("Adjusted.",
+					     colnames(alt_glm_results)[-c(1,2)])
+adjusted_prot <- left_join(adjusted_prot,alt_glm_results,by="Accession")
 
 # Merge
 idy <- intersect(colnames(tmt_protein),colnames(adjusted_prot))

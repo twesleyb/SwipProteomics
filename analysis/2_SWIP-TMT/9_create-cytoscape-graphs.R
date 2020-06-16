@@ -60,12 +60,11 @@ data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
 
 # Load networks.
-data(adjm)
 data(ne_adjm)
 data(ppi_adjm)
 
 # Load gene map
-gene_map <- readRDS(file.path(rdatdir,"gene_map.RData"))
+data(gene_map)
 
 #--------------------------------------------------------------------
 ## Create igraph graph objects.
@@ -76,21 +75,16 @@ module_list <- split(names(partition),partition)[-1] # drop M0
 names(module_list) <- paste0("M",names(module_list))
 
 # Insure that matrices are in matching order.
-check <- all(colnames(adjm) == colnames(ne_adjm)) & 
-	all(colnames(ne_adjm) == colnames(ppi_adjm))
+check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
 if (!check) { stop() }
 
-# Create igraph graphs from adjacency matrices.
-adjm_g <- graph_from_adjacency_matrix(adjm,mode="undirected",diag=FALSE,
-				      weighted=TRUE)
+# Create igraph graph objects.
 netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
 ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
 				     weighted=TRUE)
 
 # Annotate graph's with gene symols.
-symbols <- gene_map$symbol[match(names(V(adjm_g)),gene_map$uniprot)]
-adjm_g <- set_vertex_attr(adjm_g,"symbol",value = symbols)
 symbols <- gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)]
 netw_g <- set_vertex_attr(netw_g,"symbol",value = symbols)
 symbols <- gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)]
@@ -99,6 +93,9 @@ ppi_g <- set_vertex_attr(ppi_g,"symbol",value = symbols)
 #--------------------------------------------------------------------
 ## Annotate graphs with additional meta data.
 #--------------------------------------------------------------------
+
+idx <- match(names(V(netw_g)),tmt_protein$Accession)
+
 
 #--------------------------------------------------------------------
 ## Create Cytoscape graphs.
