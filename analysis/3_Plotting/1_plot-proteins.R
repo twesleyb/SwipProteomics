@@ -70,7 +70,7 @@ close(pbar)
 #--------------------------------------------------------------------
 
 # Load the graph partition
-data(list=partition) # FIXME: warnings about datasets?
+data(list="partition")
 
 # If partition exists, sort the plots by module assignment.
 if (exists("partition")) { 
@@ -99,7 +99,7 @@ if (exists("partition")) {
 } # EIF
 
 # Save.
-message("\nSaving plots, this will take several minutes...")
+message("\nSaving plots, this will take several minutes.")
 myfile <- file.path(figsdir,"TMT_All_Proteins.pdf")
 if (save_subset) {
 	# Save subset of clustered proteins.
