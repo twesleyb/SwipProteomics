@@ -127,7 +127,7 @@ save(ppi_adjm,file=file.path(root,"data","ppi_adjm.rda"), version=2)
 # FIXME: do we need this?
 norm_protein <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample, value.var = "Intensity") %>%
-	fwrite(file.path(root,"data","norm_protein.csv"))
+	fwrite(file.path(root,"rdata","norm_protein.csv"))
 
 # Done!
 end <- Sys.time()

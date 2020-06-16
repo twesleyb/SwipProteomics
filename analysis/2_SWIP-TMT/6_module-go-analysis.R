@@ -58,7 +58,7 @@ names(module_list) <- paste0("M",names(module_list))
 sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
 
-# collect list of genes.
+# collect list of entrez ids and gene symbols.
 gene_list <- lapply(module_list,function(x) {
 			    tmt_protein$Entrez[match(names(x),tmt_protein$Accession)]
 			    })
@@ -68,6 +68,7 @@ gene_symbols <- lapply(module_list,function(x) {
 			    })
 
 # Build a GO reference collection:
+message("\nBuilding a mouse GO reference collection with anRichment.")
 gocollection <- suppressPackageStartupMessages({
 	anRichment::buildGOcollection(organism="mouse")
 })

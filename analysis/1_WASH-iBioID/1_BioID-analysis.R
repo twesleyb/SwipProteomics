@@ -20,6 +20,9 @@ datafile = "BioID_raw_protein.csv" # In BioID.zip/
 ## Prepare the workspace.
 #-------------------------------------------------------------------------------
 
+start <- Sys.time()
+message(paste("Starting analysis at:",start))
+
 # Activate renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -273,4 +276,8 @@ wash_interactome <- results %>% filter(candidate != "no")
 myfile <- file.path(datadir, "wash_interactome.rda")
 save(wash_interactome,file=myfile,version=2)
 
-message("\nDone!")
+# Done!
+end <- Sys.time()
+message(paste("\nCompleted analysis at:",end))
+message(paste("Elapsed time:",
+	      round(difftime(end,start,units="mins"),2),"minutes."))

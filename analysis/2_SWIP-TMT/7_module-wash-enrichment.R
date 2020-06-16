@@ -59,6 +59,7 @@ module_list <- split(names(partition),partition)[-1] # drop M0
 background <- unique(c(unlist(module_list),wash_prots))
 
 # Loop to perform hypergeometric test for enrichment.
+message("\nPerforming hypergeometric tests to assess WASH BioID enrichment.")
 results_list <- lapply(c(1:length(module_list)), function(x) {
 	       hyperTest(wash_prots,module_list[[x]],background)
 }) 

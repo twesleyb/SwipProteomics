@@ -40,7 +40,7 @@ figsdir <- file.path(root, "figs", "Proteins")
 
 # If necessary, create figsdir.
 if (! dir.exists(figsdir)) {
-	dir.create(figsdir)
+	dir.create(figsdir,recursive=TRUE)
 }
 
 # Utilize arial font.

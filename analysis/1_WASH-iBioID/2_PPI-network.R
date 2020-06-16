@@ -16,6 +16,9 @@ data_file = "WASH_BioID_Results.RData"
 ## Prepare the workspace.
 #-------------------------------------------------------------------------------
 
+start <- Sys.time()
+message(paste("Starting analysis at:",start))
+
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -91,3 +94,9 @@ message(paste("\nNumber of Edges:",length(E(g))))
 # Save sif in root/tabls.
 myfile <- file.path(root,"tables","WASH_Network_PPIs.xlsx")
 write_excel(sif,myfile)
+
+# Done!
+end <- Sys.time()
+message(paste("\nCompleted analysis at:",end))
+message(paste("Elapsed time:",
+	      round(difftime(end,start,units="mins"),2),"minutes."))
