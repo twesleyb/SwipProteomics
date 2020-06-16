@@ -2,7 +2,7 @@
 # 0_run-analysis.sh - execute this script to run the analysis.
 
 # Output log files:
-REPORT="Swip.report"
+REPORT="Swip-TMT.report"
 
 # Define a progress spinner function.
 # From William Pursell: https://stackoverflow.com/questions/12498304/

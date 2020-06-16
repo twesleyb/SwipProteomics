@@ -175,7 +175,7 @@ rm(list=c("ig_prots","uniprot","entrez","missing",
 # Convert PD df into tidy df. 
 # Samples should contain the following columns:
 # Treatment, Channel, Sample, Experiment
-message("\nLoading raw data from Proteome Discover...")
+message("\nLoading raw data from Proteome Discover.")
 cols <- colnames(peptides)[!grepl("Abundance",colnames(peptides))]
 tidy_peptide <- tidyProt(peptides,id.vars=cols)
 
@@ -291,8 +291,6 @@ qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
 message("\nIntra-experimental QC means are equal after IRS normalization:")
 knitr::kable(sample(qc_proteins,1))
 
-rm(qc_proteins)
-
 #---------------------------------------------------------------------
 ## Perform Sample Pool Normalization.
 #---------------------------------------------------------------------
@@ -330,11 +328,11 @@ rm(list=c("df","protein_list","idx","protein"))
 #---------------------------------------------------------------------
 
 # Remove proteins that:
-# ... were identified by a single peptide.
-# ... contain too many missing values.
-# ... contain any missing QC values.
-# ... have outlier measurements.
-message(paste("\nFiltering proteins, this may take several minutes..."))
+# * were identified by a single peptide.
+# * contain too many missing values.
+# * contain any missing QC values.
+# * have outlier measurements.
+message(paste("\nFiltering proteins, this may take several minutes."))
 filt_protein <- filtProt(spn_protein,
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
 
@@ -461,8 +459,8 @@ message(paste("...Percent Change +/-", round(100*fold_change_delta,2)))
 message(paste("...FDR <",DA_alpha))
 
 # Save.
-myfile <- file.path(rdatdir,"alt_glm_results.RData")
-saveRDS(alt_glm_results,myfile)
+#myfile <- file.path(rdatdir,"alt_glm_results.RData")
+#saveRDS(alt_glm_results,myfile)
 
 #----------------------------------------------------------------------
 ## Plot commonly dysregulated prots, adjusted for fraction differences.
@@ -485,7 +483,7 @@ dt$Sample <- as.character(dt$Sample)
 
 # Combine with additional meta data.
 idy <- which(colnames(tidy_protein)=="Intensity")
-temp_prot <- tidy_protein[,-..idy] %>% filter(Treatment != "SPQC")
+temp_prot <- as.data.table(tidy_protein)[,-..idy] %>% filter(Treatment != "SPQC")
 adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
 
 # Wash proteins + control.
@@ -594,7 +592,7 @@ norm_protein <- tidy_protein %>% as.data.table() %>%
 	as.matrix(rownames="Accession")
 
 # Loop to add normalized protein data to glm statistical results.
-message("\nSaving TMT data and statistical results...")
+message("\nSaving TMT data and statistical results.")
 for (i in 1:length(glm_results)){
 	df <- glm_results[[i]]
 	namen <- names(glm_results)[i]
@@ -656,7 +654,7 @@ for (i in 1:length(glm_results)){
 }
 
 ## Save as excel workboook.
-## FIXME: Add select protein stats.
+## FIXME: Add select protein ttest stats.
 names(glm_results) <- paste(names(glm_results),"Results")
 results <- c(list("Samples" = samples,
 		"Normalized Protein" = tidy_protein),
@@ -664,9 +662,7 @@ results <- c(list("Samples" = samples,
 myfile <- file.path(tabsdir,"Swip_TMT_Results.xlsx")
 write_excel(results,myfile,rowNames=FALSE)
 
-rm(list=c("myfile","temp_list","temp_dt","idy","is_missing","entrez",
-	  "missing_entrez","mapped_by_hand","uniprot","df","namen",
-	  "dm","subsamples","ids","dt_out"))
+rm(list=c("myfile","idy","is_missing","entrez"))
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -713,7 +709,7 @@ rm(list=c("idx","temp_list","temp_dt","idy"))
 #---------------------------------------------------------------------
 
 ## Save key results.
-message("\nSaving data for downstream analysis...")
+message("\nSaving data for downstream analysis.")
 
 # Save raw data -- tidy_peptide.
 myfile <- file.path(rdatdir,"tidy_peptide.csv")
