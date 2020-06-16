@@ -9,6 +9,11 @@ ARCHIVE/
 networks/
 manuscript/
 
+## project specific files to ignore.
+renv.lock
+*.swp
+*.swn
+
 ## R.gitignore
 
 # History files

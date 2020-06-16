@@ -1,0 +1,87 @@
+Starting analysis at: 2020-06-16 11:28:59
+Loading swipProteomics
+
+Creating gene identifier map.
+Warning, unable to map 3 gene identifiers to entrez.
+Mapping missing IDs by hand.
+
+
+Loading raw data from Proteome Discover...
+
+Performing sample loading normalization.
+
+Peptide data before sample loading normalization:
+
+
+|Experiment |Sample                                       | Sum(Intensity)|
+|:----------|:--------------------------------------------|--------------:|
+|Exp1       |Abundance.F1.128N.Sample.53403.Mutant5.Exp1  |       18147624|
+|Exp1       |Abundance.F1.131N.Sample.53406.Mutant8.Exp1  |       14985183|
+|Exp2       |Abundance.F2.132N.Sample.53421.Mutant9.Exp2  |       15950426|
+|Exp2       |Abundance.F2.133N.Sample.53422.Mutant10.Exp2 |       16010756|
+|Exp3       |Abundance.F3.133N.Sample.53436.Mutant10.Exp3 |       18339444|
+|Exp3       |Abundance.F3.131C.Sample.53428.Control9.Exp3 |       16272394|
+
+Peptide data after sample loading normalization:
+
+
+|Experiment |Sample                                       | Sum(Intensity)|
+|:----------|:--------------------------------------------|--------------:|
+|Exp1       |Abundance.F1.128N.Sample.53403.Mutant5.Exp1  |       15813384|
+|Exp1       |Abundance.F1.134N.Sample.53438.SPQC2.Exp1    |       15813384|
+|Exp2       |Abundance.F2.129C.Sample.53412.Control7.Exp2 |       15102786|
+|Exp2       |Abundance.F2.130C.Sample.53413.Control8.Exp2 |       15102786|
+|Exp3       |Abundance.F3.131N.Sample.53434.Mutant8.Exp3  |       16660974|
+|Exp3       |Abundance.F3.130N.Sample.53433.Mutant7.Exp3  |       16660974|
+
+Imputing a small number of missing peptide values.
+Imputing missing values in group: Exp1
+... Percent missing values: 0.015% (n=219).
+Imputing missing values in group: Exp2
+... Percent missing values: 0.018% (n=263).
+Imputing missing values in group: Exp3
+... Percent missing values: 0.015% (n=220).
+
+Removing peptides with irreproducible QC measurements.
+Total number of SPQC outlier peptides identified: 474
+
+Summarizing proteins as the sum of their peptides.
+
+Performing sample loading normalization between experiments.
+
+Protein data after sample loading normalization:
+
+
+|Experiment |Sample                                       | Sum(Intensity)|
+|:----------|:--------------------------------------------|--------------:|
+|Exp1       |Abundance.F1.127C.Sample.53396.Control5.Exp1 |       15752339|
+|Exp1       |Abundance.F1.131N.Sample.53406.Mutant8.Exp1  |       15752339|
+|Exp2       |Abundance.F2.128C.Sample.53411.Control6.Exp2 |       15752339|
+|Exp2       |Abundance.F2.133N.Sample.53422.Mutant10.Exp2 |       15752339|
+|Exp3       |Abundance.F3.127C.Sample.53424.Control5.Exp3 |       15752339|
+|Exp3       |Abundance.F3.129N.Sample.53432.Mutant6.Exp3  |       15752339|
+
+Standardizing protein measurements between experiments by IRS normalization.
+
+Intra-experimental QC means are equal after IRS normalization:
+
+
+|Accession |Experiment |Treatment | Mean(Intensity)|
+|:---------|:----------|:---------|---------------:|
+|Q14BB9    |Exp1       |SPQC      |        1242.417|
+|Q14BB9    |Exp2       |SPQC      |        1242.417|
+|Q14BB9    |Exp3       |SPQC      |        1242.417|
+
+Accounting for experimental batch effect by performing sample pool normalization.
+
+The mean of biological replicates and pooled QC samples are now equal:
+
+
+|Sample_Pool |Accession |Treatement       | Mean(Intensity)|
+|:-----------|:---------|:----------------|---------------:|
+|FALSE       |Q8CCS6    |Control + Mutant |        937.0839|
+|TRUE        |Q8CCS6    |SPQC             |        937.0839|
+
+Filtering proteins, this may take several minutes...
+
+Execution halted

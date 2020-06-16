@@ -1,0 +1,5 @@
+#!/usr/bin/env Rscript
+
+# Creat this package, assumes you are in bin.
+mypath <- dirname(getwd())
+usethis::create_package(mypath)

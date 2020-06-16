@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Creating a virtual environment from a environment.yml file.
+root="$(getrd)"
+venv="$(ls $root/*.yml)"
+
+# Prompt user.
+echo "Restore the following virtual environment: $venv"
+read -p "Yes/No: " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy] ]];
+then
+	conda env create -f $venv
+fi

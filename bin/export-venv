@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Export a virtual environment.
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate swipProteomics
+conda env export > ../venv.yml

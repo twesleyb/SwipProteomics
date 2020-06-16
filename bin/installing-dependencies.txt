@@ -1,0 +1,9 @@
+# Installing dependencies.
+
+# Install all dependencies with Conda.
+Exception: could not install extrafont through conda -- tried repeatedly to
+resolve dependencies conflicts/errors.
+Installed successfully with install.packages().
+
+Exception: Install custom R packages hosted on github using devtools.
+e.g. devtools::install_github("twesleyb/getPPIs")
