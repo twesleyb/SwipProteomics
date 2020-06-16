@@ -1,11 +1,15 @@
 ## project specific directories to ignore.
-ARCHIVE/
-rdata/
-data/
-networks/
 renv/
+figs/
+docs/
+refs/
+data/
+rdata/
+ARCHIVE/
+networks/
+manuscript/
 
-## r.gitignore
+## R.gitignore
 
 # History files
 .Rhistory
