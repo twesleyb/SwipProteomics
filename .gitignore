@@ -10,9 +10,10 @@ networks/
 manuscript/
 
 ## project specific files to ignore.
-renv.lock
 *.swp
 *.swn
+*.report 
+renv.lock
 
 ## R.gitignore
 

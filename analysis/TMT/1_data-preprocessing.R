@@ -89,9 +89,11 @@ downdir <- file.path(rootdir, "downloads") # Misc trash.
 figsdir <- file.path(rootdir, "figs","TMT") # Output figures.
 
 # Create output directories if necessary.
-if (!dir.exists(figsdir)) { dir.create(figsdir) }
+if (!dir.exists(datadir)) { dir.create(datadir) }
+if (!dir.exists(downdir)) { dir.create(downdir) }
 if (!dir.exists(rdatdir)) { dir.create(rdatdir) }
 if (!dir.exists(tabsdir)) { dir.create(tabsdir) }
+if (!dir.exists(figsdir)) { dir.create(figsdir, recursive = TRUE) }
 
 # Set global plotting settings.
 ggtheme()
