@@ -3,7 +3,7 @@
 # Analysing Swip (WASH) BioID proteomics.
 
 ## User parameters to change:
-alpha = 0.1
+FDR_alpha = 0.1
 enrichment_threshold = log2(3.5)
 
 ## Input data in root/rdata
@@ -53,7 +53,7 @@ ids <- paste(results$Gene,results$Accession,sep="|")
 names(ids) <- results$Entrez
 
 # Get entrez identifiers for proteins of interest.
-sig <- results$FDR < alpha
+sig <- results$FDR < FDR_alpha
 up <- results$logFC > enrichment_threshold
 entrez <- names(ids)[sig & up]
 
@@ -98,5 +98,3 @@ write_excel(sif,myfile)
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

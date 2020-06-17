@@ -3,7 +3,7 @@
 # Analysing WASH (Washc1) iBioID proteomics.
 
 ## User parameters to change:
-alpha = 0.1 # FDR significance threshold for protein enrichment.
+FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
 enrichment_threshold = log2(3.0) # enrichment threshold.
 
 ## Input data in root/data
@@ -236,12 +236,12 @@ idy <- which(colnames(results)=="logCPM")
 colnames(results)[idy] <- "Percent Control (%)"
 
 # Summary:
-sig <- results$FDR < alpha
+sig <- results$FDR < FDR_alpha
 up <- results$logFC > enrichment_threshold
 nsig <- sum(sig & up)
 message(paste0("\nNumber of significantly enriched proteins ",
 	      "(log2FC > ",round(enrichment_threshold,2),
-	      "; FDR < ",alpha,"): "), nsig,".")
+	      "; FDR < ",FDR_alpha,"): "), nsig,".")
 
 # Map uniprot ids to entrez ids using mgi batch query.
 # NOTE: this takes a little time as the function downloads the data from MGI.
@@ -284,5 +284,3 @@ save(wash_interactome,file=myfile,version=2)
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

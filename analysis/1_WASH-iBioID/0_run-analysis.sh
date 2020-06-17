@@ -13,13 +13,17 @@ spin() {
 		printf "\r${spin:$i:1}"
 		sleep 0.1 # Can be adjusted.
 	done
+	echo -e "\n"
 }
 
 # Remove any existing reports.
 rm -f *.report
 
 # Run the analysis 
+echo "Processing iBioID proteomics data."
 ./1_*.R &> iBioID-Proteomics.report & spin
+
+echo "Building PPI network."
 ./2_*.R &>> iBioID-Proteomics.report & spin
 
 cat ./iBioID-Proteomics.report
