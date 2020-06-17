@@ -45,6 +45,11 @@ rdatdir <- file.path(root,"rdata")
 tabsdir <- file.path(root,"tables")
 downdir <- file.path(root,"downloads")
 
+# Create rdata dir if it doesn't exist.
+if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
+if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
+if (!dir.exists(downdir)){ dir.create(downdir) }
+
 #-------------------------------------------------------------------------------
 ## Load the raw data.
 #-------------------------------------------------------------------------------
