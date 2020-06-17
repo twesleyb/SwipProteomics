@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ' Clustering of a protein co-expression graph with Leidenalg.' 
 
-## User parameters: 
+## Parameters: 
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
 nsteps = 100 # Number of steps to take between rmin and rmax.
@@ -49,7 +49,7 @@ funcdir = os.path.join(root,"Py")
 sys.path.append(root)
 from Py.myfun import *
 
-## Leidenalg supports the following optimization methods:
+# Leidenalg supports the following optimization methods:
 methods = {
         # Modularity
         "Modularity": {'partition_type' : 'ModularityVertexPartition', 
@@ -95,7 +95,7 @@ print("Performing Leidenalg clustering utilizing the {}".format(method),
 ## Load input adjacency matrix and create an igraph object.
 #---------------------------------------------------------------------
 
-# Load adjacency matrix.
+# Load graph adjacency matrix.
 myfile = os.path.join(rdatdir,adjm_file) 
 adjm = read_csv(myfile, header = 0, index_col = 0) 
 
@@ -116,8 +116,8 @@ else:
 #--------------------------------------------------------------------
 
 # Update partition type parameter.
-# Dynamically load the partition_type class. This is the method to be used for
-# clusering optimization.
+# Dynamically load the partition_type class. 
+# This is the method to be used for optimizing the clustering.
 parameters['partition_type'] = getattr(import_module('leidenalg'),method)
 
 # Remove any None type parameters.
@@ -132,6 +132,7 @@ if parameters.get('resolution_parameter') is None:
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
+    initial_partition = partition
     if recursive:
         # Recursively split modules that are too big.
         subgraphs = partition.subgraphs()
@@ -153,13 +154,13 @@ if parameters.get('resolution_parameter') is None:
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
-        new_partition = {k: v for d in parts for k, v in d.items()}
+        new_part = {k: v for d in parts for k, v in d.items()}
         # Set membership of initial graph.
-        new_membership = [new_partition.get(node) for node in partition.graph.vs['name']]
-        partition.set_membership(new_membership)
+        membership = [new_part.get(node) for node in partition.graph.vs['name']]
+        partition.set_membership(membership)
         # Replace partition in profile list.
         profile[0] = partition
-        print("... Final partition: " + partition.summary() + ".",file=stderr)
+        print("... Final partition: " + partition.summary() + ".", file=stderr)
 else:
     # Loop to perform multi-resolution clustering methods.
     pbar = ProgressBar()
@@ -175,9 +176,16 @@ else:
         # Ends loop.
 # Ends If/else.
 
+
 #------------------------------------------------------------------------------
 ## Save Leidenalg clustering results.
 #------------------------------------------------------------------------------
+
+# Save initial partition.
+df = DataFrame(columns = profile[0].graph.vs['name'])
+df.loc['Membership'] = initial_partition.membership
+myfile = os.path.join(rdatdir, output_name + "initial_partition.csv")
+df.to_csv(myfile)
 
 # Collect partition results and save as csv. 
 if len(profile) == 1:

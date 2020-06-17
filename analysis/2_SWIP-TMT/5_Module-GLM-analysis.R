@@ -200,7 +200,7 @@ save(sig_proteins, file=myfile,version=2)
 #--------------------------------------------------------------------
 
 # Save as excel table
-myfile <- file.path(tabsdir,"Module_GLM_results.xlsx")
+myfile <- file.path(tabsdir,"TMT_Module_GLM_results.xlsx")
 results <- list("results" = glm_results)
 write_excel(results,file=myfile)
 

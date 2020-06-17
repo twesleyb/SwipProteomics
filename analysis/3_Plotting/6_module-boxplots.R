@@ -32,6 +32,10 @@ data(module_colors)
 myfile <- file.path(root,"rdata","alt_glm_results.RData")
 alt_results <- readRDS(myfile)
 
+# Set plotting theme.
+ggtheme()
+set_font("Arial", font_path = file.path(root,"fonts"))
+
 #---------------------------------------------------------------------
 ## Prepare the data for plotting.
 #---------------------------------------------------------------------

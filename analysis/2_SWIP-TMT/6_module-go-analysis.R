@@ -93,7 +93,7 @@ knitr::kable(top_go[idx,])
 
 # save significant results.
 results <- go_gse[idx]
-write_excel(results,file.path(tabsdir,"Swip_Module_GO_Enrichment.xlsx"))
+write_excel(results,file.path(tabsdir,"TMT_Module_GO_Enrichment.xlsx"))
 
 # Done!
 end <- Sys.time()
