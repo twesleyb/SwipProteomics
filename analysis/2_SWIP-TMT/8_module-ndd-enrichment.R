@@ -10,10 +10,6 @@
 alpha_GSE = 0.05 # Significance threshold.
 single_group = FALSE
 
-## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #--------------------------------------------------------------------
 ## Set-up the workspace.
 #--------------------------------------------------------------------

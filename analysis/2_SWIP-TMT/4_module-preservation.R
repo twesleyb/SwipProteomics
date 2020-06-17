@@ -39,10 +39,6 @@ netw = c(discovery="ne_adjm.csv", test=NULL)
 part = c(discovery="Swip_partition.csv", test=NULL)
 data = c(discovery="norm_protein.csv", test=NULL)
 
-## R Options.
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 # Data for comparing WT and Swip mutant networks.
 #adjm = c(discovery="wt_adjm.csv", test="ko_adjm.csv")
 #netw = c(discovery="wt_ne_adjm.csv", test="ko_ne_adjm.csv")

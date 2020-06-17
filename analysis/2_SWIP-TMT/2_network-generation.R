@@ -6,10 +6,6 @@
 ## ANALYSIS OPTIONS:
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
-## R OPTIONS:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------

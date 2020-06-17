@@ -9,10 +9,6 @@
 ## User parameters to change:
 gse_alpha = 0.05 # significance threshold for gse enrichment (BF p.adj).
 
-## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #---------------------------------------------------------------------
 ## Set-up the workspace.
 #---------------------------------------------------------------------

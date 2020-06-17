@@ -739,5 +739,3 @@ save(tmt_protein,file=myfile,version=2)
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

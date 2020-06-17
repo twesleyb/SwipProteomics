@@ -9,10 +9,6 @@
 ## Optional parameters:
 gse_alpha = 0.10 # FDR significance threshold.
 
-## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #--------------------------------------------------------------------
 ## Set-up the workspace.
 #--------------------------------------------------------------------
