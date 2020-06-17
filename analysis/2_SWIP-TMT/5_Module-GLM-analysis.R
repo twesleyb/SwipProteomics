@@ -101,11 +101,11 @@ qlf <- glmQLFTest(fit)
 glm_results <- topTags(qlf,n=Inf,sort.by="p.value")$table %>%
 	as.data.table(keep.rownames="Module")
 
-# Adjuste p-values.
-glm_results$PAdjust <- p.adjust(glm_results$PValue,method="bonferroni")
-
 # Drop M0.
 glm_results <- glm_results %>% filter(Module != 0)
+
+# Adjuste p-values.
+glm_results$PAdjust <- p.adjust(glm_results$PValue,method="bonferroni")
 
 # Fix logCPM column -- > convert to percentWT.
 idy <- which(colnames(glm_results)=="logCPM")
@@ -168,7 +168,7 @@ glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
 glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
 
-# Sig 85 - Significant intrafraction comparisons.
+# Sig 85 -- Significant intrafraction comparisons.
 sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
 sig85 <- sig_prots
@@ -189,9 +189,11 @@ glm_results$nSig968 <- sapply(paste0("M",glm_results$Module),function(x){
 				      sum(x %in% sig968) })
 
 # Combine as single list.
-sig_proteins <- list()
+sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)
 
 # Save as rda object.
+myfile <- file.path(datadir,"sig_proteins.rda")
+save(sig_proteins, file=myfile,version=2)
 
 #--------------------------------------------------------------------
 # Save results.
