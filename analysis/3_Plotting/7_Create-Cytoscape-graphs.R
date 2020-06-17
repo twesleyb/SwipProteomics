@@ -6,6 +6,7 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
+# FIXME: Only works when run interactively?
 ## Analysis options:
 
 #--------------------------------------------------------------------
@@ -21,10 +22,10 @@ renv::load(root,quiet=TRUE)
 
 # Global imports.
 suppressPackageStartupMessages({
-  library(RCy3)
-  library(dplyr)
-  library(igraph)
-  library(data.table)
+  library(RCy3) # For talking to Cytoscape.
+  library(dplyr) # For manipulating data.
+  library(igraph) # For creating graphs.
+  library(data.table) # For working with tables.
 })
 
 # Functions.
@@ -120,6 +121,7 @@ noa$isWASH <- as.numeric(noa$Accession %in% wash_prots)
 # Add NDD annotations.
 noa$isNDD <- as.numeric(noa$Accession %in% names(NDD_proteins))
 noa$NDD <- NDD_proteins[noa$Accession]
+noa$NDD[is.na(noa$NDD)] <- "none"
 
 # Add sig prot annotations.
 noa$sig85 <- as.numeric(noa$Accession %in% sig_proteins$sig85)
@@ -150,9 +152,7 @@ if (!dir.exists(imgsdir)) {
 
 # Loop to create graphs:
 for (module_name in names(module_list)){
-
 	nodes = module_list[[module_name]]
-
 	createCytoscapeGraph(netw_g, ppi_g, nodes, module_name, 
 			     netwdir=netwdir,imgsdir=imgsdir)
 

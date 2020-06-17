@@ -164,11 +164,16 @@ NODE_SIZE = mapVisualProperty("node size", "size", "c", size_range, c(35, 100)))
 	# Mask color of non-significant nodes.
 	sig <- names(V(g))[V(g)$sig85 == 1 | V(g)$sig62 == 1 | V(g)$sig968 == 1]
 	ns <- names(V(g))[names(V(g)) %notin% sig]
-	setNodeColorBypass(ns,new.colors=col2hex("gray"))
+	if (length(ns) > 0) {
+		setNodeColorBypass(ns,new.colors=col2hex("gray"))
+	}
 
 	# Bold border of BioID proteins.
 	#selectNodes(by="name",names(V(g))[V(g)$isWASH==1])
-	setNodeBorderWidthBypass(names(V(g))[V(g)$isWASH==1],new.sizes=10)
+	wash_nodes <- names(V(g))[V(g)$isWASH==1]
+	if (length(wash_nodes) > 0) {
+		setNodeBorderWidthBypass(wash_nodes,new.sizes=10)
+	}
 
 	# Save Image.
 	netw_image <- file.path(imgsdir, module_name)
