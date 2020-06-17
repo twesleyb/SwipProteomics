@@ -29,9 +29,6 @@ suppressPackageStartupMessages({
 # Project imports.
 devtools::load_all()
 
-# Directories.
-rdatdir <- file.path(root,"rdata")
-
 #--------------------------------------------------------------------
 ## Create protein covariation network.
 #--------------------------------------------------------------------
@@ -117,9 +114,15 @@ message("\nSaving the data.")
 # half of the matrix are removed, and then it is melted into an
 # edge list. This dataframe is saved as an rda object. It can be cast
 # back into a N x N matrix with convert_to_adjm().
-save_adjm_as_rda(round(adjm,5),file.path(rdatdir,"adjm.rda")) # ~ 83 MB
-save_adjm_as_rda(ne_adjm,file.path(rdatdir,"ne_adjm.rda"))    # ~ 86 MB
-save_adjm_as_rda(ppi_adjm,file.path(rdatdir,"ppi_adjm.rda"))  # ~ 22 MB
+
+myfile <- file.path(root,"data","adjm.rda")
+save_adjm_as_rda(round(adjm,5), myfile) # ~ 83 MB
+
+myfile <- file.path(root,"data","ne_adjm.rda")
+save_adjm_as_rda(ne_adjm, myfile)    # ~ 86 MB
+
+myfile <- file.path(root,"data","ppi_adjm.rda")
+save_adjm_as_rda(ppi_adjm, myfile)  # ~ 22 MB
 
 # Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
