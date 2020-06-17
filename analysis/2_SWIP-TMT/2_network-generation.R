@@ -29,6 +29,9 @@ suppressPackageStartupMessages({
 # Project imports.
 devtools::load_all()
 
+# Directories.
+rdatdir <- file.path(root,"rdata")
+
 #--------------------------------------------------------------------
 ## Create protein covariation network.
 #--------------------------------------------------------------------
@@ -48,38 +51,6 @@ adjm <- WGCNA::bicor(dm)
 # Enhanced network.
 message("\nPerforming network enhancement with to denoise network.")
 ne_adjm <- neten::neten(adjm)
-
-# To shrink the size of the adjm, melt it to an edge list, remove diag, and
-# lower.tri, coerce to a matrix and save as rda.
-
-# Define a function that casts data back into a matrix.
-# This is packaged with the data.
-convert_to_adjm <- function(edge_df) {
-	suppressPackageStartupMessages({ library(data.table) })
-	message("Casting edge list into adjacency matrix.")
-	dm <- edge_df %>% as.data.table() %>% 
-		dcast.data.table(Var1 ~ Var2, value.var = "value") %>% 
-		as.matrix(rownames="Var1")
-	return(dm)
-}
-
-# Define a function that saves adjm as an edge list 
-# data.frame as an rda object.
-save_adjm_as_rda <- function(adjm,file) {
-	diag(adjm) <- 0 # ZERO is smaller than NA
-	adjm[lower.tri(adjm)] <- 0
-	edges <- reshape2::melt(adjm)
-	save(edges,file=file,version=2)
-}
-
-# Save adjmatrices.
-save_adjm_as_rda(ne_adjm,file="ne_adjm.rda")
-
-# load adjm.
-load("ne_adjm.rda")
-adjm <- convert_to_adjm(edges)
-
-adjm <- convert(adjm)
 
 
 #--------------------------------------------------------------------
@@ -131,26 +102,36 @@ c1 <- all(colnames(adjm) == colnames(ne_adjm))
 c2 <- all(colnames(ne_adjm) == colnames(ppi_adjm))
 if (!(c1 & c2)){ stop() }
 
+# Number of edges and nodes.
+n_edges <- sum(ppi_adjm[upper.tri(ppi_adjm)])
+n_nodes <- ncol(ppi_adjm)
+
 #--------------------------------------------------------------------
 ## Save the data.
 #--------------------------------------------------------------------
 
 message("\nSaving the data.")
 
-# Save adjm as csv and rda.
+# Save adjacency matrices as rda objects.
+# To reduce the size of the large N x N matrix, the diagonal and lower
+# half of the matrix are removed, and then it is melted into an
+# edge list. This dataframe is saved as an rda object. It can be cast
+# back into a N x N matrix with convert_to_adjm().
+save_adjm_as_rda(round(adjm,5),file.path(rdatdir,"adjm.rda")) # ~ 83 MB
+save_adjm_as_rda(ne_adjm,file.path(rdatdir,"ne_adjm.rda"))    # ~ 86 MB
+save_adjm_as_rda(ppi_adjm,file.path(rdatdir,"ppi_adjm.rda"))  # ~ 22 MB
+
+# Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","adjm.csv"))
-save(adjm,file=file.path(root,"rdata","adjm.rda"), version=2)
 
-# Save enhanced adjm as csv and rda.
+# Save enhanced adjm as csv.
 ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ne_adjm.csv"))
-save(ne_adjm,file=file.path(root,"rdata","ne_adjm.rda"), version=2)
 
-# Save ppi network as csv and rda.
+# Save ppi network as csv.
 ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
-save(ppi_adjm,file=file.path(root,"rdata","ppi_adjm.rda"), version=2)
 
 # Save norm_protein as matrix. 
 # FIXME: do we need this?
