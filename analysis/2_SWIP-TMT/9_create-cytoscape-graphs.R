@@ -35,7 +35,7 @@ datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
-## Output directory for cytoscape networks.
+# Output directory for cytoscape networks.
 netwdir <- file.path(root,"networks")
 if (!dir.exists(netwdir)) {
 	dir.create(netwdir)
@@ -55,21 +55,25 @@ data(partition)
 data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
 
+# Load NDD associated proteins.
+data(NDD_proteins)
+
 # Load networks.
 data(ne_adjm) # loads "edges", then cast to adjm.
 ne_adjm <- convert_to_adjm(edges)
-
 data(ppi_adjm)
 ppi_adjm <- convert_to_adjm(edges)
 
-# Load gene map
+# Load gene map.
 data(gene_map)
+
+# Load module stats.
 
 #--------------------------------------------------------------------
 ## Create igraph graph objects.
 #--------------------------------------------------------------------
 
-# List of all modules. 
+# Create a list of all modules. 
 module_list <- split(names(partition),partition)[-1] # drop M0
 names(module_list) <- paste0("M",names(module_list))
 
@@ -184,5 +188,3 @@ unlink(file.path(to_dir,namen))
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

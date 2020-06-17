@@ -53,6 +53,13 @@ wash_prots <- unique(wash_interactome$Accession)
 # Load the graph partition.
 data(partition)
 
+# Load the networks.
+data(adjm)
+adjm <- convert_to_adjm(edges)
+
+data(ne_adjm)
+ne_adjm <- convert_to_adjm(edges)
+
 # Calculate the number of proteins per module.
 module_sizes <- sapply(split(partition,partition), length)
 
@@ -93,7 +100,12 @@ qlf <- glmQLFTest(fit)
 # Collect results.
 glm_results <- topTags(qlf,n=Inf,sort.by="p.value")$table %>%
 	as.data.table(keep.rownames="Module")
+
+# Adjuste p-values.
 glm_results$PAdjust <- p.adjust(glm_results$PValue,method="bonferroni")
+
+# Drop M0.
+glm_results <- glm_results %>% filter(Module != 0)
 
 # Fix logCPM column -- > convert to percentWT.
 idy <- which(colnames(glm_results)=="logCPM")
@@ -110,12 +122,9 @@ message(paste0("\nNumber of significant ",
 	      "(p-adjust < ", FDR_alpha,") ",
 	      "modules: ", nsig,"."))
 
-# Sig results:
+# Pretty print sig results:
 glm_results %>% filter(PAdjust < FDR_alpha) %>%
 	knitr::kable()
-
-# Drop M0.
-glm_results <- glm_results %>% filter(Module != 0)
 
 #--------------------------------------------------------------------
 ## Other module properties.
@@ -179,17 +188,24 @@ sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>%
 glm_results$nSig968 <- sapply(paste0("M",glm_results$Module),function(x){
 				      sum(x %in% sig968) })
 
-#--------------------------------------------------------------------
-# Save results.
-#--------------------------------------------------------------------
+# Combine as single list.
+sig_proteins <- list()
+
+# Save as rda object.
 
 #--------------------------------------------------------------------
 # Save results.
 #--------------------------------------------------------------------
 
-# Save as csv.
-myfile <- file.path(tabsdir,"Module_GLM_results.csv")
-fwrite(glm_results,myfile)
+# Save as excel table
+myfile <- file.path(tabsdir,"Module_GLM_results.xlsx")
+results <- list("results" = glm_results)
+write_excel(results,file=myfile)
+
+# Save as rda object.
+module_stats <- glm_results
+myfile <- file.path(datadir,"module_stats.rda")
+save(module_stats,file=myfile,version=2)
 
 # Done!
 end <- Sys.time()
