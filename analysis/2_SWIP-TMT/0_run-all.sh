@@ -58,3 +58,4 @@ echo "Analyzing modules for enrichment of NDD-associated genes."
 echo "Generating Cytoscape networks."
 #9_*.R &>> "$REPORT" & spin
 
+cat "$REPORT"
