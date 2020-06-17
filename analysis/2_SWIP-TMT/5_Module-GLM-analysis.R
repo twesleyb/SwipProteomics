@@ -48,6 +48,10 @@ set_font("Arial", font_path = fontdir)
 # Load the data.
 data(tmt_protein)
 
+# Load WASH BioID results.
+data(wash_interactome)
+wash_prots <- unique(wash_interactome$Accession)
+
 # Load the graph partition.
 data(partition)
 
