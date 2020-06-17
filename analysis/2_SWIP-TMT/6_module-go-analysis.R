@@ -7,7 +7,7 @@
 #' ---
 
 ## User parameters to change:
-gse_alpha = 0.05 # significance threshold for gse enrichment (BF p.adj).
+FDR_alpha = 0.05 # significance threshold for gse enrichment.
 
 #---------------------------------------------------------------------
 ## Set-up the workspace.
@@ -74,7 +74,7 @@ gocollection <- suppressPackageStartupMessages({
 go_gse <- gse(gene_list,gocollection)
 
 # collect significant modules.
-idx <- sapply(go_gse,function(x) any(x$FDR < gse_alpha))
+idx <- sapply(go_gse,function(x) any(x$FDR < FDR_alpha))
 nsig_go <- sum(idx)
 message(paste("\nNumber of modules with significant",
 	      "GO term enrichment:",nsig_go))
@@ -98,5 +98,3 @@ write_excel(results,file.path(tabsdir,"Swip_Module_GO_Enrichment.xlsx"))
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

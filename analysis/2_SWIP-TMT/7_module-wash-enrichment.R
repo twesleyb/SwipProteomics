@@ -7,7 +7,7 @@
 #' ---
 
 ## Optional parameters:
-gse_alpha = 0.10 # FDR significance threshold.
+FDR_alpha = 0.10 # FDR significance threshold.
 
 #--------------------------------------------------------------------
 ## Set-up the workspace.
@@ -76,7 +76,7 @@ hyper_dt <- tibble::add_column(hyper_dt, "n BioID Proteins"=n,.after="N")
 
 # Pretty print:
 message("Modules that are enriched for WASH iBioID proteins:")
-knitr::kable(hyper_dt %>% filter(P.adjust < gse_alpha))
+knitr::kable(hyper_dt %>% filter(P.adjust < FDR_alpha))
 
 # Done!
 end <- Sys.time()

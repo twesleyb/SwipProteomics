@@ -7,7 +7,7 @@
 #' ---
 
 ## Optional parameters:
-alpha_GSE = 0.05 # Significance threshold.
+FDR_alpha = 0.05 # Significance threshold.
 single_group = FALSE
 
 #--------------------------------------------------------------------
@@ -28,7 +28,7 @@ suppressPackageStartupMessages({
 	library(data.table)
 })
 
-# Functions.
+# Project functions.
 suppressWarnings({ devtools::load_all() })
 
 # Directories.
@@ -110,6 +110,10 @@ idx <- grepl("huntington disease",dt$disorder_association)
 if (sum(idx) > 0) { dt$disorder_association[idx] <- "HD" }
 
 # Summarize number of unique genes per category.
+# Summary.
+message(paste("Compiled",
+	formatC(length(unique(dt$entrez)),big.mark=","),
+	"genes associated with neurodegenerative disorders."))
 dt %>% group_by(disorder_association) %>% 
 	summarize(nGenes=formatC(length(unique(entrez)),big.mark=","),
 		  .groups="drop") %>% 
@@ -124,10 +128,6 @@ if (single_group) {
 	gene_list <- split(dt$entrez,dt$disorder_association)
 }
 
-# Summary.
-message(paste("Total number of unique NDD genes:",
-	      formatC(length(unique(dt$entrez)),big.mark=",")))
-
 # Create gene sets -- utilizes anRichment library.
 geneSets <- lapply(names(gene_list),function(x) {
 			    createGeneSet(gene_list[[x]],x,
@@ -141,6 +141,21 @@ PLgroup <- newGroup(name="Compiled NDD Genes",
 NDDcollection <- newCollection(dataSets=geneSets,groups=list(PLgroup))
 
 #---------------------------------------------------------------------
+## Protein NDD annotations.
+#---------------------------------------------------------------------
+
+# Collect protein NDD annotations for proteins in the data
+dt$uniprot <- gene_map$uniprot[match(dt$entrez,gene_map$entrez)]
+dt$symbol <- gene_map$symbol[match(dt$entrez,gene_map$entrez)]
+tmp_dt <- dt %>% filter(!is.na(uniprot)) %>% group_by(uniprot) %>% 
+	summarize(NDD = paste(unique(disorder_association),collapse="|"))
+NDD_proteins <- tmp_dt$NDD
+names(NDD_proteins) <- tmp_dt$uniprot
+
+# Save as rda.
+save(NDD_proteins,file=file.path(datadir,"NDD_proteins.rda"),version=2)
+
+#---------------------------------------------------------------------
 ## Module NDD enrichment analysis.
 #---------------------------------------------------------------------
 
@@ -152,7 +167,7 @@ NDD_results <- moduleGOenrichment(partition, gene_map,
 				  partition.ids = "uniprot")
 
 # Number of significant terms per module.
-nSig <- sapply(NDD_results, function(x) sum(x$FDR < alpha_GSE))
+nSig <- sapply(NDD_results, function(x) sum(x$FDR < FDR_alpha))
 
 # Modules with any sig terms:
 sigModules <- names(which(nSig > 0))
@@ -164,7 +179,7 @@ message(paste("\nNumber of modules with any significant DBD-gene enrichment:",
 
 # Get sig results.
 temp_list <- lapply(NDD_results[sigModules],function(x) {
-	       as.data.table(x) %>% filter(FDR < alpha_GSE) %>%
+	       as.data.table(x) %>% filter(FDR < FDR_alpha) %>%
 		       dplyr::select(class,dataSetName,nCommonGenes,
 			      nCommonGenes,pValue,FDR,enrichmentRatio)
 				  })
@@ -185,5 +200,3 @@ write_excel(NDD_results,myfile)
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

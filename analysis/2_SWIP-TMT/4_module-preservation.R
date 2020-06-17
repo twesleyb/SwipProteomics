@@ -361,5 +361,3 @@ if (save_as == "rdata") {
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

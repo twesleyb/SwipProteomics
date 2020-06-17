@@ -17,7 +17,7 @@ input_samples = "TMT-samples.csv"
 
 ## Analysis Options:
 save_plots = TRUE # Should plots be saved in root/figs?
-DA_alpha = 0.1 # FDR threshold for differential abundance.
+FDR_alpha = 0.1 # FDR threshold for differential abundance.
 fold_change_delta = 0.2 # Fold change threshold.
 sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
 fig_height = 5.0 # Default height of figures.
@@ -393,12 +393,12 @@ tidy_protein <- left_join(filt_protein,samples,by=c("Experiment","Sample",
 
 # Summary of DA proteins:
 message(paste0("\nSummary of differentially abundant proteins ",
-	      "in each subceulluar fraction (FDR < ",DA_alpha,"):"))
-knitr::kable(t(sapply(glm_results,function(x) sum(x$FDR < DA_alpha))))
+	      "in each subceulluar fraction (FDR < ",FDR_alpha,"):"))
+knitr::kable(t(sapply(glm_results,function(x) sum(x$FDR < FDR_alpha))))
 
 # Total number of unique DA proteeins:
 # FIXME: NUMBER  is not right.
-all_sig <- lapply(glm_results, function(x) x$Accession[x$FDR < DA_alpha])
+all_sig <- lapply(glm_results, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
 
@@ -446,13 +446,13 @@ alt_glm_results <- tibble::add_column(alt_glm_results,
 
 # Summary of DA proteins with logFC cutoff:
 d <- fold_change_delta
-sig <- alt_glm_results$FDR < DA_alpha 
+sig <- alt_glm_results$FDR < FDR_alpha 
 DA <- alt_glm_results$logFC < log2(1-d) | alt_glm_results$logFC > log2(1+d)
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("Total number of unique, differentially abundant proteins:",
 	      sum(DA & sig)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
-message(paste("...FDR <",DA_alpha))
+message(paste("...FDR <",FDR_alpha))
 
 #----------------------------------------------------------------------
 ## Plot commonly dysregulated prots, adjusted for fraction differences.
