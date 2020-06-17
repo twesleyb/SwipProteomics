@@ -68,6 +68,10 @@ ppi_adjm <- convert_to_adjm(edges)
 data(gene_map)
 
 # Load module stats.
+data(module_stats)
+
+# Load sig prots.
+data(sig_proteins)
 
 #--------------------------------------------------------------------
 ## Create igraph graph objects.
@@ -110,6 +114,18 @@ noa <- noa %>% select(Accession, Symbol, Entrez, Module, Adjusted.logFC,
 data(module_colors)
 noa$Color <- module_colors[noa$Module]
 
+# Add WASH annotation.
+noa$isWASH <- as.numeric(noa$Accession %in% wash_prots)
+
+# Add NDD annotations.
+noa$isNDD <- as.numeric(noa$Accession %in% names(NDD_proteins))
+noa$NDD <- NDD_proteins[noa$Accession]
+
+# Add sig prot annotations.
+noa$sig85 <- as.numeric(noa$Accession %in% sig_proteins$sig85)
+noa$sig62 <- as.numeric(noa$Accession %in% sig_proteins$sig62)
+noa$sig968 <- as.numeric(noa$Accession %in% sig_proteins$sig968)
+
 # Loop to add node attributes to netw_graph.
 for (i in c(1:ncol(noa))) {
 	namen <- colnames(noa)[i]
@@ -134,57 +150,17 @@ if (!dir.exists(imgsdir)) {
 
 # Loop to create graphs:
 for (module_name in names(module_list)){
+
 	nodes = module_list[[module_name]]
+
 	createCytoscapeGraph(netw_g, ppi_g, nodes, module_name, 
 			     netwdir=netwdir,imgsdir=imgsdir)
+
 }
 
-# When done, save cytoscape session.
+# When done, save Cytoscape session.
+# NOTE: When on WSL, need to use Windows path format bc
+# Cytoscape is a Windows program.
 myfile <- file.path(netwdir,paste0("Modules.cys"))
-winfile <- gsub("/mnt/d/","D:/",myfile)
+winfile <- gsub("/mnt/d/","D:/",myfile) 
 saveSession(winfile)
-
-# Convert to svg to pdf.
-
-## Combine modules as a single pdf.
-
-# Directory for grouped pdfs.
-output_dir <- file.path(figsdir,"Final-Markers")
-dir.create(output_dir,recursive=TRUE)
-
-message("Combining markers and saving as single pdf...")
-
-for (module in names(marker_modules)){
-# Get subset of proteins.
-prots <- paste0(gsub("\\|","_",marker_modules[[module]]),".pdf")
-check <- all(prots %in% names(all_plots))
-if (!check) { stop("We are missing some plots!") } 
-# Create directory for grouped plots.
-to_dir <- file.path(output_dir,gsub(" ","_",module))
-dir.create(to_dir)
-# Remove any existing plots.
-unlink(list.files(to_dir,full.names=TRUE))
-# Copy to new directory.
-namen <- names(all_plots[prots])
-response <- file.copy(from=all_plots[prots],
-		      to=file.path(to_dir,namen))
-if (!all(response)) { stop("Problem saving pdfs.") }
-
-# Combined into a single pdf with ghostscript cli utility.
-# Create gs command.
-myfile <- file.path(to_dir,paste0(gsub(" ","_",module),".pdf"))
-cmd <- c("gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite",
-	 "-sOutputFile=OUTPUT.pdf", "INPUT.pdf")
-cmd <- gsub("OUTPUT.pdf",myfile,cmd)
-cmd <- gsub("INPUT.pdf",file.path(to_dir,"*.pdf"),cmd)
-cmd <- paste(cmd,collapse=" ")
-
-# Execute system command
-response <- system(cmd,intern=TRUE)
-
-# Remove input pdfs.
-unlink(file.path(to_dir,namen))
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

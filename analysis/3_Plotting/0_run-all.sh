@@ -54,4 +54,8 @@ echo "Analyzing modules for enrichment of WASH BioID proteins."
 echo "Analyzing modules for enrichment of NDD-associated genes."
 ./8_*.R &>> "$REPORT" & spin
 
+# STEP 9.
+echo "Generating Cytoscape networks."
+#9_*.R &>> "$REPORT" & spin
+
 cat "$REPORT"
