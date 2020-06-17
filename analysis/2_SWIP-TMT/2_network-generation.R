@@ -49,6 +49,39 @@ adjm <- WGCNA::bicor(dm)
 message("\nPerforming network enhancement with to denoise network.")
 ne_adjm <- neten::neten(adjm)
 
+# To shrink the size of the adjm, melt it to an edge list, remove diag, and
+# lower.tri, coerce to a matrix and save as rda.
+
+# Define a function that casts data back into a matrix.
+# This is packaged with the data.
+convert_to_adjm <- function(edge_df) {
+	suppressPackageStartupMessages({ library(data.table) })
+	message("Casting edge list into adjacency matrix.")
+	dm <- edge_df %>% as.data.table() %>% 
+		dcast.data.table(Var1 ~ Var2, value.var = "value") %>% 
+		as.matrix(rownames="Var1")
+	return(dm)
+}
+
+# Define a function that saves adjm as an edge list 
+# data.frame as an rda object.
+save_adjm_as_rda <- function(adjm,file) {
+	diag(adjm) <- 0 # ZERO is smaller than NA
+	adjm[lower.tri(adjm)] <- 0
+	edges <- reshape2::melt(adjm)
+	save(edges,file=file,version=2)
+}
+
+# Save adjmatrices.
+save_adjm_as_rda(ne_adjm,file="ne_adjm.rda")
+
+# load adjm.
+load("ne_adjm.rda")
+adjm <- convert_to_adjm(edges)
+
+adjm <- convert(adjm)
+
+
 #--------------------------------------------------------------------
 ## Create PPI network.
 #--------------------------------------------------------------------
