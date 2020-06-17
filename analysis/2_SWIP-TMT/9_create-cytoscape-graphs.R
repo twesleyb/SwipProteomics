@@ -56,8 +56,11 @@ data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
 
 # Load networks.
-data(ne_adjm)
+data(ne_adjm) # loads "edges", then cast to adjm.
+ne_adjm <- convert_to_adjm(edges)
+
 data(ppi_adjm)
+ppi_adjm <- convert_to_adjm(edges)
 
 # Load gene map
 data(gene_map)
@@ -103,19 +106,12 @@ noa <- noa %>% select(Accession, Symbol, Entrez, Module, Adjusted.logFC,
 data(module_colors)
 noa$Color <- module_colors[noa$Module]
 
-# Loop to add node attributes.
+# Loop to add node attributes to netw_graph.
 for (i in c(1:ncol(noa))) {
 	namen <- colnames(noa)[i]
 	col_data <- setNames(noa[[i]],nm=noa$Accession)
 	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
 }
-
-#--------------------------------------------------------------------
-## Node size is proportional to its importance in the network.
-#--------------------------------------------------------------------
-
-WGCNA::module:
-
 
 #--------------------------------------------------------------------
 ## Create Cytoscape graphs.
