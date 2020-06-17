@@ -107,17 +107,17 @@ message("\nSaving the data.")
 # Save adjm as csv and rda.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","adjm.csv"))
-save(adjm,file=file.path(root,"data","adjm.rda"), version=2)
+save(adjm,file=file.path(root,"rdata","adjm.rda"), version=2)
 
 # Save enhanced adjm as csv and rda.
 ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ne_adjm.csv"))
-save(ne_adjm,file=file.path(root,"data","ne_adjm.rda"), version=2)
+save(ne_adjm,file=file.path(root,"rdata","ne_adjm.rda"), version=2)
 
 # Save ppi network as csv and rda.
 ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
-save(ppi_adjm,file=file.path(root,"data","ppi_adjm.rda"), version=2)
+save(ppi_adjm,file=file.path(root,"rdata","ppi_adjm.rda"), version=2)
 
 # Save norm_protein as matrix. 
 # FIXME: do we need this?
@@ -128,5 +128,3 @@ norm_protein <- tmt_protein %>% as.data.table() %>%
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))
