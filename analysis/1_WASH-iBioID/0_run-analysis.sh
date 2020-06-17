@@ -21,3 +21,5 @@ rm -f *.report
 # Run the analysis 
 ./1_BioID-analysis.R &> iBioID-Proteomics.report & spin
 ./2_PPI-network.R &>> iBioID-Proteomics.report & spin
+
+cat ./iBioID-Proteomics.report
