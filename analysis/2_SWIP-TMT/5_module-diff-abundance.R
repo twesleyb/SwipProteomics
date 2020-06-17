@@ -9,10 +9,6 @@
 ## Options:
 alpha = 0.1 # Significance threshold.
 
-## R options.
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #FIXME: ADD ADDITIONAL MODULE METRICS
 
 #---------------------------------------------------------------------
@@ -30,7 +26,6 @@ renv::load(root,quiet=TRUE) # NOTE: getrd is a f(x) in .Rprofile.
 # Load required packages and functions.
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating data.
-#	library(ggplot2) # For making plots.
 	library(edgeR) # For statistical analysis.
 	library(data.table) # For working with tables.
 })
@@ -117,7 +112,50 @@ message(paste0("\nNumber of significant ",
 glm_results %>% filter(PAdjust < alpha) %>%
 	knitr::kable()
 
+#--------------------------------------------------------------------
+# Add additional meta data.
+#--------------------------------------------------------------------
+
+# Annotate with module proteins.
+data(gene_map)
+#
+symbols <- unique(tmt_protein$Symbol)
+names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
+#
+module_list <- split(names(partition),partition)
+names(module_list) <- paste0("M",names(module_list))
+named_module_list <- lapply(module_list,function(x) symbols[x])
+#
+module_prots <- lapply(named_module_list,function(x) paste(x,names(x),collapse="|",sep=";"))
+glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
+#
+n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
+glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
+
+# Sig 85
+sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
+	select(Accession) %>% unlist() %>% unique()
+sig85 <- sig_prots
+n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
+glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
+
+# Sig 968
+sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
+	select(Accession) %>% unlist() %>% unique()
+
+glm_results$nSig968 <- sapply(paste0("M",glm_results$Module),function(x) sum(x %in% sig968))
+
+# sig + FC
+sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
+	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
+	select(Accession) %>% unlist() %>% unique()
+glm_results$nSig62 <- sapply(paste0("M",glm_results$Module),function(x) sum(x %in% sig62))
+
+#--------------------------------------------------------------------
 # Save results.
+#--------------------------------------------------------------------
+
+# Save as csv.
 myfile <- file.path(tabsdir,"Module_GLM_results.csv")
 fwrite(glm_results,myfile)
 

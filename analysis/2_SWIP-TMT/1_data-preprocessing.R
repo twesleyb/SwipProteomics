@@ -23,10 +23,6 @@ sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
 fig_height = 5.0 # Default height of figures.
 fig_width = 5.0 # Default width of figures.
 
-## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 ## Input in root/data:
 # * TMT.zip/TMT-samples.csv     - sample meta data.
 # * TMT.zip/TMT-raw-peptide.csv - raw peptide data from PD.
@@ -63,6 +59,7 @@ options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
 ## Prepare the workspace.
 #---------------------------------------------------------------------
 # Prepare the R workspace for the analysis. 
+
 start <- Sys.time()
 message(paste("Starting analysis at:", start))
 
@@ -311,10 +308,9 @@ protein_list <- spn_protein %>% group_by(Accession)  %>% group_split()
 idx <- sapply(protein_list,function(x) any(is.na(x)))
 protein_list <- protein_list[!idx]
 
-# Get a random protein's data.
+# Get a random protein's data as an example.
 protein <- sample(protein_list,1)[[1]]
 protein$Sample_Pool <- protein$Treatment == "SPQC"
-
 df <- protein %>% group_by(Sample_Pool) %>% 
 	dplyr::summarize(Accession = unique(Accession),
 		  Treatement=paste(unique(Treatment),collapse=" + "),
@@ -689,7 +685,7 @@ colnames(alt_glm_results)[-c(1,2)] <- paste0("Adjusted.",
 					     colnames(alt_glm_results)[-c(1,2)])
 adjusted_prot <- left_join(adjusted_prot,alt_glm_results,by="Accession")
 
-# Merge
+# tmt_protein with adjusted data and stats.
 idy <- intersect(colnames(tmt_protein),colnames(adjusted_prot))
 tmt_protein <- left_join(tmt_protein,adjusted_prot,by=idy)
 
@@ -699,18 +695,20 @@ tmt_protein <- tmt_protein %>% dplyr::select(Experiment, Sample, Channel,
 				      "Cfg Force (xg)",
 				      "Date of Brain Fractionation",
 				      "Mouse ID", Sex, DOB, "Age (mo)",
-				      Accession, Entrez, Gene, Peptides,
-				      Intensity, Adjusted.Intensity, logFC, 
-				      PercentWT, F, PValue, FDR)
+				      Accession, Entrez, Symbol, Peptides,
+				      Intensity, Adjusted.Intensity, 
+				      logFC, Adjusted.logFC,
+				      PercentWT, Adjusted.PercentWT,
+				      F, Adjusted.F,
+				      PValue, Adjusted.PValue,
+				      FDR, Adjusted.FDR)
 
 rm(list=c("idx","temp_list","temp_dt","idy"))
 
 #---------------------------------------------------------------------
 ## Save output for downstream analysis.
 #---------------------------------------------------------------------
-
-## Save key results.
-message("\nSaving data for downstream analysis.")
+# Save key results.
 
 # Save raw data -- tidy_peptide.
 myfile <- file.path(rdatdir,"tidy_peptide.csv")

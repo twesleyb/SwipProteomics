@@ -8,10 +8,6 @@
 
 ## Analysis options:
 
-## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 #--------------------------------------------------------------------
 ## Set-up the workspace.
 #--------------------------------------------------------------------
@@ -94,14 +90,38 @@ ppi_g <- set_vertex_attr(ppi_g,"symbol",value = symbols)
 ## Annotate graphs with additional meta data.
 #--------------------------------------------------------------------
 
-idx <- match(names(V(netw_g)),tmt_protein$Accession)
+# Collect meta data from tmt_protein.
+tmp_dt <- data.table(Accession = names(V(netw_g)),
+		  Module = paste0("M",partition[names(V(netw_g))]))
+noa <- left_join(tmp_dt, tmt_protein, by = "Accession") %>% 
+	filter(!duplicated(Accession))
+noa <- noa %>% select(Accession, Symbol, Entrez, Module, Adjusted.logFC, 
+		      Adjusted.PercentWT, Adjusted.F, Adjusted.PValue, 
+		      Adjusted.FDR)
+
+# Add module colors.
+data(module_colors)
+noa$Color <- module_colors[noa$Module]
+
+# Loop to add node attributes.
+for (i in c(1:ncol(noa))) {
+	namen <- colnames(noa)[i]
+	col_data <- setNames(noa[[i]],nm=noa$Accession)
+	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
+}
+
+#--------------------------------------------------------------------
+## Node size is proportional to its importance in the network.
+#--------------------------------------------------------------------
+
+WGCNA::module:
 
 
 #--------------------------------------------------------------------
 ## Create Cytoscape graphs.
 #--------------------------------------------------------------------
 
-## FIXME: remove existing images.
+# Network images will be saved in networks/Modules:
 imgsdir <- file.path(netwdir,"Modules")
 
 if (!dir.exists(imgsdir)) {
