@@ -95,6 +95,12 @@ knitr::kable(top_go[idx,])
 results <- go_gse[idx]
 write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GSE_Results.xlsx"))
 
+# Save as rda.
+module_GO <- dplyr::bind_rows(results,.id="class")
+colnames(module_GO)[which(colnames(module_GO) == "class")] <- "Module"
+myfile <- file.path(root,"data","module_GO.rda")
+save(module_GO,file=myfile,version=2)
+
 # Done!
 end <- Sys.time()
 message(paste("\nCompleted analysis at:",end))
