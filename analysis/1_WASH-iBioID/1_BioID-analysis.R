@@ -37,7 +37,7 @@ suppressPackageStartupMessages({
 })
 
 # Load any additional functions in root/R.
-devtools::load_all()
+suppressMessages({ devtools::load_all() })
 
 # Project directories.
 datadir <- file.path(root,"data")
@@ -56,15 +56,16 @@ if (!dir.exists(downdir)){ dir.create(downdir) }
 
 # Extract the raw data from zipped file.
 myfile <- file.path(datadir,zipfile)
-unzip(myfile, exdir=downdir) # unzip into root/downloads/
+unzip(myfile) # unzip 
 
 # Read into R.
-myfile <- file.path(downdir,tools::file_path_sans_ext(zipfile),datafile)
+myfile <- file.path(getwd(),tools::file_path_sans_ext(zipfile),datafile)
 raw_prot <- fread(myfile)
 
 # Clean-up.
 myfile <- file.path(downdir,tools::file_path_sans_ext(zipfile))
 unlink(myfile,recursive=TRUE)
+unlink("./BioID", recursive=TRUE)
 
 # Tidy-up the data.
 message("\nLoading raw Swip BioID protein data.")
