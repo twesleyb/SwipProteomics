@@ -132,9 +132,11 @@ if parameters.get('resolution_parameter') is None:
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
-    initial_partition = partition
+    if not recursive: 
+        print("... Initial partition: " + partition.summary() + ".", file=stderr)
+    # Recursively split modules that are too big.
     if recursive:
-        # Recursively split modules that are too big.
+        initial_membership = partition.membership
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
         n_big = sum(too_big)
@@ -176,16 +178,16 @@ else:
         # Ends loop.
 # Ends If/else.
 
-
 #------------------------------------------------------------------------------
 ## Save Leidenalg clustering results.
 #------------------------------------------------------------------------------
 
-# Save initial partition.
-df = DataFrame(columns = profile[0].graph.vs['name'])
-df.loc['Membership'] = initial_partition.membership
-myfile = os.path.join(rdatdir, output_name + "_initial_partition.csv")
-df.to_csv(myfile)
+if recursive:
+    # Save initial partition.
+    df = DataFrame(columns = profile[0].graph.vs['name'])
+    df.loc['Membership'] = initial_membership
+    myfile = os.path.join(rdatdir, output_name + "_initial_partition.csv")
+    df.to_csv(myfile)
 
 # Collect partition results and save as csv. 
 if len(profile) == 1:
