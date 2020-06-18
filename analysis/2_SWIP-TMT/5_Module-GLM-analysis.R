@@ -7,7 +7,7 @@
 #' ---
 
 ## Options:
-FDR_alpha = 0.1 # Significance threshold.
+BF_alpha = 0.1 # Significance threshold.
 
 #---------------------------------------------------------------------
 ## Prepare the workspace.
@@ -60,6 +60,14 @@ adjm <- convert_to_adjm(edges)
 data(ne_adjm)
 ne_adjm <- convert_to_adjm(edges)
 
+#---------------------------------------------------------------------
+## Prepare the data.
+#---------------------------------------------------------------------
+
+# Load the initial partition of the graph.
+myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
+fread(myfile)
+
 # Calculate the number of proteins per module.
 module_sizes <- sapply(split(partition,partition), length)
 
@@ -104,7 +112,7 @@ glm_results <- topTags(qlf,n=Inf,sort.by="p.value")$table %>%
 # Drop M0.
 glm_results <- glm_results %>% filter(Module != 0)
 
-# Adjuste p-values.
+# Adjust p-values for n module comparisons.
 glm_results$PAdjust <- p.adjust(glm_results$PValue,method="bonferroni")
 
 # Fix logCPM column -- > convert to percentWT.
@@ -117,13 +125,14 @@ n <- module_sizes[as.character(glm_results$Module)]
 glm_results <- tibble::add_column(glm_results,Nodes=n,.after="Module")
 
 # Number of significant modules.
-nsig <- sum(glm_results$PAdjust < FDR_alpha)
+message(paste("\nTotal number of modules:",length(unique(partition)) -1))
+nsig <- sum(glm_results$PAdjust < BF_alpha)
 message(paste0("\nNumber of significant ",
-	      "(p-adjust < ", FDR_alpha,") ",
+	      "(p-adjust < ", BF_alpha,") ",
 	      "modules: ", nsig,"."))
 
 # Pretty print sig results:
-glm_results %>% filter(PAdjust < FDR_alpha) %>%
+glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
 #--------------------------------------------------------------------
@@ -146,6 +155,10 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
+
+# Organization of the modules.
+ME_dm <- as.matrix(ME_data$eigengenes,keep.rownames=TRUE)
+ME_adjm <- WGCNA::bicor(ME_dm)
 
 #--------------------------------------------------------------------
 # Add additional meta data.

@@ -184,7 +184,7 @@ else:
 # Save initial partition.
 df = DataFrame(columns = profile[0].graph.vs['name'])
 df.loc['Membership'] = initial_partition.membership
-myfile = os.path.join(rdatdir, output_name + "initial_partition.csv")
+myfile = os.path.join(rdatdir, output_name + "_initial_partition.csv")
 df.to_csv(myfile)
 
 # Collect partition results and save as csv. 
