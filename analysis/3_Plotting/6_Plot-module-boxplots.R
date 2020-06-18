@@ -69,6 +69,7 @@ for (module in modules) {
 	plot <- plot + geom_point() 
 	plot <- plot + scale_fill_manual(values=colors)
 	plot <- plot + ggtitle(module_name)
+	plot <- plot + theme(plot.title = element_text(hjust = 0.5))
 	plots[[module_name]] <- plot
 }
 
