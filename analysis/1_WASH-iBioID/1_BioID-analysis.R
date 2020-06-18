@@ -80,11 +80,6 @@ mito_prot <- getIDs(mito_entrez,from="entrez",to="uniprot",species="mouse")
 nMito <- sum(mito_prot %in% tidy_prot$Accession)
 message(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
 
-# Save mitochondria proteins that were removed.
-myfile <- file.path(tabsdir,"Mitochondrial_Contaminants.csv")
-tidy_prot %>% filter(Accession %in% mito_prot) %>% 
-	dplyr::select(Accession) %>% fwrite(myfile)
-
 # Remove mitochondrial proteins as contaminants.
 tidy_prot <- tidy_prot %>%  filter(Accession %notin% mito_prot)
 
@@ -266,10 +261,17 @@ if (!check) { stop("Unable to map all entrez ids to gene symbols.") }
 results <- tibble::add_column(results,"Entrez"=entrez,.after="Accession")
 results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
 
+# Create list of results, 
+results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
+
+# Add the mitochondrial proteins that were removed.
+df <- tidy_prot %>% filter(Accession %in% mito_prot) %>% 
+	dplyr::select(Accession) %>% fwrite(myfile)
+results_list[["Mitochondrial Contaiminants"]] <- df
+
 # Write to file.
 message("\nSaving results.")
 myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
-results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
 write_excel(results_list,myfile)
 
 # Save results as rdata for downstream analysis.

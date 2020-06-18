@@ -30,6 +30,7 @@ suppressPackageStartupMessages({
 	#library(TBmiscr) # For misc. utilities.
 	library(getPPIs) # For mapping gene names.
 	library(data.table) # For data.tables.
+	library(openxlsx)
 })
 
 # Directories.
@@ -91,9 +92,13 @@ g <- graph_from_data_frame(sif,vertices=noa,directed=FALSE)
 message(paste("\nNumber of Nodes:",length(V(g))))
 message(paste("\nNumber of Edges:",length(E(g))))
 
-# Save sif in root/tabls.
-myfile <- file.path(root,"tables","WASH_Network_PPIs.xlsx")
-write_excel(sif,myfile)
+# data in root/tables:
+# Save sif as a sheet in WASH_BioID_Results.xlsx
+myfile <- file.path(root,"tables","WASH_BioID_Results.xlsx")
+wb <- loadWorkbook(file = myfile)
+addWorksheet(wb, sheetName = "PPIs")
+writeData(wb,sheet=2,sif,rowNames=TRUE,colNames=TRUE)
+saveWorkbook(wb, file=myfile, overwrite=TRUE)
 
 # Done!
 end <- Sys.time()
