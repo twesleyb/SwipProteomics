@@ -136,7 +136,7 @@ glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
 #--------------------------------------------------------------------
-## Other module properties.
+## Module PVE
 #--------------------------------------------------------------------
 
 #  Calculate module eigengenes.
@@ -155,10 +155,6 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
-
-# Organization of the modules.
-ME_dm <- as.matrix(ME_data$eigengenes,keep.rownames=TRUE)
-ME_adjm <- WGCNA::bicor(ME_dm)
 
 #--------------------------------------------------------------------
 # Add additional meta data.

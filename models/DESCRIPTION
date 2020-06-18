@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# In pymol, type the following commands:
+# mset 1,180 
+# util.mroll 1, 180, 1
+# set ray_trace_frames, 1 
+# set cache_frames, 0
+
+# Then save as a video. File > save as video > PNG images
+
+# Convert the images to a gif with img2gif.

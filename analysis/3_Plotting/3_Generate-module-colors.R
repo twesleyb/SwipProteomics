@@ -81,13 +81,37 @@ names(community_colors) <- names(communities)
 modules <- split(partition,partition)
 names(modules) <- paste0("M",names(modules))
 n_modules <- length(modules) -1
-module_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_modules))
-names(module_colors) <- names(modules)
+all_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_modules))
 
 # Insure that WASH module is #B86FAD
-swip = "Q3UMB9"
-m <- paste0("M",partition[swip])
-module_colors[m] <- "#B86FAD"
+#swip = "Q3UMB9"
+#m <- paste0("M",partition[swip])
+#module_colors[m] <- "#B86FAD"
+
+#--------------------------------------------------------------------
+## Organize the colors.
+#--------------------------------------------------------------------
+
+#  Calculate module eigengenes.
+dm <- tmt_protein %>% as.data.table() %>% 
+	dcast(Sample ~ Accession, value.var = "Intensity") %>% 
+	as.matrix(rownames="Sample") %>% log2()
+ME_data <- WGCNA::moduleEigengenes(dm, colors = partition, 
+				   excludeGrey = TRUE, softPower = 1 ,
+				   impute = FALSE)
+
+# Extract ME matrix.
+ME_dm <- as.matrix(ME_data$eigengenes)
+
+# Compute relationships between modules.
+ME_adjm <- WGCNA::bicor(ME_dm)
+
+# Cluster heirarchically.
+d <- as.dist(1 - ME_adjm)
+hc <- hclust(d)
+
+# Assign names to colors in heirarchical order.
+names(all_colors) <- hc$labels[hc$order]
 
 #--------------------------------------------------------------------
 ## Save the data.
@@ -100,48 +124,3 @@ save(community_colors,file=myfile,version=2)
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
-
-#--------------------------------------------------------------------
-## Generate a plot.
-#--------------------------------------------------------------------
-
-# Working with tmt_protein...
-# Drop QC and coerce data to data matrix.
-dm <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
-	filter(Accession %in% names(partition)) %>%
-	as.data.table() %>%
-	reshape2::dcast(Accession ~ Sample, value.var= "Intensity") %>%
-		as.data.table() %>% as.matrix(rownames="Accession")
-
-# Scale rows.
-# NOTE: normalization is applied row-wise (dim=1), but we
-# need to transpose the output such that it is the same
-# dimensions as the input.
-norm_dm <- t(apply(dm,1,function(x) x/sum(x)))
-
-# Drop un-clustered proteins.
-idx <- rownames(norm_dm) %in% modules[["M0"]]
-norm_dm <- norm_dm[!idx,]
-
-# Generate plot.
-plot <- ggplotPCAprot(norm_dm,scale=TRUE,center=TRUE)
-
-# Collect plots data and annotate with color assignments.
-df <- plot$data
-df$community <- paste0("C",community_part[rownames(df)])
-df$module <- paste0("M",partition[rownames(df)])
-df$community_color <- community_colors[df$community]
-df$module_color <- module_colors[df$module]
-
-#--------------------------------------------------------------------
-## How to organize the colors?
-#--------------------------------------------------------------------
-
-# 57 communities.
-# 250 modules.
-
-plot <- plot + geom_point(data=df, aes(colour=factor(community)))
-plot <- plot + scale_colour_manual(values=df$community_color)
-plot <- plot + theme(legend.position = "none")
-plot
-
