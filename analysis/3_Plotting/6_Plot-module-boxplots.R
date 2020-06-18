@@ -1,9 +1,6 @@
 #!/usr/bin/env Rscript
 
 ## R Options:
-options(renv.config.synchronized.check = FALSE) # skip renv::check(repo).
-options(renv.settings.snapshot.type = "simple") # use simple renv::snapshot.
-
 
 # Load renv.
 root <- getrd()
