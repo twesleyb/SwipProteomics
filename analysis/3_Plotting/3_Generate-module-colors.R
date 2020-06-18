@@ -126,6 +126,22 @@ norm_dm <- norm_dm[!idx,]
 # Generate plot.
 plot <- ggplotPCAprot(norm_dm,scale=TRUE,center=TRUE)
 
-#-------------
+# Collect plots data and annotate with color assignments.
+df <- plot$data
+df$community <- paste0("C",community_part[rownames(df)])
+df$module <- paste0("M",partition[rownames(df)])
+df$community_color <- community_colors[df$community]
+df$module_color <- module_colors[df$module]
+
+#--------------------------------------------------------------------
+## How to organize the colors?
+#--------------------------------------------------------------------
+
 # 57 communities.
 # 250 modules.
+
+plot <- plot + geom_point(data=df, aes(colour=factor(community)))
+plot <- plot + scale_colour_manual(values=df$community_color)
+plot <- plot + theme(legend.position = "none")
+plot
+
