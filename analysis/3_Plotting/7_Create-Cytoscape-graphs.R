@@ -35,6 +35,7 @@ suppressWarnings({ devtools::load_all() })
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
+figsdir <- file.path(root, "figs","Networks")
 
 # Output directory for cytoscape networks.
 netwdir <- file.path(root,"networks")
@@ -140,8 +141,7 @@ for (i in c(1:ncol(noa))) {
 #--------------------------------------------------------------------
 
 # Network images will be saved in networks/Modules:
-imgsdir <- file.path(netwdir,"Modules")
-
+imgsdir <- figsdir
 if (!dir.exists(imgsdir)) {
 	# Create the directory.
 	dir.create(imgsdir)
