@@ -7,7 +7,7 @@
 #' ---
 
 ## Analysis options:
-
+# FIXME: this script is to save cys networks as single pdf.
 #--------------------------------------------------------------------
 ## Set-up the workspace.
 #--------------------------------------------------------------------

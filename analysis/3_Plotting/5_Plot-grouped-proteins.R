@@ -9,6 +9,9 @@
 # OPTIONS:
 save_subset = TRUE # Only save subset of clustered proteins?
 
+# FIXME: CHANGE x axis labels to be g force.
+# add annotations, n proteins pve, pvalue, f statistic.
+
 ## Input data in root/data/
 # * tmt_protein
 
