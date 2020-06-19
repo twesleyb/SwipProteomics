@@ -2,4 +2,4 @@
 
 Analysis of Swip mutant mouse brain spatial proteomics
 
-![Swip protein model](./models/wt.gif)
+![Swip protein model](./models/Swip.gif)
