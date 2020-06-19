@@ -39,12 +39,18 @@ tabsdir <- file.path(root, "tables")
 downdir <- file.path(root, "downloads")
 figsdir <- file.path(root, "figs","Modules")
 
+# If necessary, create dir for figs.
+if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
+
 # Global plotting settings.
 ggtheme()
 set_font("Arial", font_path = fontdir)
 
 # Load the data.
 data(tmt_protein)
+
+# Load the gene map.
+data(gene_map)
 
 # Load WASH BioID results.
 data(wash_interactome)
@@ -155,13 +161,37 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
+#--------------------------------------------------------------------
+# Module hubs.
+#--------------------------------------------------------------------
+
+# All modules.
+module_list <- split(partition,partition)
+names(module_list) <- paste0("M",names(module_list))
+
+# Get top three proteins.
+# Sorted by node weighted degree.
+module_hubs <- lapply(module_list, function(x) {
+	       prots <- names(x)
+	       subadjm <- ne_adjm[prots,prots]
+	       node_degree <- apply(subadjm,2,sum)
+	       node_degree <- node_degree[order(node_degree,decreasing=TRUE)]
+	       hubs <- names(head(node_degree,3))
+	       symbols <- gene_map$symbol[match(hubs,gene_map$uniprot)]
+	       ids <- paste(symbols,hubs,sep="|")
+	       return(ids)
+				  })
+
+# Add to the data.
+hubs_list <- module_hubs[paste0("M",glm_results$Module)]
+glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
+				  
 
 #--------------------------------------------------------------------
 # Add additional meta data.
 #--------------------------------------------------------------------
 
 # Annotate with module proteins.
-data(gene_map)
 #
 symbols <- unique(tmt_protein$Symbol)
 names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
@@ -185,19 +215,17 @@ n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
 glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
 
 # Sig 62 -- sig WT v KO with > +/- 20% percent change.
-## FIXME: these values are not correct.
 sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
 	select(Accession) %>% unlist() %>% unique()
-glm_results$nSig62 <- sapply(paste0("M",glm_results$Module),function(x){
-				     sum(x %in% sig62) })
+tmp_list <- module_list[paste0("M",glm_results$Module)]
+glm_results$nSig62 <- sapply(tmp_list,function(x) sum(x %in% sig62))
 
 # Sig 968 --  sig WT v KO - NO log2FC threshold.
-## FIXME: these values are not correct.
 sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
-glm_results$nSig968 <- sapply(paste0("M",glm_results$Module),function(x){
-				      sum(x %in% sig968) })
+tmp_list <- module_list[paste0("M",glm_results$Module)]
+glm_results$nSig968 <- sapply(tmp_list,function(x) sum(x %in% sig968))
 
 # Combine as single list.
 sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)
