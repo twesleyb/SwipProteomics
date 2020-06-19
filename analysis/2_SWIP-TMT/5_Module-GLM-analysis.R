@@ -66,7 +66,7 @@ ne_adjm <- convert_to_adjm(edges)
 
 # Load the initial partition of the graph.
 myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
-fread(myfile)
+#fread(myfile)
 
 # Calculate the number of proteins per module.
 module_sizes <- sapply(split(partition,partition), length)

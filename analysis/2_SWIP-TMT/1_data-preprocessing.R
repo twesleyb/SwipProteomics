@@ -670,7 +670,7 @@ final_results <- c(list("Samples" = samples), final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
-rm(list=c("myfile","idy","is_missing","entrez"))
+rm(list=c("myfile","idy"))
 
 #---------------------------------------------------------------------
 ## Save output for downstream analysis.
@@ -681,9 +681,9 @@ rm(list=c("myfile","idy","is_missing","entrez"))
 myfile <- file.path(rdatdir,"tidy_peptide.csv")
 fwrite(tidy_peptide,myfile)
 
-# Save tidy_protein.
-myfile <- file.path(rdatdir,"tidy_protein.csv")
-fwrite(tidy_protein,myfile)
+# Save tmt_protein
+myfile <- file.path(rdatdir,"tmt_protein.csv")
+fwrite(tmt_protein,myfile)
 
 # Save statistical results.
 myfile <- file.path(rdatdir,"glm_results.RData")
