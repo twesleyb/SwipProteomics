@@ -10,8 +10,8 @@
 ## to work with the input arguments that they are provided, and in many cases 
 ## will not perform as expected if passed different arguments.
 
-## Input data in root/input/:
-zip_file = "TMT.zip"
+## Input data in root/data/:
+zip_file = "TMT.zip" # Zipped directory contains:
 input_data = "TMT-raw-peptide.csv"
 input_samples = "TMT-samples.csv"
 
@@ -82,7 +82,7 @@ datadir <- file.path(rootdir, "data") # Key pieces of data saved as rda.
 fontdir <- file.path(rootdir, "fonts") # Arial font for plots.
 rdatdir <- file.path(rootdir, "rdata") # Temporary data files.
 tabsdir <- file.path(rootdir, "tables") # Output tables.
-downdir <- file.path(rootdir, "downloads") # Misc trash.
+downdir <- file.path(rootdir, "downloads") # Misc stuff.
 figsdir <- file.path(rootdir, "figs","TMT") # Output figures.
 
 # Create output directories if necessary.
@@ -112,7 +112,7 @@ peptides <- fread(myfile)
 myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_samples)
 samples <- fread(myfile)
 
-# Format cfg force column -- this is the Force in g's used to obtain 
+# Format Cfg force column -- this is the Force in g's used to obtain 
 # the subcellular fraction.
 samples$"Cfg Force (xg)" <- formatC(samples$"Cfg Force (xg)",big.mark=",")
 
@@ -377,33 +377,30 @@ if (check) {
 message(paste("\nEvaluating intra-fraction protein differential abundance."))
 # NOTE: Model = ~ Fraction + Treatment | Treatment = Genotype.Fraction
 comparisons <- "Genotype.Fraction"
-results <- glmDA(filt_protein,comparisons,samples,
+glm_results <- glmDA(filt_protein,comparisons,samples,
 		 samples_to_ignore="SPQC")
 
 # Collect the results.
-fit <- results$fit
-qlf <- results$qlf
-dge <- results$dge
-glm_results <- results$stats
-glm_results <- glm_results[c("F4","F5","F6","F7","F8","F9","F10")]
+dge <- glm_results$dge
+results_list <- glm_results$stats
+results_list <- results_list[c("F4","F5","F6","F7","F8","F9","F10")]
 
 # Annotate final normalized protein with sample meta data.
-tidy_protein <- left_join(filt_protein,samples,by=c("Experiment","Sample",
-						     "Channel","Treatment"))
+tmt_protein <- left_join(filt_protein,samples,
+			 by=intersect(colnames(filt_protein),colnames(samples)))
 
 # Summary of DA proteins:
 message(paste0("\nSummary of differentially abundant proteins ",
 	      "in each subceulluar fraction (FDR < ",FDR_alpha,"):"))
-knitr::kable(t(sapply(glm_results,function(x) sum(x$FDR < FDR_alpha))))
+knitr::kable(t(sapply(results_list,function(x) sum(x$FDR < FDR_alpha))))
 
 # Total number of unique DA proteeins:
-# FIXME: NUMBER  is not right.
-all_sig <- lapply(glm_results, function(x) x$Accession[x$FDR < FDR_alpha])
+all_sig <- lapply(results_list, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
 
 # Proteins that are commonly dysregulated:
-combined_results <- rbindlist(glm_results,idcol="Fraction")
+combined_results <- rbindlist(results_list,idcol="Fraction")
 idx <- match(combined_results$Accession,gene_map$uniprot)
 combined_results$Gene <- gene_map$symbol[idx] 
 df <- combined_results %>% group_by(Accession) %>% 
@@ -412,7 +409,6 @@ df <- combined_results %>% group_by(Accession) %>%
 			 nFractions = length(FDR), 
 			 .groups = "drop") %>% 
 	filter(nSig==nFractions)
-
 # Status:
 message(paste("\nProteins that are differentially abundant in all fractions:\n",
 	      paste(df$Gene,collapse=", ")))
@@ -420,34 +416,25 @@ message(paste("\nProteins that are differentially abundant in all fractions:\n",
 rm(list=c("df","all_sig","n_sig","comparisons"))
 
 #----------------------------------------------------------------------
-## Alternative statistical model: WT vs Mutant differential abundance.
+## Assess differential abundance between WT vs Mutant groups.
 #----------------------------------------------------------------------
 
 # Use EdgeR glm to evaluate differential protein abundance.
 # Compare WT v Mutant within a fraction.
-# NOTE: model = "~ Fraction + Treatment" We are interested in WT versus Mutant.
+# NOTE: model = "~ Fraction + Treatment" We are interested in 'Treatment'.
 message(paste("\nEvaluating protein differential abundance between",
 	      "WT and Mutant groups."))
 comparisons <- "Genotype.Fraction"
 samples_to_ignore = "SPQC"
-alt_glm <- glmDA2(tidy_protein, comparisons, samples, samples_to_ignore)
+alt_glm_results <- glmDA2(tmt_protein, comparisons, samples, samples_to_ignore)
 
 # Extract key glm results.
-alt_glm_results <- alt_glm$stats
-fit <- alt_glm$fit
-qlf <- alt_glm$qlf
-dge <- alt_glm$dge
-
-# Annotate results with gene Symbols.
-idx <- match(alt_glm_results$Accession,gene_map$uniprot)
-Symbol <- gene_map$symbol[idx]
-alt_glm_results <- tibble::add_column(alt_glm_results, 
-				      Symbol, .after="Accession")
+alt_results <- alt_glm_results$stats
 
 # Summary of DA proteins with logFC cutoff:
 d <- fold_change_delta
-sig <- alt_glm_results$FDR < FDR_alpha 
-DA <- alt_glm_results$logFC < log2(1-d) | alt_glm_results$logFC > log2(1+d)
+sig <- alt_results$FDR < FDR_alpha 
+DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("Total number of unique, differentially abundant proteins:",
 	      sum(DA & sig)))
@@ -461,7 +448,7 @@ message(paste("...FDR <",FDR_alpha))
 # Calculate protein abundance, adjusted for fraction differences.
 logCPM <- edgeR::cpm(dge, log=TRUE)
 
-# Remove effect of freaction.
+# Remove effect of fraction.
 dm <- limma::removeBatchEffect(logCPM,batch=dge$samples$fraction,
 				   design=model.matrix(~treatment,
 						       data=dge$samples))
@@ -474,8 +461,8 @@ dt <- as.data.table(dm,keep.rownames="Accession") %>%
 dt$Sample <- as.character(dt$Sample)
 
 # Combine with additional meta data.
-idy <- which(colnames(tidy_protein)=="Intensity")
-temp_prot <- as.data.table(tidy_protein)[,-..idy] %>% filter(Treatment != "SPQC")
+idy <- which(colnames(tmt_protein)=="Intensity")
+temp_prot <- as.data.table(tmt_protein)[,-..idy] %>% filter(Treatment != "SPQC")
 adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
 
 # Wash proteins + control.
@@ -514,6 +501,7 @@ plot <- plot + geom_vline(xintercept=seq(2.5,length(proteins)*2,by=2),
 			  linetype="dotted",size=0.5)
 
 # Perform t-tests.
+# FIXME: Substitute with glm pvalues.
 prot_list <- df %>% group_by(Accession) %>% group_split()
 data_ttests <- lapply(prot_list,function(subdf) {
 			      x <- subdf$Intensity
@@ -563,113 +551,15 @@ rm(list=c("myfile","plot","ymax","symbols","build","stats","prot_list",
 	  "data_ttests","xlabels","prots"))
 
 #---------------------------------------------------------------------
-## Save the TMT data and stats as a single excel workbook
-#---------------------------------------------------------------------
-
-## Save TMT data as a single excel document.
-## Create an excel workbook with the following sheets:
-# * Samples
-# * Input - raw peptides
-# * Output - normalized protein
-# * Statistical results:
-#     - Seperate sheet for each fraction/comparison.
-#     - Include contrast specific data.
-
-# Sort the statistical results.
-glm_results <- glm_results[c("F4","F5","F6","F7","F8","F9","F10")]
-
-# Data to be added to stats.
-norm_protein <- tidy_protein %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var="Intensity") %>%
-	as.matrix(rownames="Accession")
-
-# Loop to add normalized protein data to glm statistical results.
-message("\nSaving TMT data and statistical results.")
-for (i in 1:length(glm_results)){
-	df <- glm_results[[i]]
-	namen <- names(glm_results)[i]
-	subsamples <- samples$Sample[grepl(namen,samples$Fraction)]
-	idy <- match(subsamples,colnames(norm_protein))
-	dm <- norm_protein[,idy]
-	# Sort the data by Exp.Sample
-	ids <- sapply(sapply(strsplit(colnames(dm),"\\."),"[",c(6,7),
-			     simplify=FALSE), paste,collapse=".")
-	names(ids) <- colnames(dm)
-	ids <- ids[order(ids)]
-	dm <- dm[,names(ids)]
-	# Coerce dm to dt and merge with stats df.
-	dt <- as.data.table(dm,keep.rownames="Accession")
-	dt_out <- left_join(df,dt,by="Accession") %>% as.data.table
-	glm_results[[i]] <- dt_out
-} # Ends loop.
-
-# Map uniprot to entrez IDs.
-uniprot <- glm_results[[1]][["Accession"]]
-idx <- match(uniprot,gene_map$uniprot)
-entrez <- gene_map$entrez[idx]
-names(entrez) <- uniprot
-
-# Map missing ids by hand.
-is_missing <- is.na(entrez)
-missing_entrez <- entrez[is_missing]
-mapped_by_hand <- c("P00848"=17705,
-		    "P62806"=326619,
-		    "Q64525"=319189,
-		    "P06330"=111507, 
-		    "Q5PR69"=320827, 
-		    "Q80WG5"=241296,
-		    "P03975"=15598, 
-		    "Q80TK0"=100503185)
-entrez[names(mapped_by_hand)] <- mapped_by_hand
-
-# Check that we have successfully mapped all uniprot ids to entrez.
-check <- sum(is.na(entrez))
-if (check != 0) { stop("There are unmapped uniprot IDs.") }
-
-# Map entrez to gene symbols.
-idx <- match(entrez,gene_map$entrez)
-symbols <- gene_map$symbol[idx]
-names(symbols) <- entrez
-
-# Loop to add Entrez IDs and Gene Symbols to data.
-# Also fix column titles at the same time. 
-for (i in 1:length(glm_results)){
-	df <- glm_results[[i]]
-	colnames(df) <- gsub("\\."," ",colnames(df))
-	idy <- grepl("Abundance",colnames(df))
-	colnames(df)[idy] <- paste("Log2",colnames(df)[idy])
-	df <- tibble::add_column(df,"Entrez"=entrez[df$Accession],
-				 .after="Accession")
-	df <- tibble::add_column(df,"Gene"=symbols[as.character(df$Entrez)],
-				 .after="Entrez")
-	glm_results[[i]] <- df
-}
-
-## Save as excel workboook.
-## FIXME: Add select protein ttest stats.
-names(glm_results) <- paste(names(glm_results),"Results")
-results <- c(list("Samples" = samples,
-		"Normalized Protein" = tidy_protein),
-	     glm_results)
-myfile <- file.path(tabsdir,"Swip_TMT_Results.xlsx")
-write_excel(results,myfile,rowNames=FALSE)
-
-rm(list=c("myfile","idy","is_missing","entrez"))
-
-#---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
 #---------------------------------------------------------------------
 
 # Collect stats.
-idx <- names(results)[grep("F[0-9]{1,2}",names(results))]
-temp_list <- results[idx]
-names(temp_list) <- gsub(" Results","",names(temp_list))
-temp_list <- lapply(temp_list,function(x) x[,c(1:8)])
-temp_dt <- bind_rows(temp_list,.id="Fraction")
+temp_dt <- bind_rows(results_list,".id"="Fraction")
 
-# Merge protein data and stats.
-tmt_protein <- left_join(tidy_protein,temp_dt,
-			 by=intersect(colnames(tidy_protein),colnames(temp_dt)))
+# Merge tmt_protein data and glm stats.
+tmt_protein <- left_join(tmt_protein,temp_dt,
+			 by=intersect(colnames(tmt_protein),colnames(temp_dt)))
 
 # Remove QC data.
 tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
@@ -681,15 +571,23 @@ idy <- which(colnames(adjusted_prot) == "Intensity")
 colnames(adjusted_prot)[idy] <- "Adjusted.Intensity"
 
 # Add stats to adjusted protein data.
-colnames(alt_glm_results)[-c(1,2)] <- paste0("Adjusted.",
-					     colnames(alt_glm_results)[-c(1,2)])
-adjusted_prot <- left_join(adjusted_prot,alt_glm_results,by="Accession")
+idy <- colnames(alt_results) %notin% c("Accession","Entrez","Symbol")
+colnames(alt_results)[idy] <- paste0("Adjusted.",
+				     colnames(alt_results)[idy])
+adjusted_prot <- left_join(adjusted_prot,alt_results,
+			   by=intersect(colnames(adjusted_prot),
+					colnames(alt_results)))
 
-# tmt_protein with adjusted data and stats.
+# Combine tmt_protein with adjusted data and stats.
 idy <- intersect(colnames(tmt_protein),colnames(adjusted_prot))
 tmt_protein <- left_join(tmt_protein,adjusted_prot,by=idy)
 
-# Select columns  of interest.
+# Annotate with gene identifiers.
+idx <- match(tmt_protein$Accession,gene_map$uniprot)
+tmt_protein$Entrez <- gene_map$entrez[idx]
+tmt_protein$Symbol <- gene_map$symbol[idx]
+
+# Organize the columns -- select columns of interest.
 tmt_protein <- tmt_protein %>% dplyr::select(Experiment, Sample, Channel,
 				      Treatment, Genotype, Fraction,
 				      "Cfg Force (xg)",
@@ -703,7 +601,76 @@ tmt_protein <- tmt_protein %>% dplyr::select(Experiment, Sample, Channel,
 				      PValue, Adjusted.PValue,
 				      FDR, Adjusted.FDR)
 
-rm(list=c("idx","temp_list","temp_dt","idy"))
+rm(list=c("idx","idy"))
+
+#---------------------------------------------------------------------
+## Save the TMT data and stats as a single excel workbook
+#---------------------------------------------------------------------
+
+## Save TMT data as a single excel document.
+## Create an excel workbook with the following sheets:
+# * Samples
+# * Input - raw peptides
+# * Output - normalized protein
+# * Statistical results:
+#     - Seperate sheet for each fraction/comparison.
+#     - Include contrast specific data.
+
+# Add normalized protein data 
+norm_dm <- tmt_protein %>% as.data.table() %>%
+	dcast(Accession ~ Sample,value.var="Intensity") %>%
+	as.matrix(rownames="Accession")
+
+# Loop to add normalized protein data to glm statistical results.
+message("\nSaving TMT data and statistical results.")
+for (i in 1:length(results_list)){
+	# Get the relevant data.
+	df <- results_list[[i]]
+	namen <- names(results_list)[i]
+	subsamples <- samples$Sample[grepl(namen,samples$Fraction)]
+	idy <- match(subsamples,colnames(norm_dm))
+	dm <- norm_dm[,idy]
+	# Sort the data by Exp.Sample
+	ids <- sapply(sapply(strsplit(colnames(dm),"\\."),"[",c(6,7),
+			     simplify=FALSE), paste,collapse=".")
+	names(ids) <- colnames(dm)
+	ids <- ids[order(ids)]
+	dm <- dm[,names(ids)]
+	# Coerce dm to dt and merge with stats df.
+	dt <- as.data.table(dm,keep.rownames="Accession")
+	dt_out <- left_join(df,dt,by="Accession") %>% as.data.table
+	results_list[[i]] <- dt_out
+} # Ends loop.
+
+# Add adjusted protein values to alt stats.
+df <- adjusted_prot %>% as.data.table() %>%
+	dcast(Accession ~ Sample, value.var="Adjusted.Intensity")
+alt_results <- left_join(alt_results,df,by="Accession")
+colnames(alt_results) <- gsub("Abundance","Adjusted.Abundance",
+			      colnames(alt_results))
+
+# Combine intra-fraction comparisons and wt v mutant comparisons.
+results_list[["WT v MUT"]] <- alt_results
+
+# Annotate each df with gene identfifiers.
+final_results <- list()
+for (i in c(1:length(results_list))) {
+	tmp_df <- results_list[[i]]
+	idx <- match(tmp_df$Accession,gene_map$uniprot)
+	Entrez <- gene_map$entrez[idx]
+	Symbol <-  gene_map$symbol[idx]
+	tmp_df <- tibble::add_column(tmp_df,Entrez,.after="Accession")
+	tmp_df <- tibble::add_column(tmp_df,Symbol,.after="Entrez")
+	final_results[[i]] <- tmp_df
+}
+
+# Save as excel workboook.
+names(final_results) <- paste(names(results_list),"Results")
+final_results <- c(list("Samples" = samples), final_results)
+myfile <- file.path(tabsdir,"Swip_TMT_Results.xlsx")
+write_excel(final_results,myfile,rowNames=FALSE)
+
+rm(list=c("myfile","idy","is_missing","entrez"))
 
 #---------------------------------------------------------------------
 ## Save output for downstream analysis.
@@ -725,8 +692,6 @@ saveRDS(glm_results,myfile)
 # Save to select protein statistics to file.
 myfile <- file.path(rdatdir,"Select_Protein_Stats.csv")
 fwrite(ttest_dt,myfile)
-
-## Output saved in root/data:
 
 # Save gene map.
 myfile <- file.path(datadir,"gene_map.rda")
