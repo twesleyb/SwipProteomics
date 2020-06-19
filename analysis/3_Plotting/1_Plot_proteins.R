@@ -154,10 +154,11 @@ for (module in seq(1,max(unique(partition)))) {
 	grouped_plots[[module]] <- plot
 } # EOL
 
-myfile <- file.path(figsdir,"Module_Grouped_Proteins.pdf")
+myfile <- file.path(figsdir,"TMT_Module_Proteins.pdf")
 ggsavePDF(grouped_plots, myfile)
 
 #--------------------------------------------------------------------
+## Save the data.
 #--------------------------------------------------------------------
 
 # Save.
