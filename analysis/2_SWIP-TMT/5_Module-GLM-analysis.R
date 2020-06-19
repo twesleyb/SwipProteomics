@@ -185,6 +185,7 @@ n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
 glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
 
 # Sig 62 -- sig WT v KO with > +/- 20% percent change.
+## FIXME: these values are not correct.
 sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
 	select(Accession) %>% unlist() %>% unique()
@@ -192,6 +193,7 @@ glm_results$nSig62 <- sapply(paste0("M",glm_results$Module),function(x){
 				     sum(x %in% sig62) })
 
 # Sig 968 --  sig WT v KO - NO log2FC threshold.
+## FIXME: these values are not correct.
 sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
 glm_results$nSig968 <- sapply(paste0("M",glm_results$Module),function(x){
