@@ -94,6 +94,7 @@ message(paste("\nNumber of Edges:",length(E(g))))
 
 # data in root/tables:
 # Save sif as a sheet in WASH_BioID_Results.xlsx
+sif$weight <- NULL
 myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")

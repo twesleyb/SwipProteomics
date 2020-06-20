@@ -577,6 +577,7 @@ colnames(alt_results)[idy] <- paste0("Adjusted.",
 adjusted_prot <- left_join(adjusted_prot,alt_results,
 			   by=intersect(colnames(adjusted_prot),
 					colnames(alt_results)))
+adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
 # Combine tmt_protein with adjusted data and stats.
 idy <- intersect(colnames(tmt_protein),colnames(adjusted_prot))
