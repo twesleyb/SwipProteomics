@@ -100,7 +100,7 @@ community_membership <- lapply(community_list, function(x){
 names(community_membership) <- paste0("C",names(community_membership))
 
 #---------------------------------------------------------------------
-## Prepare the data.
+## Perform module level statistical analysis.
 #---------------------------------------------------------------------
 
 # Calculate the number of proteins per module.
@@ -177,18 +177,20 @@ glm_results %>% filter(PAdjust < BF_alpha) %>%
 ## Annotate with community membership.
 #--------------------------------------------------------------------
 
+# Its just complicated...
 x = unlist(community_membership,use.names=FALSE)
 y = unlist(sapply(names(community_membership),function(x) {
 		   rep(x,times=length(community_membership[[x]]))}),
 	   use.names=FALSE)
 names(y) <- x
 
+# Annotate data with community membership.
 glm_results <- tibble::add_column(glm_results,
 			  "Community" = y[paste0("M",glm_results$Module)],
 			  .after="Module")
 
 #--------------------------------------------------------------------
-## Module PVE
+## Calculate Module PVE
 #--------------------------------------------------------------------
 
 #  Calculate module eigengenes.
@@ -208,7 +210,7 @@ glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
 #--------------------------------------------------------------------
-# Module hubs.
+# Determine module hubs.
 #--------------------------------------------------------------------
 
 # All modules.
@@ -233,7 +235,7 @@ hubs_list <- module_hubs[paste0("M",glm_results$Module)]
 glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
 				  
 #--------------------------------------------------------------------
-# Add additional meta data.
+## Annotate with number of sigprots.
 #--------------------------------------------------------------------
 
 # Annotate with module proteins.
@@ -288,7 +290,7 @@ df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>%
 dm <- df %>% as.data.table() %>%
 	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
 dm$Module <- as.character(dm$Module)
-glm_ressults <- left_join(glm_results,dm,by="Module")
+glm_results <- left_join(glm_results,dm,by="Module")
 
 #--------------------------------------------------------------------
 # Save results.
