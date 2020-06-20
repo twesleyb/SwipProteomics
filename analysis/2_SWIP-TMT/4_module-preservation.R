@@ -3,19 +3,16 @@
 #' ---
 #' title: Module Preservation
 #' description: Evaluate module preservation by permutation testing.
-#'              This is a more general form of the module-self-preservation
-#'              script. Should be able to handle different permutation
-#'              test setups.
 #' authors: Tyler W Bradshaw
 #' ---
 
 ## User parameters to change:
-#stats = c(1, 2, 6, 7) # Statistics by which module preservation is enforced. 
-stats = c(1,6,7)
+stats = c(1,6,7) # Statistics by which module preservation is enforced. 
 strength = "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges = "zero" # How will negative edges be replacedR? Abs val or zero.
 replace_zero_index = TRUE # If min(module index)==0, +1 such that all indices >0.
 log_data = FALSE # Should input data be log2 transformed?
+min_size = 5 # Minimum size of a module.
 
 ## Organization of the permutation test:
 # Names of discovery_data and test_data can be anything.
@@ -180,17 +177,15 @@ renv::load(root,quiet=TRUE)
 
 # Global options and imports.
 suppressPackageStartupMessages({
-	library(dplyr)
-	#library(NetRep)
-	#library(TBmiscr)
-	library(data.table)
+	library(dplyr) # For manipulating the data.
+	library(NetRep) # For permutation testing.
+	library(data.table) # For working with tables.
 })
 
 # Additional functions.
 devtools::load_all()
 
 # Directories.
-root <- getrd()
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 
@@ -241,6 +236,9 @@ if (replace_zero_index) {
 	# Add 1 if minimum partition index is 0.
 	part_list <- lapply(part_list[which(sapply(part_list,min)==0)],function(x) x+1)
 }
+
+# Enforce minimum module size.
+
 
 # Insure that names of the and data, adjm,  netw, and partitions match.
 adjm <- adjm_list[["discovery"]]
