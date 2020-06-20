@@ -4,7 +4,7 @@
 
 ## User parameters to change:
 FDR_alpha = 0.1
-enrichment_threshold = log2(3.5)
+enrichment_threshold = log2(3.0)
 
 ## Input data in root/rdata
 data_file = "WASH_BioID_Results.RData"
@@ -94,10 +94,10 @@ message(paste("\nNumber of Edges:",length(E(g))))
 
 # data in root/tables:
 # Save sif as a sheet in WASH_BioID_Results.xlsx
-myfile <- file.path(root,"tables","WASH_BioID_Results.xlsx")
+myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")
-writeData(wb,sheet=2,sif,rowNames=TRUE,colNames=TRUE)
+writeData(wb,sheet=4,sif,rowNames=TRUE,colNames=TRUE)
 saveWorkbook(wb, file=myfile, overwrite=TRUE)
 
 # Done!

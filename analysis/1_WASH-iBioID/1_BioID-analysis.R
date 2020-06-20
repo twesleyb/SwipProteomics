@@ -72,7 +72,7 @@ message("\nLoading raw Swip BioID protein data.")
 tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
 		      id.vars=c("Accession","Description","Peptides"))
 
-# Load mitochondrial protein list.
+# Load mitochondrial protein list from twesleyb/geneLists.
 data(list=geneLists("mito"))
 mito_entrez <- unlist(mitocarta2,use.names=FALSE)
 mito_prot <- getIDs(mito_entrez,from="entrez",to="uniprot",species="mouse")
@@ -98,10 +98,10 @@ message("\nPerforming sample loading normalization.")
 SL_prot <- normSL(tidy_prot,groupBy="Sample")
 
 # Check, column sums should now be equal.
-#message("Total intensity sums are equal after sample loading normalization:")
-#df <- SL_prot %>% group_by(Sample) %>% 
-	#summarize("Total Intensity"=sum(Intensity,na.rm=TRUE))
-#knitr::kable(df)
+message("Total intensity sums are equal after sample loading normalization:")
+df <- SL_prot %>% group_by(Sample) %>% 
+	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE))
+knitr::kable(df)
 
 #-------------------------------------------------------------------------------
 ## Sample pool normalization.
@@ -201,7 +201,7 @@ norm_prot <- as.data.table(log2(dge$counts),keep.rownames="Accession")
 dt_qc <- as.data.table(log2(dm[,qc_cols]),keep.rownames="Accession")
 norm_prot <- left_join(norm_prot, dt_qc,by="Accession")
 
-## Perform exactTest.
+# Perform exactTest.
 data_ET <- edgeR::exactTest(dge, pair = c("Control", "WASH"))
 
 # Call topTags to add FDR. Keep the data the same order by sort.by="none".
@@ -266,8 +266,8 @@ results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
 results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
 
 # Add the mitochondrial proteins that were removed.
-df <- tidy_prot %>% filter(Accession %in% mito_prot) %>% 
-	dplyr::select(Accession) %>% fwrite(myfile)
+df <- raw_prot %>% filter(Accession %in% mito_prot) %>% 
+	dplyr::select(Accession)
 results_list[["Mitochondrial Contaiminants"]] <- df
 
 # Write to file.
