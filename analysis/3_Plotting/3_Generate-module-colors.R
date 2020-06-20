@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 ## OPTIONS:
-min_size = 5
+min_size = 5 # minimum size of a module.
+max_size = 100 # maximum size of a module.
 
 ## OUTPUT:
 # * Updated module color assignemnts.
@@ -40,80 +41,52 @@ data(partition)
 # All communities. 
 # Load the intial partition of the graph into large communities.
 myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
-community_part <- fread(myfile,drop=1) %>% unlist()
-communities <- split(names(community_part),community_part)
+cpartition <- fread(myfile,drop=1) %>% unlist() + 1 # Add 1 because python uses 0 index.
+communities <- split(names(cpartition),cpartition)
 names(communities) <- paste0("C",names(communities))
 
-# Remove communties that are smaller than min_size.
-idx <- sapply(communities,length) < min_size
-names(communities)[idx] <- "C0"
+# cmodules is the modules contained by every community.
+cmodules <- lapply(communities, function(x) paste0("M",unique(partition[x])))
 
-# Collect unclustered proteins, and reset their Community membership to 0.
-not_clustered <- unlist(communities[names(communities) == "C0"])
-community_part[not_clustered] <- 0
+# combine modules that only contain "M0"
+idx <- as.numeric(which(sapply(cmodules, function(x) all(x == "M0"))))
+new_part <- cpartition
+new_part[new_part %in% idx] <- 0
+new_cpart <- reset_index(new_part)
+cpartition <- new_cpart
 
-# Reset partition index.
-new_part <- reset_index(community_part)
-communities <- split(names(new_part),new_part)
+# New communtities
+communities <- split(names(new_cpart),new_cpart)
 names(communities) <- paste0("C",names(communities))
 
-# Sizes of the communities.
-community_sizes <- sapply(communities,length)
-to_split <- names(which(community_sizes > 100))
-to_split <- to_split[!to_split=="C0"]
-n_split <- length(to_split)
-
-# Proteins assigned to each module.
-community_prots <- split(partition,community_part)
-
-# All modules.
-modules <- split(names(partition),partition)
-names(modules) <- paste0("M",names(modules))
+# Save as rda.
+save(communities,file=file.path(root,"data","communities.rda"),version=2)
+save(cpartition,file=file.path(root,"data","cpartition.rda"),version=2)
 
 #---------------------------------------------------------------------
 ## Generate colors.
 #---------------------------------------------------------------------
 
 # Generate community colors.
-n_communities <- length(communities) -1
-community_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_communities))
+n_comm <- length(communities) -1
+community_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_comm))
 names(community_colors) <- names(communities)
 
-# Generate module colors.
-modules <- split(partition,partition)
-names(modules) <- paste0("M",names(modules))
-n_modules <- length(modules) -1
-all_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_modules))
+# Insure that WASH community/module is #B86FAD
+swip = "Q3UMB9"
+wash_community <- names(which(sapply(communities, function(x) swip %in% x)))
+community_colors[wash_community] <- "#B86FAD"
 
-# Insure that WASH module is #B86FAD
-#swip = "Q3UMB9"
-#m <- paste0("M",partition[swip])
-#module_colors[m] <- "#B86FAD"
+# Protein color assignments.
+protein_colors <- community_colors[paste0("C",cpartition)]
+names(protein_colors) <- names(cpartition)
 
-#--------------------------------------------------------------------
-## Organize the colors.
-#--------------------------------------------------------------------
-
-#  Calculate module eigengenes.
-dm <- tmt_protein %>% as.data.table() %>% 
-	dcast(Sample ~ Accession, value.var = "Intensity") %>% 
-	as.matrix(rownames="Sample") %>% log2()
-ME_data <- WGCNA::moduleEigengenes(dm, colors = partition, 
-				   excludeGrey = TRUE, softPower = 1 ,
-				   impute = FALSE)
-
-# Extract ME matrix.
-ME_dm <- as.matrix(ME_data$eigengenes)
-
-# Compute relationships between modules.
-ME_adjm <- WGCNA::bicor(ME_dm)
-
-# Cluster heirarchically.
-d <- as.dist(1 - ME_adjm)
-hc <- hclust(d)
-
-# Assign names to colors in heirarchical order.
-names(all_colors) <- hc$labels[hc$order]
+# Module color assignments.
+module_colors <- sapply(split(protein_colors,partition[names(protein_colors)]),unique)
+names(module_colors) <- paste0("M",names(module_colors))
+module_colors <- unlist(module_colors,use.names=TRUE,recursive=FALSE)
+module_colors <- unlist(module_colors,use.names=FALSE) 
+names(module_colors) <- names(module_colors)
 
 #--------------------------------------------------------------------
 ## Save the data.
