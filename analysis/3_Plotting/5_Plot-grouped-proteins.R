@@ -7,7 +7,6 @@
 #' ---
 
 # OPTIONS:
-save_subset = TRUE # Only save subset of clustered proteins?
 
 # FIXME: CHANGE x axis labels to be g force.
 # add annotations, n proteins pve, pvalue, f statistic.
@@ -68,7 +67,7 @@ for (prot in all_proteins) {
 close(pbar)
 
 #--------------------------------------------------------------------
-## Save plots as a single pdf.
+## Sort plots by module assignment.
 #--------------------------------------------------------------------
 
 # Load the graph partition
@@ -105,9 +104,9 @@ if (exists("partition")) {
 #--------------------------------------------------------------------
 
 grouped_plots <- list()
-
 # Loop to do the work.
-for (module in seq(1,max(unique(partition)))) {
+all_modules <- unique(partition[partition!=0])
+for (module in all_modules){
 	# Get  data.
 	prots <- names(which(partition == module))
 	module_plots <- plots[prots]
@@ -134,14 +133,15 @@ for (module in seq(1,max(unique(partition)))) {
 	df$Fitted.Intensity <- fit$fitted.values
 	# Generate plot.
 	plot <- ggplot(df)
-	plot <- plot + aes(x = Fraction)
+	plot <- plot + aes(x = `Cfg Force (xg)`)
 	plot <- plot + aes(y = Normalized.Intensity)
 	plot <- plot + aes(group = interaction(Experiment,Treatment,Accession))
 	plot <- plot + aes(color = Genotype)
 	plot <- plot + geom_line(alpha=0.37)
 	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5)
 	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1)
-	plot <- plot + scale_colour_manual(name="Replicate",values = c("#DC6AD7","#5E5E5E"))
+	plot <- plot + scale_colour_manual(name="Replicate",
+					   values = c("#DC6AD7","#5E5E5E"))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 
@@ -157,5 +157,20 @@ for (module in seq(1,max(unique(partition)))) {
 	grouped_plots[[module]] <- plot
 } # EOL
 
+names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
+
+# Annotate with additional module information.
+data(module_stats)
+module_stats$Module <- paste0("M",module_stats$Module)
+
+# Loop to annotate plot with a table.
+i = 1
+namen <- names(grouped_plots)[i]
+plot = grouped_plots[[i]]
+df <- module_stats %>% filter(Module == namen) %>% 
+	select(Module,Community,Nodes,PVE,Hubs)
+##FIXME: need to annotate
+
+# Save.
 myfile <- file.path(figsdir,"Module_Grouped_Proteins.pdf")
 ggsavePDF(grouped_plots, myfile)

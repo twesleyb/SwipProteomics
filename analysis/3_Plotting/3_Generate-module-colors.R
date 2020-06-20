@@ -67,9 +67,13 @@ save(cpartition,file=file.path(root,"data","cpartition.rda"),version=2)
 ## Generate colors.
 #---------------------------------------------------------------------
 
+# Colors generated online at coolars.co
+data(coolors)
+
 # Generate community colors.
 n_comm <- length(communities) -1
-community_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_comm))
+#community_colors <- c(col2hex("gray"),colorspace::rainbow_hcl(n_comm))
+community_colors <- c(col2hex("gray"), sample(coolors,n_comm))
 names(community_colors) <- names(communities)
 
 # Insure that WASH community/module is #B86FAD
@@ -99,3 +103,7 @@ save(community_colors,file=myfile,version=2)
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
+
+# Status.
+end <- Sys.time()
+message(paste("\nCompleted at:", end))
