@@ -1,6 +1,5 @@
 ## project specific directories to ignore.
 renv/
-figs/
 docs/
 rdata/
 ARCHIVE/

@@ -7,7 +7,6 @@
 #' ---
 
 # OPTIONS:
-save_subset = TRUE # Only save subset of clustered proteins?
 
 ## Input data in root/data/
 # * tmt_protein
@@ -34,7 +33,6 @@ suppressPackageStartupMessages({
 suppressWarnings({ devtools::load_all() })
 
 # Project directories:
-root <- getrd()
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Proteins")
 

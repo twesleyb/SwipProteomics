@@ -16,7 +16,7 @@ plot_protein <- function(data,protein,id.col="Accession") {
 	
 	# Subset the data.
 	df <- subset(data,data[[id.col]] == protein)
-	gene <- unique(df$Gene)
+	gene <- unique(df$Symbol)
 
 	# Insure Fraction is a factor, and levels are in correct order.
 	df$Fraction <- factor(df$Fraction,
