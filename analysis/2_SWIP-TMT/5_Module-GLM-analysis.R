@@ -66,19 +66,51 @@ adjm <- convert_to_adjm(edges)
 data(ne_adjm)
 ne_adjm <- convert_to_adjm(edges)
 
+# Load the initial partition of the graph.
+myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
+communities <- fread(myfile,drop=1) %>% unlist()
+
+# Remove small communities.
+community_list <- split(communities,communities)
+too_small <- as.numeric(names(which(sapply(community_list,length)<5)))
+communities[communities %in% too_small] <- 0
+community_list <- split(communities,communities)
+
+# Get community membership for modules.
+community_membership <- lapply(community_list, function(x){
+				       paste0("M",unique(partition[names(x)]))
+})
+
+# Remove communties that only contain 'M0'
+to_drop <- names(which(sapply(community_membership,function(x) all(x=="M0"))))
+communities[communities %in% as.numeric(to_drop)] <- 0
+communities <- reset_index(communities)
+community_list <- split(communities,communities)
+
+# Total number of communities.
+message(paste("\nNumber of communities:",length(community_list)-1))
+
+# Check the number of communities that were recursively split.
+nRecursive <- sum(sapply(community_list,length) > 100)
+
+# Get community membership for modules.
+community_membership <- lapply(community_list, function(x){
+				       paste0("M",unique(partition[names(x)]))
+})
+names(community_membership) <- paste0("C",names(community_membership))
+
 #---------------------------------------------------------------------
 ## Prepare the data.
 #---------------------------------------------------------------------
-
-# Load the initial partition of the graph.
-myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
-#fread(myfile)
 
 # Calculate the number of proteins per module.
 module_sizes <- sapply(split(partition,partition), length)
 
 # Annotate data with module membership.
 tmt_protein$Module <- partition[tmt_protein$Accession]
+
+# Annotate data with  community membership.
+tmt_protein$Community <- communities[tmt_protein$Accession]
 
 # Cast data into a dm, summarize all proteins in a module.
 dm <- tmt_protein %>% group_by(Module, Genotype, Fraction) %>% 
@@ -142,6 +174,20 @@ glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
 #--------------------------------------------------------------------
+## Annotate with community membership.
+#--------------------------------------------------------------------
+
+x = unlist(community_membership,use.names=FALSE)
+y = unlist(sapply(names(community_membership),function(x) {
+		   rep(x,times=length(community_membership[[x]]))}),
+	   use.names=FALSE)
+names(y) <- x
+
+glm_results <- tibble::add_column(glm_results,
+			  "Community" = y[paste0("M",glm_results$Module)],
+			  .after="Module")
+
+#--------------------------------------------------------------------
 ## Module PVE
 #--------------------------------------------------------------------
 
@@ -186,7 +232,6 @@ module_hubs <- lapply(module_list, function(x) {
 hubs_list <- module_hubs[paste0("M",glm_results$Module)]
 glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
 				  
-
 #--------------------------------------------------------------------
 # Add additional meta data.
 #--------------------------------------------------------------------
@@ -233,6 +278,17 @@ sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)
 # Save as rda object.
 myfile <- file.path(datadir,"sig_proteins.rda")
 save(sig_proteins, file=myfile,version=2)
+
+#--------------------------------------------------------------------
+## Add module level data.
+#--------------------------------------------------------------------
+
+df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
+	summarize(Intensity = sum(Adjusted.Intensity))
+dm <- df %>% as.data.table() %>%
+	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
+dm$Module <- as.character(dm$Module)
+glm_ressults <- left_join(glm_results,dm,by="Module")
 
 #--------------------------------------------------------------------
 # Save results.
