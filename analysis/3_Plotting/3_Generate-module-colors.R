@@ -6,6 +6,8 @@ min_size = 5
 ## OUTPUT:
 # * Updated module color assignemnts.
 
+# To conserve on colors. All communities will be the same color.
+
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------

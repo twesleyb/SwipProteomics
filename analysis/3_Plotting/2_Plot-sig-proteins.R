@@ -31,7 +31,6 @@ suppressPackageStartupMessages({
 suppressWarnings({ devtools::load_all() })
 
 # Project directories:
-root <- getrd()
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Proteins")
 

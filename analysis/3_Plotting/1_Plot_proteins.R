@@ -159,16 +159,9 @@ ggsavePDF(grouped_plots, myfile)
 ## Save the data.
 #--------------------------------------------------------------------
 
-# Save.
+# Save all proteins.
 message("\nSaving plots, this will take several minutes.")
 myfile <- file.path(figsdir,"TMT_All_Proteins.pdf")
-if (save_subset) {
-	# Save subset of clustered proteins.
-	idx <- names(plots)[names(plots) %in% names(partition)]
-	ggsavePDF(plots[idx], myfile)
-} else {
-	# Save all proteins.
 	ggsavePDF(plots, myfile)
-}
 
 message("\nDone!")
