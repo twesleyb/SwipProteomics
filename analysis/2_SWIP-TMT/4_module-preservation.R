@@ -23,9 +23,9 @@ test_data = "Swip"
 
 ## Other NetRep Defaults:
 verbose = FALSE
-nPerm = NULL
+nPerm = 100000
 null = "overlap"
-backgroundLabel = 0 # Modules with backgroundLabel will be ignored.*
+backgroundLabel = 0 # Modules with backgroundLabel will be ignored. *See NOTE.
 alternative = "greater" # Greater or less, for preservation use 'greater'.
 
 ## Input data.
@@ -237,8 +237,20 @@ if (replace_zero_index) {
 	part_list <- lapply(part_list[which(sapply(part_list,min)==0)],function(x) x+1)
 }
 
-# Enforce minimum module size.
+# Coerce to named vector.
+part_list <- lapply(part_list, unlist)
 
+# Enforce minimum module size.
+too_small <- lapply(part_list, function(x) { 
+			    as.numeric(names(which(sapply(split(x,x),length) < min_size))) 
+			    })
+# Loop to remove small modules.
+message(paste("\nRemoving modules that contain less than",min_size,"nodes."))
+for (i in c(1:length(part_list))) {
+	part <- part_list[[i]]
+	part[part %in% too_small[[1]]] <- 0
+	part_list[[i]] <- part
+}
 
 # Insure that names of the and data, adjm,  netw, and partitions match.
 adjm <- adjm_list[["discovery"]]
@@ -285,6 +297,7 @@ message(paste(
   "of", discovery_data,
   "modules in the", test_data, "network..."
 ))
+message(paste("\nNumber of permutations:", formatC(nPerm,big.mark=",")))
 
 # Check, if performing self-preservation test, then discovery == test.
 if (discovery_data == test_data) {

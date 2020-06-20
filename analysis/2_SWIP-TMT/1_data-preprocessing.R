@@ -668,7 +668,7 @@ for (i in c(1:length(results_list))) {
 # Save as excel workboook.
 names(final_results) <- paste(names(results_list),"Results")
 final_results <- c(list("Samples" = samples), final_results)
-myfile <- file.path(tabsdir,"Swip_TMT_Results.xlsx")
+myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
 rm(list=c("myfile","idy"))
