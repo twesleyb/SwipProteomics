@@ -50,8 +50,4 @@ rm -f *.report
 #echo "Analyzing modules for enrichment of WASH BioID proteins."
 ./7_*.R &>> "$REPORT" & spin
 
-# STEP 8.
-#echo "Analyzing modules for enrichment of NDD-associated genes."
-./8_*.sh &>> "$REPORT" & spin
-
 cat "$REPORT"

@@ -16,8 +16,6 @@
 ## Set-up the workspace.
 #---------------------------------------------------------------------
 
-message(paste("Started analysis at:", Sys.time())
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -101,5 +99,3 @@ for (i in c(1:length(plots))) {
 message("\nSaving plots, this will take several minutes.")
 myfile <- file.path(figsdir,"Protein_plots.pdf")
 ggsavePDF(plots, myfile)
-
-message(paste("\nCompleted at:", Sys.time()))

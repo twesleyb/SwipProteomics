@@ -12,9 +12,6 @@
 ## Set-up the workspace.
 #--------------------------------------------------------------------
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -150,12 +147,15 @@ if (!dir.exists(imgsdir)) {
 }
 
 # Loop to create graphs:
-for (module_name in names(module_list)){
-	nodes = module_list[[module_name]]
+message("\nCreating Cytoscape graphs!")
+pbar <- txtProgressBar(max=length(module_list),style=3)
+for (module_name in names(module_list)){ 
+	nodes <- module_list[[module_name]]
 	createCytoscapeGraph(netw_g, ppi_g, nodes, module_name, 
 			     netwdir=netwdir,imgsdir=imgsdir)
-
+	setTxtProgressBar(pbar, value = match(module_name,names(module_list)))
 }
+close(pbar)
 
 # When done, save Cytoscape session.
 # NOTE: When on WSL, need to use Windows path format bc
@@ -163,3 +163,5 @@ for (module_name in names(module_list)){
 myfile <- file.path(netwdir,paste0("Modules.cys"))
 winfile <- gsub("/mnt/d/","D:/",myfile) 
 saveSession(winfile)
+
+message("\nDone!")

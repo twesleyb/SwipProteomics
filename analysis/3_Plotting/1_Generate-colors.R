@@ -118,7 +118,3 @@ save(community_colors,file=myfile,version=2)
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
-
-# Status.
-end <- Sys.time()
-message(paste("\nCompleted at:", end))
