@@ -1,3 +1,7 @@
 * module hubbiness stat doesn't match the module sizes in the cytoscape graphs.
-* i dont understand module 77 -- and why its sig. 
-* annotate module graphs
+* rename All_Modules.pdf to 'Module_Boxplots.pdf'
+* rename Module_Protein_PCA.pdf to 'Module_PCA.pdf'
+* save .svg network images in a subdirectory SVG/
+* save Module_Grouped_Proteins.pdf in Modules directory as Module_Protein_plots.pdf
+* rename TMT_All_Proteins to Protein_plots.pdf
+* rename TMT_Significant_Proteins.pdf as sig85_Protein_plots.pdf
