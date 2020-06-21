@@ -175,8 +175,9 @@ NODE_SIZE = mapVisualProperty("node size", "size", "c", size_range, c(35, 100)))
 		setNodeBorderWidthBypass(wash_nodes,new.sizes=10)
 	}
 
-	# Save Image.
-	netw_image <- file.path(imgsdir, module_name)
+	file_prefix <- formatC(as.numeric(gsub("M","",module_name)),
+			       width=3,flag=0)
+	netw_image <- file.path(imgsdir, paste(file_prefix,module_name,sep="_"))
 	winfile <- gsub("/mnt/d/", "D:/", netw_image)
 	exportImage(winfile, "svg")
 

@@ -9,8 +9,6 @@
 ## Options:
 BF_alpha = 0.1 # Significance threshold.
 
-# FIXME: Does PVE make sense?
-
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
@@ -78,9 +76,6 @@ module_sizes <- sapply(split(partition,partition), length)
 # Annotate data with module membership.
 tmt_protein$Module <- partition[tmt_protein$Accession]
 
-# Annotate data with  community membership.
-tmt_protein$Community <- communities[tmt_protein$Accession]
-
 # Cast data into a dm, summarize all proteins in a module.
 dm <- tmt_protein %>% group_by(Module, Genotype, Fraction) %>% 
 	dplyr::summarize(Sum.Intensity=sum(Intensity),.groups="drop") %>% 
@@ -143,22 +138,6 @@ glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
 #--------------------------------------------------------------------
-## Annotate with community membership.
-#--------------------------------------------------------------------
-
-# Its just complicated...
-x = unlist(community_membership,use.names=FALSE)
-y = unlist(sapply(names(community_membership),function(x) {
-		   rep(x,times=length(community_membership[[x]]))}),
-	   use.names=FALSE)
-names(y) <- x
-
-# Annotate data with community membership.
-glm_results <- tibble::add_column(glm_results,
-			  "Community" = y[paste0("M",glm_results$Module)],
-			  .after="Module")
-
-#--------------------------------------------------------------------
 ## Calculate Module PVE
 #--------------------------------------------------------------------
 
@@ -169,6 +148,16 @@ dm <- tmt_protein %>% as.data.table() %>%
 ME_data <- WGCNA::moduleEigengenes(dm, colors = partition, 
 				   excludeGrey = TRUE, softPower = 1 ,
 				   impute = FALSE)
+
+# Calculate bicor coorelation matrix.
+ME_adjm <- WGCNA::bicor(t(ME_data$eigengenes))
+ME_ne_adjm <- neten::neten(ME_adjm)
+
+# Save.
+myfile <- file.path(rdatdir,"ME_adjm.csv")
+ME_adjm %>% as.data.table(keep.rownames=TRUE) %>% fwrite(myfile)
+myfile <- file.path(rdatdir,"ME_ne_adjm.csv")
+ME_ne_adjm %>% as.data.table(keep.rownames=TRUE) %>% fwrite(myfile)
 
 # Extract PVE.
 pve <- as.numeric(ME_data$varExplained)

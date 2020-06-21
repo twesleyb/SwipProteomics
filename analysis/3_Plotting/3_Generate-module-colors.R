@@ -42,28 +42,6 @@ data(partition)
 
 modules <- split(names(partition),partition)
 
-dm <- tmt_protein %>% as.data.table() %>%
-	dcast(Sample ~ Accession, value.var = "Intensity") %>%
-	as.matrix(rownames="Sample") %>% log2() 
-
-ME_data <- WGCNA::moduleEigengenes(dm,colors=partition,
-				    excludeGrey=TRUE,softPower=1,
-				    impute = FALSE)
-
-ME_adjm <- WGCNA::bicor(ME_data$eigengenes)
-ME_ne_adjm <- neten::neten(ME_adjm)
-
-# Cluster with Louvain.
-g <- graph_from_adjacency_matrix(ME_ne_adjm, mode = "undirected",
-				 weighted = TRUE,diag = FALSE)
-
-# Only 4 large communities.
-x = cluster_louvain(g, weights = E(g)$weight)
-
-#---------------------------------------------------------------------
-## Collect modules and communties.
-#---------------------------------------------------------------------
-
 # All communities. 
 # Load the intial partition of the graph into large communities.
 myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
