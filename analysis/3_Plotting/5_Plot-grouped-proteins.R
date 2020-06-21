@@ -127,6 +127,7 @@ for (module in all_modules){
 				 "30,000", "79,000","120,000")
 	# Fit with glm, add fitted values to df.
 	fit <- glm(Normalized.Intensity ~ Fraction + Genotype, data = df)
+
 	df$Fitted.Intensity <- fit$fitted.values
 	# Generate plot.
 	plot <- ggplot(df)

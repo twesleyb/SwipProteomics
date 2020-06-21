@@ -9,6 +9,8 @@
 ## Options:
 BF_alpha = 0.1 # Significance threshold.
 
+# FIXME: Does PVE make sense?
+
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
@@ -65,39 +67,6 @@ adjm <- convert_to_adjm(edges)
 
 data(ne_adjm)
 ne_adjm <- convert_to_adjm(edges)
-
-# Load the initial partition of the graph.
-myfile <- file.path(root,"rdata","Swip_initial_partition.csv")
-communities <- fread(myfile,drop=1) %>% unlist()
-
-# Remove small communities.
-community_list <- split(communities,communities)
-too_small <- as.numeric(names(which(sapply(community_list,length)<5)))
-communities[communities %in% too_small] <- 0
-community_list <- split(communities,communities)
-
-# Get community membership for modules.
-community_membership <- lapply(community_list, function(x){
-				       paste0("M",unique(partition[names(x)]))
-})
-
-# Remove communties that only contain 'M0'
-to_drop <- names(which(sapply(community_membership,function(x) all(x=="M0"))))
-communities[communities %in% as.numeric(to_drop)] <- 0
-communities <- reset_index(communities)
-community_list <- split(communities,communities)
-
-# Total number of communities.
-message(paste("\nNumber of communities:",length(community_list)-1))
-
-# Check the number of communities that were recursively split.
-nRecursive <- sum(sapply(community_list,length) > 100)
-
-# Get community membership for modules.
-community_membership <- lapply(community_list, function(x){
-				       paste0("M",unique(partition[names(x)]))
-})
-names(community_membership) <- paste0("C",names(community_membership))
 
 #---------------------------------------------------------------------
 ## Perform module level statistical analysis.
