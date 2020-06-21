@@ -105,7 +105,7 @@ for (module in modules) {
 	# Create table.
 	idx <-  module_stats$Module == as.character(module)
 	pve <- paste0("PVE=",round(module_stats$PVE[idx],3))
-	padj <- paste0("P-adjust=",stats$PAdjust)
+	padj <- paste0("P-adjust=",round(stats$PAdjust,3))
 	n <- paste0("n Proteins=",module_stats$Nodes[idx])
 	tab <- tableGrob(rbind(padj,pve,n), theme=tab_theme, rows=NULL)
 
@@ -116,6 +116,9 @@ for (module in modules) {
 				b = nrow(tab), 
 				l = 1, 
 				r  = ncol(tab))
+
+	# Should table be positioned on the left or right?
+	
 
 	# Add table to plot.
 	yrange <- range(log2(df$Intensity))
