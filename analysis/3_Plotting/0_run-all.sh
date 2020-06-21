@@ -23,31 +23,27 @@ spin() {
 rm -f *.report
 
 # STEP 1.
-#echo "Processing TMT data."
+echo "Generating protein, module, and community color assignments."
 ./1_*.R &> "$REPORT" & spin   
 
 # STEP 2.
-#echo "Generating protein networks."
+echo "Plotting protein abundance across all fractions."
 ./2_*.R &>> "$REPORT" & spin   
 
 # STEP 3.
-#echo "Clustering the protein co-variation network."
+echo "Plotting protein PCA with module color annotations."
 ./3_*.R &>> "$REPORT" & spin
 
 # STEP 4.
-#echo "Enforcing module preservation."
+echo "Plotting all proteins from a module together."
 ./4_*.R &>> "$REPORT" & spin
 
 # STEP 5.
-#echo "Analyzing modules for changes in abundance."
+echo "Plotting adjusted module intensity data to compare genotypes."
 ./5_*.R &>> "$REPORT" & spin
 
 # STEP 6.
-#echo "Analyzing modules for GO enrichment."
+echo "Creating Cytoscape graphs."
 ./6_*.R &>> "$REPORT" & spin
-
-# STEP 7.
-#echo "Analyzing modules for enrichment of WASH BioID proteins."
-./7_*.R &>> "$REPORT" & spin
 
 cat "$REPORT"
