@@ -85,6 +85,7 @@ for (module in modules) {
 	plot <- plot + theme(panel.background = element_blank())
 	plot <- plot + theme(axis.line.x=element_line())
 	plot <- plot + theme(axis.line.y=element_line())
+	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 
 	# Add significance star.
 	if (stats$PAdjust < BF_alpha) {
@@ -117,14 +118,21 @@ for (module in modules) {
 				l = 1, 
 				r  = ncol(tab))
 
-	# Should table be positioned on the left or right?
-	
-
 	# Add table to plot.
+	# Should table be positioned on the left or right?
+	min_group <- df %>% ungroup() %>% 
+		filter(Intensity == min(Intensity)) %>% 
+		select(Genotype) %>% unlist() %>%
+		as.character()
+	if (min_group == "WT") {
+		xpos <- 4
+	} else {
+		xpos <- 1
+	}
 	yrange <- range(log2(df$Intensity))
 	ypos <- yrange[1] + 0.15* diff(yrange)
 	plot <- plot + 
-		annotation_custom(gtab, xmin=-Inf,xmax=1.0,ymin=-Inf,ymax=ypos)
+		annotation_custom(gtab, xmin=-Inf,xmax=xpos,ymin=-Inf,ymax=ypos)
 
 	plots[[module_name]] <- plot
 }
