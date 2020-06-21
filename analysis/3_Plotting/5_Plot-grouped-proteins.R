@@ -159,7 +159,7 @@ for (module in all_modules){
 	tab_theme$core$bg_params$fill="white"
 	tab_theme$core$bg_params$col=NA
 	# Create table.
-	tab <- tableGrob(rbind(n,pve), theme=tab_theme, rows=NULL)
+	tab <- tableGrob(n, theme=tab_theme, rows=NULL)
 	# Add border to table.
 	border <- rectGrob(gp = gpar(fill=NA,lwd=2))
 	gtab <- gtable_add_grob(tab, border, 
@@ -173,11 +173,11 @@ for (module in all_modules){
 	plot <- plot + aes(y = Normalized.Intensity)
 	plot <- plot + aes(group = interaction(Experiment,Treatment,Accession))
 	plot <- plot + aes(color = Genotype)
-	plot <- plot + geom_line(alpha=0.33)
-	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5)
-	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1)
+	plot <- plot + geom_line(alpha=0.31)
+	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5,alpha=0.5)
+	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1.5)
 	plot <- plot + scale_colour_manual(name="Replicate",
-					   values = c("#DC6AD7","#5E5E5E"))
+					   values = c("#DC6AD7",col2hex("gray")))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 

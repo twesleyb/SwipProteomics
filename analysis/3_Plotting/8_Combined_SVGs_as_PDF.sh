@@ -13,13 +13,12 @@ do
 done
 
 # Combine pdfs.
-echo "Combinging pdfs."
-output="../../figs/Combined_Modules.pdf"
-input="../../figs/Networks/*.pdf"
+echo "See this script for command to combine pdfs."
+
 gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="$output" "$input"
 
 # Remove temporary pdfs.
-rm ../../fig/Networks/*.pdf
+#rm ../../fig/Networks/*.pdf
 
 # Move output file to final resting place.
 mv $output ../../figs/Networks/

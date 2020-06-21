@@ -23,7 +23,7 @@ test_data = "Swip"
 
 ## Other NetRep Defaults:
 verbose = FALSE
-nPerm = 100000
+nPerm = NULL
 null = "overlap"
 backgroundLabel = 0 # Modules with backgroundLabel will be ignored. *See NOTE.
 alternative = "greater" # Greater or less, for preservation use 'greater'.
