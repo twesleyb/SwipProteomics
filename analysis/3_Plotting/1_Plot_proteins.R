@@ -152,7 +152,7 @@ for (module in seq(1,max(unique(partition)))) {
 	grouped_plots[[module]] <- plot
 } # EOL
 
-myfile <- file.path(figsdir,"TMT_Module_Proteins.pdf")
+myfile <- file.path(figsdir,"Protein_plots.pdf")
 ggsavePDF(grouped_plots, myfile)
 
 #--------------------------------------------------------------------
@@ -161,7 +161,7 @@ ggsavePDF(grouped_plots, myfile)
 
 # Save all proteins.
 message("\nSaving plots, this will take several minutes.")
-myfile <- file.path(figsdir,"TMT_All_Proteins.pdf")
+myfile <- file.path(figsdir,"Protein_plots.pdf")
 	ggsavePDF(plots, myfile)
 
 message("\nDone!")
