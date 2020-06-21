@@ -8,9 +8,6 @@
 
 # OPTIONS:
 
-# FIXME: CHANGE x axis labels to be g force.
-# add annotations, n proteins pve, pvalue, f statistic.
-
 ## Input data in root/data/
 # * tmt_protein
 
@@ -103,8 +100,8 @@ if (exists("partition")) {
 ## Plot all proteins from a module together. 
 #--------------------------------------------------------------------
 
-grouped_plots <- list()
 # Loop to do the work.
+grouped_plots <- list()
 all_modules <- unique(partition[partition!=0])
 for (module in all_modules){
 	# Get  data.
@@ -156,7 +153,6 @@ for (module in all_modules){
 	plot <- plot + ggtitle(paste("Module:",module))
 	grouped_plots[[module]] <- plot
 } # EOL
-
 names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 
 # Annotate with additional module information.
@@ -164,12 +160,17 @@ data(module_stats)
 module_stats$Module <- paste0("M",module_stats$Module)
 
 # Loop to annotate plot with a table.
-i = 1
-namen <- names(grouped_plots)[i]
-plot = grouped_plots[[i]]
-df <- module_stats %>% filter(Module == namen) %>% 
-	select(Module,Community,Nodes,PVE,Hubs)
-##FIXME: need to annotate
+for (i in c(1:length(grouped_plots))) {
+	namen <- names(grouped_plots)[i]
+	plot = grouped_plots[[i]]
+	stats <- module_stats %>% filter(Module == namen) %>% 
+		select(Nodes) %>% unlist() 
+	mylabel <- paste("Nodes:",stats)
+	yrange <- plot$data %>% select(Normalized.Intensity) %>% range()
+	ypos <- yrange[1] + 0.01
+	plot <- plot + annotate(geom="label",x=1.1, y=ypos, label=mylabel,fill="NA")
+	grouped_plots[[i]] <- plot
+	}
 
 # Save.
 myfile <- file.path(figsdir,"Module_Grouped_Proteins.pdf")

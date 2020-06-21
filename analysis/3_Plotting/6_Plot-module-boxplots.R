@@ -62,32 +62,6 @@ for (module in modules) {
 	stats <- module_stats %>% filter(Module == module) %>% 
 		select(Module, Nodes, PVE, Hubs)
 	
-	## FIXME: annotate with Module stats.
-
-    yrange <- unlist(build$layout$panel_params[[1]][8])
-    xrange <- range(plot$data$Log2QC1)
-    xmin <- min(xrange)
-    xmax <- max(xrange)
-    xdelta <- xmax - xmin
-    ymin <- min(yrange)
-    ymax <- max(yrange)
-    ydelta <- ymax - ymin
-    tt <- ttheme_default(
-      base_size = 11,
-      core = list(bg_params = list(fill = "white"))
-    )
-    tab <- tableGrob(mytable, rows = NULL, theme = tt)
-    g <- gtable_add_grob(tab,
-      grobs = rectGrob(gp = gpar(fill = NA, lwd = 1)),
-      t = 1, b = nrow(tab), l = 1, r = ncol(tab)
-    )
-
-    if (annotate == TRUE) {
-      plot <- plot + annotation_custom(g,
-        xmin = xmin - 0.65 * xdelta, xmax,
-        ymin = ymin + 0.8 * ydelta, ymax
-      )
-    }
 
 	# Generate the plot.
 	plot <- ggplot(df,aes(x=Genotype,y=log2(Intensity),fill=Genotype)) 
@@ -98,14 +72,26 @@ for (module in modules) {
 	plot <- plot + theme(plot.title = element_text(hjust = 0.5))
 	plot <- plot + theme(legend.position = "none")
 
+	## FIXME: annotate with Module stats.
 	y <- max(log2(plot$data$Intensity))
-	plot + geom_label(x=1.5,y=y,label="foo",fill="NA")
+
+	    tt <- ttheme_default(
+	      base_size = 11,
+	      core = list(bg_params = list(fill = "white"))
+	    )
+	    tab <- tableGrob(mytable, rows = NULL, theme = tt)
+	    g <- gtable_add_grob(tab,
+	      grobs = rectGrob(gp = gpar(fill = NA, lwd = 1)),
+	      t = 1, b = nrow(tab), l = 1, r = ncol(tab)
+	    )
+
+	plot + annotation_custom(g,
+		xmin = xmin - 0.65 * xdelta, xmax,
+		ymin = ymin + 0.8 * ydelta, ymax)
+    }
 
 
-	plot + ggtitle(paste(module_name,"\nPVE:",round(stats$PVE,3)))
 
-# N Nodes, PVE, HubS
-	plot + geom_label(x=1.5,y=y,label="",fill="white")
 
 
 

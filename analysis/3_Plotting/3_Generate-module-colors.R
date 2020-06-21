@@ -22,9 +22,11 @@ renv::load(root, quiet=TRUE)
 
 # Global Imports.
 suppressPackageStartupMessages({
+	library(dplyr)
+	library(igraph)
+	library(WGCNA)
 	library(colorspace)
 	library(data.table)
-	library(dplyr)
 })
 
 # Local Imports.
@@ -33,6 +35,30 @@ suppressMessages({ devtools::load_all() })
 # Load TMT data and partition.
 data(tmt_protein)
 data(partition)
+
+#---------------------------------------------------------------------
+## Collect modules and communties.
+#---------------------------------------------------------------------
+
+modules <- split(names(partition),partition)
+
+dm <- tmt_protein %>% as.data.table() %>%
+	dcast(Sample ~ Accession, value.var = "Intensity") %>%
+	as.matrix(rownames="Sample") %>% log2() 
+
+ME_data <- WGCNA::moduleEigengenes(dm,colors=partition,
+				    excludeGrey=TRUE,softPower=1,
+				    impute = FALSE)
+
+ME_adjm <- WGCNA::bicor(ME_data$eigengenes)
+ME_ne_adjm <- neten::neten(ME_adjm)
+
+# Cluster with Louvain.
+g <- graph_from_adjacency_matrix(ME_ne_adjm, mode = "undirected",
+				 weighted = TRUE,diag = FALSE)
+
+# Only 4 large communities.
+x = cluster_louvain(g, weights = E(g)$weight)
 
 #---------------------------------------------------------------------
 ## Collect modules and communties.
