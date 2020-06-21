@@ -6,7 +6,6 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
-# FIXME: Only works when run interactively?
 ## Analysis options:
 
 #--------------------------------------------------------------------
@@ -141,7 +140,7 @@ for (i in c(1:ncol(noa))) {
 #--------------------------------------------------------------------
 
 # Network images will be saved in networks/Modules:
-imgsdir <- figsdir
+imgsdir <- file.path(figsdir,"SVG")
 if (!dir.exists(imgsdir)) {
 	# Create the directory.
 	dir.create(imgsdir)

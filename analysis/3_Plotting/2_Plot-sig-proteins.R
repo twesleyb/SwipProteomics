@@ -104,7 +104,7 @@ if (exists("partition")) {
 } # EIF
 
 # Save significant proteins as a single pdf.
-myfile <- file.path(figsdir,"TMT_Significant_Proteins.pdf")
+myfile <- file.path(figsdir,"sig85_Protein_plots.pdf")
 ggsavePDF(sorted_plots,myfile)
 
 message("\nDone!")

@@ -203,5 +203,5 @@ for (module in all_modules){
 names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 
 # Save.
-myfile <- file.path(figsdir,"Module_Grouped_Proteins.pdf")
+myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
 ggsavePDF(grouped_plots, myfile)

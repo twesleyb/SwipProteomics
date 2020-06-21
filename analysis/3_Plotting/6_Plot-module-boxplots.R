@@ -139,5 +139,5 @@ for (module in modules) {
 
 # Save as single pdf.
 # NOTE: This takes a couple minutes.
-myfile <- file.path(root,"figs","Modules","All_Modules.pdf")
+myfile <- file.path(root,"figs","Modules","Module_Boxplots.pdf")
 ggsavePDF(plots, myfile)

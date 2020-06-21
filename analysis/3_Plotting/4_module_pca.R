@@ -91,5 +91,5 @@ plot <- plot + scale_colour_manual(values=df$color)
 plot <- plot + theme(legend.position = "none")
 
 # Save to file.
-myfile <- file.path(figsdir,"Module_Protein_PCA.pdf")
+myfile <- file.path(figsdir,"Module_PCA.pdf")
 ggsave(myfile, plot, width=fig_width,height=fig_height)
