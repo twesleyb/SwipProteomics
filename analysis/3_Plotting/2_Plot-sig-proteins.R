@@ -10,7 +10,8 @@
 # * tmt_protein
 
 ## Output:
-# * a single pdf with plots of significantly DA proteins.
+# * a single pdf with plots of significantly DA proteins for 
+# intrafraction comparisons (n=85 proteins).
 
 #---------------------------------------------------------------------
 ## Set-up the workspace.
