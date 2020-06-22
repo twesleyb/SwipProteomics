@@ -9,8 +9,12 @@
 ## INPUTS:
 
 ## OPTIONS:
+fig_width = 5
+fig_height =  5
+colors = c(Control="#47b2a4",Mutant="#B86FAD") # Colors for WT and mutant groups.
 
 ## OUTPUTS:
+# Boxplot of select proteins.
 
 #---------------------------------------------------------------------
 ## Prepare the workspace.
@@ -43,41 +47,15 @@ set_font("Arial", font_path = fontdir)
 ## Load the data.
 #---------------------------------------------------------------------
 
-#----------------------------------------------------------------------
-## Plot commonly dysregulated prots, adjusted for fraction differences.
-#----------------------------------------------------------------------
-
-# Calculate protein abundance, adjusted for fraction differences.
-dm <- tmt_protein
-
-logCPM <- edgeR::cpm(dge, log=TRUE)
-
-# Remove effect of fraction.
-dm <- limma::removeBatchEffect(logCPM,batch=dge$samples$fraction,
-				   design=model.matrix(~treatment,
-						       data=dge$samples))
-
-# Collect results.
-dt <- as.data.table(dm,keep.rownames="Accession") %>% 
-	reshape2::melt(id.var="Accession",
-		       variable.name="Sample",
-		       value.name="Intensity")
-dt$Sample <- as.character(dt$Sample)
-
-# Combine with additional meta data.
-idy <- which(colnames(tmt_protein)=="Intensity")
-temp_prot <- as.data.table(tmt_protein)[,-..idy] %>% filter(Treatment != "SPQC")
-adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
+data(tmt_protein)
+data(gene_map)
 
 # Wash proteins + control.
 prots <- c("Washc4","Washc1","Washc2","Washc5","Tubb4a")
 names(prots) <- gene_map$uniprot[match(prots,gene_map$symbol)]
 
-# Combine adjusted data and stats, subset to keep proteins of interest.
-df <- adjusted_prot %>% filter(Accession %in% names(prots))
-
-# Colors for WT and mutant groups.
-colors = c(Control="#47b2a4",Mutant="#B86FAD")
+# Subset the data.
+df <- tmt_protein %>% filter(Accession %in% names(prots))
 
 # Labels will simply be WT and Mutant.
 xlabels <- rep(c("WT","Mutant"),times=length(prots))
@@ -88,7 +66,7 @@ df$Accession.Treatment <- as.character(interaction(df$Accession,df$Treatment))
 df$Accession.Treatment <- factor(df$Accession.Treatment,levels=factor_order)
 
 # Generate a plot.
-plot <- ggplot(df, aes(x=Accession.Treatment, y=Intensity,
+plot <- ggplot(df, aes(x=Accession.Treatment, y=log2(Adjusted.Intensity),
 		       fill=Treatment)) + 
 	geom_boxplot() + geom_point(aes(fill=Treatment,shape=Treatment)) +
 	theme(axis.text.x=element_text(angle=45))
@@ -101,37 +79,24 @@ plot <- plot + scale_x_discrete(labels=xlabels)
 plot <- plot + ylab("log2(Adjusted Intensity)")
 
 # Add some lines to break up the data.
-plot <- plot + geom_vline(xintercept=seq(2.5,length(proteins)*2,by=2),
+plot <- plot + geom_vline(xintercept=seq(2.5,length(prots)*2,by=2),
 			  linetype="dotted",size=0.5)
 
-# Perform t-tests.
-# FIXME: Substitute with glm pvalues.
-prot_list <- df %>% group_by(Accession) %>% group_split()
-data_ttests <- lapply(prot_list,function(subdf) {
-			      x <- subdf$Intensity
-			      y <- subdf$Treatment
-			      result <- t.test(x~y,paired=FALSE,
-					       alternative="greater")
-			      ttest_dt <- as.data.table(t(unlist(result)))
-			      return(ttest_dt)
-			  })
-names(data_ttests) <- names(prots)
-ttest_dt <- bind_rows(data_ttests,.id="Accession")
-ttest_dt$p.adjust <- p.adjust(ttest_dt$p.value,method="bonferroni")
+# Pretty print select protein stats:
+message("\nSelect Protein stats:")
+stats <- df %>% filter(Genotype == "MUT") %>%
+	select(Accession, Symbol, Adjusted.logFC, Adjusted.PercentWT, 
+	       Adjusted.F, Adjusted.FDR) %>% unique()
+knitr::kable(stats)
 
-# Annotate the plot with stats.
-stats <- df %>% filter(Treatment=="Control") %>% 
-	group_by(Accession.Treatment) %>% 
-	dplyr::summarize(ypos = 1.02*max(Intensity),.groups="drop")
-stats$Accession.Treatment <- as.character(stats$Accession.Treatment)
-stats$Accession <- sapply(strsplit(stats$Accession.Treatment,"\\."),"[",1)
-stats <- stats %>% dplyr::select(Accession.Treatment,Accession,ypos)
-stats$xpos <- seq(1.5,by=2,length.out=5)
+# Significance stars:
 stats$symbol <- "ns"
-stats <- left_join(stats,ttest_dt,by="Accession")
-stats$symbol[stats$p.adjust < 0.05] <- "*"
-stats$symbol[stats$p.adjust < 0.005] <- "**"
-stats$symbol[stats$p.adjust < 0.0005] <- "***"
+stats$symbol[stats$Adjusted.FDR < 0.05] <- "*"
+stats$symbol[stats$Adjusted.FDR < 0.005] <- "**"
+stats$symbol[stats$Adjusted.FDR < 0.0005] <- "***"
+stats$xpos <- seq(1.5,by=2,length.out=5)
+yrange <- range(log2(df$Adjusted.Intensity))
+stats$ypos <- max(yrange) + 0.05 * diff(yrange)
 
 # Add significance stars.
 plot <- plot + 
@@ -144,9 +109,6 @@ ymax <- build$layout$panel_params[[1]][["y.range"]][2]
 plot <- plot + annotate("text",x=seq(1.5,length(prots)*2,by=2),
 			y=ymax,label=symbols,size=5)
 
-# Save.
-if (save_plots) {
-	myfile <- file.path(figsdir,
-			    "Select_Proteins_Adjusted_Abundance.pdf")
-	ggsave(myfile,plot, height = fig_height, width = fig_width)
-}
+# Save as pdf.
+myfile <- file.path(figsdir,"Select_Proteins_Adjusted_Abundance.pdf")
+ggsave(myfile,plot, height = fig_height, width = fig_width)
