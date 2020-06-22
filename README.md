@@ -16,3 +16,5 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 * is nework ppi information too big to save?
 * module protein plots label is nproteins -- mising outline?
 * change these plots to their colors?
+* clean-up GO and NDD enrichment tables.
+

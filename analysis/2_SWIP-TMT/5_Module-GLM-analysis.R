@@ -183,29 +183,15 @@ module_hubs <- lapply(module_list, function(x) {
 	       symbols <- gene_map$symbol[match(hubs,gene_map$uniprot)]
 	       ids <- paste(symbols,hubs,sep="|")
 	       return(ids)
-				  })
+				  } )
 
-# Add to the data.
-hubs_list <- module_hubs[paste0("M",glm_results$Module)]
-glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
+# We will add hubs to the data below.
 				  
 #--------------------------------------------------------------------
 ## Annotate with number of sigprots.
 #--------------------------------------------------------------------
 
-# Annotate with module proteins.
-#
-symbols <- unique(tmt_protein$Symbol)
-names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
-#
-module_list <- split(names(partition),partition)
-names(module_list) <- paste0("M",names(module_list))
-named_module_list <- lapply(module_list,function(x) symbols[x])
-#
-module_prots <- lapply(named_module_list,function(x){ 
-			       paste(x,names(x),collapse="|",sep=";") })
-glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
-#
+# Number of WASH proteins.
 n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
 #glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
 
@@ -246,6 +232,23 @@ dm <- df %>% as.data.table() %>%
 	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
 dm$Module <- as.character(dm$Module)
 glm_results <- left_join(glm_results,dm,by="Module")
+
+# Annotate with hubs.
+hubs_list <- module_hubs[paste0("M",glm_results$Module)]
+glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
+
+# Annotate with module proteins.
+#
+symbols <- unique(tmt_protein$Symbol)
+names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
+#
+module_list <- split(names(partition),partition)
+names(module_list) <- paste0("M",names(module_list))
+named_module_list <- lapply(module_list,function(x) symbols[x])
+#
+module_prots <- lapply(named_module_list,function(x){ 
+			       paste(x,names(x),collapse="|",sep=";") })
+glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 
 #--------------------------------------------------------------------
 # Save results.

@@ -6,7 +6,14 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
-## Analysis options:
+## OPTIONS:
+n_cutoffs = 5000 # when thresholding graph
+netw_layout = 'force-directed edgeAttribute=weight'
+
+# NETWORK:
+# edges ~ similarity
+# size ~ nodes
+# color ~ module color
 
 #--------------------------------------------------------------------
 ## Set-up the workspace.
@@ -31,13 +38,8 @@ suppressWarnings({ devtools::load_all() })
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
-figsdir <- file.path(root, "figs","Networks")
-
-# Output directory for cytoscape networks.
-netwdir <- file.path(root,"networks")
-if (!dir.exists(netwdir)) {
-	dir.create(netwdir)
-}
+netwdir <- file.path(root, "networks")
+figsdir <- file.path(root, "figs","Modules")
 
 #--------------------------------------------------------------------
 ## Load the data.
@@ -49,118 +51,154 @@ data(tmt_protein)
 # Load the graph partition:
 data(partition)
 
-# Load wash interactome.
-data(wash_interactome)
-wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
+#  Calculate module eigengenes.
+dm <- tmt_protein %>% as.data.table() %>% 
+	dcast(Sample ~ Accession, value.var = "Intensity") %>% 
+	as.matrix(rownames="Sample") %>% log2()
+ME_data <- WGCNA::moduleEigengenes(dm, colors = partition, 
+				   excludeGrey = TRUE, softPower = 1 ,
+				   impute = FALSE)
 
-# Load NDD associated proteins.
-data(NDD_proteins)
+# Evaluate relationships between modules.
+adjm <- WGCNA::bicor(ME_data$eigengenes)
+ne_adjm <- neten::neten(adjm)
 
-# Load networks.
-data(ne_adjm) # loads "edges", then cast to adjm.
-ne_adjm <- convert_to_adjm(edges)
-data(ppi_adjm)
-ppi_adjm <- convert_to_adjm(edges)
+# Cast to edge df.
+edge_df <- reshape2::melt(ne_adjm)
+colnames(edge_df) <- c("ModuleA","ModuleB","weight")
+edge_df$ModuleA <- gsub("ME","M",edge_df$ModuleA)
+edge_df$ModuleB <- gsub("ME","M",edge_df$ModuleB)
+edge_df <- edge_df %>% filter(weight != 0)
 
-# Load gene map.
-data(gene_map)
+# Annotate with node attributes.
+noa <- data.table(Module = paste0("M",seq(1,n_modules)))
 
-# Load module stats.
-data(module_stats)
+# Size ~ n nodes.
+# Sizes of all modules.
+module_sizes <- sapply(split(names(partition),partition),length)
+names(module_sizes) <- paste0("M",names(module_sizes))
+noa$Size <- module_sizes[noa$Module]
 
-# Load sig prots.
-data(sig_proteins)
+# Module color.
+noa$Color <- module_colors[noa$Module]
 
 #--------------------------------------------------------------------
 ## Create igraph graph objects.
 #--------------------------------------------------------------------
 
-# Create a list of all modules. 
-module_list <- split(names(partition),partition)[-1] # drop M0
-names(module_list) <- paste0("M",names(module_list))
+# Creat igraph graph.
+g <- graph_from_data_frame(edge_df, directed = FALSE, vertices = noa)
 
-# Insure that matrices are in matching order.
-check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
-if (!check) { stop() }
+# Prune weak edges.
+# Seq from min(edge.weight) to max to generate cutoffs.
+n_edges <- length(E(g))
+min_weight <- min(E(g)$weight)
+max_weight <- max(E(g)$weight)
+cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
 
-# Create igraph graph objects.
-netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
-				      weighted=TRUE)
-ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
-				     weighted=TRUE)
-
-# Annotate graph's with gene symols.
-symbols <- gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)]
-netw_g <- set_vertex_attr(netw_g,"symbol",value = symbols)
-symbols <- gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)]
-ppi_g <- set_vertex_attr(ppi_g,"symbol",value = symbols)
-
-#--------------------------------------------------------------------
-## Annotate graphs with additional meta data.
-#--------------------------------------------------------------------
-
-# Collect meta data from tmt_protein.
-tmp_dt <- data.table(Accession = names(V(netw_g)),
-		  Module = paste0("M",partition[names(V(netw_g))]))
-noa <- left_join(tmp_dt, tmt_protein, by = "Accession") %>% 
-	filter(!duplicated(Accession))
-noa <- noa %>% select(Accession, Symbol, Entrez, Module, Adjusted.logFC, 
-		      Adjusted.PercentWT, Adjusted.F, Adjusted.PValue, 
-		      Adjusted.FDR)
-
-# Add module colors.
-data(module_colors)
-noa$Color <- module_colors[noa$Module]
-
-# Add WASH annotation.
-noa$isWASH <- as.numeric(noa$Accession %in% wash_prots)
-
-# Add NDD annotations.
-noa$isNDD <- as.numeric(noa$Accession %in% names(NDD_proteins))
-noa$NDD <- NDD_proteins[noa$Accession]
-noa$NDD[is.na(noa$NDD)] <- "none"
-
-# Add sig prot annotations.
-noa$sig85 <- as.numeric(noa$Accession %in% sig_proteins$sig85)
-noa$sig62 <- as.numeric(noa$Accession %in% sig_proteins$sig62)
-noa$sig968 <- as.numeric(noa$Accession %in% sig_proteins$sig968)
-
-# Loop to add node attributes to netw_graph.
-for (i in c(1:ncol(noa))) {
-	namen <- colnames(noa)[i]
-	col_data <- setNames(noa[[i]],nm=noa$Accession)
-	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
+# Define a function that checks if graph is connnected at a 
+# given edge weight threshold.
+is_connected <- function(graph,threshold) {
+filt_graph <- delete.edges(graph, 
+		       which(E(graph)$weight <= threshold))
+return(is.connected(filt_graph))
 }
+
+# Check if graph is connected or not at various thresholds.
+checks <- sapply(cutoffs, function(threshold) {
+		 is_connected(g,threshold)
+		       })
+
+# Limit is max(cutoff) at which the graph is still connected.
+limit <- cutoffs[max(which(checks==TRUE))]
+if (all(checks)) { stop("Error thesholding graph.") }
+
+# Prune edges. NOTE: This removes all edge types.
+g <- delete.edges(g, which(E(g)$weight <= limit))
+n_edges_final <- length(E(g))
 
 #--------------------------------------------------------------------
 ## Create Cytoscape graphs.
 #--------------------------------------------------------------------
+# NOTE: underscores in attribute names are removed during import. 
 
-# Network images will be saved in networks/Modules:
-imgsdir <- file.path(figsdir,"SVG")
-if (!dir.exists(imgsdir)) {
-	# Create the directory.
-	dir.create(imgsdir)
-} else {
-	# Remove any existing figures.
-	invisible({ file.remove(list.files(imgsdir,full.name=TRUE)) })
-}
+suppressPackageStartupMessages({ library(RCy3) })
 
-# Loop to create graphs:
-message("\nCreating Cytoscape graphs!")
-pbar <- txtProgressBar(max=length(module_list),style=3)
-for (module_name in names(module_list)){ 
-	nodes <- module_list[[module_name]]
-	createCytoscapeGraph(netw_g, ppi_g, nodes, module_name, 
-			     netwdir=netwdir,imgsdir=imgsdir)
-	setTxtProgressBar(pbar, value = match(module_name,names(module_list)))
-}
-close(pbar)
+# Insure we are connected to Cytoscape.
+cytoscapePing()
+
+# Write graph to file as gml format.
+# This is faster than sending to cytoscape with RCy3 function.
+myfile <- file.path(netwdir, "network.gml")
+write_graph(g, myfile, format = "gml")
+
+# Load into Cytoscape.
+winfile <- gsub("/mnt/d/", "D:/", myfile)
+cysnetw <- importNetworkFromFile(winfile)
+Sys.sleep(2); unlink(myfile) # clean-up
+
+# VISUAL STYLE DEFAULTS:
+# Create a visual style.
+style.name = "myStyle"
+
+# VISUAL STYLE DEFAULTS:
+defaults <- list(
+	 NETWORK_TITLE = "RCy3 Network",
+	 NODE_FILL_COLOR = col2hex("gray"),
+	 NODE_TRANSPARENCY = 200,
+	 NODE_SIZE = 35,
+	 NODE_SHAPE = "ellipse",
+	 NODE_LABEL_TRANSPARENCY = 255,
+	 NODE_LABEL_FONT_SIZE = 12,
+	 NODE_LABEL_COLOR = col2hex("black"),
+	 NODE_BORDER_TRANSPARENCY = 200,
+	 NODE_BORDER_WIDTH = 4,
+	 NODE_BORDER_PAINT = col2hex("black"),
+	 NODE_TRANSPARENCY = 200,
+	 EDGE_STROKE_UNSELECTED_PAINT = col2hex("black"),
+	 EDGE_WIDTH = 2,
+	 NETWORK_BACKGROUND_PAINT = col2hex("white")
+	)
+
+## VISUAL STYLE MAPPINGS:
+
+# MAPPED PROPERTIES:
+weight_range <- c(min(E(g)$weight), max(E(g)$weight))
+size_range <- c(min(V(g)$size),max(V(g)$size))
+edge_colors <- c(col2hex("gray"), col2hex("dark red"))
+
+# List of mapped params.
+mappings <- list(
+NODE_FILL_COLOR = mapVisualProperty("node fill color","Color","p"),
+NODE_LABEL = mapVisualProperty("node label","symbol", "p"),
+EDGE_TRANSPARENCY = mapVisualProperty("edge transparency", "weight", 
+			      "c", weight_range, c(155, 255)),
+EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",
+					 "weight", "c",weight_range,
+					 edge_colors),
+NODE_SIZE = mapVisualProperty("node size", "size", "c", size_range, c(35, 100)))
+
+# Create a visual style.
+createVisualStyle(style.name, defaults = defaults, 
+		  mappings = mappings)
+
+# Apply to graph.
+setVisualStyle(style.name); Sys.sleep(3) 
+
+# Apply layout.
+layoutNetwork(netw_layout); Sys.sleep(2); fitContent()
+
+# Free up some memory.
+cytoscapeFreeMemory()
+
+#---------------------------------------------------------------------
+## Save
+#---------------------------------------------------------------------
 
 # When done, save Cytoscape session.
 # NOTE: When on WSL, need to use Windows path format bc
 # Cytoscape is a Windows program.
-myfile <- file.path(netwdir,paste0("Modules.cys"))
+myfile <- file.path(netwdir,paste0("Module_Network.cys"))
 winfile <- gsub("/mnt/d/","D:/",myfile) 
 saveSession(winfile)
 
