@@ -6,4 +6,6 @@
 * update protein boxplots with glm pvalues (select proteins)
 * is nework ppi information too big to save?
 * module protein plots label is nproteins -- mising outline?
-# change these plots to their colors?
+* change these plots to their colors?
+* clean-up module stats -- make formatting similar to protein stats, move
+* additional meta data/module annotatios to seperate sheet.
