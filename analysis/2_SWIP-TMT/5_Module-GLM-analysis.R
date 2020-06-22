@@ -14,9 +14,6 @@ BF_alpha = 0.1 # Significance threshold.
 #---------------------------------------------------------------------
 # Prepare the R workspace for the analysis. 
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv -- use renv::load NOT activate!
 root <- getrd()
 renv::load(root,quiet=TRUE) # NOTE: getrd is a f(x) in .Rprofile.
@@ -263,7 +260,3 @@ write_excel(results,file=myfile)
 module_stats <- glm_results
 myfile <- file.path(datadir,"module_stats.rda")
 save(module_stats,file=myfile,version=2)
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

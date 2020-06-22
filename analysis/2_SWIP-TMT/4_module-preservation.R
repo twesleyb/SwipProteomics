@@ -6,7 +6,7 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
-## User parameters to change:
+## OPTIONS:
 stats = c(1,6,7) # Statistics by which module preservation is enforced. 
 strength = "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges = "zero" # How will negative edges be replacedR? Abs val or zero.
@@ -14,21 +14,21 @@ replace_zero_index = TRUE # If min(module index)==0, +1 such that all indices >0
 log_data = FALSE # Should input data be log2 transformed?
 min_size = 5 # Minimum size of a module.
 
-## Organization of the permutation test:
+## ORGANIZATION of the permutation test:
 # Names of discovery_data and test_data can be anything.
 # These names are used to generate the output filename.
 # If performing self-preservation, then discovery should be == test.
 discovery_data = "Swip"
 test_data = "Swip"
 
-## Other NetRep Defaults:
+## Other NetRep DEFAULTS:
 verbose = FALSE
 nPerm = NULL
 null = "overlap"
 backgroundLabel = 0 # Modules with backgroundLabel will be ignored. *See NOTE.
 alternative = "greater" # Greater or less, for preservation use 'greater'.
 
-## Input data.
+## INPUT data.
 # All data are in root/rdata.
 # If performing self-preservation, then test = NULL.
 adjm = c(discovery="adjm.csv", test=NULL)
@@ -36,19 +36,7 @@ netw = c(discovery="ne_adjm.csv", test=NULL)
 part = c(discovery="Swip_partition.csv", test=NULL)
 data = c(discovery="norm_protein.csv", test=NULL)
 
-# Data for comparing WT and Swip mutant networks.
-#adjm = c(discovery="wt_adjm.csv", test="ko_adjm.csv")
-#netw = c(discovery="wt_ne_adjm.csv", test="ko_ne_adjm.csv")
-#part = c(discovery="Swip_WT_partition.csv", test="Swip_KO_partition.csv")
-#data = c(discovery="norm_wt_protein.csv", test="norm_ko_protein.csv")
-
-# Data for comparing WT and Swip mutant networks.
-#adjm = c(discovery="ko_adjm.csv", test="wt_adjm.csv")
-#netw = c(discovery="ko_ne_adjm.csv", test="wt_ne_adjm.csv")
-#part = c(discovery="Swip_KO_partition.csv", test="Swip_WT_partition.csv")
-#data = c(discovery="norm_ko_protein.csv", test="norm_wt_protein.csv")
-
-## Output saved in root/rdata:
+## OUTPUT saved in root/rdata:
 # Partition of the network with preservation enforced. 
 # NOTE: Indices of modules that are not preserved are set to 0.
 save_as = "rda" # Output format for partition: can be RData or csv
@@ -167,9 +155,6 @@ check_preservation <- function(results, part_list, stats,
 #---------------------------------------------------------------------
 ## Set-up the workspace.
 #---------------------------------------------------------------------
-
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
 
 # Load renv.
 root <- getrd()
@@ -368,7 +353,3 @@ if (save_as == "rdata") {
 } else {
 	stop("ut oh")
 }
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

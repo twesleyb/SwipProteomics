@@ -3,15 +3,12 @@
 ## INPUT:
 # tmt_protein in root/data
 
-## ANALYSIS OPTIONS:
+## OPTIONS:
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
-
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
 
 # Load renv.
 root <- getrd()
@@ -141,7 +138,3 @@ ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 norm_protein <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample, value.var = "Intensity") %>%
 	fwrite(file.path(root,"rdata","norm_protein.csv"))
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

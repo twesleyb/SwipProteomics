@@ -13,9 +13,6 @@ FDR_alpha = 0.05 # significance threshold for gse enrichment.
 ## Set-up the workspace.
 #---------------------------------------------------------------------
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -100,7 +97,3 @@ module_GO <- dplyr::bind_rows(results,.id="class")
 colnames(module_GO)[which(colnames(module_GO) == "class")] <- "Module"
 myfile <- file.path(root,"data","module_GO.rda")
 save(module_GO,file=myfile,version=2)
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

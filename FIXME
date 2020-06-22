@@ -1,1 +1,6 @@
 * module hubbiness stat doesn't match the module sizes in the cytoscape graphs.
+* examine meta organization of modules
+* where are the lysosomes?
+* add sheet with module membership to module results xlsx.
+* update protein boxplots with glm pvalues (select proteins)
+* is nework ppi information too big to save?
