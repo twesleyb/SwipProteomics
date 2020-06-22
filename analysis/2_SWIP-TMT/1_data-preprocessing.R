@@ -10,12 +10,12 @@
 ## to work with the input arguments that they are provided, and in many cases 
 ## will not perform as expected if passed different arguments.
 
-## Input data in root/data/:
+## INPUT data in root/data/:
 zip_file = "TMT.zip" # Zipped directory contains:
 input_data = "TMT-raw-peptide.csv"
 input_samples = "TMT-samples.csv"
 
-## Analysis Options:
+## OPTIONS:
 save_plots = TRUE # Should plots be saved in root/figs?
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
 fold_change_delta = 0.2 # Fold change threshold.
@@ -23,14 +23,10 @@ sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
 fig_height = 5.0 # Default height of figures.
 fig_width = 5.0 # Default width of figures.
 
-## Input in root/data:
-# * TMT.zip/TMT-samples.csv     - sample meta data.
-# * TMT.zip/TMT-raw-peptide.csv - raw peptide data from PD.
-
-## Output in root/tables:
+## OUTPUT saved in root/tables:
 # * Swip_TMT_Results.xlsx
 
-## Output for R package in root/data.
+## OUTPUT for R package in root/data.
 # * tmt_protein.rda
 
 ## Order of data processing operations:
@@ -59,9 +55,6 @@ fig_width = 5.0 # Default width of figures.
 ## Prepare the workspace.
 #---------------------------------------------------------------------
 # Prepare the R workspace for the analysis. 
-
-start <- Sys.time()
-message(paste("Starting analysis at:", start))
 
 # Load renv -- use renv::load NOT activate!
 rootdir <- getrd()
@@ -701,7 +694,3 @@ save(gene_map,file=myfile,version=2)
 # Save tidy_protein as rda object. 
 myfile <- file.path(datadir,"tmt_protein.rda")
 save(tmt_protein,file=myfile,version=2)
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

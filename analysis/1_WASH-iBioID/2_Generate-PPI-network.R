@@ -16,9 +16,6 @@ data_file = "WASH_BioID_Results.RData"
 ## Prepare the workspace.
 #-------------------------------------------------------------------------------
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -100,7 +97,3 @@ wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")
 writeData(wb,sheet=4,sif,rowNames=TRUE,colNames=TRUE)
 saveWorkbook(wb, file=myfile, overwrite=TRUE)
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))

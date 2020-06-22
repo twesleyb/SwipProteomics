@@ -13,9 +13,6 @@ FDR_alpha = 0.10 # FDR significance threshold.
 ## Set-up the workspace.
 #--------------------------------------------------------------------
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -77,9 +74,3 @@ hyper_dt <- tibble::add_column(hyper_dt, "n BioID Proteins"=n,.after="N")
 # Pretty print:
 message("Modules that are enriched for WASH iBioID proteins:")
 knitr::kable(hyper_dt %>% filter(P.adjust < FDR_alpha))
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))
-message(paste("Elapsed time:",
-	      round(difftime(end,start,units="mins"),2),"minutes."))

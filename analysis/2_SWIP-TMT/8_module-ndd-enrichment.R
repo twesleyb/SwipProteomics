@@ -14,9 +14,6 @@ single_group = FALSE
 ## Set-up the workspace.
 #--------------------------------------------------------------------
 
-start <- Sys.time()
-message(paste("Starting analysis at:",start))
-
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -196,7 +193,3 @@ lapply(temp_list,knitr::kable)
 message("\nSaving data...")
 myfile <- file.path(tabsdir,"Swip_TMT_Module_NDD_Results.xlsx")
 write_excel(NDD_results,myfile)
-
-# Done!
-end <- Sys.time()
-message(paste("\nCompleted analysis at:",end))
