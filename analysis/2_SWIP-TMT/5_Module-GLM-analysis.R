@@ -207,27 +207,27 @@ module_prots <- lapply(named_module_list,function(x){
 glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 #
 n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
-glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
+#glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
 
 # Sig 85 -- Significant intrafraction comparisons.
 sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
 sig85 <- sig_prots
 n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
-glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
+#glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
 
 # Sig 62 -- sig WT v KO with > +/- 20% percent change.
 sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
 	select(Accession) %>% unlist() %>% unique()
 tmp_list <- module_list[paste0("M",glm_results$Module)]
-glm_results$nSig62 <- sapply(tmp_list,function(x) sum(x %in% sig62))
+#glm_results$nSig62 <- sapply(tmp_list,function(x) sum(x %in% sig62))
 
 # Sig 968 --  sig WT v KO - NO log2FC threshold.
 sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
 tmp_list <- module_list[paste0("M",glm_results$Module)]
-glm_results$nSig968 <- sapply(tmp_list,function(x) sum(x %in% sig968))
+#glm_results$nSig968 <- sapply(tmp_list,function(x) sum(x %in% sig968))
 
 # Combine as single list.
 sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)

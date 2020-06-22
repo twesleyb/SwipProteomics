@@ -24,6 +24,11 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, module_name,
 	idx <- match(nodes, names(V(graph)))
 	subg <- induced_subgraph(graph, vids = V(graph)[idx])
 
+	# Node Size ~ hubbiness or importance in its subgraph.
+	adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
+	node_importance <- apply(adjm,2,sum)
+	subg <- set_vertex_attr(subg,"size",value=node_importance[names(V(subg))])
+
 	# Prune weak edges.
 	# Seq from min(edge.weight) to max to generate cutoffs.
 	n_edges <- length(E(subg))
@@ -51,11 +56,6 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, module_name,
 	# Prune edges. NOTE: This removes all edge types.
 	g <- delete.edges(subg, which(E(subg)$weight <= limit))
 	n_edges <- length(E(g))
-
-	# Annotate graph with module node importance.
-	adjm <- as.matrix(as_adjacency_matrix(g,attr="weight"))
-	node_importance <- apply(adjm,2,sum)
-	g <- set_vertex_attr(g,"size",value=node_importance[names(V(g))])
 
 	# Write graph to file this is faster than sending to cytoscape.
 	myfile <- file.path(netwdir, paste0(module_name, ".gml"))
