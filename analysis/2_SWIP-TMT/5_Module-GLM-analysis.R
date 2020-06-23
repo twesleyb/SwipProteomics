@@ -87,15 +87,17 @@ levels(dge$samples$genotype) <- c("WT","MUT")
 # Create design matrix.
 design <- model.matrix( ~ fraction + genotype, data=dge$samples)
 
-# Flip sign of comparison.
+# Flip the sign of the comparison.
+# Report logFC MUT/WT.
 design[,"genotypeMUT"] <- abs(design[,"genotypeMUT"]-1)
 
 # Estimate dispersion.
 dge <- estimateDisp(dge, design, robust=TRUE)
 
-# Fit a model.
+# Fit a glm model.
 fit <- glmQLFit(dge,design,robust=TRUE)
 
+# Test for DA modules:
 # Default comparison is last contrast: genotype.
 qlf <- glmQLFTest(fit)
 
@@ -154,17 +156,16 @@ dm <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>%
 	as.matrix(rownames="Module")
 
 # Sort the data columns.
-idy <- grep("F[0-9]{1,2}",colnames(dm))
-f <- sapply(strsplit(colnames(dm)[idy],"_"),"[",1)
+f <- sapply(strsplit(colnames(dm),"_"),"[",1)
 f <- as.factor(f)
 levels(f) <- c("F4","F5","F6","F7","F8","F9","F10")
-g <- sapply(strsplit(colnames(dm)[idy],"_"),"[",2)
+g <- sapply(strsplit(colnames(dm),"_"),"[",2)
 g <- as.factor(g)
 levels(g) <- c("WT","MUT")
 col_order <- gsub("\\.","_",as.character(levels(interaction(f,g))))
 dm_sorted <- dm[,col_order]
 
-dt <- as.data.table(dm,keep.rownames="Module")
+dt <- as.data.table(dm_sorted,keep.rownames="Module")
 glm_results <- left_join(glm_results,dt,by="Module")
 
 #--------------------------------------------------------------------

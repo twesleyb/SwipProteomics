@@ -24,26 +24,26 @@ rm -f *.report
 
 # STEP 1.
 echo "Generating protein, module, and community color assignments."
-./1_*.R &> "$REPORT" & spin   
+./01_*.R &> "$REPORT" & spin   
 
 # STEP 2.
 echo "Plotting protein abundance across all fractions."
-./2_*.R &>> "$REPORT" & spin   
+./02_*.R &>> "$REPORT" & spin   
 
 # STEP 3.
 echo "Plotting protein PCA with module color annotations."
-./3_*.R &>> "$REPORT" & spin
+./03_*.R &>> "$REPORT" & spin
 
 # STEP 4.
 echo "Plotting all proteins from a module together."
-./4_*.R &>> "$REPORT" & spin
+./04_*.R &>> "$REPORT" & spin
 
 # STEP 5.
 echo "Plotting adjusted module intensity data to compare genotypes."
-./5_*.R &>> "$REPORT" & spin
+./05_*.R &>> "$REPORT" & spin
 
 # STEP 6.
 echo "Creating Cytoscape graphs."
-./6_*.R &>> "$REPORT" & spin
+./06_*.R &>> "$REPORT" & spin
 
 cat "$REPORT"
