@@ -50,8 +50,4 @@ echo "Analyzing modules for GO enrichment."
 echo "Analyzing modules for enrichment of WASH BioID proteins."
 ./7_*.R &>> "$REPORT" & spin
 
-# STEP 8.
-echo "Analyzing modules for enrichment of NDD-associated genes."
-./8_*.R &>> "$REPORT" & spin
-
 cat "$REPORT"
