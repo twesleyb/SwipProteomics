@@ -7,7 +7,13 @@
 #' ---
 
 ## User parameters to change:
-FDR_alpha = 0.05 # significance threshold for gse enrichment.
+FDR_alpha = 0.05 # significance threshold for GO enrichment.
+
+# NOTE: GO enrichment is performed with the Langfelder Lab's 
+# anRichment::enrichmentAnalysis function which utilizes 
+# Fisher's exact test in order to evaluate the statistical enrichment
+# of GO BP MF and CC terms in a module. The background for the test 
+# is all 'given' genes. All 5,84x protein in the dataset.
 
 #---------------------------------------------------------------------
 ## Set-up the workspace.
@@ -47,17 +53,14 @@ data(tmt_protein)
 module_list <- split(partition,partition)
 names(module_list) <- paste0("M",names(module_list))
 
-# Collect all sig prots.
-sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
-	select(Accession) %>% unlist() %>% unique()
+# Drop M0.
+module_list <- module_list[-which(names(module_list)=="M0")]
 
-# collect list of entrez ids and gene symbols.
-gene_list <- lapply(module_list,function(x) {
-			    tmt_protein$Entrez[match(names(x),tmt_protein$Accession)]
-			    })
-
-gene_symbols <- lapply(module_list,function(x) {
-			    tmt_protein$Gene[match(names(x),tmt_protein$Accession)]
+# collect list of entrez ids for each module.
+entrez_list <- lapply(module_list,function(x) {
+			    idx <- match(names(x),tmt_protein$Accession)
+			    entrez <- tmt_protein$Entrez[idx]
+			    return(entrez)
 			    })
 
 # Build a GO reference collection:
@@ -68,15 +71,16 @@ gocollection <- suppressPackageStartupMessages({
 
 # perform module go enrichment.
 # NOTE: background defaults to all genes in gene_list.
-go_gse <- gse(gene_list,gocollection)
+go_gse <- gse(entrez_list, gocollection)
 
 # collect significant modules.
 idx <- sapply(go_gse,function(x) any(x$FDR < FDR_alpha))
 nsig_go <- sum(idx)
+message(paste("\nTotal number of modules:",length(module_list)))
 message(paste("\nNumber of modules with significant",
 	      "GO term enrichment:",nsig_go))
 
-# top go term for each module.
+# top sig go term for each module.
 fe <- sapply(go_gse,function(x) round(x$enrichmentRatio[1],2))
 fdr <- sapply(go_gse,function(x) round(x$FDR[1],2))
 m <- sapply(go_gse, function(x) x$shortDataSetName[1])
@@ -88,12 +92,48 @@ top_go <- data.table(module=names(go_gse),
 message("\nModules with significant go enrichment:")
 knitr::kable(top_go[idx,])
 
+# Combine results, keep sig results.
+go_results <- bind_rows(go_gse,.id="Module") %>% filter(FDR < FDR_alpha)
+
+# Clean-up.
+
+rename_column <- function(col,new_name) {
+	idx <- which(colnames(go_results)==col)
+	colnames(go_results)[idx] <- new_name
+	return(go_results)
+}
+
+# Remove some un-needed columns.
+go_results$class <- NULL
+go_results$fracOfEffectiveClassSize <- NULL
+go_results$expectedFracOfEffectiveClassSize <- NULL
+go_results$effectiveClassSize <- NULL
+go_results$fracOfEffectiveSetSize <- NULL
+go_results$effectiveSetSize <- NULL
+go_results$rank <- NULL
+
+# Rename some columns.
+go_results <- rename_column("dataSetID","ID")
+go_results <- rename_column("dataSetName","Name")
+go_results <- rename_column("inGroups","Ontology")
+go_results <- rename_column("pValue","PValue")
+go_results <- rename_column("nCommonGenes","n Genes")
+go_results <- rename_column("enrichmentRatio","Fold Enrichment")
+go_results <- rename_column("classSize","Module Size")
+go_results <- rename_column("shortDataSetName","Short Name")
+go_results <- rename_column("overlapGenes","Entrez")
+go_results$Entrez <- gsub("\\|",";",go_results$Entrez)
+
+# Reorganize.
+go_results <- go_results %>% dplyr::select(Module,`Short Name`,Name, ID, 
+					   Ontology, `Module Size`, `n Genes`, 
+					`Fold Enrichment`, PValue, FDR, Entrez)
+
 # save significant results.
-results <- go_gse[idx]
-write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GSE_Results.xlsx"))
+write_excel(list("Module GO Results" = go_results),
+	    file.path(tabsdir,"Swip_TMT_Module_GO_Results.xlsx"))
 
 # Save as rda.
-module_GO <- dplyr::bind_rows(results,.id="class")
-colnames(module_GO)[which(colnames(module_GO) == "class")] <- "Module"
+module_go <- go_results
 myfile <- file.path(root,"data","module_GO.rda")
-save(module_GO,file=myfile,version=2)
+save(module_go,file=myfile,version=2)
