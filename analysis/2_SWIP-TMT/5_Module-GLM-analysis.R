@@ -119,7 +119,7 @@ idy <- which(colnames(glm_results)=="logCPM")
 colnames(glm_results)[idy] <- "PercentWT"
 glm_results$PercentWT <- 2^glm_results$logFC
 
-# Number of nodes per module:
+# Annotate with the number of nodes per module.
 glm_results <- tibble::add_column(glm_results,
 				  N=module_sizes[glm_results$Module],
 				  .after="Module")
@@ -146,12 +146,26 @@ glm_results %>% filter(`PAdjust (Bonferroni)` < BF_alpha) %>%
 ## Add module level data to Module stats.
 #--------------------------------------------------------------------
 
-df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
-	summarize(Intensity = sum(Adjusted.Intensity))
-dm <- df %>% as.data.table() %>%
-	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
-dm$Module <- as.character(dm$Module)
-glm_results <- left_join(glm_results,dm,by="Module")
+# Cast the module-level data into a matrix.
+dm <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
+	summarize(Intensity = sum(Adjusted.Intensity)) %>% 
+	as.data.table() %>%
+	dcast(Module ~ Fraction + Genotype, value.var = "Intensity") %>%
+	as.matrix(rownames="Module")
+
+# Sort the data columns.
+idy <- grep("F[0-9]{1,2}",colnames(dm))
+f <- sapply(strsplit(colnames(dm)[idy],"_"),"[",1)
+f <- as.factor(f)
+levels(f) <- c("F4","F5","F6","F7","F8","F9","F10")
+g <- sapply(strsplit(colnames(dm)[idy],"_"),"[",2)
+g <- as.factor(g)
+levels(g) <- c("WT","MUT")
+col_order <- gsub("\\.","_",as.character(levels(interaction(f,g))))
+dm_sorted <- dm[,col_order]
+
+dt <- as.data.table(dm,keep.rownames="Module")
+glm_results <- left_join(glm_results,dt,by="Module")
 
 #--------------------------------------------------------------------
 ## These results will be saved in an excel workbook. In addition to 
@@ -260,6 +274,9 @@ module_proteins <- sapply(protein_list, function(x) {
 				  paste(paste(gene_map$symbol[match(x,gene_map$uniprot)],x,sep="|"),collapse=";")})
 
 module_noa$Proteins <- module_proteins[module_noa$Module]
+
+# Drop "M0"
+module_noa <- module_noa %>% filter(Module != "M0")
 
 #--------------------------------------------------------------------
 # Save results.

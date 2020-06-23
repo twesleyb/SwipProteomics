@@ -14,4 +14,3 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 * module protein plots label is nproteins -- mising outline?
 * change these plots to their colors?
 * clean-up NDD enrichment tables.
-

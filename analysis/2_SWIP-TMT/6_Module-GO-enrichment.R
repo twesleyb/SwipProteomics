@@ -96,8 +96,8 @@ knitr::kable(top_go[idx,])
 go_results <- bind_rows(go_gse,.id="Module") %>% filter(FDR < FDR_alpha)
 
 # Clean-up.
-
 rename_column <- function(col,new_name) {
+	# A function that renames a column in a data.frame.
 	idx <- which(colnames(go_results)==col)
 	colnames(go_results)[idx] <- new_name
 	return(go_results)
@@ -129,8 +129,20 @@ go_results <- go_results %>% dplyr::select(Module,`Short Name`,Name, ID,
 					   Ontology, `Module Size`, `n Genes`, 
 					`Fold Enrichment`, PValue, FDR, Entrez)
 
+#--------------------------------------------------------------------
+## Save GO results for significant modules in a seperate sheet.
+#--------------------------------------------------------------------
+
+data(sig_modules)
+sub_results <- go_results %>% filter(Module %in% sig_modules)
+
+#--------------------------------------------------------------------
+## Save the data.
+#--------------------------------------------------------------------
+
 # save significant results.
-write_excel(list("Module GO Results" = go_results),
+write_excel(list("Module GO Results" = go_results, 
+		 "Sig Module GO Results"=sub_results),
 	    file.path(tabsdir,"Swip_TMT_Module_GO_Results.xlsx"))
 
 # Save as rda.
