@@ -47,7 +47,7 @@ fig_width = 5.0 # Default width of figures.
 #   remove proteins with too many missing values; remove proteins that are not 
 #   reproducible (exhibit high inter-experimental variablility across the 3x 
 #   biological replicates.
-# * Asses differential abundance with a general linear model 
+# * Assess intra-fraction differential abundance with a general linear model 
 #   ([Abundance] ~ 0 + groups) as implemented by the Edge R package 
 #   and its functions gmQLFfit() and glmQLFTest().
 
@@ -172,8 +172,16 @@ tidy_peptide <- tidyProt(peptides,id.vars=cols)
 # Annotate tidy data with additional meta data from samples.
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
-rm(list="cols")
+message("\nSummary of initial peptide/protein quantification after removing contaiminants:")
+n_samples <- length(unique(tidy_peptide$Sample))
+n_proteins <- length(unique(tidy_peptide$Accession))
+n_peptides <- length(unique(tidy_peptide$Sequence))
+df <- data.frame("Samples"=as.character(n_samples),
+		 "Proteins"=formatC(n_proteins,big.mark=","),
+		 "Peptides"=formatC(n_peptides,big.mark=","))
+knitr::kable(df)
 
+rm(list="cols")
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
 #---------------------------------------------------------------------
@@ -429,10 +437,12 @@ d <- fold_change_delta
 sig <- alt_results$FDR < FDR_alpha 
 DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
 message(paste("\nFor WT v Mutant contrast, there are..."))
-message(paste("Total number of unique, differentially abundant proteins:",
+message(paste("N Differentially abundant proteins:",
 	      sum(DA & sig)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",FDR_alpha))
+
+message(paste("Total number of DA proteins:", sum(alt_results$FDR < FDR_alpha)))
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
