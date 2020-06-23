@@ -10,11 +10,8 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 <p align="center">The Swip (Washc4) protein.<p align="center">
 
 # FIXME:
-* examine meta organization of modules
-* where are the lysosomes?
-* add sheet with module membership to module results xlsx.
 * is nework ppi information too big to save?
 * module protein plots label is nproteins -- mising outline?
 * change these plots to their colors?
-* clean-up GO and NDD enrichment tables.
+* clean-up NDD enrichment tables.
 
