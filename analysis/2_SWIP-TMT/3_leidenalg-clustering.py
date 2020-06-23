@@ -124,7 +124,7 @@ parameters['partition_type'] = getattr(import_module('leidenalg'),method)
 out = [key for key in parameters if parameters.get(key) is None]
 for key in out: del parameters[key]
 
-# Perform Leidenalg community detection. 
+# Perform Leidenalg module detection. 
 if parameters.get('resolution_parameter') is None:
     # Single resolution methods.
     profile = list()

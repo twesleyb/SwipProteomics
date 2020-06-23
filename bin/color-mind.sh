@@ -8,7 +8,8 @@
 
 # Get 5 fresh colors.
 INPUT='{"input":["N","N","N","N","N"],"model":"default"}'
-COLORS="$(curl -q 'http://colormind.io/api/' --data-binary "$INPUT")"
+COLORS="$(curl -s 'http://colormind.io/api/' --data-binary "$INPUT")"
+echo $COLORS
 
 # Pass input as text.
-curl -q 'http://colormind.io/api/' --data-binary "@input.txt"
+#curl -q 'http://colormind.io/api/' --data-binary "@input.txt"

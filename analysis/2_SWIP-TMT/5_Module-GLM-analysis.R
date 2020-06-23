@@ -55,6 +55,8 @@ wash_prots <- unique(wash_interactome$Accession)
 
 # Load the graph partition.
 data(partition)
+data(fixed_cpartition)
+partition
 
 # Load the networks.
 data(adjm)
