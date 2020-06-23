@@ -203,7 +203,7 @@ EDGE_TRANSPARENCY = mapVisualProperty("edge transparency", "weight",
 EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",
 					 "weight", "c",weight_range,
 					 edge_colors),
-NODE_SIZE = mapVisualProperty("node size", "Size", "c", size_range, c(15, 100)))
+NODE_SIZE = mapVisualProperty("node size", "Size", "c", size_range, c(35, 150)))
 
 # Create a visual style.
 createVisualStyle(style.name, defaults = defaults, 
@@ -306,7 +306,7 @@ for (i in c(1:length(communities))){
 			 EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",
 								 "weight", "c",weight_range,
 								 edge_colors),
-			 NODE_SIZE = mapVisualProperty("node size", "Size", "c", size_range, c(15, 100)))
+			 NODE_SIZE = mapVisualProperty("node size", "Size", "c", size_range, c(35, 150)))
 	createVisualStyle(style.name, defaults = defaults, 
 			  mappings = mappings)
 
@@ -324,4 +324,3 @@ for (i in c(1:length(communities))){
 myfile <- file.path(netwdir,paste0("Module_Network.cys"))
 winfile <- gsub("/mnt/d/","D:/",myfile) 
 saveSession(winfile)
-
