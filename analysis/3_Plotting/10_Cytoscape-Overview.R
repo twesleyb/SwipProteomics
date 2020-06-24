@@ -107,6 +107,7 @@ write_graph(g, myfile, format = "gml")
 # Send to Cytoscape.
 # NOTE: underscores in attribute names are removed. 
 winfile <- gsub("/mnt/d/", "D:/", myfile)
+<<<<<<< HEAD
 cysnetw <- importNetworkFromFile(winfile); Sys.sleep(2)
 unlink(myfile)
 
@@ -122,6 +123,26 @@ result = tryCatch({
 	print("Created Network View!")
 	Sys.sleep(2)
 })
+=======
+cysnetw <- importNetworkFromFile(winfile)
+Sys.sleep(2); unlink(myfile)
+
+# For REALLY large networks you need to tell cytoscape to create a view of the
+# network. I coded this before...
+
+# Check if network view was successfully created.
+if (length(cysnetw)==0) {
+	result = tryCatch({
+		getNetworkViews()
+	}, warning = function(w) {
+		print(w)
+	}, error = function(e) {
+		commandsPOST("view create")
+	}, finally = {
+		print("Created Network View!")
+	})
+} Sys.slee(2)
+>>>>>>> dc80f240c117e84f0c43892d3655ed3b3235e4ec
 
 # Visual Property defaults:
 defaults <- list(
@@ -171,13 +192,24 @@ winfile <- gsub("/mnt/d/", "D:/", netw_image)
 exportImage(winfile, "svg")
 
 # Convert SVG to tiff.
+<<<<<<< HEAD
 #system(command = paste("svg2tiff",paste0(netw_image,".svg")))
+=======
+system(command = paste("svg2tiff",paste0(netw_image,".svg")))
+>>>>>>> dc80f240c117e84f0c43892d3655ed3b3235e4ec
 
 # Free up some memory.
 cytoscapeFreeMemory()
 
+<<<<<<< HEAD
 # Save cys session. 
 # NOTE: NETWORK IS TOO BIG!
 #myfile <- file.path(netwdir,"Network_Overview.cys")
 #winfile <- gsub("/mnt/d/","D:/",myfile) 
 #saveSession(winfile)
+=======
+# Save cys session.
+myfile <- file.path(netwdir,"Network_Overview.cys")
+winfile <- gsub("/mnt/d/","D:/",myfile) 
+saveSession(winfile)
+>>>>>>> dc80f240c117e84f0c43892d3655ed3b3235e4ec
