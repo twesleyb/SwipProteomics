@@ -172,6 +172,7 @@ tidy_peptide <- tidyProt(peptides,id.vars=cols)
 # Annotate tidy data with additional meta data from samples.
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
+# Summary of initial peptide/protein quantification.
 message(paste("\nSummary of initial peptide/protein quantification",
 	     "after removing contaiminants:"))
 n_samples <- length(unique(tidy_peptide$Sample))
@@ -182,7 +183,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 		 "Peptides"=formatC(n_peptides,big.mark=","))
 knitr::kable(df)
 
-rm(list="cols")
+rm(list=c("cols","df"))
 
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
@@ -348,6 +349,7 @@ rm(list="check")
 #---------------------------------------------------------------------
 
 # If necessary, protein level imputing can be performed.
+# The KNN algorithm is suitable for MNAR or MAR data.
 
 # Impute missing values.
 # Proteins with more than 50% missing values are ignored.
@@ -404,7 +406,7 @@ all_sig <- lapply(results_list, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
 
-# Proteins that are commonly dysregulated:
+# Which Proteins that are commonly dysregulated?
 combined_results <- rbindlist(results_list,idcol="Fraction")
 idx <- match(combined_results$Accession,gene_map$uniprot)
 combined_results$Gene <- gene_map$symbol[idx] 
@@ -414,6 +416,7 @@ df <- combined_results %>% group_by(Accession) %>%
 			 nFractions = length(FDR), 
 			 .groups = "drop") %>% 
 	filter(nSig==nFractions)
+
 # Status:
 message(paste("\nProteins that are differentially abundant in all fractions:\n",
 	      paste(df$Gene,collapse=", ")))
@@ -445,8 +448,34 @@ message(paste("N Differentially abundant proteins:",
 	      sum(DA & sig)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",FDR_alpha))
+message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < FDR_alpha),
+	      " (FDR < ",FDR_alpha,")."))
+message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < 0.05),
+	      " (FDR < ",0.05,")."))
 
-message(paste("Total number of DA proteins:", sum(alt_results$FDR < FDR_alpha)))
+#---------------------------------------------------------------------
+## Get Protein abundance adjusted for fraction differences.
+#---------------------------------------------------------------------
+
+# Calculate protein abundance, adjusted for fraction differences.
+logCPM <- edgeR::cpm(glm_results$dge, log=TRUE) # Is CPM step needed?
+
+# Remove effect of fraction.
+dm <- limma::removeBatchEffect(logCPM,batch=dge$samples$fraction,
+				   design=model.matrix(~treatment,
+						       data=dge$samples))
+
+# Collect results.
+dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+	reshape2::melt(id.var="Accession",
+		       variable.name="Sample",
+		       value.name="Intensity")
+dt$Sample <- as.character(dt$Sample)
+
+# Combine with additional meta data.
+idy <- which(colnames(tmt_protein)=="Intensity")
+temp_prot <- as.data.table(tmt_protein)[,-..idy] %>% filter(Treatment != "SPQC")
+adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -564,14 +593,14 @@ for (i in c(1:length(results_list))) {
 }
 
 # Save as excel workboook.
-# FIXME: add raw peptide
-# FIXME: add gene map.
+# Include gene map -- clean-up its columns.
 colnames(gene_map) <- c("Uniprot Accession", "Entrez ID", 
 			"Gene Symbol", "Protein")
 names(final_results) <- paste(names(results_list),"Results")
+
 final_results <- c(list("Samples" = samples),
 		   list("Gene Identifiers"=gene_map),
-		   list("Raw Peptide" = peptide),
+		   list("Raw Peptide" = peptides),
 		   final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)

@@ -1,0 +1,19 @@
+# Calculate protein abundance, adjusted for fraction differences.
+logCPM <- edgeR::cpm(dge, log=TRUE)
+
+# Remove effect of fraction.
+dm <- limma::removeBatchEffect(logCPM,batch=dge$samples$fraction,
+				   design=model.matrix(~treatment,
+						       data=dge$samples))
+
+# Collect results.
+dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+	reshape2::melt(id.var="Accession",
+		       variable.name="Sample",
+		       value.name="Intensity")
+dt$Sample <- as.character(dt$Sample)
+
+# Combine with additional meta data.
+idy <- which(colnames(tmt_protein)=="Intensity")
+temp_prot <- as.data.table(tmt_protein)[,-..idy] %>% filter(Treatment != "SPQC")
+adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
