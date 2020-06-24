@@ -134,8 +134,7 @@ for (protein in prots) {
 	df <- tmt_protein %>% filter(Accession == protein)
 	# Organize the factors.
 	df$Group <- df$Genotype
-	df$Group <- factor(df$Group)
-	levels(df$Group) <- c("WT","MUT")
+	df$Group <- factor(df$Group, levels= c("WT","MUT"))
 	# Generate a plot.
 	plot <- ggplot(df, aes(x=Group, y=log2(Adjusted.Intensity),fill=Group)) 
 	plot <- plot + geom_boxplot() 
