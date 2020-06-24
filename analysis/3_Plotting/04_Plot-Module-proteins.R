@@ -6,7 +6,9 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
-# OPTIONS:
+## OPTIONS:
+save_all = TRUE
+save_sig = TRUE
 
 ## Input data in root/data/
 # * tmt_protein
@@ -217,11 +219,16 @@ for (module in all_modules){
 names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 
 # Save.
-message("\nSaving all modules.")
-myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
-ggsavePDF(grouped_plots, myfile)
+if (save_all) {
+	message("\nSaving all modules.")
+	myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
+	ggsavePDF(grouped_plots, myfile)
+}
 
 # Save significant modules.
-message("\nSaving significant modules.")
-myfile <- file.path(root,"figs","Modules","Sig_Module_Protein_plots.pdf")
-ggsavePDF(grouped_plots[[sig_modules]], myfile)
+if (save_sig) {
+	message("\nSaving significant modules.")
+	myfile <- file.path(figsdir, 
+			    paste0("Sig",length(sig_modules),"_Module_Protein_plots.pdf"))
+	ggsavePDF(grouped_plots[[sig_modules]], myfile)
+}
