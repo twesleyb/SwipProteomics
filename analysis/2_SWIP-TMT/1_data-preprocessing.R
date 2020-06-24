@@ -18,6 +18,7 @@ input_samples = "TMT-samples.csv"
 ## OPTIONS:
 save_plots = TRUE # Should plots be saved in root/figs?
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
+BF_alpha = 0.1 # P.adjust threshold for differential abundance.
 fold_change_delta = 0.2 # Fold change threshold.
 sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
 fig_height = 5.0 # Default height of figures.
@@ -442,16 +443,34 @@ alt_results <- alt_glm_results$stats
 # Summary of DA proteins with logFC cutoff:
 d <- fold_change_delta
 sig <- alt_results$FDR < FDR_alpha 
+sig2 <- alt_results$PAdjust < BF_alpha
 DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
+DA2 <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
+
+# Calucate P-adjust with Bonferonni method.
+alt_results$PAdjust <- p.adjust(alt_results$PValue, method ="bonferroni")
+
+# Status:
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("N Differentially abundant proteins:",
 	      sum(DA & sig)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",FDR_alpha))
+
+message(paste("N Differentially abundant proteins:",
+	      sum(DA2 & sig2)))
+message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
+message(paste("...Bonferonni <",BH_alpha))
+
 message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < FDR_alpha),
 	      " (FDR < ",FDR_alpha,")."))
 message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < 0.05),
 	      " (FDR < ",0.05,")."))
+
+message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < 0.05),
+	      " (Bonferroni < ",0.05,")."))
+message(paste0("Total number of DA proteins: ", sum(alt_results$PAdjust < 0.1),
+	      " (Bonferroni < ",0.1,")."))
 
 #---------------------------------------------------------------------
 ## Get Protein abundance adjusted for fraction differences.
@@ -591,17 +610,23 @@ for (i in c(1:length(results_list))) {
 	tmp_df <- tibble::add_column(tmp_df,Symbol,.after="Entrez")
 	final_results[[i]] <- tmp_df
 }
+# This is a list of the final statistical results.
+names(final_results) <- paste(names(results_list),"Results")
 
-# Save as excel workboook.
+# Save the data as an excel workboook.
 # Include gene map -- clean-up its columns.
+# Include final, normalized protein data as a data.frame.
+
 colnames(gene_map) <- c("Uniprot Accession", "Entrez ID", 
 			"Gene Symbol", "Protein")
-names(final_results) <- paste(names(results_list),"Results")
+
+prot_dt <- as.data.table(log2(norm_dm), keep.rownames="Accession")
 
 final_results <- c(list("Samples" = samples),
 		   list("Gene Identifiers"=gene_map),
 		   list("Raw Peptide" = peptides),
-		   final_results)
+		   list("Norm Protein" = prot_dt),
+		   final_results) # all the statistical comparisons
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
