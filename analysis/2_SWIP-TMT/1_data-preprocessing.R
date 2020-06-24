@@ -460,7 +460,7 @@ message(paste("...FDR <",FDR_alpha))
 message(paste("N Differentially abundant proteins:",
 	      sum(DA2 & sig2)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
-message(paste("...Bonferonni <",BH_alpha))
+message(paste("...Bonferonni <",BF_alpha))
 
 message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < FDR_alpha),
 	      " (FDR < ",FDR_alpha,")."))
