@@ -45,12 +45,13 @@ figsdir <- file.path(rootdir, "figs","Proteins") # Output figures.
 ggtheme()
 set_font("Arial", font_path = fontdir)
 
-#---------------------------------------------------------------------
-## Load the data.
-#---------------------------------------------------------------------
-
+# Load the data.
 data(gene_map)
 data(tmt_protein)
+
+#---------------------------------------------------------------------
+## Plot select proteins.
+#---------------------------------------------------------------------
 
 # Wash proteins + control.
 prots <- c("Washc4","Washc1","Washc2","Washc5","Tubb4a")
@@ -60,17 +61,20 @@ names(prots) <- gene_map$"Uniprot Accession"[match(prots,gene_map$"Gene Symbol")
 df <- tmt_protein %>% filter(Accession %in% names(prots))
 
 # Labels will simply be WT and Mutant.
-xlabels <- rep(c("WT","Mutant"),times=length(prots))
+xlabels <- rep(c("WT","MUT"),times=length(prots))
 
 # Order of the factors.
-factor_order <- paste(rep(names(prots),each=2), c("Control","Mutant"),sep=".")
-df$Accession.Treatment <- as.character(interaction(df$Accession,df$Treatment))
-df$Accession.Treatment <- factor(df$Accession.Treatment,levels=factor_order)
+df$Group <- df$Treatment
+df$Group <- gsub("Control","WT",df$Group)
+df$Group <- gsub("Mutant","MUT",df$Group)
+factor_order <- paste(rep(names(prots),each=2), c("WT","MUT"),sep=".")
+df$Accession.Group <- as.character(interaction(df$Accession,df$Group))
+df$Accession.Group <- factor(df$Accession.Group,levels=factor_order)
 
 # Generate a plot.
-plot <- ggplot(df, aes(x=Accession.Treatment, y=log2(Adjusted.Intensity),
-		       fill=Treatment)) + 
-	geom_boxplot() + geom_point(aes(fill=Treatment,shape=Treatment)) +
+plot <- ggplot(df, aes(x=Accession.Group, y=log2(Adjusted.Intensity),
+		       fill=Group)) + 
+	geom_boxplot() + geom_point(aes(fill=Group,shape=Group)) +
 	theme(axis.text.x=element_text(angle=45))
 plot <- plot + scale_fill_manual(name="Genotype",values=colors)
 plot <- plot + theme(legend.position="none")
@@ -106,7 +110,6 @@ plot <- plot +
 
 # Annotate with protein names.
 symbols <- prots 
-#----------------------------------------------------------------------
 build <- ggplot_build(plot)
 ymax <- build$layout$panel_params[[1]][["y.range"]][2]
 plot <- plot + annotate("text",x=seq(1.5,length(prots)*2,by=2),
@@ -130,23 +133,22 @@ for (protein in prots) {
 	# Subset the data.
 	df <- tmt_protein %>% filter(Accession == protein)
 	# Organize the factors.
-	df$Group <- df$Treatment
-	df$Group <- gsub("Control","WT",df$Group)
-	df$Group <- gsub("Mutant","MUT",df$Group)
+	df$Group <- df$Genotype
 	df$Group <- factor(df$Group)
 	levels(df$Group) <- c("WT","MUT")
 	# Generate a plot.
 	plot <- ggplot(df, aes(x=Group, y=log2(Adjusted.Intensity),fill=Group)) 
 	plot <- plot + geom_boxplot() 
 	plot <- plot + geom_point(aes(fill=Group,shape=Group))
-	plot <- plot + theme(axis.text.x=element_text(angle=45))
+	#plot <- plot + theme(axis.text.x=element_text(angle=45))
 	plot <- plot + scale_fill_manual(name="Genotype",values=colors)
 	plot <- plot + theme(legend.position="none")
 	plot <- plot + theme(panel.background = element_blank())
-	plot <- plot + theme(panel.border=element_rect(colour="black",
-						       fill="NA",size=1))
+	#plot <- plot + theme(panel.border=element_rect(colour="black",fill="NA",size=1)) # border around entire plot
+	plot <- plot + theme(axis.line.x=element_line())
+	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + theme(axis.title.x = element_blank())
-	plot <- plot + scale_x_discrete(labels=xlabels)
+	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + ylab("log2(Adjusted Intensity)")
 	# Collect protein stats.
 	stats <- df %>% filter(Group == "MUT") %>%

@@ -9,6 +9,7 @@
 ## OPTIONS:
 save_all = TRUE
 save_sig = TRUE
+wt_color = "#47b2a4"
 
 ## Input data in root/data/
 # * tmt_protein
@@ -153,7 +154,7 @@ for (module in all_modules){
 	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5,alpha=0.5)
 	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1.5)
 	plot <- plot + scale_colour_manual(name="Replicate",
-					   values = c(module_color,"#5E5E5E"))
+					   values = c(module_color,wt_color))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 

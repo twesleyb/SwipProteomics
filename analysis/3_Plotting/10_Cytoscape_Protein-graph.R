@@ -53,9 +53,6 @@ data(partition)
 data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
 
-# Load NDD associated proteins.
-data(NDD_proteins)
-
 # Load networks.
 data(ne_adjm) # loads "edges", then cast to adjm.
 ne_adjm <- convert_to_adjm(edges)
@@ -86,13 +83,14 @@ if (!check) { stop() }
 # Create igraph graph objects.
 netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
+
 ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
 				     weighted=TRUE)
 
 # Annotate graph's with gene symols.
-symbols <- gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)]
+symbols <- gene_map$"Gene Symbol"[match(names(V(netw_g)),gene_map$"Uniprot Accession")]
 netw_g <- set_vertex_attr(netw_g,"symbol",value = symbols)
-symbols <- gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)]
+symbols <- gene_map$"Gene Symbol"[match(names(V(ppi_g)),gene_map$"Uniprot Accession")]
 ppi_g <- set_vertex_attr(ppi_g,"symbol",value = symbols)
 
 #--------------------------------------------------------------------
@@ -115,11 +113,6 @@ noa$Color <- module_colors[noa$Module]
 # Add WASH annotation.
 noa$isWASH <- as.numeric(noa$Accession %in% wash_prots)
 
-# Add NDD annotations.
-noa$isNDD <- as.numeric(noa$Accession %in% names(NDD_proteins))
-noa$NDD <- NDD_proteins[noa$Accession]
-noa$NDD[is.na(noa$NDD)] <- "none"
-
 # Add sig prot annotations.
 noa$sig85 <- as.numeric(noa$Accession %in% sig_proteins$sig85)
 noa$sig62 <- as.numeric(noa$Accession %in% sig_proteins$sig62)
@@ -136,21 +129,10 @@ for (i in c(1:ncol(noa))) {
 ## Create Cytoscape graphs.
 #--------------------------------------------------------------------
 
-
-n_cutoffs=5000
-netwdir=getwd()
-imgsdir=getwd()
+## Defaults.
+n_cutoffs=50
 netw_layout=NULL
-
-# Imports
-suppressPackageStartupMessages({
-	library(RCy3)
-})
-
-# Default layout.
-if (is.null(netw_layout)) { 
-	netw_layout <- 'force-directed edgeAttribute=weight' 
-}
+netw_layout='force-directed edgeAttribute=weight' 
 
 # Check that we are connected to Cytoscape.
 response <- cytoscapePing()
@@ -158,21 +140,11 @@ if (response != "You are connected to Cytoscape!") {
 	stop("Start Cytoscape first!") 
 }
 
-# Subset graph: keep nodes in module.
-graph <- netw_g
-idx <- match(nodes, names(V(graph)))
-subg <- induced_subgraph(graph, vids = V(graph)[idx])
-
-# Node Size ~ hubbiness or importance in its subgraph.
-adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
-node_importance <- apply(adjm,2,sum)
-subg <- set_vertex_attr(subg,"size",value=node_importance[names(V(subg))])
-
 # Prune weak edges.
 # Seq from min(edge.weight) to max to generate cutoffs.
-n_edges <- length(E(subg))
-min_weight <- min(E(subg)$weight)
-max_weight <- max(E(subg)$weight)
+n_edges <- length(E(netw_g))
+min_weight <- min(E(netw_g)$weight)
+max_weight <- max(E(netw_g)$weight)
 cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
 
 # Define a function that checks if graph is connnected at a 
@@ -184,8 +156,10 @@ is_connected <- function(graph,threshold) {
 }
 
 # Check if graph is connected or not at various thresholds.
+# FIXME: Speed up by parallezing?
+# NOTE: very slow for large graph.
 checks <- sapply(cutoffs, function(threshold) {
-			 is_connected(subg,threshold)
+			 is_connected(netw_g,threshold)
 			       })
 
 # Limit is max(cutoff) at which the graph is still connected.
@@ -193,8 +167,8 @@ limit <- cutoffs[max(which(checks==TRUE))]
 if (all(checks)) { stop("Error thesholding graph.") }
 
 # Prune edges. NOTE: This removes all edge types.
-g <- delete.edges(subg, which(E(subg)$weight <= limit))
-n_edges <- length(E(g))
+subg <- delete.edges(netw_g, which(E(netw_g)$weight <= limit))
+n_edges <- length(E(subg))
 
 # Write graph to file this is faster than sending to cytoscape.
 myfile <- file.path(netwdir, paste0(module_name, ".gml"))
