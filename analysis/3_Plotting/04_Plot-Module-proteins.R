@@ -114,9 +114,6 @@ for (i in c(1:length(plots))) {
 # Module colors.
 data(module_colors)
 
-# Module stats for annotations.
-data(module_stats)
-
 # Loop to do the work.
 grouped_plots <- list()
 all_modules <- unique(partition[partition!=0])

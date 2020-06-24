@@ -31,7 +31,7 @@ data(partition)
 data(module_colors)
 
 # Load the module-level statistics.
-#data(module_stats)
+data(module_stats)
 
 # Load sig modules.
 data(sig_modules)
@@ -54,7 +54,6 @@ modules <- modules[order(modules)][-1] # Sort in numerical order.
 # Loop to generate plots.
 plots <- list()
 for (module in modules) {
-
 	# Get data for a given module.
 	module_name <- paste0("M",module)
 	df <- tmt_protein %>% filter(Module == module) %>% 
@@ -66,14 +65,12 @@ for (module in modules) {
 	# Collect the module's stats.
 	stats <- module_stats %>% filter(Module == module) %>% 
 		select(Module, Nodes, PVE, Hubs, PAdjust)
-
 	# Significance annotations.
 	stats$symbol <- ""
 	if (stats$PAdjust < 0.1) { stats$symbol <- "." }
 	if (stats$PAdjust < 0.05) { stats$symbol <- "*" }
 	if (stats$PAdjust < 0.005) { stats$symbol <- "**" }
 	if (stats$PAdjust < 0.0005) { stats$symbol <- "***" }
-
 	# Generate the plot.
 	plot <- ggplot(df,aes(x=Genotype,y=log2(Intensity),fill=Genotype)) 
 	plot <- plot + geom_boxplot() 

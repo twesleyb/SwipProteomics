@@ -215,7 +215,7 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 module_noa$`Module PC1 PVE` <- pve[module_noa$Module]
 
 #--------------------------------------------------------------------
-# Determine module hubs.
+## Determine module hubs.
 #--------------------------------------------------------------------
 
 # Hubbiness statistic = node weighted degree
@@ -283,8 +283,13 @@ module_noa <- module_noa %>% filter(Module != "M0")
 myfile <- file.path(root,"data","module_noa.rda")
 save(module_noa,file=myfile,version=2)
 
+# Save module stats.
+module_stats <- glm_results
+myfile <- file.path(datadir,"module_stats.rda")
+save(module_stats,file=myfile,version=2)
+
 #--------------------------------------------------------------------
-# Save results.
+## Save results as excel document.
 #--------------------------------------------------------------------
 
 # Add to final results.

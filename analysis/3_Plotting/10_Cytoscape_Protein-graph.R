@@ -65,6 +65,9 @@ ppi_adjm <- convert_to_adjm(edges)
 # Load gene map.
 data(gene_map)
 
+# Load module stats.
+data(module_stats)
+
 # Load sig prots.
 data(sig_proteins)
 
