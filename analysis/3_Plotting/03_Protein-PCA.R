@@ -28,12 +28,7 @@ suppressPackageStartupMessages({
 suppressMessages({ devtools::load_all() })
 
 # Project directories:
-figsdir <- file.path(root,"figs","Modules")
-
-# If necessary, create figsdir.
-if (!dir.exists(figsdir)) {
-	dir.create(figsdir)
-}
+figsdir <- file.path(root,"figs")
 
 #---------------------------------------------------------------------
 ## Prepare the data for ploting.
@@ -87,7 +82,7 @@ plot <- plot + scale_colour_manual(values=df$color)
 plot <- plot + theme(legend.position = "none")
 
 # Save to file.
-myfile <- file.path(figsdir,"Module_PCA.pdf")
+myfile <- file.path(figsdir,"Proteins","Protein_PCA.pdf")
 ggsave(myfile, plot, width=fig_width,height=fig_height)
 
 #--------------------------------------------------------------------
@@ -131,5 +126,5 @@ plot <- plot + scale_x_continuous(expand = c(0,0))
 plot <- plot + scale_y_continuous(expand = c(0,0))
 
 # Save to file.
-myfile <- file.path(figsdir,"Sample_PCA.pdf")
+myfile <- file.path(figsdir,"Samples","Sample_PCA.pdf")
 ggsave(myfile, plot, width=fig_width,height=fig_height)
