@@ -260,7 +260,7 @@ results <- tibble::add_column(results,"Entrez"=entrez,.after="Accession")
 results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
 
 # Create list of results, 
-results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
+results_list <- list("Raw Protein" = raw_prot, "BioID Results" = results)
 
 # Add the mitochondrial proteins that were removed.
 df <- raw_prot %>% filter(Accession %in% mito_prot) %>% 
