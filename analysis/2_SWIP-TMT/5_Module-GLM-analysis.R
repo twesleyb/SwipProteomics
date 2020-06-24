@@ -235,8 +235,8 @@ module_hubs <- lapply(module_list, function(prots) {
 	       ids <- paste(symbols,hubs,sep="|")
 	       return(ids)
 				  } )
-
-module_noa$`Top 3 Hubs` <- sapply(module_hubs,paste,collapse=";")[module_noa$Module]
+idx <- module_noa$Module
+module_noa$`Top 3 Hubs` <- sapply(module_hubs,paste,collapse=";")[idx]
 
 #--------------------------------------------------------------------
 ## Annotate with number of sigprots at various thresholds.
@@ -278,6 +278,10 @@ module_noa$Proteins <- module_proteins[module_noa$Module]
 
 # Drop "M0"
 module_noa <- module_noa %>% filter(Module != "M0")
+
+# Save as rda.
+myfile <- file.path(root,"data","module_noa.rda")
+save(module_noa,file=myfile,version=2)
 
 #--------------------------------------------------------------------
 # Save results.

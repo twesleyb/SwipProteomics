@@ -6,6 +6,10 @@
 #' authors: Tyler W Bradshaw
 #' ---
 
+## Options:
+save_all = FALSE
+save_sig = TRUE
+
 ## Input data in root/data/
 # * tmt_protein
 
@@ -44,6 +48,9 @@ if (! dir.exists(figsdir)) {
 set_font("Arial",font_path=fontdir)
 ggtheme()
 
+# Load sig85 proteins.
+data(sig_proteins)
+
 #--------------------------------------------------------------------
 ## Generate the plots.
 #--------------------------------------------------------------------
@@ -71,7 +78,7 @@ close(pbar)
 data(partition)
 
 # Generate list of modules.
-modules <- split(names(partition),partition)[-1] # Drop M0.
+modules <- split(names(partition),partition)
 names(modules) <- paste("Module:",names(modules))
 
 # Sort plots by Module assignment.
@@ -95,7 +102,23 @@ for (i in c(1:length(plots))) {
 ## Save the data.
 #--------------------------------------------------------------------
 
-# Save all proteins.
-message("\nSaving plots, this will take several minutes.")
-myfile <- file.path(figsdir,"Protein_plots.pdf")
-ggsavePDF(plots, myfile)
+if (save_all) {
+	# Save all proteins.
+	message("\nSaving all plots, this will take several minutes.")
+	M0_prots <- names(partition[partition==0])
+	drop <- names(plots) %in% M0_prots
+	all_plots <- plots[!drop]
+	myfile <- file.path(figsdir,"Protein_plots.pdf")
+	ggsavePDF(all_plots, myfile)
+}
+
+# Save sig85 prots include M0.
+if (save_sig) {
+	message("\nSaving significant plots, this will take several minutes.")
+	myfile <- file.path(figsdir,"Sig85_Protein_plots.pdf")
+	prots <- sig_proteins[["sig85"]]
+	# Sort by module assignment.
+	idx <- order(partition[prots])
+	sig_plots <- plots[prots][idx]
+	ggsavePDF(sig_plots, myfile)
+}

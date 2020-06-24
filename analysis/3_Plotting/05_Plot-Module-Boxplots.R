@@ -31,7 +31,10 @@ data(partition)
 data(module_colors)
 
 # Load the module-level statistics.
-data(module_stats)
+#data(module_stats)
+
+# Load sig modules.
+data(sig_modules)
 
 # Set plotting theme.
 ggtheme()
@@ -58,10 +61,8 @@ for (module in modules) {
 		group_by(Module,Genotype,Fraction) %>%
 		summarize(Intensity=sum(Adjusted.Intensity),.groups="drop")
 	df$Genotype <- factor(df$Genotype,levels=c("WT","MUT"))
-
 	# Get module's color.
 	colors <- c(col2hex("gray"), module_colors[module_name])
-
 	# Collect the module's stats.
 	stats <- module_stats %>% filter(Module == module) %>% 
 		select(Module, Nodes, PVE, Hubs, PAdjust)
@@ -86,7 +87,6 @@ for (module in modules) {
 	plot <- plot + theme(axis.line.x=element_line())
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-
 	# Add significance star.
 	if (stats$PAdjust < BF_alpha) {
 		yrange <- range(log2(df$Intensity))
@@ -95,21 +95,18 @@ for (module in modules) {
 			annotate("text",x=1.5,size=7,
 				 y=ypos, label=stats$symbol)
 	}
-		
 	## Add a table with module statistics.
 	# Table theme.
 	tab_theme <- ttheme_default()
 	tab_theme$core$fg_params$hjust = 0.5
 	tab_theme$core$bg_params$fill="white"
 	tab_theme$core$bg_params$col=NA
-	
 	# Create table.
 	idx <-  module_stats$Module == as.character(module)
 	pve <- paste0("PVE=",round(module_stats$PVE[idx],3))
 	padj <- paste0("P-adjust=",round(stats$PAdjust,3))
 	n <- paste0("n Proteins=",module_stats$Nodes[idx])
 	tab <- tableGrob(rbind(padj,pve,n), theme=tab_theme, rows=NULL)
-
 	# Add border to table.
 	border <- rectGrob(gp = gpar(fill=NA,lwd=2))
 	gtab <- gtable_add_grob(tab, border, 
@@ -117,7 +114,6 @@ for (module in modules) {
 				b = nrow(tab), 
 				l = 1, 
 				r  = ncol(tab))
-
 	# Add table to plot.
 	# Should table be positioned on the left or right?
 	min_group <- df %>% ungroup() %>% 
@@ -133,7 +129,6 @@ for (module in modules) {
 	ypos <- yrange[1] + 0.15* diff(yrange)
 	plot <- plot + 
 		annotation_custom(gtab, xmin=-Inf,xmax=xpos,ymin=-Inf,ymax=ypos)
-
 	plots[[module_name]] <- plot
 }
 
@@ -141,3 +136,6 @@ for (module in modules) {
 # NOTE: This takes a couple minutes.
 myfile <- file.path(root,"figs","Modules","Module_Boxplots.pdf")
 ggsavePDF(plots, myfile)
+
+myfile <- file.path(root,"figs","Modules","Sig_Module_Boxplots.pdf")
+ggsavePDF(plots[sig_modules], myfile)

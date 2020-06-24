@@ -55,6 +55,9 @@ if (! dir.exists(figsdir)) {
 ggtheme()
 set_font("Arial",font_path=fontdir)
 
+# Load significant modules.
+data(sig_modules)
+
 #--------------------------------------------------------------------
 ## Generate the plots.
 #--------------------------------------------------------------------
@@ -214,5 +217,11 @@ for (module in all_modules){
 names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 
 # Save.
+message("\nSaving all modules.")
 myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
 ggsavePDF(grouped_plots, myfile)
+
+# Save significant modules.
+message("\nSaving significant modules.")
+myfile <- file.path(root,"figs","Modules","Sig_Module_Protein_plots.pdf")
+ggsavePDF(grouped_plots[[sig_modules]], myfile)

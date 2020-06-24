@@ -172,7 +172,8 @@ tidy_peptide <- tidyProt(peptides,id.vars=cols)
 # Annotate tidy data with additional meta data from samples.
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
-message("\nSummary of initial peptide/protein quantification after removing contaiminants:")
+message(paste("\nSummary of initial peptide/protein quantification",
+	     "after removing contaiminants:"))
 n_samples <- length(unique(tidy_peptide$Sample))
 n_proteins <- length(unique(tidy_peptide$Accession))
 n_peptides <- length(unique(tidy_peptide$Sequence))
@@ -182,6 +183,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 knitr::kable(df)
 
 rm(list="cols")
+
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
 #---------------------------------------------------------------------
@@ -239,6 +241,8 @@ rm(list=c("tp","df","myfile","plot"))
 #---------------------------------------------------------------------
 ## Examine reproducibility of QC measurements.
 #---------------------------------------------------------------------
+
+# FIXME: need to generate a plot!
 
 # Assess reproducibility of QC measurements and remove QC samples
 # that are irreproducible.
@@ -395,7 +399,7 @@ message(paste0("\nSummary of differentially abundant proteins ",
 	      "in each subceulluar fraction (FDR < ",FDR_alpha,"):"))
 knitr::kable(t(sapply(results_list,function(x) sum(x$FDR < FDR_alpha))))
 
-# Total number of unique DA proteeins:
+# Total number of unique DA proteins:
 all_sig <- lapply(results_list, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
@@ -560,8 +564,15 @@ for (i in c(1:length(results_list))) {
 }
 
 # Save as excel workboook.
+# FIXME: add raw peptide
+# FIXME: add gene map.
+colnames(gene_map) <- c("Uniprot Accession", "Entrez ID", 
+			"Gene Symbol", "Protein")
 names(final_results) <- paste(names(results_list),"Results")
-final_results <- c(list("Samples" = samples), final_results)
+final_results <- c(list("Samples" = samples),
+		   list("Gene Identifiers"=gene_map),
+		   list("Raw Peptide" = peptide),
+		   final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
