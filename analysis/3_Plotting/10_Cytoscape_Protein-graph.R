@@ -12,6 +12,9 @@
 ## Set-up the workspace.
 #--------------------------------------------------------------------
 
+## THIS SCRIPT IS NOT COMPLETE. Manually processed network after 
+## removing edges less than 0.9 and sending to cytoscape.
+
 # Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
@@ -22,6 +25,8 @@ suppressPackageStartupMessages({
   library(dplyr) # For manipulating data.
   library(igraph) # For creating graphs.
   library(data.table) # For working with tables.
+  library(parallel) # For parallel proccessing.
+  library(doParallel)
 })
 
 # Functions.
@@ -130,7 +135,7 @@ for (i in c(1:ncol(noa))) {
 #--------------------------------------------------------------------
 
 ## Defaults.
-n_cutoffs=50
+n_cutoffs=10
 netw_layout=NULL
 netw_layout='force-directed edgeAttribute=weight' 
 
@@ -158,21 +163,28 @@ is_connected <- function(graph,threshold) {
 # Check if graph is connected or not at various thresholds.
 # FIXME: Speed up by parallezing?
 # NOTE: very slow for large graph.
-checks <- sapply(cutoffs, function(threshold) {
-			 is_connected(netw_g,threshold)
-			       })
+
+## Why so slowwwww???
+#nThreads <- parallel::detectCores()
+#workers <- makeCluster(c(rep("localhost", nThreads)), type = "SOCK")
+#registerDoParallel(workers)
+#t0=Sys.time()
+#checks <- foreach(i=cutoffs) %dopar% { is_connected(netw_g,i) }
+#difftime(Sys.time(),t0) # Checking each threshold in serial takes about 6 seconds.
+#stopCluster(workers)
 
 # Limit is max(cutoff) at which the graph is still connected.
 limit <- cutoffs[max(which(checks==TRUE))]
 if (all(checks)) { stop("Error thesholding graph.") }
 
 # Prune edges. NOTE: This removes all edge types.
+limit = 0.9 # 500, 000 edges. is this possible.:
 subg <- delete.edges(netw_g, which(E(netw_g)$weight <= limit))
 n_edges <- length(E(subg))
 
 # Write graph to file this is faster than sending to cytoscape.
-myfile <- file.path(netwdir, paste0(module_name, ".gml"))
-write_graph(g, myfile, format = "gml")
+myfile <- file.path(netwdir, paste0("network", ".gml"))
+write_graph(subg, myfile, format = "gml")
 
 # Send to Cytoscape.
 # NOTE: underscores in attribute names are removed. 
