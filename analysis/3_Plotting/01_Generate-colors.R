@@ -14,7 +14,8 @@ swip_color = "#B86FAD" # color of swip/wash module.
 # Parse the python dictionary returned as a string from 
 # system(random_color.py)
 str_to_vec <- function(response) {
-	vec <- gsub("'","",gsub("\\[|\\]","",trimws(unlist(strsplit(response,",")))))
+	vec <- gsub("'","",gsub("\\[|\\]","",
+				trimws(unlist(strsplit(response,",")))))
 	return(vec)
 }
 
@@ -39,9 +40,6 @@ suppressMessages({ devtools::load_all() })
 data(tmt_protein)
 data(partition)
 
-#data(coolors)
-#data(colormind)
-
 #---------------------------------------------------------------------
 ## Generate colors.
 #---------------------------------------------------------------------
@@ -62,21 +60,21 @@ response <- system(cmd, intern = TRUE)
 #  Parse the response.
 colors <- toupper(str_to_vec(response))
 
+if (swip_color %in% colors) { stop("Duplicate colors.") }
+
 # Module color assignments.
-if (swip_color %in% colors) {
-	stop("Duplicate colors.")
-} else {
-	# Initialize a vector for the module colors.
-	module_colors <- rep(NA,length(modules))
-	names(module_colors) <- names(modules)
-	# Insure that M0 is gray and WASH community/module is #B86FAD.
-	module_colors["M0"] <- col2hex("gray")
-	wash_module <- names(which(sapply(modules, function(x) swip %in% x)))
-	module_colors[wash_module] <- swip_color
-	# The reamining colors are random.
-	idx <- is.na(module_colors)
-	module_colors[idx] <- sample(colors,sum(idx))
-}
+# Initialize a vector for the module colors.
+module_colors <- rep(NA,length(modules))
+names(module_colors) <- names(modules)
+
+# Insure that M0 is gray and WASH community/module is #B86FAD.
+module_colors["M0"] <- col2hex("gray")
+wash_module <- names(which(sapply(modules, function(x) swip %in% x)))
+module_colors[wash_module] <- swip_color
+
+# The reamining colors are random.
+idx <- is.na(module_colors)
+module_colors[idx] <- sample(colors,sum(idx))
 
 #--------------------------------------------------------------------
 ## Save the data.
