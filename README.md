@@ -19,4 +19,4 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 * column names of module_noa changed and may cause bugs
 * adjusted protein boxplots -- some  of 968 are annotated as NS?
 * Insure consistent use of BF p-adjust for higher level stats.
-
+* TMT gene map columns were changed  and may cause bugs.
