@@ -105,7 +105,7 @@ edge_colors <- c(col2hex("gray"), col2hex("dark red"))
 # List of mapped params.
 mappings <- list(
 NODE_FILL_COLOR = mapVisualProperty("node fill color","Color","p"),
-NODE_LABEL = mapVisualProperty("node label","symbol", "p"),
+NODE_LABEL = mapVisualProperty("node label","protein", "p"),
 EDGE_TRANSPARENCY = mapVisualProperty("edge transparency", "weight", 
 				      "c", weight_range, c(155, 255)),
 EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",

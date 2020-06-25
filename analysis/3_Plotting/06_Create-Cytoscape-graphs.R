@@ -53,9 +53,6 @@ data(partition)
 data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession) # Get uniprot accession
 
-# Load NDD associated proteins.
-data(NDD_proteins)
-
 # Load networks.
 data(ne_adjm) # loads "edges", then cast to adjm.
 ne_adjm <- convert_to_adjm(edges)
@@ -70,6 +67,9 @@ data(module_stats)
 
 # Load sig prots.
 data(sig_proteins)
+
+# Load module colors
+data(module_colors)
 
 #--------------------------------------------------------------------
 ## Create igraph graph objects.
@@ -90,10 +90,10 @@ ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
 				     weighted=TRUE)
 
 # Annotate graph's with gene symols.
-symbols <- gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)]
-netw_g <- set_vertex_attr(netw_g,"symbol",value = symbols)
-symbols <- gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)]
-ppi_g <- set_vertex_attr(ppi_g,"symbol",value = symbols)
+protein_names <- toupper(gene_map$"Gene Symbol"[match(names(V(netw_g)),gene_map$"Uniprot Accession")])
+netw_g <- set_vertex_attr(netw_g,"protein",value = protein_names)
+protein_names <- gene_map$"Gene Symbol"[match(names(V(ppi_g)),gene_map$"Uniprot Accession")]
+ppi_g <- set_vertex_attr(ppi_g,"protein",value = protein_names)
 
 #--------------------------------------------------------------------
 ## Annotate graphs with additional meta data.
@@ -109,16 +109,10 @@ noa <- noa %>% select(Accession, Symbol, Entrez, Module, Adjusted.logFC,
 		      Adjusted.FDR)
 
 # Add module colors.
-data(module_colors)
 noa$Color <- module_colors[noa$Module]
 
 # Add WASH annotation.
 noa$isWASH <- as.numeric(noa$Accession %in% wash_prots)
-
-# Add NDD annotations.
-noa$isNDD <- as.numeric(noa$Accession %in% names(NDD_proteins))
-noa$NDD <- NDD_proteins[noa$Accession]
-noa$NDD[is.na(noa$NDD)] <- "none"
 
 # Add sig prot annotations.
 noa$sig85 <- as.numeric(noa$Accession %in% sig_proteins$sig85)
