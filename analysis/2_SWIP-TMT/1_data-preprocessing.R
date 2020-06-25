@@ -567,7 +567,8 @@ rm(list=c("idx","idy"))
 
 # Add normalized protein data 
 norm_df <- tmt_protein %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var="Intensity")
+	dcast(Accession ~ Sample,value.var="Intensity") 
+norm_dm <- norm_df %>% as.matrix(keep.rownames="Accession")
 
 # Loop to add normalized protein data to glm statistical results.
 message("\nSaving TMT data and statistical results.")
@@ -576,8 +577,8 @@ for (i in 1:length(results_list)){
 	df <- results_list[[i]]
 	namen <- names(results_list)[i]
 	subsamples <- samples$Sample[grepl(namen,samples$Fraction)]
-	idy <- match(subsamples,colnames(norm_df))
-	dm <- norm_df[,idy]
+	idy <- match(subsamples,colnames(norm_dm))
+	dm <- norm_dm[,idy]
 	# Sort the data by Exp.Sample
 	ids <- sapply(sapply(strsplit(colnames(dm),"\\."),"[",c(6,7),
 			     simplify=FALSE), paste,collapse=".")
@@ -643,6 +644,6 @@ saveRDS(glm_results,myfile)
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
 
-# Save tidy_protein (final normalized protein in tidy (lonn) format) as rda object. 
+# Save tidy_protein (final normalized protein in tidy format) as rda object. 
 myfile <- file.path(datadir,"tmt_protein.rda")
 save(tmt_protein,file=myfile,version=2)
