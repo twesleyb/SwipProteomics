@@ -70,7 +70,7 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 #   ([Abundance] ~ 0 + groups) as implemented by the Edge R package 
 #   and its functions gmQLFfit() and glmQLFTest().
 
-## NOTE: REPRODUCIBILITY
+## NOTE: RE REPRODUCIBILITY
 # The dependencies for this project were managed within a conda virtual 
 # environment into which R and renv, a R package for managing R libraries,
 # were installed. All additional R dependencies were installed using 
@@ -129,7 +129,7 @@ if (!dir.exists(tabsdir)) { dir.create(tabsdir) }
 if (!dir.exists(figsdir)) { dir.create(figsdir, recursive = TRUE) }
 
 # Set global plotting settings.
-ggtheme(); set_font("Arial", font_path = fontdir)
+#ggtheme(); set_font("Arial", font_path = fontdir)
 
 #---------------------------------------------------------------------
 ## Load the raw data and sample info.
@@ -151,7 +151,7 @@ samples <- fread(myfile)
 # the subcellular fraction.
 samples$"Cfg Force (xg)" <- formatC(samples$"Cfg Force (xg)",big.mark=",")
 
-rm(list="myfile")
+rm(list="myfile") # remove temporary variables.
 
 #---------------------------------------------------------------------
 ## Map all Uniprot accession numbers to stable entrez IDs.
@@ -184,7 +184,7 @@ missing <- entrez[is.na(entrez)]
 mapped_by_hand <- c(P05214=22144, P0CG14=214987, P84244=15078)
 entrez[names(mapped_by_hand)] <- mapped_by_hand
 
-# Check: we have successfully mapped all uniprot ids.
+# Check: we have successfully mapped all Uniprot IDs.
 check <- sum(is.na(entrez)) == 0
 if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
 
@@ -226,7 +226,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 		 "Peptides"=formatC(n_peptides,big.mark=","))
 knitr::kable(df)
 
-rm(list="cols")
+rm(list=c("cols","df","n_samples","n_proteins","n_peptides"))
 
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
@@ -348,15 +348,16 @@ rm(list=c("df","protein_list","idx","protein"))
 #---------------------------------------------------------------------
 
 # Remove proteins that:
-# * were identified by a single peptide.
-# * contain too many missing values.
-# * contain any missing QC values.
-# * have outlier measurements (outside mean +/- nSD from its bin).
+# * Were identified by a single peptide.
+# * Contain too many (>50%) missing values.
+# * Contain any missing QC values.
+# * Have outlier protein measurements:
+#       mean(ratio(replicates)) outside +/- nSD * mean(bin))
 message(paste("\nFiltering proteins, this may take several minutes."))
 filt_protein <- filtProt(spn_protein,
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
 
-# There should be no missing values at this point.
+# Check, there should be no missing values at this point.
 check <- sum(is.na(filt_protein$Intensity)) == 0
 if (!check) { stop("Why are there missing values!") }
 
@@ -395,10 +396,11 @@ if (check) {
 ## Intrafraction protein differential abundance.
 #---------------------------------------------------------------------
 
-# Use EdgeR glm to evaluate differential protein abundance.
-# Compare WT v Mutant within a fraction.
-message(paste("\nEvaluating intra-fraction protein differential abundance."))
+# Use EdgeR glm to evaluate differential protein abundance for 
+# WT v Mutant comparisons within a fraction.
 # NOTE: Model = ~ Fraction + Treatment | Treatment = Genotype.Fraction
+message(paste("\nEvaluating intra-fraction protein differential abundance."))
+
 comparisons <- "Genotype.Fraction"
 glm_results <- glmDA(filt_protein,comparisons,samples,
 		 samples_to_ignore="SPQC")
@@ -463,9 +465,50 @@ bounds <- logFC_threshold
 sig1 <- alt_results$FDR < FDR_alpha 
 sig2 <- alt_results$PAdjust < BF_alpha
 updown <- alt_results$logFC < bounds['lwr'] | alt_results$logFC < bounds['upr']
-df <- data.table("Intra-fraction Contrasts (FDR<0.1)"=sum(sig1 & updown),
-		 "WT v Swip MUT Contrast (BF<0.05)"=sum(sig2 & updown))
+df <- data.table("Fraction.WT vs Fraction.MUT (DA & FDR<0.1)"=sum(sig1 & updown),
+		 "WT vs Swip MUT Contrast (DA & BF<0.05)"=sum(sig2 & updown))
 knitr::kable(df)
+
+# Column names are Adjusted.NAME
+idy <- colnames(alt_results) %notin% c("Accession","Entrez","Symbol")
+colnames(alt_results)[idy] <- paste0("Adjusted.",
+				     colnames(alt_results)[idy])
+
+#---------------------------------------------------------------------
+## Calculate Protein abundance adjusted for fraction differences.
+#---------------------------------------------------------------------
+
+# Calculate protein abundance, adjusted for fraction differences.
+logCPM <- edgeR::cpm(glm_results$dge, log=TRUE) # Is CPM step needed?
+
+# Remove effect of fraction.
+dm <- limma::removeBatchEffect(logCPM,
+			       batch=dge$samples$fraction,
+			       design=model.matrix(~treatment,data=dge$samples))
+
+# Collect results.
+dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+		reshape2::melt(id.var="Accession",
+			       variable.name="Sample",
+			       value.name="Adjusted.Intensity")
+dt$Sample <- as.character(dt$Sample)
+
+# Combine with additional sample  meta data.
+adjusted_prot <- left_join(tmt_protein,dt,
+			   by=intersect(colnames(tmt_protein),colnames(dt)))
+
+# Add stats to adjusted protein data.
+adjusted_prot <- left_join(adjusted_prot,alt_results,
+			   by=intersect(colnames(adjusted_prot),
+					colnames(alt_results)))
+
+# unlog
+adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
+
+# Cast into a matrix, so we can add data to stats.
+adj_dm <- adjusted_prot %>% as.data.table() %>%
+	dcast(Accession ~ Sample,value.var="Adjusted.Intensity") %>%
+	as.matrix(rownames="Accession")
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -481,21 +524,6 @@ tmt_protein <- left_join(tmt_protein,temp_dt,
 # Remove QC data.
 tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
 	as.data.table()
-
-# Add adjusted protein values to tmt_protein.
-# Rename Intensity column.
-idy <- which(colnames(adjusted_prot) == "Intensity")
-
-colnames(adjusted_prot)[idy] <- "Adjusted.Intensity"
-
-# Add stats to adjusted protein data.
-idy <- colnames(alt_results) %notin% c("Accession","Entrez","Symbol")
-colnames(alt_results)[idy] <- paste0("Adjusted.",
-				     colnames(alt_results)[idy])
-adjusted_prot <- left_join(adjusted_prot,alt_results,
-			   by=intersect(colnames(adjusted_prot),
-					colnames(alt_results)))
-adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
 # Combine tmt_protein with adjusted data and stats.
 idy <- intersect(colnames(tmt_protein),colnames(adjusted_prot))
@@ -585,7 +613,9 @@ for (i in c(1:length(results_list))) {
 
 # Save as excel workboook.
 names(final_results) <- paste(names(results_list),"Results")
-final_results <- c(list("Samples" = samples), final_results)
+final_results <- c(list("Samples" = samples),
+		   list("Raw Peptide" = peptides),
+		   list("Norm Protein" = norm_dm), final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
