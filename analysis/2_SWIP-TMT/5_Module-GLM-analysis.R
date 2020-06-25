@@ -58,8 +58,7 @@ figsdir <- file.path(root, "figs","Modules")
 if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
 
 # Global plotting settings.
-ggtheme()
-set_font("Arial", font_path = fontdir)
+ggtheme(); set_font("Arial", font_path = fontdir)
 
 # Load the data.
 data(tmt_protein)
@@ -73,13 +72,8 @@ wash_prots <- unique(wash_interactome$Accession)
 
 # Load the graph partition.
 data(partition)
-data(fixed_cpartition)
-partition
 
-# Load the networks.
-data(adjm)
-adjm <- convert_to_adjm(edges)
-
+# Load the network.
 data(ne_adjm)
 ne_adjm <- convert_to_adjm(edges)
 
@@ -154,6 +148,11 @@ message(paste0("\nNumber of significant ",
 glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
+# Save sig modules.
+myfile <- file.path(root,"data","sig_modules.rda")
+sig_modules <- paste0("M",glm_results$Module[glm_results$PAdjust < BF_alpha])
+save(sig_modules,file=myfile,version=2)
+
 #--------------------------------------------------------------------
 ## Calculate Module PVE
 #--------------------------------------------------------------------
@@ -166,16 +165,6 @@ ME_data <- WGCNA::moduleEigengenes(dm, colors = partition,
 				   excludeGrey = TRUE, softPower = 1 ,
 				   impute = FALSE)
 
-# Calculate bicor coorelation matrix.
-ME_adjm <- WGCNA::bicor(t(ME_data$eigengenes))
-ME_ne_adjm <- neten::neten(ME_adjm)
-
-# Save.
-myfile <- file.path(rdatdir,"ME_adjm.csv")
-ME_adjm %>% as.data.table(keep.rownames=TRUE) %>% fwrite(myfile)
-myfile <- file.path(rdatdir,"ME_ne_adjm.csv")
-ME_ne_adjm %>% as.data.table(keep.rownames=TRUE) %>% fwrite(myfile)
-
 # Extract PVE.
 pve <- as.numeric(ME_data$varExplained)
 names(pve) <- gsub("X","M",names(ME_data$varExplained))
@@ -184,6 +173,7 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
+
 #--------------------------------------------------------------------
 # Determine module hubs.
 #--------------------------------------------------------------------
@@ -208,41 +198,6 @@ module_hubs <- lapply(module_list, function(x) {
 # We will add hubs to the data below.
 				  
 #--------------------------------------------------------------------
-## Annotate with number of sigprots.
-#--------------------------------------------------------------------
-
-# Number of WASH proteins.
-n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
-#glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
-
-# Sig 85 -- Significant intrafraction comparisons.
-sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
-	select(Accession) %>% unlist() %>% unique()
-sig85 <- sig_prots
-n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
-#glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
-
-# Sig 62 -- sig WT v KO with > +/- 20% percent change.
-sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
-	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
-	select(Accession) %>% unlist() %>% unique()
-tmp_list <- module_list[paste0("M",glm_results$Module)]
-#glm_results$nSig62 <- sapply(tmp_list,function(x) sum(x %in% sig62))
-
-# Sig 968 --  sig WT v KO - NO log2FC threshold.
-sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
-	select(Accession) %>% unlist() %>% unique()
-tmp_list <- module_list[paste0("M",glm_results$Module)]
-#glm_results$nSig968 <- sapply(tmp_list,function(x) sum(x %in% sig968))
-
-# Combine as single list.
-sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)
-
-# Save as rda object.
-myfile <- file.path(datadir,"sig_proteins.rda")
-save(sig_proteins, file=myfile,version=2)
-
-#--------------------------------------------------------------------
 ## Add module level data.
 #--------------------------------------------------------------------
 
@@ -251,6 +206,16 @@ df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>%
 dm <- df %>% as.data.table() %>%
 	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
 dm$Module <- as.character(dm$Module)
+
+# Sort columns.
+idy <- grepl("F[0-9]{1,2}",colnames(dm))
+lvls <- c("F4","F5","F6","F7","F8","F9","F10")
+f <- factor(sapply(strsplit(colnames(dm)[idy],"_"),"[",1),levels=lvls)
+g <- factor(sapply(strsplit(colnames(dm)[idy],"_"),"[",2),levels=c("WT","MUT"))
+idy <- c("Module",gsub("\\.","_",as.character(levels(interaction(f,g)))))
+dm <- dm %>% select(all_of(idy))
+
+# Add to the data.
 glm_results <- left_join(glm_results,dm,by="Module")
 
 # Annotate with hubs.
@@ -258,7 +223,6 @@ hubs_list <- module_hubs[paste0("M",glm_results$Module)]
 glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
 
 # Annotate with module proteins.
-#
 symbols <- unique(tmt_protein$Symbol)
 names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
 #
@@ -276,7 +240,7 @@ glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 
 # Save as excel table
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
-results <- list("results" = glm_results)
+results <- list("Module GLM Results" = glm_results)
 write_excel(results,file=myfile)
 
 # Save as rda object.

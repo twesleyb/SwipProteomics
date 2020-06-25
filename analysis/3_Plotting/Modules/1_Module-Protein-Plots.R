@@ -1,21 +1,39 @@
 #!/usr/bin/env Rscript
 
 #' ---
-#' title: 
-#' description: plot grouped protein abundance
+#' title: Swip Proteomics Plotting
+#' description: generate module protein plots
 #' authors: Tyler W Bradshaw
 #' ---
 
 ## OPTIONS:
-save_all = TRUE
+save_all = FALSE
 save_sig = TRUE
-wt_color = "#47b2a4"
+wt_color = "#47b2a4" # teal blue
 
 ## Input data in root/data/
 # * tmt_protein
 
 ## Output:
 # * a single pdf with the aligned protein plots for all modules. 
+
+#---------------------------------------------------------------------
+## Misc functions
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
 
 #---------------------------------------------------------------------
 ## Set-up the workspace.
@@ -82,7 +100,7 @@ close(pbar)
 data(partition)
 
 # If partition exists, sort the plots by module assignment.
-message("\tSorting plots...")
+message("\tSorting plots by module assignment.")
 
 # Generate list of modules.
 modules <- split(names(partition),partition)
@@ -96,7 +114,7 @@ remainder_plots <- plots[remainder_prots]
 plots <- c(sorted_plots,remainder_plots)
 
 # Annotate plots with module assignment.
-message("\tAnnotating plots...")
+message("\tAnnotating plots with module assignment.")
 for (i in c(1:length(plots))) {
 	protein <- names(plots)[i]
 	plot <- plots[[protein]]

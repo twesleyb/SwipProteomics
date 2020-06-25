@@ -11,11 +11,12 @@
 swip = "Q3UMB9" # uniprot accession of swip.
 
 ## OPTIONS:
-BF_alpha = 0.05
+BF_alpha = 0.05 # PAdjust threshold for module significance.
 
 #--------------------------------------------------------------------
 ## Misc function - getrd
 #--------------------------------------------------------------------
+
 getrd <- function(here=getwd(), dpat= ".git") {
 	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
@@ -97,9 +98,14 @@ for (module in modules) {
 	colors <- c(col2hex("gray"), module_colors[module_name])
 
 	# Collect the module's stats.
+	# FIXME: where are moddule noa?
+	stats <- module_stats %>% filter(Module == as.character(Module)) %>%
+		select(Nodes,PVE, PAdjust)
+
 	stats <- module_noa %>% filter(Module == paste0("M",module)) %>% 
 		select(Module, `Module Size`,
 		       `Module PC1 PVE`, `Top 3 Hubs`)
+
 	stats$PAdjust <- module_stats %>% 
 		filter(Module == paste0("M",module)) %>% 
 		select(`PAdjust (Bonferroni)`) %>% unlist()
