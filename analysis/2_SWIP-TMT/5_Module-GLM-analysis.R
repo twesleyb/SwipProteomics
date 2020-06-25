@@ -238,6 +238,11 @@ glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 # Save results.
 #--------------------------------------------------------------------
 
+# FIXME: Save sig proteins.
+#sig_proteins <- ""
+#myfile <- file.path(root,"data","sig_proteins.rda")
+#save(sig_proteins,file=myfile,version=2)
+
 # Save as excel table
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
 results <- list("Module GLM Results" = glm_results)
