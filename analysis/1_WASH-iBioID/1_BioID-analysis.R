@@ -159,7 +159,7 @@ message(paste0("\nFinal number of quantifiable proteins: ",
 # Proteins with missing values are less abundant than those without. 
 # This is evidence that missing values are MNAR and can be imputed with
 # the KNN algorith.
-message("\nImputing missing values using the KNN algorithm (k=10).")
+message("\nImputing missing protein values using the KNN algorithm (k=10).")
 imp_prot <- imputeKNNprot(filt_prot,quiet=FALSE)
 
 #-------------------------------------------------------------------------------

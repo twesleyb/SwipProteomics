@@ -62,9 +62,25 @@ save_as = "rda" # Output format for partition: can be RData or csv
 # 7. avg.contrib (average node contribution) - Quantifies how similar nodes are
 #    to summary profile.
 
-#------------------------------------------------------------------------------
-## Define some misc. functions that are utilized below.
-#------------------------------------------------------------------------------
+#---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+## Additional misc functions. 
 
 # Function to add source directory to file path.
 append_paths <- function(source_dir,input_file){

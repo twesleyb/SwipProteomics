@@ -10,6 +10,24 @@
 FDR_alpha = 0.05 # significance threshold for gse enrichment.
 
 #---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+#---------------------------------------------------------------------
 ## Set-up the workspace.
 #---------------------------------------------------------------------
 
@@ -89,8 +107,8 @@ message("\nModules with significant go enrichment:")
 knitr::kable(top_go[idx,])
 
 # save significant results.
-results <- go_gse[idx]
-write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GSE_Results.xlsx"))
+results <- bind.rows(go_gse[idx],.id="Module")
+write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GO_Results.xlsx"))
 
 # Save as rda.
 module_GO <- dplyr::bind_rows(results,.id="class")

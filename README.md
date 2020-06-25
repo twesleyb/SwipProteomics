@@ -5,7 +5,7 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 ## Swip R1019R Mutation
 
 <p align="center">
-  <img src="./models/Swip.gif" />
+  <img src="./models/Swip.gif" height="250" />
 </p>
 <p align="center">The Swip (Washc4) protein.<p align="center">
 

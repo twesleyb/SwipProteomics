@@ -493,9 +493,11 @@ dt <- as.data.table(dm,keep.rownames="Accession") %>%
 			       value.name="Adjusted.Intensity")
 dt$Sample <- as.character(dt$Sample)
 
-# Combine with additional sample  meta data.
-adjusted_prot <- left_join(tmt_protein,dt,
-			   by=intersect(colnames(tmt_protein),colnames(dt)))
+# Combine Adjusted protein with additional sample meta data.
+tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
+	as.data.table()
+adjusted_prot <- left_join(tmp_prot,dt,
+			   by=intersect(colnames(tmp_prot),colnames(dt)))
 
 # Add stats to adjusted protein data.
 adjusted_prot <- left_join(adjusted_prot,alt_results,
@@ -506,9 +508,9 @@ adjusted_prot <- left_join(adjusted_prot,alt_results,
 adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
 # Cast into a matrix, so we can add data to stats.
-adj_dm <- adjusted_prot %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var="Adjusted.Intensity") %>%
-	as.matrix(rownames="Accession")
+#adj_dm <- adjusted_prot %>% as.data.table() %>%
+#	dcast(Accession ~ Sample,value.var="Adjusted.Intensity") %>%
+#	as.matrix(rownames="Accession")
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -564,9 +566,9 @@ rm(list=c("idx","idy"))
 #     - Include contrast specific data.
 
 # Add normalized protein data 
-norm_dm <- tmt_protein %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var="Intensity") %>%
-	as.matrix(rownames="Accession")
+norm_df <- tmt_protein %>% as.data.table() %>%
+	dcast(Accession ~ Sample,value.var="Intensity") 
+norm_dm <- norm_df %>% as.matrix(keep.rownames="Accession")
 
 # Loop to add normalized protein data to glm statistical results.
 message("\nSaving TMT data and statistical results.")
@@ -590,7 +592,7 @@ for (i in 1:length(results_list)){
 } # Ends loop.
 
 # Add adjusted protein values to alt stats.
-df <- adjusted_prot %>% as.data.table() %>%
+df <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample, value.var="Adjusted.Intensity")
 alt_results <- left_join(alt_results,df,by="Accession")
 colnames(alt_results) <- gsub("Abundance","Adjusted.Abundance",
@@ -615,7 +617,7 @@ for (i in c(1:length(results_list))) {
 names(final_results) <- paste(names(results_list),"Results")
 final_results <- c(list("Samples" = samples),
 		   list("Raw Peptide" = peptides),
-		   list("Norm Protein" = norm_dm), final_results)
+		   list("Norm Protein" = norm_df), final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
@@ -638,14 +640,10 @@ fwrite(tmt_protein,myfile)
 myfile <- file.path(rdatdir,"glm_results.RData")
 saveRDS(glm_results,myfile)
 
-# Save to select protein statistics to file.
-myfile <- file.path(rdatdir,"Select_Protein_Stats.csv")
-fwrite(ttest_dt,myfile)
-
 # Save gene map.
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
 
-# Save tidy_protein (final normalized protein in tidy (lonn) format) as rda object. 
+# Save tidy_protein (final normalized protein in tidy format) as rda object. 
 myfile <- file.path(datadir,"tmt_protein.rda")
 save(tmt_protein,file=myfile,version=2)
