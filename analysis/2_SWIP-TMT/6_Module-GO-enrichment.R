@@ -10,6 +10,24 @@
 FDR_alpha = 0.05 # significance threshold for gse enrichment.
 
 #---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+#---------------------------------------------------------------------
 ## Set-up the workspace.
 #---------------------------------------------------------------------
 

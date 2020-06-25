@@ -7,6 +7,24 @@
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
 #---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+#---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
 
