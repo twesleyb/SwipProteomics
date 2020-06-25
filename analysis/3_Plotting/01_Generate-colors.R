@@ -1,23 +1,12 @@
 #!/usr/bin/env Rscript
 
 ## OPTIONS:
+seed = 7 # Seed for reproducibility.
 swip = "Q3UMB9" # uniprot accession of swip.
-swip_color = "#B86FAD" # color of swip/wash module.
+swip_color = "#B86FAD" # color of wash module.
 
 ## OUTPUT:
 # * Updated module color assignemnts.
-
-#---------------------------------------------------------------------
-## Misc functions.
-#---------------------------------------------------------------------
-
-# Parse the python dictionary returned as a string from 
-# system(random_color.py)
-str_to_vec <- function(response) {
-	vec <- gsub("'","",gsub("\\[|\\]","",
-				trimws(unlist(strsplit(response,",")))))
-	return(vec)
-}
 
 #---------------------------------------------------------------------
 ## Prepare the workspace.
@@ -40,41 +29,28 @@ suppressMessages({ devtools::load_all() })
 data(tmt_protein)
 data(partition)
 
+data(coolors)
+data(colormind)
+
 #---------------------------------------------------------------------
 ## Generate colors.
 #---------------------------------------------------------------------
 
-# The number of colors we need.
+# All modules.
 modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
-n_colors <- length(modules) - 2 # M0 will be gray. M19 will be purple.
 
-# Path to python script which is a simple script that uses the python 
-# port of randomcolors to generate random colors.
-script <- file.path(root,"Py","random_color.py")
-
-# Generate n random colors.
-cmd <- paste(script,"--count", n_colors)
-response <- system(cmd, intern = TRUE)
-
-#  Parse the response.
-colors <- toupper(str_to_vec(response))
-
-if (swip_color %in% colors) { stop("Duplicate colors.") }
-
-# Module color assignments.
-# Initialize a vector for the module colors.
-module_colors <- rep(NA,length(modules))
+# Module color assignments -- combine coolors and colormind.
+colors <- c(coolors, sample(colormind,length(modules)-length(coolors)))
+module_colors <- sample(colors,length(modules))
 names(module_colors) <- names(modules)
 
-# Insure that M0 is gray and WASH community/module is #B86FAD.
-module_colors["M0"] <- col2hex("gray")
+# Insure that WASH community/module is #B86FAD
 wash_module <- names(which(sapply(modules, function(x) swip %in% x)))
 module_colors[wash_module] <- swip_color
 
-# The reamining colors are random.
-idx <- is.na(module_colors)
-module_colors[idx] <- sample(colors,sum(idx))
+# Insure that M0 is gray.
+module_colors["M0"] <- col2hex("gray")
 
 #--------------------------------------------------------------------
 ## Save the data.

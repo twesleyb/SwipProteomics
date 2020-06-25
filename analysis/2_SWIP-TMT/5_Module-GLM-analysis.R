@@ -7,7 +7,7 @@
 #' ---
 
 ## Options:
-BF_alpha = 0.1 # P.adjust significance threshold for module DA.
+BF_alpha = 0.1 # Significance threshold.
 
 #---------------------------------------------------------------------
 ## Prepare the workspace.
@@ -39,43 +39,50 @@ figsdir <- file.path(root, "figs","Modules")
 # If necessary, create dir for figs.
 if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
 
+# Global plotting settings.
+ggtheme()
+set_font("Arial", font_path = fontdir)
+
 # Load the data.
 data(tmt_protein)
 
 # Load the gene map.
 data(gene_map)
 
+# Load WASH BioID results.
+data(wash_interactome)
+wash_prots <- unique(wash_interactome$Accession)
+
 # Load the graph partition.
 data(partition)
+data(fixed_cpartition)
+partition
 
 # Load the networks.
 data(adjm)
 adjm <- convert_to_adjm(edges)
+
 data(ne_adjm)
 ne_adjm <- convert_to_adjm(edges)
 
 #---------------------------------------------------------------------
-## Perform module level statistical analysis with EdgeR GLM.
+## Perform module level statistical analysis.
 #---------------------------------------------------------------------
-# Modules are summarized as the sum of all 
-# protein Adjusted.Intensities in the module.
 
 # Calculate the number of proteins per module.
 module_sizes <- sapply(split(partition,partition), length)
-names(module_sizes) <- paste0("M",names(module_sizes))
 
 # Annotate data with module membership.
-tmt_protein$Module <- paste0("M",partition[tmt_protein$Accession])
+tmt_protein$Module <- partition[tmt_protein$Accession]
 
-# Cast tmt_data into a dm, summarizing module Intensities grouped 
-# by fraction.
+# Cast data into a dm, summarize all proteins in a module.
 dm <- tmt_protein %>% group_by(Module, Genotype, Fraction) %>% 
 	dplyr::summarize(Sum.Intensity=sum(Intensity),.groups="drop") %>% 
 	as.data.table() %>%
 	dcast(Module ~ Fraction + Genotype,value.var="Sum.Intensity") %>%
 	as.matrix(rownames=TRUE)
 
-# Create dge object with the module-level data.
+# Create dge object.
 dge <- DGEList(counts=dm)
 
 # Sample to group mapping.
@@ -87,17 +94,15 @@ levels(dge$samples$genotype) <- c("WT","MUT")
 # Create design matrix.
 design <- model.matrix( ~ fraction + genotype, data=dge$samples)
 
-# Flip the sign of the comparison.
-# Report logFC MUT/WT.
+# Flip sign of comparison.
 design[,"genotypeMUT"] <- abs(design[,"genotypeMUT"]-1)
 
 # Estimate dispersion.
 dge <- estimateDisp(dge, design, robust=TRUE)
 
-# Fit a glm model.
+# Fit a model.
 fit <- glmQLFit(dge,design,robust=TRUE)
 
-# Test for DA modules:
 # Default comparison is last contrast: genotype.
 qlf <- glmQLFTest(fit)
 
@@ -106,90 +111,36 @@ glm_results <- topTags(qlf,n=Inf,sort.by="p.value")$table %>%
 	as.data.table(keep.rownames="Module")
 
 # Drop M0.
-glm_results <- glm_results %>% filter(Module != "M0")
+glm_results <- glm_results %>% filter(Module != 0)
 
 # Adjust p-values for n module comparisons.
-glm_results$`PAdjust (Bonferroni)` <- p.adjust(glm_results$PValue,method="bonferroni")
-
-# Drop FDR column.
-glm_results$FDR <- NULL
+glm_results$PAdjust <- p.adjust(glm_results$PValue,method="bonferroni")
 
 # Fix logCPM column -- > convert to percentWT.
-# NOTE: these values are small, but reflect the average affect of GENOTYPE for
-# all proteins in the module.
 idy <- which(colnames(glm_results)=="logCPM")
 colnames(glm_results)[idy] <- "PercentWT"
 glm_results$PercentWT <- 2^glm_results$logFC
 
-# Annotate with the number of nodes per module.
-glm_results <- tibble::add_column(glm_results,
-				  N=module_sizes[glm_results$Module],
-				  .after="Module")
+# Number of nodes per module:
+n <- module_sizes[as.character(glm_results$Module)]
+glm_results <- tibble::add_column(glm_results,Nodes=n,.after="Module")
 
 # Number of significant modules.
 message(paste("\nTotal number of modules:",length(unique(partition)) -1))
-nsig <- sum(glm_results$`PAdjust (Bonferroni)` < BF_alpha)
+nsig <- sum(glm_results$PAdjust < BF_alpha)
 message(paste0("\nNumber of significant ",
-	      "(Bonferroni p-adjust < ", BF_alpha,") ",
+	      "(p-adjust < ", BF_alpha,") ",
 	      "modules: ", nsig,"."))
 
-# Save sig modules.
-sig_modules <- glm_results %>% 
-	filter(`PAdjust (Bonferroni)` < BF_alpha) %>% 
-	select(Module) %>% unlist() %>% unique()
-myfile <- file.path(datadir,"sig_modules.rda")
-save(sig_modules,file=myfile,version=2)
-
 # Pretty print sig results:
-glm_results %>% filter(`PAdjust (Bonferroni)` < BF_alpha) %>%
+glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
-
-#--------------------------------------------------------------------
-## Add module level data to Module stats.
-#--------------------------------------------------------------------
-
-# Cast the module-level data into a matrix.
-dm <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
-	summarize(Intensity = sum(Adjusted.Intensity)) %>% 
-	as.data.table() %>%
-	dcast(Module ~ Fraction + Genotype, value.var = "Intensity") %>%
-	as.matrix(rownames="Module")
-
-# Sort the data columns.
-f <- sapply(strsplit(colnames(dm),"_"),"[",1)
-f <- as.factor(f)
-levels(f) <- c("F4","F5","F6","F7","F8","F9","F10")
-g <- sapply(strsplit(colnames(dm),"_"),"[",2)
-g <- as.factor(g)
-levels(g) <- c("WT","MUT")
-col_order <- gsub("\\.","_",as.character(levels(interaction(f,g))))
-dm_sorted <- dm[,col_order]
-
-dt <- as.data.table(dm_sorted,keep.rownames="Module")
-glm_results <- left_join(glm_results,dt,by="Module")
-
-#--------------------------------------------------------------------
-## These results will be saved in an excel workbook. In addition to 
-## the statistical results, lets include a sheet with module summary
-## statistics. We will call this object module_noa for module node 
-## attributes.
-#--------------------------------------------------------------------
-
-module_list <- split(names(partition),partition)
-names(module_list) <- paste0("M",names(module_list))
-
-module_noa <- data.table("Module" = names(module_list))
-
-module_noa$`Module Size` <- module_sizes[module_noa$Module]
 
 #--------------------------------------------------------------------
 ## Calculate Module PVE
 #--------------------------------------------------------------------
 
-# PVE is the perccent of the variance explained by the modules first
-# principle component.
-
-#  Calculate module eigengenes using WGCNA::mooduleEigengenes().
+#  Calculate module eigengenes.
 dm <- tmt_protein %>% as.data.table() %>% 
 	dcast(Sample ~ Accession, value.var = "Intensity") %>% 
 	as.matrix(rownames="Sample") %>% log2()
@@ -211,49 +162,60 @@ ME_ne_adjm %>% as.data.table(keep.rownames=TRUE) %>% fwrite(myfile)
 pve <- as.numeric(ME_data$varExplained)
 names(pve) <- gsub("X","M",names(ME_data$varExplained))
 
-# Add to module noa.
-module_noa$`Module PC1 PVE` <- pve[module_noa$Module]
-
+# Add to glm_results.
+glm_results <- tibble::add_column(glm_results,
+				  PVE=pve[paste0("M",glm_results$Module)],
+				  .after="Nodes")
 #--------------------------------------------------------------------
-## Determine module hubs.
+# Determine module hubs.
 #--------------------------------------------------------------------
 
-# Hubbiness statistic = node weighted degree
-# Node weighted degree is the sum of a nodes edges.
+# All modules.
+module_list <- split(partition,partition)
+names(module_list) <- paste0("M",names(module_list))
 
-# For each module, calculate node (protein) hubbiness, get the top 
-# k proteins in the module and map them to GENE|ACCESSION. 
-
-# Arbitrarily choose k = 3 HUBS.
-k = 3
-module_hubs <- lapply(module_list, function(prots) {
+# Get top three proteins.
+# Sorted by node weighted degree.
+module_hubs <- lapply(module_list, function(x) {
+	       prots <- names(x)
 	       subadjm <- ne_adjm[prots,prots]
 	       node_degree <- apply(subadjm,2,sum)
 	       node_degree <- node_degree[order(node_degree,decreasing=TRUE)]
-	       hubs <- names(head(node_degree,k)) # Get top three proteins.
+	       hubs <- names(head(node_degree,3))
 	       symbols <- gene_map$symbol[match(hubs,gene_map$uniprot)]
 	       ids <- paste(symbols,hubs,sep="|")
 	       return(ids)
 				  } )
-idx <- module_noa$Module
-module_noa$`Top 3 Hubs` <- sapply(module_hubs,paste,collapse=";")[idx]
 
+# We will add hubs to the data below.
+				  
 #--------------------------------------------------------------------
-## Annotate with number of sigprots at various thresholds.
+## Annotate with number of sigprots.
 #--------------------------------------------------------------------
 
-# Sig 85: Significant intrafraction comparisons.
-sig85 <- tmt_protein %>% filter(FDR < 0.1) %>% 
+# Number of WASH proteins.
+n_wash_prots <- sapply(module_list,function(x) sum(x %in% wash_prots))
+#glm_results$nWASH <- n_wash_prots[paste0("M",glm_results$Module)]
+
+# Sig 85 -- Significant intrafraction comparisons.
+sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
+sig85 <- sig_prots
+n_sig85 <- sapply(module_list,function(x) sum(x %in% sig_prots))
+#glm_results$nSig85 <- n_sig85[paste0("M",glm_results$Module)]
 
-# Sig 62: Sig WT v KO with > +/- 20% percent change.
+# Sig 62 -- sig WT v KO with > +/- 20% percent change.
 sig62 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	filter(Adjusted.logFC > log2(1.2) | Adjusted.logFC < log2(0.8)) %>%
 	select(Accession) %>% unlist() %>% unique()
+tmp_list <- module_list[paste0("M",glm_results$Module)]
+#glm_results$nSig62 <- sapply(tmp_list,function(x) sum(x %in% sig62))
 
-# Sig 968: Sig WT v KO - NO log2FC threshold.
+# Sig 968 --  sig WT v KO - NO log2FC threshold.
 sig968 <- tmt_protein %>% filter(Adjusted.FDR < 0.1) %>% 
 	select(Accession) %>% unlist() %>% unique()
+tmp_list <- module_list[paste0("M",glm_results$Module)]
+#glm_results$nSig968 <- sapply(tmp_list,function(x) sum(x %in% sig968))
 
 # Combine as single list.
 sig_proteins <- list(sig85=sig85,sig62=sig62,sig968=sig968)
@@ -263,39 +225,43 @@ myfile <- file.path(datadir,"sig_proteins.rda")
 save(sig_proteins, file=myfile,version=2)
 
 #--------------------------------------------------------------------
-## Annotate modules with protein identifiers.
+## Add module level data.
 #--------------------------------------------------------------------
 
-# List of uniprot accession.
-protein_list <- module_list
+df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
+	summarize(Intensity = sum(Adjusted.Intensity))
+dm <- df %>% as.data.table() %>%
+	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
+dm$Module <- as.character(dm$Module)
+glm_results <- left_join(glm_results,dm,by="Module")
 
-# Collect gene symbols for the uniprot ids in every module. Paste these
-# together as GENE|UNIPROT and collapse this seperated  by ;.
-module_proteins <- sapply(protein_list, function(x) {
-				  paste(paste(gene_map$symbol[match(x,gene_map$uniprot)],x,sep="|"),collapse=";")})
+# Annotate with hubs.
+hubs_list <- module_hubs[paste0("M",glm_results$Module)]
+glm_results$Hubs <- sapply(hubs_list,paste,collapse="; ")
 
-module_noa$Proteins <- module_proteins[module_noa$Module]
-
-# Drop "M0"
-module_noa <- module_noa %>% filter(Module != "M0")
-
-# Save as rda.
-myfile <- file.path(root,"data","module_noa.rda")
-save(module_noa,file=myfile,version=2)
-
-# Save module stats.
-module_stats <- glm_results
-myfile <- file.path(datadir,"module_stats.rda")
-save(module_stats,file=myfile,version=2)
+# Annotate with module proteins.
+#
+symbols <- unique(tmt_protein$Symbol)
+names(symbols) <- gene_map$uniprot[match(symbols,gene_map$symbol)]
+#
+module_list <- split(names(partition),partition)
+names(module_list) <- paste0("M",names(module_list))
+named_module_list <- lapply(module_list,function(x) symbols[x])
+#
+module_prots <- lapply(named_module_list,function(x){ 
+			       paste(x,names(x),collapse="|",sep=";") })
+glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 
 #--------------------------------------------------------------------
-## Save results as excel document.
+# Save results.
 #--------------------------------------------------------------------
-
-# Add to final results.
-results <- list("Module Summary Stats" = module_noa, 
-		"Module GLM Results" = glm_results)
 
 # Save as excel table
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
+results <- list("results" = glm_results)
 write_excel(results,file=myfile)
+
+# Save as rda object.
+module_stats <- glm_results
+myfile <- file.path(datadir,"module_stats.rda")
+save(module_stats,file=myfile,version=2)
