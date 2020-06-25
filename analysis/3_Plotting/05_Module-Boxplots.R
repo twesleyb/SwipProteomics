@@ -143,5 +143,5 @@ ggsavePDF(plots, myfile)
 
 # Save significant modules.
 myfile <- file.path(root,"figs","Modules",
-		    paste0("Sig",length(sig_modules),"_Module_Boxplots.pdf")
+		    paste0("Sig",length(sig_modules),"_Module_Boxplots.pdf"))
 ggsavePDF(plots[sig_modules], myfile)
