@@ -89,8 +89,8 @@ message("\nModules with significant go enrichment:")
 knitr::kable(top_go[idx,])
 
 # save significant results.
-results <- go_gse[idx]
-write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GSE_Results.xlsx"))
+results <- bind.rows(go_gse[idx],.id="Module")
+write_excel(results,file.path(tabsdir,"Swip_TMT_Module_GO_Results.xlsx"))
 
 # Save as rda.
 module_GO <- dplyr::bind_rows(results,.id="class")
