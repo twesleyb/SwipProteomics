@@ -14,7 +14,9 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 </p>
 
 # FIXME:
-* is nework ppi information too big to save?
-* module protein plots label is nproteins -- mising outline?
-* change these plots to their colors?
-* clean-up NDD enrichment tables.
+* Save network PPI information.
+* module_noa and module_stats are potentially redundant
+* column names of module_noa changed and may cause bugs
+* adjusted protein boxplots -- some  of 968 are annotated as NS?
+* Insure consistent use of BF p-adjust for higher level stats.
+
