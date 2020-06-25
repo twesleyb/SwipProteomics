@@ -1,5 +1,11 @@
 #!/usr/bin/env Rscript
 
+#' ---
+#' title: Swip Proteomics Plotting
+#' description: generate module colors
+#' authors: Tyler W Bradshaw
+#' ---
+
 ## OPTIONS:
 swip = "Q3UMB9" # uniprot accession of swip.
 swip_color = "#B86FAD" # color of swip/wash module.
@@ -8,8 +14,22 @@ swip_color = "#B86FAD" # color of swip/wash module.
 # * Updated module color assignemnts.
 
 #---------------------------------------------------------------------
-## Misc functions.
+## Misc functions
 #---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
 
 # Parse the python dictionary returned as a string from 
 # system(random_color.py)
@@ -43,6 +63,8 @@ data(partition)
 #---------------------------------------------------------------------
 ## Generate colors.
 #---------------------------------------------------------------------
+
+message("\nGenerating colors using randomcolor python module!")
 
 # The number of colors we need.
 modules <- split(names(partition),partition)

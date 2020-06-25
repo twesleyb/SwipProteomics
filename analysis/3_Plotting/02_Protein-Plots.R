@@ -16,6 +16,23 @@ save_sig = TRUE
 ## Output:
 # * a single pdf with plots of all proteins
 
+#--------------------------------------------------------------------
+## Misc function - getrd
+#--------------------------------------------------------------------
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
 #---------------------------------------------------------------------
 ## Set-up the workspace.
 #---------------------------------------------------------------------
@@ -112,7 +129,7 @@ if (save_all) {
 	ggsavePDF(all_plots, myfile)
 }
 
-# Save sig85 prots include M0.
+# Save sig85 prots include proteins that were assigned to M0.
 if (save_sig) {
 	message("\nSaving significant plots, this will take several minutes.")
 	myfile <- file.path(figsdir,"Sig85_Protein_plots.pdf")
