@@ -9,7 +9,7 @@
 
 ## OPTIONS:
 swip = "Q3UMB9" # uniprot accession of swip.
-wt_color = c("WT"=col2hex("gray"))
+wt_color = "#47b2a4"
 
 ## OPTIONS:
 BF_alpha = 0.05 # PAdjust threshold for module significance.
@@ -97,7 +97,7 @@ for (module in modules) {
 
 	# Get module's color.
 	colors <- c(wt_color,module_colors[module_name])
-	names(colors)[2] <- "MUT"
+	names(colors) <- c("WT","MUT") 
 
 	# Collect the module's stats.
 	# FIXME: where are moddule noa?
