@@ -20,7 +20,7 @@ input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
 
 ## OPTIONS:
-save_plots = TRUE # Should plots be saved in root/figs?
+#save_plots = TRUE # Should plots be saved in root/figs?
 fig_height = 5.0 # Default height of figures (in).
 fig_width = 5.0 # Default width of figures (in).
 
@@ -106,7 +106,7 @@ renv::load(rootdir,quiet=TRUE)
 # Load required packages and functions.
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating data.
-	library(ggplot2) # For making plots.
+	#library(ggplot2) # For making plots.
 	library(data.table) # For working with tables.
 })
 
@@ -646,6 +646,6 @@ fwrite(ttest_dt,myfile)
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
 
-# Save tidy_protein as rda object. 
+# Save tidy_protein (final normalized protein in tidy (lonn) format) as rda object. 
 myfile <- file.path(datadir,"tmt_protein.rda")
 save(tmt_protein,file=myfile,version=2)
