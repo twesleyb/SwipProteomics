@@ -1,6 +1,42 @@
-#FIXME: Incomplete
+
+#!/usr/bin/env Rscript
+
+#' ---
+#' title: Swip Proteomics Plotting
+#' description: 
+#' authors: Tyler W Bradshaw
+#' ---
+
+## OPTIONS:
+
+## OUTPUT:
+
+#---------------------------------------------------------------------
+## Misc functions
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+# Load renv.
+root <- getrd()
+renv::load(root, quiet=TRUE)
 
 # Generate missing value density plots.
+# FIXME: tidy_peptide is not saved, so we dont have the necessary data.
+
+quit()
 tp <- sl_peptide
 
 df <- tp %>% filter(Treatment != "QC") %>% filter(Experiment == "Exp1") %>%

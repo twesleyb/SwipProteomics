@@ -21,6 +21,7 @@ colors = c(WT="#47b2a4",MUT="#B86FAD") # Colors for WT and mutant groups.
 #--------------------------------------------------------------------
 ## Misc function - getrd
 #--------------------------------------------------------------------
+
 getrd <- function(here=getwd(), dpat= ".git") {
 	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
@@ -42,7 +43,7 @@ getrd <- function(here=getwd(), dpat= ".git") {
 
 # Load renv -- use renv::load NOT activate!
 rootdir <- getrd()
-renv::load(rootdir,quiet=TRUE) # NOTE: getrd is a f(x) in .Rprofile.
+renv::load(rootdir,quiet=TRUE)
 
 # Load required packages and functions.
 suppressPackageStartupMessages({
@@ -59,8 +60,7 @@ fontdir <- file.path(rootdir, "fonts") # Arial font for plots.
 figsdir <- file.path(rootdir, "figs","Proteins") # Output figures.
 
 # Set global plotting settings.
-ggtheme()
-set_font("Arial", font_path = fontdir)
+ggtheme(); set_font("Arial", font_path = fontdir)
 
 # Load the data.
 data(gene_map)
@@ -72,7 +72,8 @@ data(tmt_protein)
 
 # Wash proteins + control.
 prots <- c("Washc4","Washc1","Washc2","Washc5","Tubb4a")
-names(prots) <- gene_map$"Uniprot Accession"[match(prots,gene_map$"Gene Symbol")]
+idx <- match(prots,gene_map$symbol)
+names(prots) <- gene_map$uniprot[idx]
 
 # Subset the data.
 df <- tmt_protein %>% filter(Accession %in% names(prots))
@@ -183,8 +184,8 @@ for (protein in prots) {
 		annotate("text",x=stats$xpos,y=stats$ypos,
 			 label=stats$symbol,size=4)
 	# Add title.
-	idx <- match(protein,gene_map$"Uniprot Accession")
-	symbol <- gene_map$"Gene Symbol"[idx]
+	idx <- match(protein,gene_map$uniprot)
+	symbol <- gene_map$symbol[idx]
 	plot <- plot + ggtitle(paste0(symbol,"|",protein))
 	# Add module annotation.
 	yrange <- log2(range(df$Adjusted.Intensity))
