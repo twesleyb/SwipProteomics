@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-# Colors were generated online at: https://coolors.co/.
-
 # OPTIONS:
 fig_width = 5
 fig_height = 5
@@ -59,10 +57,7 @@ dm <- tmt_protein %>% filter(Treatment != "SPQC") %>%
 	reshape2::dcast(Accession ~ Sample, value.var= "Intensity") %>%
 		as.data.table() %>% as.matrix(rownames="Accession")
 
-#--------------------------------------------------------------------
-## Sample PCA.
-#--------------------------------------------------------------------
-
+# Sample PCA.
 pca <- prcomp(log2(t(dm)))
 pca_summary <- as.data.frame(t(summary(pca)$importance))
 idx <- order(pca_summary[["Proportion of Variance"]],decreasing=TRUE)

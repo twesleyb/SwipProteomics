@@ -116,7 +116,7 @@ plot <- plot + annotate("text",x=seq(1.5,length(prots)*2,by=2),
 			y=ymax,label=symbols,size=5)
 
 # Save as pdf.
-myfile <- file.path(figsdir,"Select_Adjusted_Protein_BoxPlots.pdf")
+myfile <- file.path(figsdir,"WASH_Complex_Protein_BoxPlots.pdf")
 ggsave(myfile,plot, height = fig_height, width = fig_width)
 
 #----------------------------------------------------------------------

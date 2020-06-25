@@ -134,5 +134,5 @@ for (module in modules) {
 myfile <- file.path(root,"figs","Modules","Module_Boxplots.pdf")
 ggsavePDF(plots, myfile)
 
-myfile <- file.path(root,"figs","Modules","Sig_Module_Boxplots.pdf")
+myfile <- file.path(root,"figs","Modules",paste0("Sig",length(sig_modules),"_Module_Boxplots.pdf")
 ggsavePDF(plots[sig_modules], myfile)
