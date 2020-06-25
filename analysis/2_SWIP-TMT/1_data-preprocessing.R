@@ -638,10 +638,6 @@ fwrite(tmt_protein,myfile)
 myfile <- file.path(rdatdir,"glm_results.RData")
 saveRDS(glm_results,myfile)
 
-# Save to select protein statistics to file.
-myfile <- file.path(rdatdir,"Select_Protein_Stats.csv")
-fwrite(ttest_dt,myfile)
-
 # Save gene map.
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
