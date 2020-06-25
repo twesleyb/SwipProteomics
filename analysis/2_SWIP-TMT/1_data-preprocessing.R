@@ -18,7 +18,6 @@ input_samples = "TMT-samples.csv"
 ## OPTIONS:
 save_plots = TRUE # Should plots be saved in root/figs?
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
-BF_alpha = 0.1 # P.adjust threshold for differential abundance.
 fold_change_delta = 0.2 # Fold change threshold.
 sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
 fig_height = 5.0 # Default height of figures.
@@ -173,9 +172,7 @@ tidy_peptide <- tidyProt(peptides,id.vars=cols)
 # Annotate tidy data with additional meta data from samples.
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
-# Summary of initial peptide/protein quantification.
-message(paste("\nSummary of initial peptide/protein quantification",
-	     "after removing contaiminants:"))
+message("\nSummary of initial peptide/protein quantification after removing contaiminants:")
 n_samples <- length(unique(tidy_peptide$Sample))
 n_proteins <- length(unique(tidy_peptide$Accession))
 n_peptides <- length(unique(tidy_peptide$Sequence))
@@ -184,8 +181,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 		 "Peptides"=formatC(n_peptides,big.mark=","))
 knitr::kable(df)
 
-rm(list=c("cols","df"))
-
+rm(list="cols")
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
 #---------------------------------------------------------------------
@@ -243,8 +239,6 @@ rm(list=c("tp","df","myfile","plot"))
 #---------------------------------------------------------------------
 ## Examine reproducibility of QC measurements.
 #---------------------------------------------------------------------
-
-# FIXME: need to generate a plot!
 
 # Assess reproducibility of QC measurements and remove QC samples
 # that are irreproducible.
@@ -350,7 +344,6 @@ rm(list="check")
 #---------------------------------------------------------------------
 
 # If necessary, protein level imputing can be performed.
-# The KNN algorithm is suitable for MNAR or MAR data.
 
 # Impute missing values.
 # Proteins with more than 50% missing values are ignored.
@@ -402,12 +395,12 @@ message(paste0("\nSummary of differentially abundant proteins ",
 	      "in each subceulluar fraction (FDR < ",FDR_alpha,"):"))
 knitr::kable(t(sapply(results_list,function(x) sum(x$FDR < FDR_alpha))))
 
-# Total number of unique DA proteins:
+# Total number of unique DA proteeins:
 all_sig <- lapply(results_list, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
 
-# Which Proteins that are commonly dysregulated?
+# Proteins that are commonly dysregulated:
 combined_results <- rbindlist(results_list,idcol="Fraction")
 idx <- match(combined_results$Accession,gene_map$uniprot)
 combined_results$Gene <- gene_map$symbol[idx] 
@@ -417,7 +410,6 @@ df <- combined_results %>% group_by(Accession) %>%
 			 nFractions = length(FDR), 
 			 .groups = "drop") %>% 
 	filter(nSig==nFractions)
-
 # Status:
 message(paste("\nProteins that are differentially abundant in all fractions:\n",
 	      paste(df$Gene,collapse=", ")))
@@ -443,58 +435,14 @@ alt_results <- alt_glm_results$stats
 # Summary of DA proteins with logFC cutoff:
 d <- fold_change_delta
 sig <- alt_results$FDR < FDR_alpha 
-sig2 <- alt_results$PAdjust < BF_alpha
 DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
-DA2 <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
-
-# Calucate P-adjust with Bonferonni method.
-alt_results$PAdjust <- p.adjust(alt_results$PValue, method ="bonferroni")
-
-# Status:
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("N Differentially abundant proteins:",
 	      sum(DA & sig)))
 message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
 message(paste("...FDR <",FDR_alpha))
 
-message(paste("N Differentially abundant proteins:",
-	      sum(DA2 & sig2)))
-message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
-message(paste("...Bonferonni <",BF_alpha))
-
-message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < FDR_alpha),
-	      " (FDR < ",FDR_alpha,")."))
-message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < 0.05),
-	      " (FDR < ",0.05,")."))
-
-message(paste0("Total number of DA proteins: ", sum(alt_results$FDR < 0.05),
-	      " (Bonferroni < ",0.05,")."))
-message(paste0("Total number of DA proteins: ", sum(alt_results$PAdjust < 0.1),
-	      " (Bonferroni < ",0.1,")."))
-
-#---------------------------------------------------------------------
-## Get Protein abundance adjusted for fraction differences.
-#---------------------------------------------------------------------
-
-# Calculate protein abundance, adjusted for fraction differences.
-logCPM <- edgeR::cpm(glm_results$dge, log=TRUE) # Is CPM step needed?
-
-# Remove effect of fraction.
-dm <- limma::removeBatchEffect(logCPM,batch=dge$samples$fraction,
-				   design=model.matrix(~treatment,
-						       data=dge$samples))
-
-# Collect results.
-dt <- as.data.table(dm,keep.rownames="Accession") %>% 
-	reshape2::melt(id.var="Accession",
-		       variable.name="Sample",
-		       value.name="Intensity")
-dt$Sample <- as.character(dt$Sample)
-
-# Combine with additional meta data.
-idy <- which(colnames(tmt_protein)=="Intensity")
-temp_prot <- as.data.table(tmt_protein)[,-..idy] %>% filter(Treatment != "SPQC")
-adjusted_prot <- left_join(temp_prot,dt, by=c("Accession","Sample"))
+message(paste("Total number of DA proteins:", sum(alt_results$FDR < FDR_alpha)))
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -610,23 +558,10 @@ for (i in c(1:length(results_list))) {
 	tmp_df <- tibble::add_column(tmp_df,Symbol,.after="Entrez")
 	final_results[[i]] <- tmp_df
 }
-# This is a list of the final statistical results.
+
+# Save as excel workboook.
 names(final_results) <- paste(names(results_list),"Results")
-
-# Save the data as an excel workboook.
-# Include gene map -- clean-up its columns.
-# Include final, normalized protein data as a data.frame.
-
-colnames(gene_map) <- c("Uniprot Accession", "Entrez ID", 
-			"Gene Symbol", "Protein")
-
-prot_dt <- as.data.table(log2(norm_dm), keep.rownames="Accession")
-
-final_results <- c(list("Samples" = samples),
-		   list("Gene Identifiers"=gene_map),
-		   list("Raw Peptide" = peptides),
-		   list("Norm Protein" = prot_dt),
-		   final_results) # all the statistical comparisons
+final_results <- c(list("Samples" = samples), final_results)
 myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
 
@@ -648,6 +583,10 @@ fwrite(tmt_protein,myfile)
 # Save statistical results.
 myfile <- file.path(rdatdir,"glm_results.RData")
 saveRDS(glm_results,myfile)
+
+# Save to select protein statistics to file.
+myfile <- file.path(rdatdir,"Select_Protein_Stats.csv")
+fwrite(ttest_dt,myfile)
 
 # Save gene map.
 myfile <- file.path(datadir,"gene_map.rda")
