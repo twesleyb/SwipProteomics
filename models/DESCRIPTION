@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+# Making the gif.
 
 # In pymol, type the following commands:
 # mset 1,180 

@@ -566,7 +566,7 @@ rm(list=c("idx","idy"))
 # Add normalized protein data to statistical results.
 norm_df <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample,value.var="Intensity") 
-norm_dm <- norm_df %>% as.matrix(keep.rownames="Accession")
+norm_dm <- norm_df %>% as.matrix(rownames="Accession")
 
 # Loop to add normalized protein data to glm statistical results.
 message("\nSaving TMT data and statistical results.")
