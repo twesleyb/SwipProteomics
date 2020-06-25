@@ -28,7 +28,7 @@ oldham_threshold = 2.5 # Sample connectivity threshold for detecting outliers.
 
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
 BF_alpha = 0.05 # Bonferroni threshold for differntial abundance.
-logFC_threshold = log2(1.2) # Log2 Fold change threshold.
+logFC_threshold = c(lwr=log2(0.8), upr=log2(1.2)) # Log2 Fold change threshold.
 
 ## OUTPUT saved in root/tables:
 # * Swip_TMT_Results.xlsx - an excel spreadsheet that contains:
@@ -127,8 +127,7 @@ if (!dir.exists(tabsdir)) { dir.create(tabsdir) }
 if (!dir.exists(figsdir)) { dir.create(figsdir, recursive = TRUE) }
 
 # Set global plotting settings.
-ggtheme()
-set_font("Arial", font_path = fontdir)
+ggtheme(); set_font("Arial", font_path = fontdir)
 
 #---------------------------------------------------------------------
 ## Load the raw data and sample info.
@@ -185,12 +184,12 @@ entrez[names(mapped_by_hand)] <- mapped_by_hand
 
 # Check: we have successfully mapped all uniprot ids.
 check <- sum(is.na(entrez)) == 0
-if (!check) { stop("Unable to map all Uniprot IDs to stable gene identifiers!") }
+if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
 
-# Map entrez ids to gene symbols.
+# Map entrez ids to gene symbols using twesleyb/getPPIs.
 symbols <- getPPIs::getIDs(entrez,from="entrez",to="symbol",species="mouse")
 
-# Create mapping data.table.
+# Create gene identifier mapping data.table.
 gene_map <- data.table(uniprot = names(entrez),
                        entrez = entrez,
 	               symbol = symbols)
@@ -213,16 +212,20 @@ tidy_peptide <- tidyProt(peptides,id.vars=cols)
 # Annotate tidy data with additional meta data from samples.
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
-message("\nSummary of initial peptide/protein quantification after removing contaiminants:")
+message(paste("\nSummary of initial peptide/protein quantification",
+	      "after removing contaiminants:"))
+
 n_samples <- length(unique(tidy_peptide$Sample))
 n_proteins <- length(unique(tidy_peptide$Accession))
 n_peptides <- length(unique(tidy_peptide$Sequence))
+
 df <- data.frame("Samples"=as.character(n_samples),
 		 "Proteins"=formatC(n_proteins,big.mark=","),
 		 "Peptides"=formatC(n_peptides,big.mark=","))
 knitr::kable(df)
 
 rm(list="cols")
+
 #---------------------------------------------------------------------
 ## Perform sample loading normalization.
 #---------------------------------------------------------------------
@@ -254,28 +257,6 @@ check_SL(sl_peptide) # Equal within an experiment.
 message("\nImputing a small number of missing peptide values.")
 imputed_peptide <- imputeKNNpep(sl_peptide, groupBy="Experiment",
 				samples_to_ignore="SPQC",quiet=FALSE) 
-
-# Generate missing value density plots.
-tp <- sl_peptide
-df <- tp %>% filter(Treatment != "QC") %>% filter(Experiment == "Exp1") %>%
-	group_by(Accession,Sequence) %>%
-	dplyr::summarize(Mean_Intensity = mean(Intensity,na.rm=TRUE), 
-			      Contains_Missing = any(is.na(Intensity)),
-			      .groups = "drop") %>%
-	filter(!is.na(Mean_Intensity)) # Remove peptides with all missing values.
-plot <- ggplot(df, aes(x=log2(Mean_Intensity),
-		       fill=Contains_Missing,colour=Contains_Missing)) +
-	geom_density(alpha=0.1,size=1) + ggtitle("Experiment 1")
-
-# NOTE: From this plot, the distributions overlap. Missing values are
-# missing at random or even missing completely at random.
-
-if (save_plots) {
-	myfile <- file.path(figsdir,"Peptide_MV_Density.pdf")
-	ggsave(myfile,plot,height=fig_height,width=fig_width)
-}
-
-rm(list=c("tp","df","myfile","plot"))
 
 #---------------------------------------------------------------------
 ## Examine reproducibility of QC measurements.
@@ -474,9 +455,9 @@ alt_glm_results <- glmDA2(tmt_protein, comparisons, samples, samples_to_ignore)
 alt_results <- alt_glm_results$stats
 
 # Summary of DA proteins with logFC cutoff:
-d <- logFC_threshold
+bounds <- logFC_threshold
 sig <- alt_results$FDR < FDR_alpha 
-DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
+DA <- alt_results$logFC < bounds$lwr | alt_results$logFC < bounds$upr
 message(paste("\nFor WT v Mutant contrast, there are..."))
 message(paste("N Differentially abundant proteins:",
 	      sum(DA & sig)))
