@@ -64,7 +64,6 @@ adjm <- WGCNA::bicor(dm)
 message("\nPerforming network enhancement with to denoise network.")
 ne_adjm <- neten::neten(adjm)
 
-
 #--------------------------------------------------------------------
 ## Create PPI network.
 #--------------------------------------------------------------------
@@ -84,6 +83,10 @@ ppi_data <- musInteractome %>%
 	filter(Interactor_B_Taxonomy %in% os_keep) %>%
 	filter(osEntrezA %in% entrez) %>% 
 	filter(osEntrezB %in% entrez)
+
+# Save to excel.
+myfile <- file.path(root,"tables","Swip_TMT_Network_PPIs.xlsx")
+write_excel(list("Network PPIs" = ppi_data),file=myfile)
 
 # Create simple edge list (sif) and matrix with node attributes (noa).
 sif <- ppi_data %>% select(osEntrezA, osEntrezB)

@@ -14,3 +14,5 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 * adjusted protein boxplots -- some  of 968 are annotated as NS?
 * decrease repo size
 * check which sig_proteins are saved as rda.
+* name module go sheet
+* add module membership = partition to module glm results.
