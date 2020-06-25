@@ -417,7 +417,7 @@ message(paste0("\nSummary of differentially abundant proteins ",
 	      "in each subceulluar fraction (FDR < ",FDR_alpha,"):"))
 knitr::kable(t(sapply(results_list,function(x) sum(x$FDR < FDR_alpha))))
 
-# Total number of unique DA proteeins:
+# Total number of unique DA proteins:
 all_sig <- lapply(results_list, function(x) x$Accession[x$FDR < FDR_alpha])
 n_sig <- length(unique(unlist(all_sig)))
 message(paste("\nTotal number of unique DA proteins:",n_sig))
@@ -458,13 +458,14 @@ alt_results <- alt_glm_results$stats
 PAdjust = p.adjust(alt_results$PValue,method="bonferroni")
 alt_results <- tibble::add_column(alt_results,PAdjust,.after="FDR")
 
-# Summary of DA proteins with logFC cutoff:
+# Summary of DA proteins with any logFC.
 bounds <- logFC_threshold
-sig1 <- alt_results$FDR < FDR_alpha 
-sig2 <- alt_results$PAdjust < BF_alpha
+sig1 <- alt_results$FDR < 0.05
+sig2 <- alt_results$PAdjust < BF_alpha 
 updown <- alt_results$logFC < bounds['lwr'] | alt_results$logFC < bounds['upr']
-df <- data.table("Fraction.WT vs Fraction.MUT (DA & FDR<0.1)"=sum(sig1 & updown),
-		 "WT vs Swip MUT Contrast (DA & BF<0.05)"=sum(sig2 & updown))
+message("\nSummary of WT v MUT DA proteins:")
+df <- data.table("FDR < 0.05"=sum(sig1),
+		 "BF < 0.05"=sum(sig2))
 knitr::kable(df)
 
 # Column names are Adjusted.NAME
@@ -476,8 +477,12 @@ colnames(alt_results)[idy] <- paste0("Adjusted.",
 ## Calculate Protein abundance adjusted for fraction differences.
 #---------------------------------------------------------------------
 
+# NOTE: these adjusted values are not used for modeling, only 
+# plotting purposes.
+
 # Calculate protein abundance, adjusted for fraction differences.
-logCPM <- edgeR::cpm(glm_results$dge, log=TRUE) # Is CPM step needed?
+# FIXME: Is CPM step needed? Log is necessary, but CPM norm?
+logCPM <- edgeR::cpm(glm_results$dge, log=TRUE)
 
 # Remove effect of fraction.
 dm <- limma::removeBatchEffect(logCPM,
@@ -504,11 +509,6 @@ adjusted_prot <- left_join(adjusted_prot,alt_results,
 
 # unlog
 adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
-
-# Cast into a matrix, so we can add data to stats.
-#adj_dm <- adjusted_prot %>% as.data.table() %>%
-#	dcast(Accession ~ Sample,value.var="Adjusted.Intensity") %>%
-#	as.matrix(rownames="Accession")
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -557,10 +557,10 @@ rm(list=c("idx","idy"))
 ## Save TMT data as a single excel document.
 ## Create an excel workbook with the following sheets:
 # * Samples
-# * Input - raw peptides
-# * Output - normalized protein
+# * Raw Peptide
+# * Norm Protein
 # * Statistical results:
-#     - Seperate sheet for each fraction/comparison.
+#     - Seperate sheet for each intra-fraction comparison.
 #     - Include contrast specific data.
 
 # Add normalized protein data to statistical results.
