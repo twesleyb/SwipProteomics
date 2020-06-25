@@ -30,6 +30,8 @@ FDR_alpha = 0.1 # FDR threshold for differential abundance.
 BF_alpha = 0.05 # Bonferroni threshold for differntial abundance.
 logFC_threshold = c(lwr=log2(0.8), upr=log2(1.2)) # Log2 Fold change threshold.
 
+set.seed = as.numeric(Sys.time()) # seed for random operations.
+
 ## OUTPUT saved in root/tables:
 # * Swip_TMT_Results.xlsx - an excel spreadsheet that contains:
 #     - Sample meta data.
@@ -300,14 +302,13 @@ message(paste("\nStandardizing protein measurements between",
 	      "experiments by IRS normalization."))
 irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 
-# Generate list of QC proteins.
+# Check, protein-wise QC measurements are now equal in a random protein.
+# Generate list of QC proteins, and check the average of the three Exps.
 qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>% 
 	group_by(Accession,Experiment) %>% 
 	dplyr::summarize(Treatment = unique(Treatment),
 		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
 		  .groups = "drop") %>% group_by(Accession) %>% group_split()
-
-# Check, protein-wise QC measurements are now equal.
 message("\nIntra-experimental QC means are equal after IRS normalization:")
 knitr::kable(sample(qc_proteins,1))
 
@@ -350,7 +351,7 @@ rm(list=c("df","protein_list","idx","protein"))
 # * were identified by a single peptide.
 # * contain too many missing values.
 # * contain any missing QC values.
-# * have outlier measurements.
+# * have outlier measurements (outside mean +/- nSD from its bin).
 message(paste("\nFiltering proteins, this may take several minutes."))
 filt_protein <- filtProt(spn_protein,
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
@@ -366,9 +367,8 @@ rm(list="check")
 #---------------------------------------------------------------------
 
 # If necessary, protein level imputing can be performed.
-
-# Impute missing values.
 # Proteins with more than 50% missing values are ignored.
+
 message(paste("\nImputing missing protein values."))
 imputed_protein <- imputeKNNprot(filt_protein,ignore="SPQC")
 
@@ -444,7 +444,7 @@ rm(list=c("df","all_sig","n_sig","comparisons"))
 
 # Use EdgeR glm to evaluate differential protein abundance.
 # Compare WT v Mutant within a fraction.
-# NOTE: model = "~ Fraction + Treatment" We are interested in 'Treatment'.
+# NOTE: Model: ~ Fraction + Genotype; We are interested in WT v MUT changes.
 message(paste("\nEvaluating protein differential abundance between",
 	      "WT and Mutant groups."))
 comparisons <- "Genotype.Fraction"
@@ -454,17 +454,18 @@ alt_glm_results <- glmDA2(tmt_protein, comparisons, samples, samples_to_ignore)
 # Extract key glm results.
 alt_results <- alt_glm_results$stats
 
+# Adjust pvalues with Bonferroni method.
+PAdjust = p.adjust(alt_results$PValue,method="bonferroni")
+alt_results <- tibble::add_column(alt_results,PAdjust,.after="FDR")
+
 # Summary of DA proteins with logFC cutoff:
 bounds <- logFC_threshold
-sig <- alt_results$FDR < FDR_alpha 
-DA <- alt_results$logFC < bounds$lwr | alt_results$logFC < bounds$upr
-message(paste("\nFor WT v Mutant contrast, there are..."))
-message(paste("N Differentially abundant proteins:",
-	      sum(DA & sig)))
-message(paste0("...Percent Change +/- ", round(100*fold_change_delta,2),"%."))
-message(paste("...FDR <",FDR_alpha))
-
-message(paste("Total number of DA proteins:", sum(alt_results$FDR < FDR_alpha)))
+sig1 <- alt_results$FDR < FDR_alpha 
+sig2 <- alt_results$PAdjust < BF_alpha
+updown <- alt_results$logFC < bounds['lwr'] | alt_results$logFC < bounds['upr']
+df <- data.table("Intra-fraction Contrasts (FDR<0.1)"=sum(sig1 & updown),
+		 "WT v Swip MUT Contrast (BF<0.05)"=sum(sig2 & updown))
+knitr::kable(df)
 
 #---------------------------------------------------------------------
 ## Combine final normalized TMT data and stats.
@@ -484,6 +485,7 @@ tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>%
 # Add adjusted protein values to tmt_protein.
 # Rename Intensity column.
 idy <- which(colnames(adjusted_prot) == "Intensity")
+
 colnames(adjusted_prot)[idy] <- "Adjusted.Intensity"
 
 # Add stats to adjusted protein data.
