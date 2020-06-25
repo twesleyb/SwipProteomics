@@ -122,7 +122,7 @@ write_graph(g, myfile, format = "gml")
 # NOTE: underscores in attribute names are removed. 
 winfile <- gsub("/mnt/d/", "D:/", myfile)
 cysnetw <- importNetworkFromFile(winfile)
-Sys.sleep(2); unlink(myfile)
+Sys.sleep(3); unlink(myfile)
 
 # For REALLY large networks you need to tell cytoscape to create a view of the
 # network. I coded this before...
@@ -134,7 +134,7 @@ result = tryCatch({
 	commandsPOST("view create")
 }, finally = {
 	print("Created Network View!")
-	Sys.sleep(2)
+	Sys.sleep(3)
 })
 
 # Visual Property defaults:
@@ -174,16 +174,16 @@ createVisualStyle("mysteez", defaults = defaults,
 		  mappings = mappings)
 
 # Apply to graph.
-setVisualStyle("mysteez"); Sys.sleep(3)
+invisible({ setVisualStyle("mysteez") }); Sys.sleep(3)
 
 # Apply layout.
-layoutNetwork(netw_layout); Sys.sleep(2); fitContent()
+invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
 
 # Save network image.
 netw_image <- file.path(figsdir, "Network_Overview")
 winfile <- gsub("/mnt/d/", "D:/", netw_image)
 exportImage(winfile, "svg")
-message("\nConvert svg to tiff before pushing to git!")
+message("\nConvert svg image to tiff before pushing to git (too big)!")
 
 # Free up some memory.
-cytoscapeFreeMemory()
+invisible({ cytoscapeFreeMemory() })
