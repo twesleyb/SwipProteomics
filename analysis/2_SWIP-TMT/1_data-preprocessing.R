@@ -20,7 +20,6 @@ input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
 
 ## OPTIONS:
-#save_plots = TRUE # Should plots be saved in root/figs?
 fig_height = 5.0 # Default height of figures (in).
 fig_width = 5.0 # Default width of figures (in).
 
@@ -106,7 +105,6 @@ renv::load(rootdir,quiet=TRUE)
 # Load required packages and functions.
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating data.
-	#library(ggplot2) # For making plots.
 	library(data.table) # For working with tables.
 })
 
@@ -565,7 +563,7 @@ rm(list=c("idx","idy"))
 #     - Seperate sheet for each fraction/comparison.
 #     - Include contrast specific data.
 
-# Add normalized protein data 
+# Add normalized protein data to statistical results.
 norm_df <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample,value.var="Intensity") 
 norm_dm <- norm_df %>% as.matrix(keep.rownames="Accession")
@@ -647,3 +645,5 @@ save(gene_map,file=myfile,version=2)
 # Save tidy_protein (final normalized protein in tidy format) as rda object. 
 myfile <- file.path(datadir,"tmt_protein.rda")
 save(tmt_protein,file=myfile,version=2)
+
+message("\nDone!")
