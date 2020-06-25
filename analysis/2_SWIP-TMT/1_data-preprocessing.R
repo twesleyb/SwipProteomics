@@ -2,46 +2,63 @@
 
 #' ---
 #' title: Swip Proteomics
-#' description: Preprocessing of Swip TMT proteomics data.
+#' description: Preprocessing and statistical analysis of Swip TMT proteomics.
 #' authors: Tyler W Bradshaw
 #' ---
 
 ## NOTE: The functions used in this script are not robust. They were written
 ## to work with the input arguments that they are provided, and in many cases 
-## will not perform as expected if passed different arguments.
+## will not perform as expected if passed different arguments. I attempted to
+## keep the data in a tidy-ish format throughout. This decision makes some
+## operations like plotting easier, but makes other operations like
+## normalization more cumbersome and computationally costly.
 
-## INPUT data in root/data/:
-zip_file = "TMT.zip" # Zipped directory contains:
+## INPUT data is in root/data/TMT_.zip.
+# The zipped directory contains sample meta data and raw peptide data from PD.
+zip_file = "TMT.zip" 
+input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
-input_samples = "TMT-samples.csv"
 
 ## OPTIONS:
 save_plots = TRUE # Should plots be saved in root/figs?
+fig_height = 5.0 # Default height of figures (in).
+fig_width = 5.0 # Default width of figures (in).
+
+oldham_threshold = 2.5 # Sample connectivity threshold for detecting outliers.
+
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
-fold_change_delta = 0.2 # Fold change threshold.
-sample_connectivity_threshold = 2.5 # Threshold for sample level outliers.
-fig_height = 5.0 # Default height of figures.
-fig_width = 5.0 # Default width of figures.
+BF_alpha = 0.05 # Bonferroni threshold for differntial abundance.
+logFC_threshold = log2(1.2) # Log2 Fold change threshold.
 
 ## OUTPUT saved in root/tables:
-# * Swip_TMT_Results.xlsx
+# * Swip_TMT_Results.xlsx - an excel spreadsheet that contains:
+#     - Sample meta data.
+#     - Gene/protein identifiers.
+#     - Raw peptide data.
+#     - Final normalized data (log2 transformed).
+#     - Statistical results for intrafraction contrasts (F4-10).
+#     - Statistical results for WT v MUT contrast.
 
 ## OUTPUT for R package in root/data.
+# Key datasets are saved in the data directory as read-only objects.
 # * tmt_protein.rda
 
+## OUTPUT for downstream analysis in root/rdata/
+# Input files/temporary files that are passed to other scripts including 
+# the python clustering script are saved in root/rdata.
+
 ## Order of data processing operations:
+# FIXME: double check this
 # * Load the data from PD.
 # * Initial sample loading normalization -- done within an experiment.
 # * Impute missing peptide values with KNN algorithm (k=10).
 # * Examine QC peptide reproducibility -- remove outliers.
 # * Summarize to protein level by summing all peptides for a protein.
 # * Protein-level sample loading normalization -- done across all experiments.
-
 # * IRS normalization -- equalizes protein measurements made from different
 #   peptides.
 # * Sample pool normalization -- assumes that mean of QC technical replicates is
 #   equal to mean of biological replicates..
-
 # * Impute missing protein values with KNN (k=10).
 # * Protein level filtering -- remove proteins identified by a single peptide;
 #   remove proteins with too many missing values; remove proteins that are not 
@@ -51,6 +68,30 @@ fig_width = 5.0 # Default width of figures.
 #   ([Abundance] ~ 0 + groups) as implemented by the Edge R package 
 #   and its functions gmQLFfit() and glmQLFTest().
 
+## NOTE: REPRODUCIBILITY
+# The dependencies for this project were managed within a conda virtual 
+# environment into which R and renv, a R package for managing R libraries,
+# were installed. All additional R dependencies were installed using 
+# renv. 
+
+#---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
@@ -58,7 +99,7 @@ fig_width = 5.0 # Default width of figures.
 
 # Load renv -- use renv::load NOT activate!
 rootdir <- getrd()
-renv::load(rootdir,quiet=TRUE) # NOTE: getrd is a f(x) in .Rprofile.
+renv::load(rootdir,quiet=TRUE) 
 
 # Load required packages and functions.
 suppressPackageStartupMessages({
@@ -72,11 +113,11 @@ suppressWarnings({ devtools::load_all() })
 
 # Project directories:
 datadir <- file.path(rootdir, "data") # Key pieces of data saved as rda.
-fontdir <- file.path(rootdir, "fonts") # Arial font for plots.
+fontdir <- file.path(rootdir, "fonts") # Arial font for ggplots saved as pdf.
 rdatdir <- file.path(rootdir, "rdata") # Temporary data files.
-tabsdir <- file.path(rootdir, "tables") # Output tables.
-downdir <- file.path(rootdir, "downloads") # Misc stuff.
-figsdir <- file.path(rootdir, "figs","TMT") # Output figures.
+tabsdir <- file.path(rootdir, "tables") # Output tables -- excel files.
+downdir <- file.path(rootdir, "downloads") # Misc downloads/temporary files.
+figsdir <- file.path(rootdir, "figs", "TMT") # Output figures.
 
 # Create output directories if necessary.
 if (!dir.exists(datadir)) { dir.create(datadir) }
@@ -102,7 +143,7 @@ myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_data)
 peptides <- fread(myfile)
 
 # Load sample information.
-myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_samples)
+myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
 samples <- fread(myfile)
 
 # Format Cfg force column -- this is the Force in g's used to obtain 
@@ -358,8 +399,8 @@ imputed_protein <- imputeKNNprot(filt_protein,ignore="SPQC")
 # identify outlier samples.
 # This approach was adapted from Oldham et al., 2012 (pmid: 22691535).
 zK <- sampleConnectivity(filt_protein)
-outlier_samples <- c(names(zK)[zK < -sample_connectivity_threshold],
-		     names(zK)[zK > sample_connectivity_threshold])
+outlier_samples <- c(names(zK)[zK < -1 * oldham_threshold],
+		     names(zK)[zK > +1 * oldham_threshold])
 
 # There are no sample outliers.
 check <- length(outlier_samples) == 0
@@ -433,7 +474,7 @@ alt_glm_results <- glmDA2(tmt_protein, comparisons, samples, samples_to_ignore)
 alt_results <- alt_glm_results$stats
 
 # Summary of DA proteins with logFC cutoff:
-d <- fold_change_delta
+d <- logFC_threshold
 sig <- alt_results$FDR < FDR_alpha 
 DA <- alt_results$logFC < log2(1-d) | alt_results$logFC > log2(1+d)
 message(paste("\nFor WT v Mutant contrast, there are..."))
