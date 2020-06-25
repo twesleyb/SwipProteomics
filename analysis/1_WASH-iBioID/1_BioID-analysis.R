@@ -1,6 +1,10 @@
 #!/usr/bin/env Rscript
 
-# Analysing WASH (Washc1) iBioID proteomics.
+#' ---
+#' title: WASH iBioID Proteomics Analysis
+#' description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
+#' authors: Tyler W Bradshaw
+#' ---
 
 ## User parameters to change:
 FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
@@ -15,6 +19,24 @@ datafile = "BioID_raw_protein.csv" # In BioID.zip/
 
 ## Output in root/data:
 # * wash_interactome.rda # The WASH iBioID proteome.
+
+#---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
 
 #-------------------------------------------------------------------------------
 ## Prepare the workspace.

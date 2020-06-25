@@ -1,6 +1,10 @@
 #!/usr/bin/env Rscript
 
-# Analysing Swip (WASH) BioID proteomics.
+#' ---
+#' title: WASH iBioID Proteomics Analysis
+#' description: building a PPI network for WASH proteome.
+#' authors: Tyler W Bradshaw
+#' ---
 
 ## User parameters to change:
 FDR_alpha = 0.1
@@ -11,6 +15,24 @@ data_file = "WASH_BioID_Results.RData"
 
 ## Output in root/tables:
 # * WASH_Network_PPIs.xlsx
+
+#---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
 
 #-------------------------------------------------------------------------------
 ## Prepare the workspace.
