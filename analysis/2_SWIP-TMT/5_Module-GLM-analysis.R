@@ -7,7 +7,7 @@
 #' ---
 
 ## Options:
-BF_alpha = 0.1 # Significance threshold.
+BF_alpha = 0.05 # Significance threshold.
 
 #---------------------------------------------------------------------
 ## Misc function - getrd().
