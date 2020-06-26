@@ -241,10 +241,10 @@ dm <- df %>% dplyr::select(Module,all_of(cols)) %>%
 	as.data.table() %>% as.matrix(rownames="Module")
 idy <- grepl("WT",colnames(dm))
 WT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
-WT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/WT_means
+WT_SEM <- apply(dm,1,function(x) sd(log2(x[idy])))/WT_means
 idy <- grepl("MUT",colnames(dm))
 MUT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
-MUT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/MUT_means
+MUT_SEM <- apply(dm,1,function(x) sd(log2(x[idy])))/MUT_means
 df <- tibble::add_column(df,"WT Mean" = WT_means, .after="PVE")
 df <- tibble::add_column(df,"WT SEM" = WT_SEM, .after="WT Mean")
 df <- tibble::add_column(df,"MUT Mean" = MUT_means, .after="WT SEM")
