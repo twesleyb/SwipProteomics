@@ -48,17 +48,14 @@ suppressWarnings({ devtools::load_all() })
 
 # Project directories:
 datadir <- file.path(root, "data")
-fontdir <- file.path(root, "fonts")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 downdir <- file.path(root, "downloads")
+suppdir <- file.path(root, "supplement")
 figsdir <- file.path(root, "figs","Modules")
 
 # If necessary, create dir for figs.
 if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
-
-# Global plotting settings.
-ggtheme(); set_font("Arial", font_path = fontdir)
 
 # Load the data.
 data(tmt_protein)
@@ -157,7 +154,7 @@ save(sig_modules,file=myfile,version=2)
 ## Calculate Module PVE
 #--------------------------------------------------------------------
 
-#  Calculate module eigengenes.
+# Calculate module eigengenes.
 dm <- tmt_protein %>% as.data.table() %>% 
 	dcast(Sample ~ Accession, value.var = "Intensity") %>% 
 	as.matrix(rownames="Sample") %>% log2()
@@ -195,7 +192,7 @@ module_hubs <- lapply(module_list, function(x) {
 	       return(ids)
 				  } )
 
-# We will add hubs to the data below.
+# We will add hubs to the data in the code below.
 				  
 #--------------------------------------------------------------------
 ## Add module level data.
@@ -235,6 +232,26 @@ module_prots <- lapply(named_module_list,function(x){
 glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 
 #--------------------------------------------------------------------
+## Calculate mean and SEM of groups.
+#--------------------------------------------------------------------
+
+df <- glm_results
+cols <- c(grep("F[0-9]{1,2}_WT",colnames(df)),grep("MUT",colnames(df)))
+dm <- df %>% dplyr::select(Module,all_of(cols)) %>% 
+	as.data.table() %>% as.matrix(rownames="Module")
+idy <- grepl("WT",colnames(dm))
+WT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
+WT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/WT_means
+idy <- grepl("MUT",colnames(dm))
+MUT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
+MUT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/MUT_means
+df <- tibble::add_column(df,"WT Mean" = WT_means, .after="PVE")
+df <- tibble::add_column(df,"WT SEM" = WT_SEM, .after="WT Mean")
+df <- tibble::add_column(df,"MUT Mean" = MUT_means, .after="WT SEM")
+df <- tibble::add_column(df,"MUT SEM" = MUT_SEM, .after="MUT Mean")
+glm_results <- df
+
+#--------------------------------------------------------------------
 # Save results.
 #--------------------------------------------------------------------
 
@@ -245,6 +262,11 @@ glm_results$Proteins <-  module_prots[paste0("M",glm_results$Module)]
 
 # Save as excel table
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
+results <- list("Module GLM Results" = glm_results)
+write_excel(results,file=myfile)
+
+# Save a copy in root/supplment.
+myfile <- file.path(suppdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")
 results <- list("Module GLM Results" = glm_results)
 write_excel(results,file=myfile)
 
