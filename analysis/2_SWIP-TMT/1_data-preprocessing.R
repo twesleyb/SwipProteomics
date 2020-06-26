@@ -628,6 +628,23 @@ all_cols <- c(colnames(alt_results)[colnames(alt_results) %notin% sorted_cols],
 alt_results <- alt_results %>% dplyr::select(all_of(all_cols)) %>% 
 	as.data.table()
 
+# Calculate group mean and SEM.
+df <- alt_results
+idy <- grep("Abundance",colnames(df))
+dm <- df %>% dplyr::select(Accession, all_of(idy)) %>% 
+	as.matrix(rownames="Accession")
+idy <- grep("Control",colnames(dm))
+WT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
+WT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/WT_means
+idy <- grep("Mutant",colnames(dm))
+MUT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
+MUT_SEM <- apply(dm,1,function(x) log2(sd(x[idy])))/MUT_means
+df <- tibble::add_column(df,'WT Mean' = WT_means, .after = "Accession")
+df <- tibble::add_column(df,'WT SEM' = WT_SEM, .after = "WT Mean")
+df <- tibble::add_column(df,'MUT Mean' = MUT_means, .after = "WT SEM")
+df <- tibble::add_column(df,'MUT SEM' = MUT_SEM, .after = "MUT Mean")
+alt_results <- as.data.table(df)
+
 # Add intra-fraction comparisons to list of results.
 results_list[["WT v MUT"]] <- alt_results
 
