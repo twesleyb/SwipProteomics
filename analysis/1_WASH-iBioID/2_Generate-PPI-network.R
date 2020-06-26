@@ -56,6 +56,7 @@ suppressPackageStartupMessages({
 datadir <- file.path(root,"data")
 rdatdir <- file.path(root,"rdata")
 tabsdir <- file.path(root,"tables")
+suppdir <- file.path(root, "supplement") # final supplementary data
 
 # Load any additional functions in root/R.
 devtools::load_all()
@@ -117,5 +118,9 @@ sif$weight <- NULL
 myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")
-writeData(wb,sheet=4,sif,rowNames=TRUE,colNames=TRUE)
+writeData(wb,sheet=4,sif,rowNames=FALSE,colNames=TRUE)
+saveWorkbook(wb, file=myfile, overwrite=TRUE)
+
+# Save a copy of the data in supplement/ dir.
+myfile <- file.path(suppdir,"S1_WASH_BioID_Results.xlsx")
 saveWorkbook(wb, file=myfile, overwrite=TRUE)

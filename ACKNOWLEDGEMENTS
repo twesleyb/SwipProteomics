@@ -1,13 +1,15 @@
-I would like the ensure that the following people are acknowledged for their
+# ACKNOWLEDGMENTS
+
+I would like to ensure that the following people are acknowledged for their
 help and support throughout this project.
 
-* Jamie Courtland - the Swip/Washc4 project is Jamie's phD thesis project. JC, thank
-* you for giving me the opportunity to work on this project and being an
-* excellent collaborator. 
+* Jamie Courtland - the Swip/Washc4 project is Jamie's phD thesis project. 
+  JC, thank you for giving me the opportunity to work on this project and 
+  being an excellent collaborator. 
 
-* Eric Dammer [linkedin](https://www.linkedin.com/in/ericbdammer) ED, thank you for
-* your contributions to the early development of the protein covariance analysis
-* codebase which developed out of ED's WPCNA code.
+* Eric Dammer [linkedin](https://www.linkedin.com/in/ericbdammer) - ED, 
+  thank you for your contributions to the early development of the 
+  protein covariance analysis codebase which developed out of ED's WPCNA code.
 
 * Phillip Wilmarth [github](https://github.com/pwilmart) - PW, thank you for
 * your help and advice about proteomics signal processing and normalization 
@@ -21,3 +23,6 @@ help and support throughout this project.
 
 * Soderling lab (SHS) - AU, AP, EB, EE, EH, JK, JW, KH, SD, TT, YG: Thank you for
 * your friendship, mentorship, scientific support, and technical assistance. 
+
+* _In Memoriam_ of Daniel Kanek - DK, you were an excellent scientist, and 
+  I think of you often. These bytes are for you.

@@ -1,19 +1,19 @@
-Supplementary files.
+# Supplementary files.
 
-Table S1 - WASH iBioID results
+* Table S1 - WASH iBioID results
 
-Table S2 - SWIP TMT Protein level results 
+* Table S2 - SWIP TMT Protein level results 
 
-Table S3 - SWIP TMT Module level results 
+* Table S3 - SWIP TMT Module level results 
 
-Table S4 - SWIP TMT Network PPIs
+* Table S4 - SWIP TMT Network PPIs
 
-File S5 - Sig85 Protein plots (FDR < 0.1)
+* File S5 - Significant Protein plots (intrafraction FDR < 0.1)
 
-File S6 - SigXX Protein Boxplots (PAdjust < 0.1)
+* File S6 - Significant Protein Boxplots (WT v MUT PAdjust < 0.1)
 
-File S7 - SigXX Module Protein plots (PAdjust < 0.05)
+* File S7 - Significant Module Protein plots (WT v MUT PAdjust < 0.05)
 
-File S8 - SigXX Module Boxplots (PAdjust < 0.05)
+* File S8 - Significant Module Boxplots (WT v MUT PAdjust < 0.05)
 
-File S9 - Module Networks 
+* File S9 - All Module Subgraphs

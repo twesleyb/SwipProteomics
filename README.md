@@ -10,9 +10,7 @@ Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
 <p align="center">The Swip (Washc4) protein.<p align="center">
 
 # FIXME:
-* Save network PPI information.
 * adjusted protein boxplots -- some  of 968 are annotated as NS?
-* decrease repo size
 * check which sig_proteins are saved as rda.
 * name module go sheet
 * add module membership = partition to module glm results.

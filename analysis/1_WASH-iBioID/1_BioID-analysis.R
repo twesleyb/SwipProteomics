@@ -10,9 +10,9 @@
 FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
 enrichment_threshold = log2(3.0) # enrichment threshold.
 
-## Input data in root/data
+## Input data in root/data/BioID.zip/
 zipfile = "BioID.zip"
-datafile = "BioID_raw_protein.csv" # In BioID.zip/
+datafile = "BioID_raw_protein.csv" 
 
 ## Output in root/tables:
 # * WASH_BioID_Results.xlsx
@@ -42,11 +42,11 @@ getrd <- function(here=getwd(), dpat= ".git") {
 ## Prepare the workspace.
 #-------------------------------------------------------------------------------
 
-# Activate renv.
+# Load renv.
 root <- getrd()
 renv::load(root,quiet=TRUE)
 
-# Imports
+# Imports.
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating the data.
 	library(edgeR) # For statitical comparisons.
@@ -55,16 +55,16 @@ suppressPackageStartupMessages({
 	library(data.table) # For working with data.tables.
 })
 
-# Load any additional functions in root/R.
+# Load any additional project specific functions and data.
 suppressMessages({ devtools::load_all() })
 
 # Project directories.
-datadir <- file.path(root,"data")
-rdatdir <- file.path(root,"rdata")
-tabsdir <- file.path(root,"tables")
-downdir <- file.path(root,"downloads")
+datadir <- file.path(root,"data") # key datasets
+rdatdir <- file.path(root,"rdata") # temp data files
+tabsdir <- file.path(root,"tables") # final xlsx tables
+downdir <- file.path(root,"downloads") # misc/temp files
 
-# Create rdata dir if it doesn't exist.
+# Create dirs if they dont exist.
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
 if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }
@@ -108,6 +108,11 @@ nProt <- length(unique(tidy_prot$Accession))
 message(paste0("\nTotal number of proteins quantified: ",
 	      formatC(nProt,big.mark=","),"."))
 
+# Cast tidy prot into a matrix.
+tidy_dm <- tidy_prot %>% as.data.table() %>%
+	dcast(Accession + Description + Peptides ~ Sample, 
+	      value.var = "Intensity")
+
 #-------------------------------------------------------------------------------
 ## Sample loading normalization. 
 #-------------------------------------------------------------------------------
@@ -137,7 +142,7 @@ SPN_prot <- normSP(SL_prot,pool="QC")
 # Status.
 message("\nFiltering proteins...")
 
-# Remove one hit wonders.
+# Remove one hit wonders -- proteins identified by a single peptide.
 one_hit_wonders <- unique(SPN_prot$Accession[SL_prot$Peptides == 1])
 n_ohw <- length(one_hit_wonders)
 filt_prot <- SPN_prot %>% filter(Peptides>1)
@@ -180,12 +185,12 @@ message(paste0("\nFinal number of quantifiable proteins: ",
 
 # Proteins with missing values are less abundant than those without. 
 # This is evidence that missing values are MNAR and can be imputed with
-# the KNN algorith.
+# the KNN algorithm.
 message("\nImputing missing protein values using the KNN algorithm (k=10).")
 imp_prot <- imputeKNNprot(filt_prot,quiet=FALSE)
 
 #-------------------------------------------------------------------------------
-## Statistical testing -- EdgeR Exact Test. 
+## Statistical testing with EdgeR::ExactTest. 
 #-------------------------------------------------------------------------------
 
 # Status.
@@ -258,8 +263,8 @@ message(paste0("\nNumber of significantly enriched proteins ",
 	      "(log2FC > ",round(enrichment_threshold,2),
 	      "; FDR < ",FDR_alpha,"): "), nsig,".")
 
-# Map uniprot ids to entrez ids using mgi batch query.
-# NOTE: this takes a little time as the function downloads the data from MGI.
+# Map UniprotIDs to Entrez IDs using online MGI batch query tool.
+# NOTE: this takes several minutes as the function downloads the data from MGI.
 message("\nMapping Uniprot IDs to stable Entrez IDs and gene symbols.")
 entrez <- mgi_batch_query(results$Accession)
 
@@ -281,7 +286,10 @@ if (!check) { stop("Unable to map all entrez ids to gene symbols.") }
 results <- tibble::add_column(results,"Entrez"=entrez,.after="Accession")
 results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
 
-# Create list of results, 
+# Drop canidate column since its not it the other workbooks.
+results$candidate <- NULL
+
+# Create list of results:
 results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
 
 # Add the mitochondrial proteins that were removed.
