@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
 #' ---
-#' title:
-#' description:
+#' title: Swip TMT Proteomics
+#' description: analysis of modules for enrichment of WASH proteome
 #' authors: Tyler W Bradshaw
 #' ---
 

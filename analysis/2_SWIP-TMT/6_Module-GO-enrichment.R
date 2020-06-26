@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 
 #' ---
-#' title: Module Analysis
-#' description: Analysis of co-expression modules
-#' authors: Tyler W Bradshaw
+#' title: Swip TMT proteomics
+#' description: Analysis of modules for GO enrichment
+#' authors: Tyler W A Bradshaw
 #' ---
 
 ## User parameters to change:

@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 
 #' ---
-#' title: Swip Proteomics
-#' description:
-#' authors: Tyler W Bradshaw
+#' title: Swip TMT Proteomics
+#' description: module level statistical analysis
+#' authors: Tyler W A Bradshaw
 #' ---
 
 ## Options:

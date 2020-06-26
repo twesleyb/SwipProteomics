@@ -3,7 +3,7 @@
 #' ---
 #' title: Module Preservation
 #' description: Evaluate module preservation by permutation testing.
-#' authors: Tyler W Bradshaw
+#' authors: Tyler W A Bradshaw
 #' ---
 
 ## OPTIONS:

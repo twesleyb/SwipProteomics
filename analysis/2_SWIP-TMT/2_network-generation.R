@@ -1,5 +1,11 @@
 #!/usr/bin/env Rscript
 
+#' ---
+#' title: Swip TMT Proteomics
+#' description: generate protein networks
+#' authors: Tyler W A Bradshaw
+#' ---
+
 ## INPUT:
 # tmt_protein in root/data
 

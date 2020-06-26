@@ -3,7 +3,7 @@
 #' ---
 #' title: WASH iBioID Proteomics Analysis
 #' description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
-#' authors: Tyler W Bradshaw
+#' authors: Tyler W A Bradshaw
 #' ---
 
 ## User parameters to change:
@@ -287,10 +287,11 @@ results <- tibble::add_column(results,"Entrez"=entrez,.after="Accession")
 results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
 
 # Drop canidate column since its not it the other workbooks.
-results$candidate <- NULL
+tmp_results <- results
+tmp_results$candidate <- NULL
 
 # Create list of results:
-results_list <- list("Raw Protein" = tidy_prot, "BioID Results" = results)
+results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = tmp_results)
 
 # Add the mitochondrial proteins that were removed.
 df <- raw_prot %>% filter(Accession %in% mito_prot) %>% 

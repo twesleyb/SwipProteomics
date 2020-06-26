@@ -3,7 +3,7 @@
 #' ---
 #' title: WASH iBioID Proteomics Analysis
 #' description: building a PPI network for WASH proteome.
-#' authors: Tyler W Bradshaw
+#' authors: Tyler W A Bradshaw
 #' ---
 
 ## User parameters to change:
@@ -112,9 +112,8 @@ g <- graph_from_data_frame(sif,vertices=noa,directed=FALSE)
 message(paste("\nNumber of Nodes:",length(V(g))))
 message(paste("\nNumber of Edges:",length(E(g))))
 
-# data in root/tables:
 # Save sif as a sheet in WASH_BioID_Results.xlsx
-sif$weight <- NULL
+sif$Weight <- NULL
 myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")

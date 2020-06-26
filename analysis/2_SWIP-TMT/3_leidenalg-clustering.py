@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-' Clustering of a protein co-expression graph with Leidenalg.' 
+'''
+title: Leidenalg Clustering 
+description: clustering the protein network with Leidenalg + Surprise 
+authors: Tyler W A Bradshaw
+'''
 
 ## Parameters: 
 rmin = 0 # Min resolution for multi-resolution methods.
