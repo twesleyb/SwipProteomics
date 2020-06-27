@@ -199,7 +199,8 @@ module_hubs <- lapply(module_list, function(x) {
 #--------------------------------------------------------------------
 
 df <- tmt_protein %>% group_by(Module,Genotype,Fraction) %>% 
-	summarize(Intensity = sum(Adjusted.Intensity))
+	dplyr::summarize(Intensity = sum(Adjusted.Intensity),.groups="drop")
+df$.groups <- NULL
 dm <- df %>% as.data.table() %>%
 	dcast(Module ~ Fraction + Genotype, value.var = "Intensity")
 dm$Module <- as.character(dm$Module)
