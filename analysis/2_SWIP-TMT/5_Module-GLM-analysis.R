@@ -261,14 +261,21 @@ glm_results <- df
 #myfile <- file.path(root,"data","sig_proteins.rda")
 #save(sig_proteins,file=myfile,version=2)
 
-# Save as excel table
+# Data.table describing graph partition.
+Uniprot <- names(partition)
+idx <- match(Uniprot,gene_map$uniprot)
+Entrez <- gene_map$entrez[idx]
+Symbol <- gene_map$symbol[idx]
+part_dt <- data.table(Uniprot,Entrez,Symbol,Module=partition)
+
+# Save as excel table.
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
-results <- list("Module GLM Results" = glm_results)
+results <- list("Network Partition" = part_dt,
+		"Module GLM Results" = glm_results)
 write_excel(results,file=myfile)
 
 # Save a copy in root/supplment.
 myfile <- file.path(suppdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")
-results <- list("Module GLM Results" = glm_results)
 write_excel(results,file=myfile)
 
 # Save as rda object.
