@@ -1,4 +1,4 @@
-imputeKNNprot <- function(tidy_prot,ignore="QC",rowmax=0.5,colmax=0.8,
+imputeQRILC <- function(tidy_prot,ignore="QC",rowmax=0.5,colmax=0.8,
 			  quiet=TRUE){
 
 	# Determine how many missing values each protein has,

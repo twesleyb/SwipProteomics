@@ -67,7 +67,7 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 # * Assess WT v MUT differential abundance across all fractions with a 
 #   GLM: [Protein Abundance] ~ Fraction + Genotype.
 
-## NOTE: REPRODUCIBILITY
+## NOTE:
 # The dependencies for this project were managed within a conda virtual 
 # environment into which R and renv, an R package for managing R libraries,
 # were installed. All additional R dependencies were installed using 
@@ -78,8 +78,8 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)

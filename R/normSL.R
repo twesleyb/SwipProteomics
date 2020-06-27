@@ -12,6 +12,7 @@ normSL <- function(tp, groupBy=NULL){
 	cmd <- paste0("group_by(tp, ",paste(groupBy,collapse=", "),")")
 
 	# Calculate column sums for grouped samples.
+	# FIXME: if .groups is set to 'drop' to avoid Warning msg, then error?
 	data_list <- eval(parse(text=cmd)) %>% 
 		summarize(Total=sum(Intensity,na.rm=TRUE)) %>%
 		group_split()

@@ -24,8 +24,8 @@ datafile = "BioID_raw_protein.csv"
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -37,6 +37,28 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	root <- here
 	return(root)
 }
+
+# Calculate the Coefficient of Covarition (CV).
+cv <- function(x) { sd(x)/mean(x) }
+
+# Check CV of WASH, Control, and SPQC groups.
+check_group_CV <- function(tidy_prot) {
+	# Annotate with QC and biological replicates groups.
+	tmp_dt <- tidy_prot %>% as.data.table()
+	tmp_dt$Group <- sapply(strsplit(tmp_dt$Sample," "),"[",2)
+	# Calculate protein-wise CV.
+	tmp_res <- tmp_dt %>% group_by(Accession, Group) %>% 
+		dplyr::summarize(n = length(Intensity), 
+				 CV=cv(Intensity),.groups="drop")
+	# NOTE: NA can arise if protein was not quantified in all replicates.
+	cv_summary <- tmp_res %>% filter(!is.na(CV)) %>% 
+		group_by(Group) %>% 
+		summarize('Mean(CV)' = mean(CV,na.rm=TRUE),
+			  'SD(CV)' = sd(CV, na.rm=TRUE),
+			  'n' = length(CV),.groups="drop")
+	return(cv_summary)
+}
+
 
 #-------------------------------------------------------------------------------
 ## Prepare the workspace.
@@ -50,8 +72,8 @@ renv::load(root,quiet=TRUE)
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating the data.
 	library(edgeR) # For statitical comparisons.
-	library(geneLists) # For a list of mito proteins.
 	library(getPPIs) # For mapping gene identifiers.
+	library(geneLists) # For a list of mito proteins.
 	library(data.table) # For working with data.tables.
 })
 
@@ -77,7 +99,7 @@ if (!dir.exists(downdir)){ dir.create(downdir) }
 myfile <- file.path(datadir,zipfile)
 unzip(myfile) # unzip 
 
-# Read into R.
+# Read into R with data.table::fread.
 myfile <- file.path(getwd(),tools::file_path_sans_ext(zipfile),datafile)
 raw_prot <- fread(myfile)
 
@@ -86,10 +108,19 @@ myfile <- file.path(downdir,tools::file_path_sans_ext(zipfile))
 unlink(myfile,recursive=TRUE)
 unlink("./BioID", recursive=TRUE)
 
-# Tidy-up the data.
+# Tidy the data.
 message("\nLoading raw Swip BioID protein data.")
 tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
 		      id.vars=c("Accession","Description","Peptides"))
+
+# Insure that keratins have been removed--typically the proteomics core removes
+# most of these.
+idx <- grepl("Keratin|keratin",tidy_prot$Description)
+keratins <- tidy_prot %>% filter(idx) %>% dplyr::select(Accession) %>% 
+	unlist() %>% unique()
+warning(paste(length(keratins),
+	      "Keratin proteins remain, and  will be removed."))
+tidy_prot <- tidy_prot %>% filter(Accession %notin% keratins)
 
 # Load mitochondrial protein list from twesleyb/geneLists.
 data(list=geneLists("mito"))
@@ -98,10 +129,10 @@ mito_prot <- getIDs(mito_entrez,from="entrez",to="uniprot",species="mouse")
 
 # Status.
 nMito <- sum(mito_prot %in% tidy_prot$Accession)
-message(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
+warning(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
 
 # Remove mitochondrial proteins as contaminants.
-tidy_prot <- tidy_prot %>%  filter(Accession %notin% mito_prot)
+tidy_prot <- tidy_prot %>% filter(Accession %notin% mito_prot)
 
 # Summary:
 nProt <- length(unique(tidy_prot$Accession))
@@ -112,6 +143,10 @@ message(paste0("\nTotal number of proteins quantified: ",
 tidy_dm <- tidy_prot %>% as.data.table() %>%
 	dcast(Accession + Description + Peptides ~ Sample, 
 	      value.var = "Intensity")
+
+# Status.
+message("\nSummary of group CVs:")
+knitr::kable(check_group_CV(tidy_prot))
 
 #-------------------------------------------------------------------------------
 ## Sample loading normalization. 
@@ -124,7 +159,7 @@ SL_prot <- normSL(tidy_prot,groupBy="Sample")
 # Check, column sums should now be equal.
 message("Total intensity sums are equal after sample loading normalization:")
 df <- SL_prot %>% group_by(Sample) %>% 
-	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE))
+	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),groups="drop")
 knitr::kable(df)
 
 #-------------------------------------------------------------------------------
@@ -146,27 +181,23 @@ message("\nFiltering proteins...")
 one_hit_wonders <- unique(SPN_prot$Accession[SL_prot$Peptides == 1])
 n_ohw <- length(one_hit_wonders)
 filt_prot <- SPN_prot %>% filter(Peptides>1)
-
-# Status.
 message(paste("... Number of one-hit-wonders:",n_ohw))
 
 # Remove proteins with unreliable QC (more than 1 missing values).
 df <- filt_prot %>% filter(grepl("QC",Sample)) %>% group_by(Accession) %>%
-	summarize(N=length(Intensity),n_missing=sum(is.na(Intensity)))
+	summarize(N=length(Intensity),
+		  n_missing=sum(is.na(Intensity)),.groups="drop")
 out <- unique(df$Accession[df$n_missing>0])
 filt_prot <- filt_prot %>% filter(Accession %notin% out)
-
-# Status.
 n_out <- length(out)
 message(paste("... Number of proteins with missing QC data:",n_out))
 
 # Remove proteins with more than 50% missingness as these cannot be imputed.
 df <- filt_prot %>% filter(!grepl("QC",Sample)) %>% group_by(Accession) %>%
-	summarize(N=length(Intensity),n_missing=sum(is.na(Intensity)))
+	summarize(N=length(Intensity),
+		  n_missing=sum(is.na(Intensity)),.groups="drop")
 out <- unique(df$Accession[df$n_missing>0.5*df$N])
 filt_prot <- filt_prot %>% filter(Accession %notin% out)
-
-# Status.
 n_out <- length(out)
 message(paste("... Number of proteins with too many missing values:",n_out))
 
@@ -187,7 +218,10 @@ message(paste0("\nFinal number of quantifiable proteins: ",
 # This is evidence that missing values are MNAR and can be imputed with
 # the KNN algorithm.
 message("\nImputing missing protein values using the KNN algorithm (k=10).")
-imp_prot <- imputeKNNprot(filt_prot,quiet=FALSE)
+imp_prot <- imputeKNNprot(filt_prot,k=10,rowmax=0.5,colmax=0.8,quiet=FALSE)
+
+# Status.
+knitr::kable(check_group_CV(imp_prot))
 
 #-------------------------------------------------------------------------------
 ## Statistical testing with EdgeR::ExactTest. 
