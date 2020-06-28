@@ -12,8 +12,7 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 recursive = False # If module_size > max_size, then cluster recursively.
 n_iterations = -1 # Num of Lalg iter. If -1, then repeat until no improvement.
-optimization_method = 'Modularity' # Optimization method.
-# Methods: Modularity Surprise CPM RBConfiguration RBER Significance
+optimization_method = 'Surprise' # Optimization method.
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
@@ -56,30 +55,30 @@ from Py.myfun import *
 
 # Leidenalg supports the following optimization methods:
 methods = {
-        # 1. Modularity
+        # Modularity
         "Modularity": {'partition_type' : 'ModularityVertexPartition', 
             'weights' : True, 'signed' : False,
             'resolution_parameter' : None, 'n_iterations' : n_iterations},
-        # 2. Surprise
+        # Surprise
         "Surprise": {'partition_type' : 'SurpriseVertexPartition', 
             'weights' : True, 'signed' : False,
             'resolution_parameter' : None, 'n_iterations' : n_iterations},
-        # 3. RBConfiguration
+        # RBConfiguration
         "RBConfiguration": {'partition_type' : 'RBConfigurationVertexPartition', 
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
-        # 4. RBER
+        # RBER
         "RBER": {'partition_type' : 'RBERVertexPartition', 
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
-        # 5. CPM
+        # CPM
         "CPM": {'partition_type' : 'CPMVertexPartition', 
             'weights' : True, 'signed' : True,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
-        # 6. Significance
+        # Significance
         # FIXME: Significance method doesn't seem to be working.
         "Significance": 
         {'partition_type' : 'SignificanceVertexPartition', 
@@ -181,7 +180,6 @@ else:
         diff = optimiser.optimise_partition(partition,n_iterations=-1)
         profile.append(partition)
         # Ends loop.
-    print("... Final partition: " + partition.summary() + ".", file=stderr)
 # Ends If/else.
 
 #------------------------------------------------------------------------------
