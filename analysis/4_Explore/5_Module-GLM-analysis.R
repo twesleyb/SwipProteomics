@@ -148,7 +148,7 @@ glm_results %>% filter(PAdjust < BF_alpha) %>%
 # Save sig modules.
 myfile <- file.path(root,"data","sig_modules.rda")
 sig_modules <- paste0("M",glm_results$Module[glm_results$PAdjust < BF_alpha])
-save(sig_modules,file=myfile,version=2)
+#save(sig_modules,file=myfile,version=2)
 
 #--------------------------------------------------------------------
 ## Calculate Module PVE
@@ -272,13 +272,13 @@ part_dt <- data.table(Uniprot,Entrez,Symbol,Module=partition)
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
 results <- list("Network Partition" = part_dt,
 		"Module GLM Results" = glm_results)
-write_excel(results,file=myfile)
+#write_excel(results,file=myfile)
 
 # Save a copy in root/supplment.
 myfile <- file.path(suppdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")
-write_excel(results,file=myfile)
+#write_excel(results,file=myfile)
 
 # Save as rda object.
 module_stats <- glm_results
 myfile <- file.path(datadir,"module_stats.rda")
-save(module_stats,file=myfile,version=2)
+#save(module_stats,file=myfile,version=2)
