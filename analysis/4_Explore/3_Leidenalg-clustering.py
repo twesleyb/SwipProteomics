@@ -12,7 +12,7 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-optimization_method = 'Modularity'
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but optimization.
 
 ## Recursive option:
@@ -136,7 +136,8 @@ for key in out: del parameters[key]
 
 # Perform Leidenalg module detection. 
 if parameters.get('resolution_parameter') is None:
-    # Single resolution methods.
+
+    # Single resolution methods + first iteration if recursive.
     profile = list()
     partition = find_partition(**parameters)
     optimiser = Optimiser()
@@ -144,17 +145,27 @@ if parameters.get('resolution_parameter') is None:
     profile.append(partition)
     if not recursive:
         print("... Final partition: " + partition.summary() + ".", file=stderr)
+
     # Recursively split modules that are too big.
     if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
+
         # Update optimization method.
         method = methods.get(recursive_method).get('partition_type')
-        parameters['partition_type'] = getattr(import_module('leidenalg'),method)
+        if type(method) is str:
+                parameters['partition_type'] = getattr(import_module('leidenalg'),method)
+        elif type(method) == 'type':
+                parameters['partition_type'] = method
+
+        # Initial module membership.
         initial_membership = partition.membership
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
         n_big = sum(too_big)
         n_iter = 0
+        msg = "\nSplitting {} modules that contain more than {} nodes."
+        print(msg.format(n_big,max_size),file=stderr)
+
         while any(too_big) and n_iter < n_recursive_iter:
             # Perform clustering for any subgraphs that are too big.
             idx = [i for i, too_big in enumerate(too_big) if too_big] 
@@ -165,30 +176,37 @@ if parameters.get('resolution_parameter') is None:
             # Add to list.
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
+            n_iter += 1
+            
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
         new_part = {k: v for d in parts for k, v in d.items()}
+
         # Set membership of initial graph.
         membership = [new_part.get(node) for node in partition.graph.vs['name']]
         partition.set_membership(membership)
+
         # Replace partition in profile list.
         profile[0] = partition
         print("... Final partition: " + partition.summary() + ".", file=stderr)
-        n_iter += 1
-else:
-    # Loop to perform multi-resolution clustering methods.
-    pbar = ProgressBar()
-    profile = list()
-    resolution_range = linspace(**parameters.get('resolution_parameter'))
-    for resolution in pbar(resolution_range):
-        # Update resolution parameter.
-        parameters['resolution_parameter'] = resolution
-        partition = find_partition(**parameters)
-        optimiser = Optimiser()
-        diff = optimiser.optimise_partition(partition,n_iterations=-1)
-        profile.append(partition)
+
+    else:
+
+        # Multi-resolution methods:
+        pbar = ProgressBar()
+        profile = list()
+        resolution_range = linspace(**parameters.get('resolution_parameter'))
+
+        for resolution in pbar(resolution_range):
+            # Update resolution parameter.
+            parameters['resolution_parameter'] = resolution
+            partition = find_partition(**parameters)
+            optimiser = Optimiser()
+            diff = optimiser.optimise_partition(partition,n_iterations=-1)
+            profile.append(partition)
         # Ends loop.
+
 # Ends If/else.
 
 #------------------------------------------------------------------------------

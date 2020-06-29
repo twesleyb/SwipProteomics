@@ -77,8 +77,8 @@ message("\nSaving the data.")
 
 # Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
-	fwrite(file.path(root,"rdata","filt_adjm.csv"))
+	fwrite(file.path(root,"rdata","adjm.csv"))
 
 # Save enhanced adjm as csv.
 ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
-	fwrite(file.path(root,"rdata","filt_ne_adjm.csv"))
+	fwrite(file.path(root,"rdata","ne_adjm.csv"))

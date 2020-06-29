@@ -13,8 +13,8 @@ FDR_alpha = 0.05 # significance threshold for gse enrichment.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -44,7 +44,6 @@ suppressPackageStartupMessages({
 # Load additional functions in root/R.
 suppressWarnings({ devtools::load_all() })
 
-# Project directories:
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
@@ -54,7 +53,7 @@ tabsdir <- file.path(root, "tables")
 #---------------------------------------------------------------------
 
 # Load the partition and tmt data.
-data(partition)
+data(ms_partition)
 data(tmt_protein)
 
 #---------------------------------------------------------------------

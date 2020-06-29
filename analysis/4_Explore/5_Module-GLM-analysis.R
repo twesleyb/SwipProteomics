@@ -140,8 +140,8 @@ nsig <- sum(glm_results$PAdjust < BF_alpha)
 message(paste0("\nNumber of significant ",
 	      "(p-adjust < ", BF_alpha,") ",
 	      "modules: ", nsig,"."))
-message(paste0("\nModule that contains Swip (Washc4|Q3UMB9:",
-	       paste0("M",partition["Q3UMB9"])))
+message(paste0("\nModule that contains Swip (Washc4|Q3UMB9): ",
+	       partition["Q3UMB9"],"."))
 
 # Pretty print sig results:
 glm_results %>% filter(PAdjust < BF_alpha) %>%
@@ -172,9 +172,7 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
-
-print(colnames(glm_results))
-
+message(paste("\nMedian Module PVE:", round(median(glm_results$PVE),3)))
 
 #--------------------------------------------------------------------
 # Determine module hubs.
@@ -277,7 +275,7 @@ part_dt <- data.table(Uniprot,Entrez,Symbol,Module=partition)
 myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
 results <- list("Network Partition" = part_dt,
 		"Module GLM Results" = glm_results)
-#write_excel(results,file=myfile)
+write_excel(results,file="temp.xlsx")
 
 # Save a copy in root/supplment.
 myfile <- file.path(suppdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")

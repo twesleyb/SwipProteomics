@@ -13,8 +13,8 @@ FDR_alpha = 0.10 # FDR significance threshold.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -57,7 +57,7 @@ tabsdir <- file.path(root, "tables")
 data(tmt_protein)
 
 # Load the graph partition:
-data(partition)
+data(ms_partition)
 
 # Load WASH iBioID interactome.
 data(wash_interactome)
