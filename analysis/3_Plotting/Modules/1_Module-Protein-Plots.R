@@ -9,7 +9,8 @@
 ## OPTIONS:
 save_all = TRUE
 save_sig = TRUE
-wt_color = "#47b2a4" # teal blue
+#wt_color = "#47b2a4" # teal blue
+wt_color = "gray"
 
 ## Input data in root/data/
 # * tmt_protein
@@ -172,7 +173,8 @@ for (module in all_modules){
 	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5,alpha=0.5)
 	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1.5)
 	plot <- plot + scale_colour_manual(name="Replicate",
-					   values = c(module_color,wt_color))
+					   values = c(module_color,
+						      col2hex(wt_color)))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 
@@ -200,7 +202,7 @@ names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 # Save.
 if (save_all) {
 	message("\nSaving all modules, this will take several minutes.")
-	myfile <- file.path(root,"figs","All_Module_Protein_plots.pdf")
+	myfile <- file.path(figsdir,"All_Module_Protein_plots.pdf")
 	ggsavePDF(grouped_plots, myfile)
 }
 

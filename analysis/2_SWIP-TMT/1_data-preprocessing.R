@@ -466,7 +466,11 @@ df <- data.table("FDR < 0.10"=sum(sig1),
 		 "FDR < 0.05"=sum(sig2),
 		 "BF  < 0.05"=sum(sig3))
 knitr::kable(df)
+
+# Save sig_proteins
 sig_proteins <- alt_results$Accession[sig2]
+myfile <- file.path(datadir,"sig_proteins")
+save(sig_proteins,file=myfile,version=2)
 
 # Column names are Adjusted.NAME
 idy <- colnames(alt_results) %notin% c("Accession","Entrez","Symbol")

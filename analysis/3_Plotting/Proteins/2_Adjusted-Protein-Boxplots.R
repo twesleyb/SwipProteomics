@@ -22,8 +22,8 @@ colors = c(WT="#47b2a4",MUT="#B86FAD") # Colors for WT and mutant groups.
 ## Misc function - getrd
 #--------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -197,5 +197,5 @@ for (protein in prots) {
 
 # Save as pdf.
 message("\nSaving protein boxplots.")
-myfile <- file.path(figsdir,"Sig968_Adjusted_Protein_BoxPlots.pdf")
+myfile <- file.path(figsdir,paste0("Sig",length(sig_proteins),"_Adjusted_Protein_BoxPlots.pdf"))
 ggsavePDF(plot_list,myfile)

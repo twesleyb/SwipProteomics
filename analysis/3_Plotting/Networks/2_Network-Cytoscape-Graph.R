@@ -183,7 +183,7 @@ invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
 netw_image <- file.path(figsdir, "Network_Overview")
 winfile <- gsub("/mnt/d/", "D:/", netw_image)
 exportImage(winfile, "svg")
-message("\nConvert svg image to tiff before pushing to git (too big)!")
+message("\nConvert svg image to tiff before pushing to git!")
 
 # Free up some memory.
 invisible({ cytoscapeFreeMemory() })

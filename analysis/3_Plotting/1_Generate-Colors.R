@@ -9,6 +9,8 @@
 ## OPTIONS:
 swip = "Q3UMB9" # uniprot accession of swip.
 swip_color = "#B86FAD" # color of swip/wash module.
+luminosity = "bright" # bright light or dark
+#hue = "purple" # Hue can also be specified.
 
 ## OUTPUT:
 # * Updated module color assignemnts.
@@ -59,6 +61,7 @@ suppressMessages({ devtools::load_all() })
 # Load TMT data and partition.
 data(tmt_protein)
 data(partition)
+data(coolors)
 
 #---------------------------------------------------------------------
 ## Generate colors.
@@ -74,13 +77,33 @@ n_colors <- length(modules) - 2 # M0 will be gray. M19 will be purple.
 script <- file.path(root,"Py","random_color.py")
 
 # Generate n random colors.
-cmd <- paste(script,"--count", n_colors)
+n=250 # Generate more colors than we need and sample from them.
+cmd <- paste(script,"--count",n ,"--luminosity",luminosity)
 response <- system(cmd, intern = TRUE)
 
 #  Parse the response.
 colors <- toupper(str_to_vec(response))
+colors <- sample(colors,n_colors)
 
 if (swip_color %in% colors) { stop("Duplicate colors.") }
+
+#--------------------------------------------------------------------
+## Preview the colors. 
+#--------------------------------------------------------------------
+
+color_plots <- list()
+for (color in colors) {
+	plot <- ggplot() 
+	plot <- plot + theme(panel.background = element_rect(fill=color))
+	color_plots[[color]] <- plot
+}
+myfile <- file.path(root,"downloads",
+		    paste0(n_colors,"_random_",luminosity,"_colors.pdf"))
+ggsavePDF(color_plots,myfile)
+
+#--------------------------------------------------------------------
+## Assign modules a color.
+#--------------------------------------------------------------------
 
 # Module color assignments.
 # Initialize a vector for the module colors.
@@ -103,10 +126,3 @@ module_colors[idx] <- sample(colors,sum(idx))
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
-
-message(paste0("\nGenerated",n_colors,
-	       "appealing colors using randomcolor python module!"))
-
-#--------------------------------------------------------------------
-## Preview the colors. 
-#--------------------------------------------------------------------
