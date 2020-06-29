@@ -18,7 +18,7 @@ n_iterations = -1  # Not the number of recursive iterations, but optimization.
 ## Recursive option:
 recursive = True # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
-n_recursive_iter = 1
+n_recursive_iter = 1 # total number of recursive iterations.
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/

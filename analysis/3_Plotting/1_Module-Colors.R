@@ -17,15 +17,15 @@ swip_color = "#B86FAD" # color of swip/wash module.
 ## Misc functions
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
 	}
 	# Loop to find root.
 	while (!in_root(here)) { 
-		here <- dirname(here) 
+		here <- dirname(here)
 	}
 	root <- here
 	return(root)
@@ -63,8 +63,6 @@ data(partition)
 #---------------------------------------------------------------------
 ## Generate colors.
 #---------------------------------------------------------------------
-
-message("\nGenerating colors using randomcolor python module!")
 
 # The number of colors we need.
 modules <- split(names(partition),partition)
@@ -105,3 +103,6 @@ module_colors[idx] <- sample(colors,sum(idx))
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
+
+message(paste0("\nGenerated",n_colors,
+	       "appealing colors using randomcolor python module!"))
