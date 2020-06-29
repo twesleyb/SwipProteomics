@@ -12,7 +12,7 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-optimization_method = 'Surprise'
+optimization_method = 'Modularity'
 n_iterations = -1  # Not the number of recursive iterations, but optimization.
 
 ## Recursive option:
@@ -27,7 +27,7 @@ adjm_file = 'ne_adjm.csv'
 ## Output:
 # Saved in root/rdata/
 # [output_name]_partitions.csv
-output_name = 'Modularity_Surprise' # Prefix out output partition, saved as .csv.
+output_name = 'MS' # Prefix out output partition, saved as .csv.
 
 #------------------------------------------------------------------------------
 ## Prepare the workspace.

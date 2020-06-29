@@ -32,7 +32,7 @@ alternative = "greater" # Greater or less, for preservation use 'greater'.
 # All data are in root/rdata.
 adjm = c(discovery="adjm.csv", test=NULL)
 netw = c(discovery="ne_adjm.csv", test=NULL)
-part = c(discovery="Modularity_Surprise_partition.csv", test=NULL)
+part = c(discovery="MS_partition.csv", test=NULL)
 data = c(discovery="norm_protein.csv", test=NULL)
 
 ## OUTPUT saved in root/rdata:
