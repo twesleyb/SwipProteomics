@@ -106,3 +106,7 @@ save(module_colors,file=myfile,version=2)
 
 message(paste0("\nGenerated",n_colors,
 	       "appealing colors using randomcolor python module!"))
+
+#--------------------------------------------------------------------
+## Preview the colors. 
+#--------------------------------------------------------------------

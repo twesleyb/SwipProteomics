@@ -13,8 +13,8 @@ BF_alpha = 0.05 # Significance threshold.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -170,6 +170,10 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
+
+# Status.
+message(paste("\nMedian module PVE:",
+	      round(100*median(glm$results$PVE),3),"%."))
 
 #--------------------------------------------------------------------
 # Determine module hubs.
