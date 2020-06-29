@@ -62,7 +62,7 @@ suppressWarnings({ devtools::load_all() })
 # Project directories:
 root <- getrd()
 fontdir <- file.path(root, "fonts")
-figsdir <- file.path(root, "figs", "Proteins")
+figsdir <- file.path(root, "figs", "Modules")
 
 # If necessary, create figsdir.
 if (! dir.exists(figsdir)) {
@@ -200,7 +200,7 @@ names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 # Save.
 if (save_all) {
 	message("\nSaving all modules, this will take several minutes.")
-	myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
+	myfile <- file.path(root,"figs","All_Module_Protein_plots.pdf")
 	ggsavePDF(grouped_plots, myfile)
 }
 

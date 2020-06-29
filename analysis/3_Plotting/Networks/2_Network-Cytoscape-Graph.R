@@ -187,3 +187,59 @@ message("\nConvert svg image to tiff before pushing to git (too big)!")
 
 # Free up some memory.
 invisible({ cytoscapeFreeMemory() })
+
+# Save in rdata. File is too big to save as data.
+
+EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",
+					 "weight", "c",weight_range,
+					 edge_colors))
+
+# Create a visual style.
+createVisualStyle("mysteez", defaults = defaults, 
+		  mappings = mappings)
+
+# Apply to graph.
+invisible({ setVisualStyle("mysteez") }); Sys.sleep(3)
+
+# Apply layout.
+invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
+
+# Save network image.
+netw_image <- file.path(figsdir, "Network_Overview")
+winfile <- gsub("/mnt/d/", "D:/", netw_image)
+exportImage(winfile, "svg")
+message("\nConvert svg image to tiff before pushing to git (too big)!")
+
+# Free up some memory.
+invisible({ cytoscapeFreeMemory() })
+
+# Save in rdata. File is too big to save as data.
+EDGE_STROKE_UNSELECTED_PAINT = mapVisualProperty("edge stroke unselected paint",
+					 "weight", "c",weight_range,
+					 edge_colors))
+
+# Create a visual style.
+createVisualStyle("mysteez", defaults = defaults, 
+		  mappings = mappings)
+
+# Apply to graph.
+invisible({ setVisualStyle("mysteez") }); Sys.sleep(3)
+
+# Apply layout.
+invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
+
+# Save network image.
+netw_image <- file.path(figsdir, "Network_Overview")
+winfile <- gsub("/mnt/d/", "D:/", netw_image)
+exportImage(winfile, "svg")
+message("\nConvert svg image to tiff before pushing to git (too big)!")
+
+# Free up some memory.
+invisible({ cytoscapeFreeMemory() })
+
+# When done, save Cytoscape session.
+# NOTE: When on WSL, need to use Windows path format bc
+# Cytoscape is a Windows program.
+myfile <- file.path(root,"rdata",paste0(file_prefix,"All_Proteins.cys"))
+winfile <- gsub("/mnt/d/","D:/",myfile) 
+saveSession(winfile)

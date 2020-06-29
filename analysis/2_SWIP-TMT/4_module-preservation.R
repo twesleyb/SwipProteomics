@@ -298,7 +298,6 @@ message(paste(
   "of", discovery_data,
   "modules in the", test_data, "network..."
 ))
-message(paste("\nNumber of permutations:", formatC(nPerm,big.mark=",")))
 
 # Check, if performing self-preservation test, then discovery == test.
 if (discovery_data == test_data) {

@@ -43,11 +43,7 @@ echo "Analyzing modules for changes in abundance."
 ./5_*.R &>> "$REPORT" & spin
 
 # STEP 6.
-echo "Analyzing modules for GO enrichment."
-./6_*.R &>> "$REPORT" & spin
-
-# STEP 7.
 echo "Analyzing modules for enrichment of WASH BioID proteins."
-./7_*.R &>> "$REPORT" & spin
+./6_*.R &>> "$REPORT" & spin
 
 cat "$REPORT"

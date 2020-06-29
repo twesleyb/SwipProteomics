@@ -44,6 +44,7 @@ suppressPackageStartupMessages({
 # Load additional functions in root/R.
 suppressWarnings({ devtools::load_all() })
 
+# Project directories:
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
@@ -53,7 +54,7 @@ tabsdir <- file.path(root, "tables")
 #---------------------------------------------------------------------
 
 # Load the partition and tmt data.
-data(ms_partition)
+data(partition)
 data(tmt_protein)
 
 #---------------------------------------------------------------------
