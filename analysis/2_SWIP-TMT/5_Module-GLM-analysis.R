@@ -47,14 +47,25 @@ suppressPackageStartupMessages({
 suppressWarnings({ devtools::load_all() })
 
 # Project directories:
+datadir <- file.path(root, "data")
+rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
+downdir <- file.path(root, "downloads")
 suppdir <- file.path(root, "supplement")
+figsdir <- file.path(root, "figs","Modules")
+
+# If necessary, create dir for figs.
+if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
 
 # Load the data.
 data(tmt_protein)
 
 # Load the gene map.
 data(gene_map)
+
+# Load WASH BioID results.
+data(wash_interactome)
+wash_prots <- unique(wash_interactome$Accession)
 
 # Load the graph partition.
 data(partition)
@@ -130,20 +141,11 @@ message(paste0("\nNumber of significant ",
 	      "(p-adjust < ", BF_alpha,") ",
 	      "modules: ", nsig,"."))
 
-# Module that contains Swip.
-wash_module <- partition["Q3UMB9"]
-message(paste("\nModule that contains SWIP (Washc4|Q3UMB9):",wash_module))
-
 # Pretty print sig results:
 glm_results %>% filter(PAdjust < BF_alpha) %>%
 	knitr::kable()
 
-# Print Wash result.
-glm_results %>% filter(Module == wash_module) %>% knitr::kable()
-
 # Save sig modules.
-idx <- order(as.numeric(sapply(strsplit(sig_modules,"M"),"[",2)))
-sig_modules <- sig_modules[idx] # Sort in numerical order.
 myfile <- file.path(root,"data","sig_modules.rda")
 sig_modules <- paste0("M",glm_results$Module[glm_results$PAdjust < BF_alpha])
 save(sig_modules,file=myfile,version=2)
@@ -171,12 +173,10 @@ glm_results <- tibble::add_column(glm_results,
 
 # Status.
 message(paste("\nMedian module PVE:",
-	      round(100*median(glm_results$PVE),2),"%."))
-
-# WASH module
+	      round(100*median(glm$results$PVE),3),"%."))
 
 #--------------------------------------------------------------------
-## Determine module hubs.
+# Determine module hubs.
 #--------------------------------------------------------------------
 
 # All modules.
@@ -260,6 +260,11 @@ glm_results <- df
 # Save results.
 #--------------------------------------------------------------------
 
+# FIXME: Save sig proteins.
+#sig_proteins <- ""
+#myfile <- file.path(root,"data","sig_proteins.rda")
+#save(sig_proteins,file=myfile,version=2)
+
 # Data.table describing graph partition.
 Uniprot <- names(partition)
 idx <- match(Uniprot,gene_map$uniprot)
@@ -279,5 +284,5 @@ write_excel(results,file=myfile)
 
 # Save as rda object.
 module_stats <- glm_results
-myfile <- file.path(root,"data","module_stats.rda")
+myfile <- file.path(datadir,"module_stats.rda")
 save(module_stats,file=myfile,version=2)

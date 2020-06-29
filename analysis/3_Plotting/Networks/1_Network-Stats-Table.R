@@ -10,8 +10,8 @@
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
-# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -58,11 +58,13 @@ p_clustered <- round(100*sum(partition!=0)/length(partition),2)
 median_pve <- median(module_stats$PVE)
 median_size <- median(module_stats$Nodes)
 
-# Create table.
-df <- data.table("N Nodes" = n_nodes,
-		 "N Modules" = n_modules,
+df <- data.table("Nodes" = n_nodes,
+		 "Modules" = n_modules,
 		 "Percent Clustered" = p_clustered,
-		 "Median Size" = median_size)
+		 "Median Module PC1 PVE" = median_pve,
+		 "Median Module Size" = median_size)
+
+# Create table.
 gtab <- tableGrob(df, rows=NULL, theme=ttheme_default())
 
 # Save.

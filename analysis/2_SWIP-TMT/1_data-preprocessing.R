@@ -27,7 +27,7 @@ oldham_threshold = 2.5 # Sample connectivity threshold for detecting outliers.
 
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
 BF_alpha = 0.05 # Bonferroni threshold for differential abundance.
-#logFC_threshold = c(lwr=log2(0.8), upr=log2(1.2)) # FC threshold.
+logFC_threshold = c(lwr=log2(0.8), upr=log2(1.2)) # FC threshold.
 
 set.seed = as.numeric(Sys.time()) # seed for random operations.
 
@@ -457,20 +457,13 @@ alt_results <- tibble::add_column(alt_results,PAdjust,.after="FDR")
 
 # Summary of DA proteins with any logFC.
 #bounds <- logFC_threshold
-sig1 <- alt_results$FDR < 0.1
-sig2 <- alt_results$FDR < 0.05
-sig3 <- alt_results$PAdjust < BF_alpha 
+sig1 <- alt_results$FDR < 0.05
+sig2 <- alt_results$PAdjust < BF_alpha 
 #updown <- alt_results$logFC < bounds['lwr'] | alt_results$logFC < bounds['upr']
 message("\nSummary of WT v MUT DA proteins:")
-df <- data.table("FDR < 0.10"=sum(sig1),
-		 "FDR < 0.05"=sum(sig2),
-		 "BF  < 0.05"=sum(sig3))
+df <- data.table("FDR < 0.05"=sum(sig1),
+		 "BF < 0.05"=sum(sig2))
 knitr::kable(df)
-
-# Save sig_proteins
-sig_proteins <- alt_results$Accession[sig2]
-myfile <- file.path(datadir,"sig_proteins")
-save(sig_proteins,file=myfile,version=2)
 
 # Column names are Adjusted.NAME
 idy <- colnames(alt_results) %notin% c("Accession","Entrez","Symbol")

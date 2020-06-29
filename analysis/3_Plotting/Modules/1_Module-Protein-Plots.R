@@ -7,10 +7,9 @@
 #' ---
 
 ## OPTIONS:
-save_all = TRUE
+save_all = FALSE
 save_sig = TRUE
-#wt_color = "#47b2a4" # teal blue
-wt_color = "gray"
+wt_color = "#47b2a4" # teal blue
 
 ## Input data in root/data/
 # * tmt_protein
@@ -22,8 +21,8 @@ wt_color = "gray"
 ## Misc functions
 #---------------------------------------------------------------------
 
-# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
+	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -63,7 +62,7 @@ suppressWarnings({ devtools::load_all() })
 # Project directories:
 root <- getrd()
 fontdir <- file.path(root, "fonts")
-figsdir <- file.path(root, "figs", "Modules")
+figsdir <- file.path(root, "figs", "Proteins")
 
 # If necessary, create figsdir.
 if (! dir.exists(figsdir)) {
@@ -173,8 +172,7 @@ for (module in all_modules){
 	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5,alpha=0.5)
 	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1.5)
 	plot <- plot + scale_colour_manual(name="Replicate",
-					   values = c(module_color,
-						      col2hex(wt_color)))
+					   values = c(module_color,wt_color))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 
@@ -202,7 +200,7 @@ names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 # Save.
 if (save_all) {
 	message("\nSaving all modules, this will take several minutes.")
-	myfile <- file.path(figsdir,"All_Module_Protein_plots.pdf")
+	myfile <- file.path(root,"figs","Modules","Module_Protein_plots.pdf")
 	ggsavePDF(grouped_plots, myfile)
 }
 
@@ -210,7 +208,6 @@ if (save_all) {
 if (save_sig) {
 	message("\nSaving significant modules.")
 	myfile <- file.path(figsdir, 
-			    paste0("Sig",length(sig_modules),
-				   "_Module_Protein_plots.pdf"))
+			    paste0("Sig",length(sig_modules),"_Module_Protein_plots.pdf"))
 	ggsavePDF(grouped_plots[sig_modules], myfile)
 }
