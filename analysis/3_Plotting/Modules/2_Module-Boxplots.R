@@ -18,8 +18,8 @@ BF_alpha = 0.05 # PAdjust threshold for module significance.
 ## Misc function - getrd
 #--------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -169,8 +169,9 @@ for (module in modules) {
 
 # Save as single pdf.
 # NOTE: This takes a couple minutes.
-#myfile <- file.path(root,"figs","Modules","Module_Boxplots.pdf")
-#ggsavePDF(plots, myfile)
+# Save significant modules.
+myfile <- file.path(root,"figs","Modules","All_Module_Boxplots.pdf")
+ggsavePDF(plots, myfile)
 
 # Save significant modules.
 myfile <- file.path(root,"figs","Modules",

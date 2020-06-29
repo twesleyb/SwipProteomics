@@ -7,7 +7,7 @@
 #' ---
 
 ## OPTIONS:
-save_all = FALSE
+save_all = TRUE
 save_sig = TRUE
 wt_color = "#47b2a4" # teal blue
 
@@ -21,8 +21,8 @@ wt_color = "#47b2a4" # teal blue
 ## Misc functions
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -208,6 +208,7 @@ if (save_all) {
 if (save_sig) {
 	message("\nSaving significant modules.")
 	myfile <- file.path(figsdir, 
-			    paste0("Sig",length(sig_modules),"_Module_Protein_plots.pdf"))
+			    paste0("Sig",length(sig_modules),
+				   "_Module_Protein_plots.pdf"))
 	ggsavePDF(grouped_plots[sig_modules], myfile)
 }
