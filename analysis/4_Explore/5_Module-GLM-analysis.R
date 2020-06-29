@@ -13,8 +13,8 @@ BF_alpha = 0.05 # Significance threshold.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -68,7 +68,7 @@ data(wash_interactome)
 wash_prots <- unique(wash_interactome$Accession)
 
 # Load the graph partition.
-data(partition)
+data(ms_partition)
 
 # Load the network.
 data(ne_adjm)
@@ -140,6 +140,8 @@ nsig <- sum(glm_results$PAdjust < BF_alpha)
 message(paste0("\nNumber of significant ",
 	      "(p-adjust < ", BF_alpha,") ",
 	      "modules: ", nsig,"."))
+message(paste0("\nModule that contains Swip (Washc4|Q3UMB9:",
+	       paste0("M",partition["Q3UMB9"])))
 
 # Pretty print sig results:
 glm_results %>% filter(PAdjust < BF_alpha) %>%
@@ -170,6 +172,9 @@ names(pve) <- gsub("X","M",names(ME_data$varExplained))
 glm_results <- tibble::add_column(glm_results,
 				  PVE=pve[paste0("M",glm_results$Module)],
 				  .after="Nodes")
+
+print(colnames(glm_results))
+
 
 #--------------------------------------------------------------------
 # Determine module hubs.

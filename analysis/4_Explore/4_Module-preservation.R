@@ -39,7 +39,6 @@ data = c(discovery="norm_protein.csv", test=NULL)
 # Partition of the network with preservation enforced. 
 # NOTE: Indices of modules that are not preserved are set to 0.
 save_as = "rda" # Output format for partition: can be RData or csv
-output_name = "MS"
 
 #---------------------------------------------------------------------
 ## Description of NetRep Permutation Statistics:
@@ -363,7 +362,7 @@ if (save_as == "rdata") {
 	       file.path(rdatdir,output_name), row.names=TRUE)
 } else if (save_as == "rda") {
 	# Save as rda.
-	myfile <- file.path(datadir,paste0(output_name,"partition.rda",sep="_"))
+	myfile <- file.path(datadir,"ms_partition.rda")
 	save(partition,file=myfile,version=2)
 } else {
 	stop("ut oh")

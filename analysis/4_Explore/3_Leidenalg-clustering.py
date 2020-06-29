@@ -12,7 +12,7 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-optimization_method = 'Modularity'
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but optimization.
 
 ## Recursive option:
