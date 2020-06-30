@@ -13,12 +13,12 @@ max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
 optimization_method = 'Surprise'
-n_iterations = -1  # Not the number of recursive iterations, but optimization.
+n_iterations = -1  # Not the number of recursive iterations, but the number 
+# of optimization iterations.
 
 ## Recursive option:
 recursive = True # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
-n_recursive_iter = -1 # total number of recursive iterations.
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
@@ -162,11 +162,10 @@ if parameters.get('resolution_parameter') is None:
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
         n_big = sum(too_big)
-        n_iter = 0
         msg = "\nSplitting {} modules that contain more than {} nodes."
         print(msg.format(n_big,max_size),file=stderr)
 
-        while any(too_big) and n_iter < n_recursive_iter:
+        while any(too_big):
             # Perform clustering for any subgraphs that are too big.
             idx = [i for i, too_big in enumerate(too_big) if too_big] 
             parameters['graph'] = subgraphs.pop(idx[0])
@@ -176,7 +175,6 @@ if parameters.get('resolution_parameter') is None:
             # Add to list.
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
-            n_iter += 1
             
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]

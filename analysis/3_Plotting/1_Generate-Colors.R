@@ -100,13 +100,8 @@ module_colors[idx] <- sample(colors,sum(idx))
 ## Save the data.
 #--------------------------------------------------------------------
 
+message(paste("\nSaving colors."))
+
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
-
-message(paste0("\nGenerated",n_colors,
-	       "appealing colors using randomcolor python module!"))
-
-#--------------------------------------------------------------------
-## Preview the colors. 
-#--------------------------------------------------------------------
