@@ -83,12 +83,11 @@ suppressMessages({ devtools::load_all() })
 # Project directories.
 datadir <- file.path(root,"data") # key datasets
 rdatdir <- file.path(root,"rdata") # temp data files
-tabsdir <- file.path(root,"tables") # final xlsx tables
+suppdir <- file.path(root,"manuscript","files") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
 # Create dirs if they dont exist.
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
-if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }
 
 #-------------------------------------------------------------------------------
@@ -159,7 +158,7 @@ SL_prot <- normSL(tidy_prot,groupBy="Sample")
 # Check, column sums should now be equal.
 message("Total intensity sums are equal after sample loading normalization:")
 df <- SL_prot %>% group_by(Sample) %>% 
-	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),groups="drop")
+	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),.groups="drop")
 knitr::kable(df)
 
 #-------------------------------------------------------------------------------
@@ -334,7 +333,7 @@ results_list[["Mitochondrial Contaiminants"]] <- df
 
 # Write to file.
 message("\nSaving results.")
-myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
+myfile <- file.path(suppdir,"S1_WASH_BioID_Results.xlsx")
 write_excel(results_list,myfile)
 
 # Save results as rdata for downstream analysis.

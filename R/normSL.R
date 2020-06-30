@@ -14,7 +14,7 @@ normSL <- function(tp, groupBy=NULL){
 	# Calculate column sums for grouped samples.
 	# FIXME: if .groups is set to 'drop' to avoid Warning msg, then error?
 	data_list <- eval(parse(text=cmd)) %>% 
-		summarize(Total=sum(Intensity,na.rm=TRUE)) %>%
+		summarize(Total=sum(Intensity,na.rm=TRUE),.groups="drop") %>%
 		group_split()
 
 	# Calculate normalization factors.

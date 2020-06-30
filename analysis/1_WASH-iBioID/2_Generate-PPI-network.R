@@ -55,8 +55,7 @@ suppressPackageStartupMessages({
 # Directories.
 datadir <- file.path(root,"data")
 rdatdir <- file.path(root,"rdata")
-tabsdir <- file.path(root,"tables")
-suppdir <- file.path(root, "supplement") # final supplementary data
+suppdir <- file.path(root,"manuscript","files")
 
 # Load any additional functions in root/R.
 devtools::load_all()
@@ -114,7 +113,7 @@ message(paste("\nNumber of Edges:",length(E(g))))
 
 # Save sif as a sheet in WASH_BioID_Results.xlsx
 sif$Weight <- NULL
-myfile <- file.path(tabsdir,"WASH_BioID_Results.xlsx")
+myfile <- file.path(suppdir,"1_WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
 addWorksheet(wb, sheetName = "PPIs")
 writeData(wb,sheet=4,sif,rowNames=FALSE,colNames=TRUE)
