@@ -145,13 +145,11 @@ ggsave(myfile,plot, height = fig_height, width = fig_width)
 # Any protein with FDR < 0.1
 data(sig_proteins)
 
-prots <- sig_proteins$sig968
-
 # Loop to do the work.
 plot_list <- list()
-for (protein in prots) {
+for (prot in sig_proteins) {
 	# Subset the data.
-	df <- tmt_protein %>% filter(Accession == protein)
+	df <- tmt_protein %>% filter(Accession == prot)
 	# Organize the factors.
 	df$Group <- df$Genotype
 	df$Group <- factor(df$Group, levels= c("WT","MUT"))
@@ -186,15 +184,15 @@ for (protein in prots) {
 		annotate("text",x=stats$xpos,y=stats$ypos,
 			 label=stats$symbol,size=4)
 	# Add title.
-	idx <- match(protein,gene_map$uniprot)
+	idx <- match(prot,gene_map$uniprot)
 	symbol <- gene_map$symbol[idx]
-	plot <- plot + ggtitle(paste0(symbol,"|",protein))
+	plot <- plot + ggtitle(paste0(symbol,"|",prot))
 	# Add module annotation.
 	yrange <- log2(range(df$Adjusted.Intensity))
 	ypos <- max(yrange) + 0.05 * diff(yrange)
-	mylabel <- paste("Module:",partition[protein])
+	mylabel <- paste("Module:",partition[prot])
 	plot <- plot + annotate(geom="label",x=2.25, y=ypos, label=mylabel)
-	plot_list[[protein]] <- plot
+	plot_list[[prot]] <- plot
 }
 
 # Save as pdf.
