@@ -1,9 +1,9 @@
 ## project specific directories to ignore.
 renv/
-docs/
 rdata/
 ARCHIVE/
 figs/AI/
+tables/
 docs/
 
 ## project specific files to ignore.
