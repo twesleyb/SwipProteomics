@@ -1,0 +1,24 @@
+# Supplementary tables/
+
+* Table S1 - WASH iBioID results and PPIs among iBioID proteins.
+
+* Table S2 - SWIP TMT Protein level statistical results for both intra-fraction 
+             comparisons and WT v MUT (adjusted for fraction) comparison.
+
+* Table S3 - SWIP TMT Module level statistical results. Includes a table describing 
+             the final partition of the protein covariation graph.
+
+# Supplementary files/
+
+* File S4 - Plots of the 85 proteins with a significant intrafraction difference
+            between WT and MUT mice (FDR < 0.1). 
+
+* File S5 - Plots of the 686 proteins with a signficant difference between WT and
+            MUT groups adjusted for baseline differences in fraction (FDR < 0.05). 
+            Includes the 147 proteins with BF < 0.05.
+
+* File S7 - Plots of Module summary abundance with  Module Protein plots (WT v MUT PAdjust < 0.05)
+
+* File S8 - Significant Module Boxplots (WT v MUT PAdjust < 0.05)
+
+* File S9 - All Module Subgraphs
