@@ -44,8 +44,7 @@ suppressPackageStartupMessages({
 # Load additional functions in root/R.
 suppressWarnings({ devtools::load_all() })
 
-datadir <- file.path(root, "data")
-rdatdir <- file.path(root, "rdata")
+# Directories.
 tabsdir <- file.path(root, "tables")
 
 #---------------------------------------------------------------------
@@ -55,27 +54,32 @@ tabsdir <- file.path(root, "tables")
 # Load the partition and tmt data.
 data(partition)
 data(tmt_protein)
+data(sig_proteins)
+data(wash_interactome)
+
+# Get list of up and down regulated proteins.
+sig_prots <- sig_proteins
+tmt_protein$isUp <- tmt_protein$Adjusted.logFC > 0 
+data_list <- tmt_protein %>% 
+	filter(Accession %in% sig_proteins) %>% 
+	group_by(isUp) %>% group_split()
+gene_list <- lapply(data_list,function(x) unique(x$Entrez))
+names(gene_list) <- c("SigDown","SigUp")
+
+#---------------------------------------------------------------------
+# how many.
+#---------------------------------------------------------------------
+
+wash_prots <- wash_interactome$Accession
+
+sig85 <- tmt_protein %>% filter(FDR<0.1) %>% select(Accession) %>% 
+	unlist() %>% unique()
+sum(wash_prots %in% sig85)
+sum(wash_prots %in% sig_proteins)
 
 #---------------------------------------------------------------------
 ## Module GO enrichment.
 #---------------------------------------------------------------------
-
-# List of modules.
-module_list <- split(partition,partition)
-names(module_list) <- paste0("M",names(module_list))
-
-# Collect all sig prots.
-sig_prots <- tmt_protein %>% filter(FDR < 0.1) %>% 
-	select(Accession) %>% unlist() %>% unique()
-
-# collect list of entrez ids and gene symbols.
-gene_list <- lapply(module_list,function(x) {
-			    tmt_protein$Entrez[match(names(x),tmt_protein$Accession)]
-			    })
-
-gene_symbols <- lapply(module_list,function(x) {
-			    tmt_protein$Gene[match(names(x),tmt_protein$Accession)]
-			    })
 
 # Build a GO reference collection:
 message("\nBuilding a mouse GO reference collection with anRichment.")
@@ -87,29 +91,5 @@ gocollection <- suppressPackageStartupMessages({
 # NOTE: background defaults to all genes in gene_list.
 go_gse <- gse(gene_list,gocollection)
 
-# collect significant modules.
-idx <- sapply(go_gse,function(x) any(x$FDR < FDR_alpha))
-nsig_go <- sum(idx)
-message(paste("\nNumber of modules with significant",
-	      "GO term enrichment:",nsig_go))
-
-# top go term for each module.
-fe <- sapply(go_gse,function(x) round(x$enrichmentRatio[1],2))
-fdr <- sapply(go_gse,function(x) round(x$FDR[1],2))
-m <- sapply(go_gse, function(x) x$shortDataSetName[1])
-top_go <- data.table(module=names(go_gse),
-		       term = m,
-		       fe=fe,fdr=fdr)
-
-# summary:
-message("\nModules with significant go enrichment:")
-knitr::kable(top_go[idx,])
-
 # save significant results.
-results_list <- list("GO Results" = bind_rows(go_gse[idx],.id="Module"))
-write_excel(results_list,file.path(tabsdir,"Swip_TMT_Module_GO_Results.xlsx"))
-
-# Save as rda.
-module_GO <- results_list[["GO Results"]]
-myfile <- file.path(root,"data","module_GO.rda")
-save(module_GO,file=myfile,version=2)
+write_excel(go_gse,file.path(tabsdir,"Level2_Up_Down_GO_Results.xlsx"))

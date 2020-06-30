@@ -12,3 +12,12 @@ load_renv(root,quiet=TRUE)
 data(tmt_protein)
 
 data(sig_proteins)
+
+length(sig_proteins)
+
+sig85 <- tmt_protein %>% filter(FDR<0.1) %>% select(Accession) %>% unlist() %>% unique()
+message(paste(sum(sig85 %in% sig_proteins), "of",length(sig85),"proteins"))
+
+
+
+
