@@ -1,16 +1,42 @@
 # SwipProteomics
 
-Analysis of Swip (Washc4) mutant mouse brain spatial proteomics
+Analysis of SWIP<sup>P1019R</sup> (Washc4) mutant mouse brain spatial proteomics
 
-## Swip R1019R Mutation
+## Swip Pro1019Arg Mutation
 
 <p align="center">
   <img src="./models/Swip.gif" height="250" />
 </p>
-<p align="center">The Swip (Washc4) protein.<p align="center">
+<p align="center">The SWIP protein with location of P1019R highlighted in red.<p align="center">
 
-# FIXME:
-* adjusted protein boxplots -- some  of 968 are annotated as NS?
-* check which sig_proteins are saved as rda.
-* name module go sheet
-* add module membership = partition to module glm results.
+## Background
+The SWIP P1019R point mutation was identified in humans with intellecutual and
+motor impairments. 
+
+## Methods
+Using TMT-proteomics we quantify 5,894 proteins across seven mouse brain subcellular
+fractions. 
+
+## Results 
+We show that this point mutation disrupts expression of the
+WASH complex in the brain and results in empaired endosomal trafficking in
+neurons. Mice exhibit impaired cognition and motor deficites as well as cellular 
+biomarkers of neurodegeneration. 
+
+## Conclusions
+
+
+## Explore
+To explore the data, download or install this repository as an R package.
+```
+git clone twesleyb/SwipProteomics
+```
+```R
+# Download as an R package.
+devtools::install_github('twesleyb/SwipProteomics')
+
+```
+
+## Reproducibility 
+Effort was made to make the analysis as reproducible as possible. Reproduce the
+R environment used to perform that analysis using [conda]() and [renv]().
