@@ -24,6 +24,7 @@ fig_height = 5.0 # Default height of figures (in).
 fig_width = 5.0 # Default width of figures (in).
 
 oldham_threshold = 2.5 # Sample connectivity threshold for detecting outliers.
+# NOTE: No sample outliers were detected.
 
 FDR_alpha = 0.1 # FDR threshold for differential abundance.
 BF_alpha = 0.05 # Bonferroni threshold for differential abundance.
@@ -31,7 +32,7 @@ logFC_threshold = c(lwr=log2(0.8), upr=log2(1.2)) # FC threshold.
 
 set.seed = as.numeric(Sys.time()) # seed for random operations.
 
-## OUTPUT saved in root/tables:
+## OUTPUT saved in root/.../tables:
 # * Swip_TMT_Results.xlsx - an excel spreadsheet that contains:
 #     - Sample meta data.
 #     - Gene/protein identifiers.
@@ -43,6 +44,7 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 ## OUTPUT for R package in root/data.
 # Key datasets are saved in the data directory as read-only objects.
 # * tmt_protein.rda
+# NOTE: can be loaded in R with data(tmt_protein).
 
 ## OUTPUT for downstream analysis in root/rdata/
 # Input files/temporary files that are passed to other scripts including 
@@ -114,9 +116,8 @@ suppressWarnings({ devtools::load_all() })
 # Project directories:
 datadir <- file.path(rootdir, "data") # Key pieces of data saved as rda.
 rdatdir <- file.path(rootdir, "rdata") # Temporary data files.
-tabsdir <- file.path(rootdir, "tables") # Output tables -- excel files.
 downdir <- file.path(rootdir, "downloads") # Misc downloads/temporary files.
-suppdir <- file.path(rootdir, "supplement") # Supplementary data files.
+tabsdir <- file.path(rootdir,"manuscript","tables") # Output tables saved as excel files.
 
 # Create output directories if necessary.
 if (!dir.exists(datadir)) { dir.create(datadir) }
@@ -665,13 +666,8 @@ names(final_results) <- paste(names(results_list),"Results")
 final_results <- c(list("Samples" = samples),
 		   list("Raw Peptide" = peptides),
 		   list("Norm Protein" = norm_df), final_results)
-myfile <- file.path(tabsdir,"Swip_TMT_Protein_GLM_Results.xlsx")
+myfile <- file.path(tabsdir,"S2_Swip_TMT_Protein_GLM_Results.xlsx")
 write_excel(final_results,myfile,rowNames=FALSE)
-
-# Save a copy in the supplement dir.
-myfile <- file.path(suppdir, "S2_Swip_TMT_Protein_GLM_Results.xlsx")
-write_excel(final_results,myfile,rowNames=FALSE)
-rm(list=c("myfile","idy"))
 
 #---------------------------------------------------------------------
 ## Save output for downstream analysis.

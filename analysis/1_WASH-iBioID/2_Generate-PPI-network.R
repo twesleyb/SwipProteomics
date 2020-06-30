@@ -13,15 +13,15 @@ enrichment_threshold = log2(3.0)
 ## Input data in root/rdata
 data_file = "WASH_BioID_Results.RData"
 
-## Output in root/tables:
+## Output in root/manuscript/tables:
 # * WASH_Network_PPIs.xlsx
 
 #---------------------------------------------------------------------
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -46,16 +46,15 @@ renv::load(root,quiet=TRUE)
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating data.
 	library(igraph) # For networks.
-	#library(TBmiscr) # For misc. utilities.
 	library(getPPIs) # For mapping gene names.
 	library(data.table) # For data.tables.
-	library(openxlsx)
+	library(openxlsx) # For working with .xlsx files.
 })
 
 # Directories.
 datadir <- file.path(root,"data")
 rdatdir <- file.path(root,"rdata")
-suppdir <- file.path(root,"manuscript","files")
+tabsdir <- file.path(root,"manuscript","tables")
 
 # Load any additional functions in root/R.
 devtools::load_all()
@@ -111,14 +110,16 @@ g <- graph_from_data_frame(sif,vertices=noa,directed=FALSE)
 message(paste("\nNumber of Nodes:",length(V(g))))
 message(paste("\nNumber of Edges:",length(E(g))))
 
-# Save sif as a sheet in WASH_BioID_Results.xlsx
-sif$Weight <- NULL
-myfile <- file.path(suppdir,"1_WASH_BioID_Results.xlsx")
+# Load WASH BioID results. 
+sif$Weight <- NULL # drop weight=1 column
+myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
 wb <- loadWorkbook(file = myfile)
+
+# Save sif as a sheet in WASH_BioID_Results.xlsx
 addWorksheet(wb, sheetName = "PPIs")
 writeData(wb,sheet=4,sif,rowNames=FALSE,colNames=TRUE)
 saveWorkbook(wb, file=myfile, overwrite=TRUE)
 
 # Save a copy of the data in supplement/ dir.
-myfile <- file.path(suppdir,"S1_WASH_BioID_Results.xlsx")
+myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
 saveWorkbook(wb, file=myfile, overwrite=TRUE)

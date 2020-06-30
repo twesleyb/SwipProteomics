@@ -16,8 +16,8 @@ os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 ## Misc function - getrd().
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -40,11 +40,11 @@ renv::load(root,quiet=TRUE)
 
 # Imports.
 suppressPackageStartupMessages({
-	library(dplyr)
-	library(WGCNA)
-	library(neten)
-	library(getPPIs)
-	library(data.table)
+	library(dplyr) # for manipulating data
+	library(WGCNA) # for bicor function
+	library(neten) # for network enhancement
+	library(getPPIs) # for PPI data
+	library(data.table) # for working with tables
 })
 
 # Project imports.
@@ -134,19 +134,20 @@ n_nodes <- ncol(ppi_adjm)
 message("\nSaving the data.")
 
 # Save adjacency matrices as rda objects.
-# To reduce the size of the large N x N matrix, the diagonal and lower
-# half of the matrix are removed, and then it is melted into an
-# edge list. This dataframe is saved as an rda object. It can be cast
-# back into a N x N matrix with convert_to_adjm().
+# To reduce the file size of a large matrix saved as a csv file, 
+# the matrix is saved as an edge list, after removing the diagonal and 
+# lower half of the matrix are removed. 
+# This dataframe is saved as an rda object. It can be cast
+# back into a N x N matrix with the convert_to_adjm function.
 
 myfile <- file.path(root,"data","adjm.rda")
-save_adjm_as_rda(round(adjm,5), myfile) # ~ 83 MB
+save_adjm_as_rda(round(adjm,5), myfile)
 
 myfile <- file.path(root,"data","ne_adjm.rda")
-save_adjm_as_rda(ne_adjm, myfile)    # ~ 86 MB
+save_adjm_as_rda(ne_adjm, myfile)
 
 myfile <- file.path(root,"data","ppi_adjm.rda")
-save_adjm_as_rda(ppi_adjm, myfile)  # ~ 22 MB
+save_adjm_as_rda(ppi_adjm, myfile)
 
 # Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
@@ -161,7 +162,6 @@ ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
 
 # Save norm_protein as matrix. 
-# FIXME: do we need this?
 norm_protein <- tmt_protein %>% as.data.table() %>%
 	dcast(Accession ~ Sample, value.var = "Intensity") %>%
 	fwrite(file.path(root,"rdata","norm_protein.csv"))

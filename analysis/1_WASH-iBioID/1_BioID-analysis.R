@@ -83,7 +83,7 @@ suppressMessages({ devtools::load_all() })
 # Project directories.
 datadir <- file.path(root,"data") # key datasets
 rdatdir <- file.path(root,"rdata") # temp data files
-suppdir <- file.path(root,"manuscript","files") # final xlsx tables
+tabsdir <- file.path(root,"manuscript","tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
 # Create dirs if they dont exist.
@@ -333,7 +333,7 @@ results_list[["Mitochondrial Contaiminants"]] <- df
 
 # Write to file.
 message("\nSaving results.")
-myfile <- file.path(suppdir,"S1_WASH_BioID_Results.xlsx")
+myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
 write_excel(results_list,myfile)
 
 # Save results as rdata for downstream analysis.

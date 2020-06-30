@@ -6,8 +6,8 @@
 #' authors: Tyler W A Bradshaw
 #' ---
 
-## Options:
-BF_alpha = 0.05 # Significance threshold.
+## OPTIONS:
+BF_alpha = 0.05
 
 #---------------------------------------------------------------------
 ## Misc function - getrd().
@@ -49,10 +49,9 @@ suppressWarnings({ devtools::load_all() })
 # Project directories:
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
-tabsdir <- file.path(root, "tables")
 downdir <- file.path(root, "downloads")
-suppdir <- file.path(root, "supplement")
 figsdir <- file.path(root, "figs","Modules")
+tabsdir <- file.path(root,"manuscript","tables")
 
 # If necessary, create dir for figs.
 if (!dir.exists(figsdir)){ dir.create(figsdir, recursive = TRUE) }
@@ -173,7 +172,7 @@ glm_results <- tibble::add_column(glm_results,
 
 # Status.
 message(paste("\nMedian module PVE:",
-	      round(100*median(glm$results$PVE),3),"%."))
+	      round(100*median(glm_results$PVE),3),"%."))
 
 #--------------------------------------------------------------------
 # Determine module hubs.
@@ -260,10 +259,11 @@ glm_results <- df
 # Save results.
 #--------------------------------------------------------------------
 
-# FIXME: Save sig proteins.
-#sig_proteins <- ""
-#myfile <- file.path(root,"data","sig_proteins.rda")
-#save(sig_proteins,file=myfile,version=2)
+# Save sig proteins.
+sig_proteins <- unique(tmt_protein$Accession[tmt_protein$PAdjust < 0.05])
+myfile <- file.path(root,"data","sig_proteins.rda")
+save(sig_proteins,file=myfile,version=2)
+print(length(sig_proteins))
 
 # Data.table describing graph partition.
 Uniprot <- names(partition)
@@ -273,13 +273,9 @@ Symbol <- gene_map$symbol[idx]
 part_dt <- data.table(Uniprot,Entrez,Symbol,Module=partition)
 
 # Save as excel table.
-myfile <- file.path(tabsdir,"Swip_TMT_Module_GLM_Results.xlsx")
+myfile <- file.path(tabsdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")
 results <- list("Network Partition" = part_dt,
 		"Module GLM Results" = glm_results)
-write_excel(results,file=myfile)
-
-# Save a copy in root/supplment.
-myfile <- file.path(suppdir,"S3_Swip_TMT_Module_GLM_Results.xlsx")
 write_excel(results,file=myfile)
 
 # Save as rda object.

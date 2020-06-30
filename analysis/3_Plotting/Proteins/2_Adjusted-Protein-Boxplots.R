@@ -7,6 +7,7 @@
 #' ---
 
 ## INPUTS:
+#* tmt_data
 
 ## OPTIONS:
 fig_width = 5
@@ -14,16 +15,15 @@ fig_height =  5
 colors = c(WT="#47b2a4",MUT="#B86FAD") # Colors for WT and mutant groups.
 
 ## OUTPUTS:
-# Boxplot of select protein abundance adjusted for baseline differences in
+# Boxplots of protein abundance adjusted for baseline differences in
 # fraction.
-# Boxplots of all proteins.
 
 #--------------------------------------------------------------------
 ## Misc function - getrd
 #--------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -57,7 +57,8 @@ suppressWarnings({ devtools::load_all() })
 
 # Project directories:
 fontdir <- file.path(rootdir, "fonts") # Arial font for plots.
-figsdir <- file.path(rootdir, "figs","Proteins") # Output figures.
+figsdir <- file.path(rootdir, "figs","Proteins") 
+suppdir <- file.path(rootdir,"manuscript","files")
 
 # Set global plotting settings.
 ggtheme(); set_font("Arial", font_path = fontdir)
@@ -67,7 +68,7 @@ data(gene_map)
 data(tmt_protein)
 
 #---------------------------------------------------------------------
-## Plot select proteins.
+## Plots for select proteins.
 #---------------------------------------------------------------------
 
 # Wash proteins + control.
@@ -107,7 +108,7 @@ plot <- plot + geom_vline(xintercept=seq(2.5,length(prots)*2,by=2),
 			  linetype="dotted",size=0.5)
 
 # Pretty print select protein stats:
-message("\nSelect Protein stats:")
+message("\nSelect Protein GLM stats:")
 stats <- df %>% filter(Genotype == "MUT") %>%
 	select(Accession, Symbol, Adjusted.logFC, Adjusted.PercentWT, 
 	       Adjusted.F, Adjusted.FDR) %>% unique()
@@ -143,6 +144,7 @@ ggsave(myfile,plot, height = fig_height, width = fig_width)
 
 # Any protein with FDR < 0.1
 data(sig_proteins)
+
 prots <- sig_proteins$sig968
 
 # Loop to do the work.
@@ -197,5 +199,5 @@ for (protein in prots) {
 
 # Save as pdf.
 message("\nSaving protein boxplots.")
-myfile <- file.path(figsdir,"Sig968_Adjusted_Protein_BoxPlots.pdf")
+myfile <- file.path(suppdir,"S5_Adjusted_Protein_BoxPlots.pdf")
 ggsavePDF(plot_list,myfile)
