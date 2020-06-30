@@ -17,8 +17,9 @@
             MUT groups adjusted for baseline differences in fraction (FDR < 0.05). 
             Includes the 147 proteins with BF < 0.05.
 
-* File S7 - Plots of Module summary abundance with  Module Protein plots (WT v MUT PAdjust < 0.05)
+* File S6 - Plots of all proteins in a module. Modules with a signficant difference between
+            WT and MUT are shown (GLM QLFFtest PAdjust < 0.05).
 
-* File S8 - Significant Module Boxplots (WT v MUT PAdjust < 0.05)
+* File S7 - Plots of significant module adjusted abundance.
 
-* File S9 - All Module Subgraphs
+* File S8 - All Module Subnetworks.
