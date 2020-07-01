@@ -1,4 +1,4 @@
-plot_protein <- function(data,protein,id.col="Accession") {
+plot_protein <- function(data,protein,id.col="Accession",legend=FALSE) {
 
 	# Generate protein plot.
 	# Subset the data.
@@ -77,7 +77,9 @@ plot_protein <- function(data,protein,id.col="Accession") {
 	plot <- plot + theme(axis.line.y=element_line())
 
 	# Remove legend.
-	plot <- plot + theme(legend.position = "none")
+	if (!legend) {
+		plot <- plot + theme(legend.position = "none")
+	}
 
 	return(plot)
 }
