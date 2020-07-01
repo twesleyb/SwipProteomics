@@ -21,8 +21,8 @@ wt_color = "#47b2a4" # teal blue
 ## Misc functions
 #---------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -70,8 +70,7 @@ if (! dir.exists(figsdir)) {
 }
 
 # Set theme for the plots; utilize arial font.
-ggtheme()
-set_font("Arial",font_path=fontdir)
+ggtheme(); set_font("Arial",font_path=fontdir)
 
 # Load significant modules.
 data(sig_modules)
