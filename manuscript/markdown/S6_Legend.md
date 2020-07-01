@@ -1,6 +1,7 @@
 # Supplementary File 6
 
-Cytoscape subnetworks for all __255__ modules, arranged in numerical order. 
+Cytoscape subnetworks for all __255__ modules, arranged in numerical order. See
+also Supplementary File 9 for the Cytoscape file containing all module subnetworks.
 
 Vizualization of covariation graphs is challenging because every pair of nodes is connected.
 In order to resolve the underlying structure of each module, a dynamic threshold was 
