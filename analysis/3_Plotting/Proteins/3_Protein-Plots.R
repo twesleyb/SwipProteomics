@@ -9,6 +9,7 @@
 ## Options:
 save_all = FALSE
 save_sig = TRUE
+FDR_alpha = 0.1
 
 ## Input data in root/data/
 # * tmt_protein
@@ -19,8 +20,9 @@ save_sig = TRUE
 #--------------------------------------------------------------------
 ## Misc function - getrd
 #--------------------------------------------------------------------
+
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -61,12 +63,12 @@ if (! dir.exists(figsdir)) {
 }
 
 # Set theme for the plots:
-# Utilize arial font.
-set_font("Arial",font_path=fontdir)
-ggtheme()
+ggtheme(); set_font("Arial",font_path=fontdir)
 
 # Load sig85 proteins.
-data(sig_proteins)
+data(tmt_protein)
+sig_prots <- tmt_protein %>% filter(FDR < FDR_alpha) %>% 
+	select(Accession) %>% unlist() %>% unique()
 
 #--------------------------------------------------------------------
 ## Generate the plots.
@@ -78,13 +80,18 @@ all_proteins <- unique(tmt_protein$Accession)
 message(paste("\nGenerating plots for",
 	       formatC(length(all_proteins),big.mark=","),
 	       "proteins."))
-
 pbar <- txtProgressBar(max=length(all_proteins),style=3)
 for (prot in all_proteins) {
 	plots[[prot]] <- plot_protein(tmt_protein,prot)
 	setTxtProgressBar(pbar,value=match(prot,all_proteins))
 }
 close(pbar)
+
+# Generate the legend.
+plot <- plot_protein(tmt_protein,sample(tmt_protein$Accession,1),legend=TRUE)
+plot_legend <- cowplot::get_legend(plot)
+myfile <- file.path(figsdir,"S4_Legend.png")
+ggsave(plot_legend,file=myfile,width=3,height=3)
 
 #--------------------------------------------------------------------
 ## Sort plots by module membership and save as a single pdf.
@@ -108,12 +115,24 @@ for (i in c(1:length(plots))) {
 	protein <- names(plots)[i]
 	plot <- plots[[protein]]
 	module <- paste("Module:", partition[protein])
-	yrange <- plot$data %>% filter(Accession == protein) %>% 
+	yrange <- plot$data %>% dplyr::filter(Accession == protein) %>% 
 		select(Intensity) %>% log2() %>% range()
 	ypos <- yrange[1] - 0.1* diff(yrange)
 	plot <- plot + annotate(geom="label",x=7, y=ypos, label=module)
 	plots[[protein]] <- plot
 }
+
+#--------------------------------------------------------------------
+## Save a single plot as an example.
+#--------------------------------------------------------------------
+
+# Example protein.
+set.seed(7)
+prot <- sample(sig_prots,1)
+plot <- plots[[prot]]
+myfile <- file.path(figsdir,"S4_Example.png")
+ggsave(plot,file=myfile,height=7,width=7)
+
 
 #--------------------------------------------------------------------
 ## Save the data.
