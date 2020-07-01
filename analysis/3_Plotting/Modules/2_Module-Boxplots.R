@@ -18,8 +18,8 @@ BF_alpha = 0.05 # PAdjust threshold for module significance.
 ## Misc function - getrd
 #--------------------------------------------------------------------
 
+# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	# Get the repository's root directory.
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -70,8 +70,7 @@ data(module_stats)
 data(sig_modules)
 
 # Set plotting theme.
-ggtheme()
-set_font("Arial", font_path = file.path(root,"fonts"))
+ggtheme(); set_font("Arial", font_path = file.path(root,"fonts"))
 
 #---------------------------------------------------------------------
 ## Prepare the data for plotting.
@@ -87,30 +86,25 @@ modules <- modules[order(modules)][-1] # Sort in numerical order.
 # Loop to generate plots.
 plots <- list()
 for (module in modules) {
-
 	# Get data for a given module.
 	module_name <- paste0("M",module)
 	df <- tmt_protein %>% filter(Module == module) %>% 
 		group_by(Module,Genotype,Fraction) %>%
 		summarize(Intensity=sum(Adjusted.Intensity),.groups="drop")
 	df$Genotype <- factor(df$Genotype,levels=c("WT","MUT"))
-
 	# Get module's color.
 	colors <- c(wt_color,module_colors[module_name])
 	names(colors) <- c("WT","MUT") 
-
 	# Collect the module's stats.
 	# FIXME: where are moddule noa?
 	stats <- module_stats %>% filter(Module == as.character(module)) %>%
 		select(Nodes, PVE, PAdjust)
-
 	# Significance annotations.
 	stats$symbol <- ""
 	if (stats$PAdjust < 0.1) { stats$symbol <- "." }
 	if (stats$PAdjust < 0.05) { stats$symbol <- "*" }
 	if (stats$PAdjust < 0.005) { stats$symbol <- "**" }
 	if (stats$PAdjust < 0.0005) { stats$symbol <- "***" }
-
 	# Generate the plot.
 	plot <- ggplot(df,aes(x=Genotype,y=log2(Intensity),fill=Genotype)) 
 	plot <- plot + geom_boxplot() 
@@ -124,7 +118,6 @@ for (module in modules) {
 	plot <- plot + theme(axis.line.x=element_line())
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-
 	# Add significance star.
 	if (stats$PAdjust < BF_alpha) {
 		yrange <- range(log2(df$Intensity))
@@ -133,14 +126,12 @@ for (module in modules) {
 			annotate("text",x=1.5,size=7,
 				 y=ypos, label=stats$symbol)
 	}
-
 	## Add a table with module statistics.
 	# Table theme.
 	#tab_theme <- ttheme_default()
 	#tab_theme$core$fg_params$hjust = 0.5
 	#tab_theme$core$bg_params$fill="white"
 	#tab_theme$core$bg_params$col=NA
-
 	# Create table.
 	#idx <-  module_stats$Module == as.character(module)
 	#pve <- paste0("PVE=",round(module_stats$PVE[idx],3))
@@ -148,7 +139,6 @@ for (module in modules) {
 	#n <- paste0("n Proteins=",module_stats$Nodes[idx])
 	#gtab <- tableGrob(stats[,!colnames(stats)=="symbol"],
 	#		 theme=ttheme_default(), rows=NULL)
-
 	# Add table to plot.
 	# Should table be positioned on the left or right?
 	#min_group <- df %>% ungroup() %>% 

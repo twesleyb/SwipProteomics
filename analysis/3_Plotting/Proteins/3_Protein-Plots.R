@@ -87,11 +87,14 @@ for (prot in all_proteins) {
 }
 close(pbar)
 
-# Generate the legend.
-plot <- plot_protein(tmt_protein,sample(tmt_protein$Accession,1),legend=TRUE)
-plot_legend <- cowplot::get_legend(plot)
-myfile <- file.path(figsdir,"S4_Legend.png")
-ggsave(plot_legend,file=myfile,width=3,height=3)
+# Generate a plot with a legend.
+plot <- plot_protein(tmt_protein,"P08226",legend=TRUE)
+plot_legend <- cowplot::get_legend(plot) 
+plot  <- plot + theme(legend.position="none")
+plot <- plot + theme(axis.text.x = element_text(angle = 45))
+plot <- cowplot::plot_grid(plot,plot_legend,rel_widths=c(1,0.2))
+myfile <- file.path(root,"figs","Examples","S4_Example.png")
+ggsave(plot,file=myfile,width=4.5,height=4.5)
 
 #--------------------------------------------------------------------
 ## Sort plots by module membership and save as a single pdf.

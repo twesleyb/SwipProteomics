@@ -195,6 +195,10 @@ for (prot in sig_proteins) {
 	plot_list[[prot]] <- plot
 }
 
+# Save an example plot with legend.
+myfile <- file.path(root,"figs","Examples","S5_Example.png")
+ggsave(plot=plot_list[["P08226"]],file=myfile,width=4.5,height=4.5)
+
 # Save as pdf.
 message("\nSaving protein boxplots.")
 myfile <- file.path(suppdir,"S5_Adjusted_Protein_BoxPlots.pdf")
