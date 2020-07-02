@@ -8,6 +8,10 @@ and the __SWIP<sup>P1019R</sup> TMT__ proteomics data associated with [Courtland
 humans with with intellectual impairments. Below is a model of SWIP's predicted 3D structure. 
 The position of the P1019R amino acid substitution is highlighted in red.
 
+<p align="center">
+  <img src="./models/Swip.gif" height="250" />
+</p>
+
 ## Genetic Disruption of WASHC4 Drives Endo-lysosomal Dysfunction and Cognitive-Movement Impairments in Mice and Humans
 
 * iBioID - conservation of the WASH complex interactome.
