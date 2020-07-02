@@ -13,7 +13,7 @@ position of the P1019R amino acid substitution highlighted in red.
 
 |__WASH Complex__| __SWIP<sup>P1019R</sup>__ |
 |----------------|---------------------------|
-|![](./figs/AI/png/WASH_Complex.png)|![](./models/Swip.gif)|
+|![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
 ### QUESTION
 #### How does SWIP<sup>P1019R</sup> cause intellectual disability?
