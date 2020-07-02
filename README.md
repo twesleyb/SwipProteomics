@@ -15,14 +15,16 @@ position of the P1019R amino acid substitution highlighted in red.
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
-#### How does SWIP<sup>P1019R</sup> cause intellectual disability?
 
+#### How does SWIP<sup>P1019R</sup> cause intellectual disability?
+#### Genetic Disruption of WASHC4
+A point mutation was made in the mouse Washc4 gene using CRISPR.
+<p align="center">
+  <img src="./imgs/CG_Mutation.png" height="250" />
+  </p>
 
 #### WASH iBioID
 The WASH complexe's interactome is conserved.
-
-#### Genetic Disruption of WASHC4
-A point mutation was made in the mouse Washc4 gene using CRISPR.
 
 #### Endo-lysosome Network Dysfunction
 
