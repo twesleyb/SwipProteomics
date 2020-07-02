@@ -8,16 +8,16 @@ and the __SWIP<sup>P1019R</sup> TMT__ proteomics data associated with [Courtland
 __Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
 humans with intellectual impairment. This mutation causes a __P1019R__ amino acid substitution in SWIP,
 a [__S__]trumpellin and [__W__]ASH [__I__]nteracting [__P__]rotein and component of the __WASH complex__.
-Below is a model of SWIP's predicted 3D structure with the position of the P1019R amino acid substitution highlighted in red.
+SWIP P1019R destabilizes the WASH complex. Below is a model of SWIP's predicted 3D structure with the 
+position of the P1019R amino acid substitution highlighted in red.
 
-<p align="center">
-  <img src="./models/Swip.gif" height="250" />
-</p>
-
-The WASH complex functions in endosome trafficking.
+|__WASH Complex__| __SWIP<sup>P1019R</sup>__ |
+|----------------|---------------------------|
+|![](./figs/AI/png/WASH_Complex.png)|![](./models/Swip.gif)|
 
 ### QUESTION
 #### How does SWIP<sup>P1019R</sup> cause intellectual disability?
+
 
 ### RESULTS
 #### WASH iBioID
