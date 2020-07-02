@@ -1,5 +1,5 @@
 # SwipProteomics
-Spatial Proteomics Analysis of __SWIP<sup>P1019R</sup>__ Mutant Mouse Brain
+_Spatial proteomics analysis of __SWIP<sup>P1019R</sup>__ mutant mouse brain._
 
 ## SWIP Pro1019Arg
 SWIP (gene: Washc4) is a component of the WASH complex. A P1019R point 
