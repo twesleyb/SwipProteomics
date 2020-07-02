@@ -1,7 +1,8 @@
 # SwipProteomics
-
-This repository contains data and source code used in the analysis of the __WASH iBioID__
-and the __SWIP<sup>P1019R</sup> TMT__ proteomics data associated with [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
+This repository contains the data and source code associated with [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
+This includes the:
+* Analysis of  __WASH iBioID__ Proteomics
+* Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
 
 ### The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
@@ -10,6 +11,11 @@ a <u>S</u>trumpellin and <u>W</u>ASH <u>I</u>nteracting <u>P</u>rotein and compo
 SWIP P1019R results in decreased SWIP and destabilizes the WASH complex. 
 Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the P1019R amino acid substitution highlighted in red.
+
+* Seven children with learning and social deficit, delayed development of motor skills
+* 1 child with spasticity
+
+
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
