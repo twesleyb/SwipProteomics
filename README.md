@@ -3,8 +3,7 @@
 This repository contains data and source code used in the analysis of the __WASH iBioID__
 and the __SWIP<sup>P1019R</sup> TMT__ proteomics data associated with [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
 
-### BACKGROUND
-#### The WASH complex member SWIP: an intellectual disability gene
+### The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
 humans with intellectual impairment. This mutation causes a __P1019R__ amino acid substitution in SWIP,
 a [__S__]trumpellin and [__W__]ASH [__I__]nteracting [__P__]rotein and component of the __WASH complex__.
