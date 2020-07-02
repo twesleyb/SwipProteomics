@@ -21,8 +21,10 @@ The WASH complex functions in endosome trafficking.
 
 ### RESULTS
 #### WASH iBioID
+The WASH complexe's interactome is conserved.
 
 #### Genetic Disruption of WASHC4
+A point mutation was made in the mouse Washc4 gene using CRISPR.
 
 #### Endo-lysosome Network Dysfunction
 
@@ -30,19 +32,20 @@ The WASH complex functions in endosome trafficking.
 #### Spatial proteomics
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from __7__ subcellular fractions prepared from control and SWIP<sup>P1019R</sup> MUT mice.
 The brain of WT and SWIP mut mice was fractionated by differential
-centrifugation at increasing velocity following the protocol from Geladaki _et al._, 2019[1].
+centrifugation at increasing velocity following the protocol from Geladaki _et al._, 2019[2].
 
 #### Network construction
-Construct a protein covariation matrix using `bicor` [(rdocumentation)](https://www.rdocumentation.org/packages/WGCNA/versions/1.69/topics/bicor),
-a robust alternative to Pearson's coorelation.
+I built a protein covariation matrix using the `bicor` 
+[(rdocumentation)](https://www.rdocumentation.org/packages/WGCNA/versions/1.69/topics/bicor) 
+function, a robust alternative to Pearson's coorelation.
 
-Remove noise from the graph using `network enhancment` [(Wang et al., 2018)](refs/Wang_2018.pdf). 
+To remove noise from the graph, I used network enhancment [3].
 My `neten` code [(github)](https://github.com/twesleyb/neten) was forked from an R port [(github.com/microbma/neten)](https://github.com/microbma/neten) 
-of the original matlab code [(github.com/wangboyunze/Network_Enhancement)](https://github.com/wangboyunze/Network_Enhancement).
+of the original Matlab code [(github.com/wangboyunze/Network_Enhancement)](https://github.com/wangboyunze/Network_Enhancement).
 
 ## Community Detection
-Modules were identified in the enhanced protein covaration graph using the [Leiden](https://github.com/vtraag/leidenalg) algorithm
-([Traag _et al._, 2019](refs/Traag_2019.pdf)). We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
+Modules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
+ We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
 
 * [NetRep](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) and original paper [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf). 
 
@@ -94,5 +97,7 @@ The conda environment can reproduced from the `SwipProteomics.yml` file.
 The renv environment can reproduced from `renv.lock` file.
 
 ## References
-[1] [Ropers _et al._, 2011](refs/Ropers_2011.pdf)
-[2] [Geladaki _et al._, 2019](refs/Geladaki_2019.pdf)
+[1] [Ropers _et al._, 2011](refs/Ropers_2011.pdf)  
+[2] [Geladaki _et al._, 2019](refs/Geladaki_2019.pdf)  
+[3] [Wang _et al._, 2018](refs/Wang_2018.pdf)  
+[4] [Traag _et al._, 2019](refs/Traag_2019.pdf)  
