@@ -8,7 +8,7 @@ This includes the:
 __Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
 This genetic mutation causes a __P1019R__ amino acid substitution in SWIP,
-a **S**trumpellin and <u>W</u>ASH <u>I</u>nteracting <u>P</u>rotein and component of the pentameric __WASH complex__.
+a <ins>S</ins>trumpellin and <u>W</u>ASH <u>I</u>nteracting <u>P</u>rotein and component of the pentameric __WASH complex__.
 SWIP P1019R results in decreased SWIP and destabilizes the WASH complex. 
 Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the P1019R amino acid substitution highlighted in red.
