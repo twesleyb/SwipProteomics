@@ -21,7 +21,7 @@ position of the P1019R amino acid substitution highlighted in red.
 To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
 mouse Washc4 gene using CRISPR genome editing. The abundance of 
 __Strumpellin__ and __WASH1__ is drastically reduced in the brains of 
-SWIP<sup>P1019R</sup> mutant (MUT) mice compared to WT control mice.
+SWIP<sup>P1019R</sup> mutant (__MUT__) mice compared to control, wild-type (__WT__) mice.
 These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
 
@@ -31,7 +31,7 @@ destabilized in the presence of SWIP<sup>P1019R</sup>.
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
-__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R</sup> MUT mice.
+__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
 We observed a significant reduction in the abundance of WASH complex proteins
 __SWIP__, __WASH1__, __Fam21__, and __Strumpellin__. These data confirm that the 
