@@ -5,6 +5,13 @@
 from argparse import ArgumentParser
 from randomcolor import RandomColor
 
+# Define a function that drops None type arguments.
+def rmNone(args):
+    rm = [key for key in args if args.get(key) is None]
+    for key in rm: del args[key]
+    return(args)
+
+
 ## INPUTS
 ap = ArgumentParser(description='Generate a random color.')
 
@@ -24,6 +31,7 @@ Controls the luminosity of the generated color. You can specify a
 string containing bright, light, or dark.''')
 
 # Seed
+# FIXME: doesnt work
 #ap.add_argument('-s','--seed', type = int, default=None, help='''
 #An integer which when passed will cause randomColor to return
 #the same color each time.''')
@@ -33,18 +41,11 @@ ap.add_argument('-f','--format', type = str, default=None, help='''
 A string which specifies the format of the generated color. Possible
 values are rgb, rgbArray, hsl, hslArray and hex (default).''')
 
-## Parse input arguments.
 
-def rmNone(args):
-    # Drop None type arguments.
-    rm = [key for key in args if args.get(key) is None]
-    for key in rm: del args[key]
-    return(args)
-# Done.
-
+# Parse input arguments.
 args = vars(ap.parse_args())
 args = rmNone(args)
 
-## Generate n random colors.
+# Generate n random colors.
 rand_color = RandomColor()
 print(rand_color.generate(**args))

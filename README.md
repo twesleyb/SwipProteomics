@@ -6,39 +6,38 @@ This includes the:
 
 ### The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
-humans with intellectual impairment. This mutation causes a __P1019R__ amino acid substitution in SWIP,
+seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
+This genetic mutation causes a __P1019R__ amino acid substitution in SWIP,
 a <u>S</u>trumpellin and <u>W</u>ASH <u>I</u>nteracting <u>P</u>rotein and component of the pentameric __WASH complex__.
 SWIP P1019R results in decreased SWIP and destabilizes the WASH complex. 
 Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the P1019R amino acid substitution highlighted in red.
 
-* Seven children with learning and social deficit, delayed development of motor skills
-* 1 child with spasticity
-
-
-
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
+### Genetic Disruption of WASHC4
+To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
+mouse Washc4 gene using CRISPR genome editing. SWIP<sup>P1019R</sup> causes a
+drastic decrease in the abundance of __Strumpellin__ and __WASH1__ protein in
+the brains of mice. These data suggest that the entire WASH complex is
+destabilized in the presence of SWIP<sup>P1019R</sup>.
 
-#### How does SWIP<sup>P1019R</sup> cause intellectual disability?
-#### Genetic Disruption of WASHC4
-A point mutation was made in the mouse Washc4 gene using CRISPR.
 <p align="center">
-  <img src="./imgs/CG_Mutation.png" height="250" />
+  <img src="./imgs/DNA_Protein.png" height="500" />
   </p>
 
-#### WASH iBioID
-The WASH complexe's interactome is conserved.
+### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
+Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
+__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R</sup> MUT mice.
 
-#### Endo-lysosome Network Dysfunction
+<p align="center">
+  <img src="./imgs/WASHC_TMT.png" height="500" />
+  </p>
 
 ## METHODS
 #### Spatial proteomics
-Using 16-plex TMT-proteomics we quantified __5,894__ proteins from __7__ subcellular fractions prepared from control and SWIP<sup>P1019R</sup> MUT mice.
-The brain of WT and SWIP mut mice was fractionated by differential
-centrifugation at increasing velocity following the protocol from Geladaki _et al._, 2019[2].
 
 #### Network construction
 I built a protein covariation matrix using the `bicor` 
