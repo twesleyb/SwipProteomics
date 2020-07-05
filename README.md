@@ -32,6 +32,8 @@ destabilized in the presence of SWIP<sup>P1019R</sup>.
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
 __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R</sup> MUT mice.
 
+We observed a significant reduction in the abundance of WASH complex proteins
+__SWIP__, __WASH1__, __Fam21__, and __Strumpellin__.
 <p align="center">
   <img src="./imgs/WASHC_TMT.png" height="500" />
   </p>
