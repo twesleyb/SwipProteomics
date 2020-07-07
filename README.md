@@ -12,15 +12,16 @@ SWIP P1019R results in decreased SWIP and destabilizes the WASH complex.
 Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the P1019R amino acid substitution highlighted in red.
 
-* Seven children with learning and social deficit, delayed development of motor skills
+* Seven children with learning and social deficit, short in stature, delayed development of motor skills
 * 1 child with spasticity
-
 
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
+* 1173 AA protein
+* activates arp2/3 and thereby controls endosomal scision
 
 #### How does SWIP<sup>P1019R</sup> cause intellectual disability?
 #### Genetic Disruption of WASHC4
