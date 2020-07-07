@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "3.6.3",
+    "Version": "4.0.0",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -8,10 +8,8 @@
       }
     ]
   },
-  "Bioconductor": {
-    "Version": "3.10"
-  },
   "Packages": {
+<<<<<<< HEAD
     "AnnotationDbi": {
       "Package": "AnnotationDbi",
       "Version": "1.48.0",
@@ -1480,6 +1478,14 @@
       "Version": "1.32.0",
       "Source": "Bioconductor",
       "Hash": "f7a31247eadfb45098bcf2e8c4aebb49"
+=======
+    "renv": {
+      "Package": "renv",
+      "Version": "0.9.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c1a367437d8a8a44bec4b9d4974cb20c"
+>>>>>>> 6ab9b1c84e2302356713899895271a53e50255dd
     }
   }
 }
