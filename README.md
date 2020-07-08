@@ -13,21 +13,10 @@ and component of the pentameric __WASH complex__.
 Below is a model of the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the __P1019R__ amino acid substitution highlighted in red.
 
-<<<<<<< HEAD
-* Seven children with learning and social deficit, short in stature, delayed development of motor skills
-* 1 child with spasticity
-
-
-=======
->>>>>>> 6ab9b1c84e2302356713899895271a53e50255dd
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
-<<<<<<< HEAD
-* 1173 AA protein
-* activates arp2/3 and thereby controls endosomal scision
-=======
 ### Genetic Disruption of WASHC4
 How does the SWIP<sup>P1019R</sup> mutation cause intellectual and motor impairment in
 humans? To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
@@ -37,7 +26,6 @@ the abundane of WASH complex proteins__Strumpellin__ and __WASH1__ are drastical
 compared to control, wild-type (__WT__) mice.
 These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
->>>>>>> 6ab9b1c84e2302356713899895271a53e50255dd
 
 <p align="center">
   <img src="./imgs/DNA_Protein.png" height="500" />
