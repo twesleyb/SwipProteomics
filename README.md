@@ -13,21 +13,10 @@ and component of the pentameric __WASH complex__.
 Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
 position of the P1019R amino acid substitution highlighted in red.
 
-<<<<<<< HEAD
-* Seven children with learning and social deficit, short in stature, delayed development of motor skills
-* 1 child with spasticity
-
-
-=======
->>>>>>> 6ab9b1c84e2302356713899895271a53e50255dd
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
-<<<<<<< HEAD
-* 1173 AA protein
-* activates arp2/3 and thereby controls endosomal scision
-=======
 ### Genetic Disruption of WASHC4
 To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
 mouse Washc4 gene using CRISPR genome editing. The abundance of 
@@ -35,15 +24,12 @@ __Strumpellin__ and __WASH1__ is drastically reduced in the brains of
 SWIP<sup>P1019R</sup> mutant (__MUT__) mice compared to control, wild-type (__WT__) mice.
 These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
->>>>>>> 6ab9b1c84e2302356713899895271a53e50255dd
 
 <p align="center">
   <img src="./imgs/DNA_Protein.png" height="500" />
   </p>
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
-Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
-__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
 We observed a significant reduction in the abundance of WASH complex proteins
 __SWIP__, __WASH1__, __Fam21__, and __Strumpellin__. These data confirm that the 
@@ -55,10 +41,11 @@ entire WASH complex* is dysrupted in the presence of SWIP<sup>P1019R<\sup>.
 
 ## METHODS
 #### Spatial proteomics
+Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
+__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
 #### Network construction
-I built a protein covariation matrix using the `bicor` 
-[(rdocumentation)](https://www.rdocumentation.org/packages/WGCNA/versions/1.69/topics/bicor) 
+A symmetric, signed protein covaration matrix was built using the `bicor`
 function, a robust alternative to Pearson's coorelation.
 
 To remove noise from the graph, I used network enhancment [3].
@@ -68,6 +55,9 @@ of the original Matlab code [(github.com/wangboyunze/Network_Enhancement)](https
 ## Community Detection
 Modules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
  We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
+ Surpsie quantifies the probability of observing a module with at least is the negative logarithm probablility of drawing m edges without
+ Surprise well suited to identifying substructure in graphs. 
+ replacement.
 
 * [NetRep](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) and original paper [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf). 
 
