@@ -5,23 +5,25 @@ This includes the:
 * Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
 
 ### The WASH complex member SWIP: an intellectual disability gene
-__Ropers _et al.___ [1] identified a non-synonymous mutation in the __WASHC4__ gene of
+__Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
-This genetic mutation causes a __P1019R__ amino acid substitution in SWIP,
+This genetic mutation causes a single amino acid substitution in SWIP,
 a <ins>S</ins>trumpellin and <ins>W</ins>ASH <ins>I</ins>nteracting <ins>P</ins>rotein 
 and component of the pentameric __WASH complex__. 
-Below is the WASH complex as well as a model of SWIP's predicted 3D structure with the 
-position of the P1019R amino acid substitution highlighted in red.
+Below is a model of the WASH complex as well as a model of SWIP's predicted 3D structure with the 
+position of the __P1019R__ amino acid substitution highlighted in red.
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
 
 ### Genetic Disruption of WASHC4
-To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
-mouse Washc4 gene using CRISPR genome editing. The abundance of 
-__Strumpellin__ and __WASH1__ is drastically reduced in the brains of 
-SWIP<sup>P1019R</sup> mutant (__MUT__) mice compared to control, wild-type (__WT__) mice.
+How does the SWIP<sup>P1019R</sup> mutation cause intellectual and motor impairment in
+humans? To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
+mouse __Washc4__ gene using CRISPR genome editing. 
+In the brains of SWIP<sup>P1019R</sup> mutant (__MUT__) mice,
+the abundane of WASH complex proteins__Strumpellin__ and __WASH1__ are drastically reduced
+compared to control, wild-type (__WT__) mice.
 These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
 
@@ -30,6 +32,7 @@ destabilized in the presence of SWIP<sup>P1019R</sup>.
   </p>
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
+To study the changes to the brain proteome caused by SWIP P1019R, we... 
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
 __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
