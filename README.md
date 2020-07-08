@@ -32,9 +32,12 @@ destabilized in the presence of SWIP<sup>P1019R</sup>.
   </p>
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
+<<<<<<< HEAD
+=======
 To study the changes to the brain proteome caused by SWIP P1019R, we... 
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
 __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
+>>>>>>> ac08fd37f86daba2ec78f9da553a16f135dd9aeb
 
 We observed a significant reduction in the abundance of WASH complex proteins
 __SWIP__, __WASH1__, __Fam21__, and __Strumpellin__. These data confirm that the 
@@ -46,10 +49,11 @@ entire WASH complex* is dysrupted in the presence of SWIP<sup>P1019R<\sup>.
 
 ## METHODS
 #### Spatial proteomics
+Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
+__7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
 #### Network construction
-I built a protein covariation matrix using the `bicor` 
-[(rdocumentation)](https://www.rdocumentation.org/packages/WGCNA/versions/1.69/topics/bicor) 
+A symmetric, signed protein covaration matrix was built using the `bicor`
 function, a robust alternative to Pearson's coorelation.
 
 To remove noise from the graph, I used network enhancment [3].
@@ -59,6 +63,9 @@ of the original Matlab code [(github.com/wangboyunze/Network_Enhancement)](https
 ## Community Detection
 Modules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
  We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
+ Surpsie quantifies the probability of observing a module with at least is the negative logarithm probablility of drawing m edges without
+ Surprise well suited to identifying substructure in graphs. 
+ replacement.
 
 * [NetRep](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) and original paper [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf). 
 
