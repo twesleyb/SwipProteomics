@@ -1,5 +1,5 @@
 # SwipProteomics
-This repository contains the data and source code associated with [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
+This repository contains the data and source code for the proteomics analysis performed by [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
 This includes the:
 * Analysis of  __WASH iBioID__ Proteomics
 * Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
@@ -7,7 +7,7 @@ This includes the:
 ### The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
-This genetic mutation causes a single amino acid substitution in SWIP,
+This genetic mutation causes a single amino acid substitution in __SWIP__,
 a <ins>S</ins>trumpellin and <ins>W</ins>ASH <ins>I</ins>nteracting <ins>P</ins>rotein 
 and component of the pentameric __WASH complex__. 
 Below is a model of the WASH complex as well as a model of SWIP's predicted 3D structure with the 
@@ -15,36 +15,33 @@ position of the __P1019R__ amino acid substitution highlighted in red.
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
-|![](./imgs/WASH_Complex.png)|![](./models/Swip.gif)|
+|![](./figs/github/WASH_Complex.png)|![](./models/Swip.gif)|
 
 ### Genetic Disruption of WASHC4
 How does the SWIP<sup>P1019R</sup> mutation cause intellectual and motor impairment in
 humans? To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
 mouse __Washc4__ gene using CRISPR genome editing. 
 In the brains of SWIP<sup>P1019R</sup> mutant (__MUT__) mice,
-the abundane of WASH complex proteins__Strumpellin__ and __WASH1__ are drastically reduced
+the abundance of WASH complex proteins__Strumpellin__ and __WASH1__ are drastically reduced
 compared to control, wild-type (__WT__) mice.
 These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
 
 <p align="center">
-  <img src="./imgs/DNA_Protein.png" height="500" />
+  <img src="./figs/github/DNA_Protein.png" height="500" />
   </p>
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
-<<<<<<< HEAD
-=======
 To study the changes to the brain proteome caused by SWIP P1019R, we... 
 Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
 __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
->>>>>>> ac08fd37f86daba2ec78f9da553a16f135dd9aeb
 
 We observed a significant reduction in the abundance of WASH complex proteins
 __SWIP__, __WASH1__, __Fam21__, and __Strumpellin__. These data confirm that the 
 entire WASH complex* is dysrupted in the presence of SWIP<sup>P1019R<\sup>.
 
 <p align="center">
-  <img src="./imgs/WASHC_TMT.png" height="500" />
+  <img src="./figs/github/WASHC_TMT.png" height="500" />
   </p>
 
 ## METHODS
@@ -66,6 +63,15 @@ Modules were identified in the enhanced protein covaration graph using the `leid
  Surpsie quantifies the probability of observing a module with at least is the negative logarithm probablility of drawing m edges without
  Surprise well suited to identifying substructure in graphs. 
  replacement.
+
+<p align="center">
+  <img src="./figs/github/Leiden.png" height="250" />
+  </p>
+
+<p align="center">
+  <img src="./figs/github/Network_Enhancement.png" height="250" />
+  </p>
+
 
 * [NetRep](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) and original paper [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf). 
 
