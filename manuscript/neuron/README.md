@@ -5,7 +5,8 @@ __Submit three documents:__
 (1) The main manuscript's text including both main and supplemental figure titles and legends.
 (2) The main and supplementary figures as a pdf.
 (3) The Key Resources table.
-(x) Any additional supplemental files. No real restriction here.
+
+In addition to these files, submit additional supplemental files. No real restriction here.
 
 For submission, you can include a graphical abstract and up to four bulleted highlights.
 
