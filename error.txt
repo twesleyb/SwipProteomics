@@ -1,0 +1,32 @@
+```
+# R version 3.6.3 (2020-02-29)
+renv::load()
+
+```
+
+
+Results in the error message below. Also, you cannot quit() or exit().
+
+```
+Error in seq_len(length(splat) - 1) : 
+  argument must be coercible to non-negative integer
+Calls: <Anonymous> ... renv_lockfile_read -> enumerate -> lapply -> FUN -> f
+Traceback (most recent calls first):
+7: renv::load()
+6: renv_lockfile_load(project)
+5: renv_lockfile_read(path)
+4: enumerate(fields, function(section, entries) {
+       splat <- strsplit(section, "/", fixed = TRUE)[[1]]
+       for (i in seq_len(length(splat) - 1)) {
+           k <- splat[1:i]
+           if (is.null(data[[k]])) 
+               data[[k]] <<- list()
+       }
+       data[[splat]] <<- entries
+   })
+3: lapply(idx, callback)
+2: FUN(X[[i]], ...)
+1: f(n[[i]], x[[i]], ...)
+Execution halted
+```
+
