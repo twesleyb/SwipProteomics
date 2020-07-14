@@ -1,5 +1,5 @@
 # SwipProteomics
-This repository contains the data and source code for the proteomics analysis performed by [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
+This repository contains the data and source code for the analysis by [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
 This includes the:
 * Analysis of  __WASH iBioID__ Proteomics
 * Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
