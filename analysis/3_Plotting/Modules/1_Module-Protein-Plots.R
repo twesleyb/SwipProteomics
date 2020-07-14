@@ -79,10 +79,15 @@ data(sig_modules) # 37 sig modules
 ## Generate the plots.
 #--------------------------------------------------------------------
 
-# Loop to generate plots for all_proteins.
+# Problem protein: "E9Q6J5" 
+#partition["E9Q6J5"] = M222
+
+# All proteins. Remove problematic protein.
 all_proteins <- unique(tmt_protein$Accession)
-message(paste0("\nGenerating plots for all proteins ",
-	      "(n=",length(all_proteins),")."))
+all_proteins <- all_proteins[all_proteins!="E9Q6J5"]
+
+# Loop to generate plots for all_proteins.
+message(paste0("\nGenerating plots for all proteins..."))
 plots <- list()
 pbar <- txtProgressBar(max=length(all_proteins),style=3)
 for (prot in all_proteins) {
@@ -111,6 +116,9 @@ sorted_plots <- plots[sorted_proteins]
 remainder_prots <- names(plots)[names(plots) %notin% names(sorted_plots)]
 remainder_plots <- plots[remainder_prots]
 plots <- c(sorted_plots,remainder_plots)
+
+# Drop pesky prot.
+plots <- plots[-which(is.na(names(plots)))]
 
 # Annotate plots with module assignment.
 message("\tAnnotating plots with module assignment.")
@@ -142,20 +150,16 @@ for (module in all_modules){
 	prots <- names(which(partition == module))
 	module_plots <- plots[prots]
 	protein_list <- lapply(module_plots,function(x) x$data)
-
 	# Get modules colors.
 	module_color <- module_colors[paste0("M",module)]
-
 	# Define a function that scales things to align.
 	norm_to_max <- function(df) {
 		norm <- function(x) { log2(x)*(1/max(log2(x))) }
 		df$Normalized.Intensity <- norm(df$Intensity)
 		return(df)
 	}
-
 	# Normalize 
 	norm_prot <- lapply(protein_list,norm_to_max)
-
 	# Get median replicate for each protein.
 	get_median <- function(x) {
 		df <- x %>% group_by(Experiment,Fraction,
@@ -164,16 +168,13 @@ for (module in all_modules){
 				  .groups="drop")
 		return(df)
 	}
-
 	# Combine data for all proteins together.
 	prot_df <- bind_rows(norm_prot)
-
 	# To simplify plot, calculate protein-wise mean.
 	prot_df <- prot_df %>% group_by(Accession,`Cfg Force (xg)`,
 					Fraction,Treatment) %>%
 		summarize(Normalized.Intensity=mean(Normalized.Intensity),
 			  .groups="drop")
-
 	# Insure Fraction and Cfg force are factors.
 	# Sort factor levels in a logical order.
 	prot_df$Fraction <- factor(prot_df$Fraction,
@@ -181,11 +182,9 @@ for (module in all_modules){
 	prot_df$"Cfg Force (xg)" <- factor(prot_df$"Cfg Force (xg)")
 	levels(prot_df$"Cfg Force (xg)") <- c("5,000","9,000","12,000","15,000",
 				 "30,000", "79,000","120,000")
-
 	# Fit with lm, add fitted values to df.
 	fit <- lm(Normalized.Intensity ~ Fraction + Treatment, data = prot_df)
 	prot_df$Fitted.Intensity <- fit$fitted.values
-
 	# Generate plot.
 	plot <- ggplot(prot_df)
 	plot <- plot + aes(x = `Cfg Force (xg)`)
@@ -209,15 +208,14 @@ for (module in all_modules){
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + theme(legend.position = "none")
 	plot <- plot + ggtitle(paste("Module:",module))
-
 	# Add module annotations.
 	yrange <- range(plot$data$Normalized.Intensity)
 	ymax <- yrange[1] + 0.10 * diff(yrange)
-	
 	#plot <- plot + 
 	#	annotation_custom(gtab, 
 	#			  xmin = -Inf, xmax = 2.0, 
 	#			  ymin =-Inf, ymax = ymax)
+
         # Add plot to list.
 	grouped_plots[[module]] <- plot
 } # EOL
