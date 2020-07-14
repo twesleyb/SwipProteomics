@@ -73,7 +73,7 @@ if (! dir.exists(figsdir)) {
 ggtheme(); set_font("Arial",font_path=fontdir)
 
 # Load significant modules.
-data(sig_modules)
+data(sig_modules) # 37 sig modules
 
 #--------------------------------------------------------------------
 ## Generate the plots.
@@ -137,41 +137,66 @@ grouped_plots <- list()
 all_modules <- unique(partition[partition!=0])
 
 for (module in all_modules){
+
 	# Get the protein data for a module.
 	prots <- names(which(partition == module))
 	module_plots <- plots[prots]
 	protein_list <- lapply(module_plots,function(x) x$data)
+
 	# Get modules colors.
 	module_color <- module_colors[paste0("M",module)]
+
 	# Define a function that scales things to align.
 	norm_to_max <- function(df) {
-		df$Normalized.Intensity <- log2(df$Intensity)*(1/max(log2(df$Intensity)))
+		norm <- function(x) { log2(x)*(1/max(log2(x))) }
+		df$Normalized.Intensity <- norm(df$Intensity)
 		return(df)
 	}
+
 	# Normalize 
 	norm_prot <- lapply(protein_list,norm_to_max)
+
+	# Get median replicate for each protein.
+	get_median <- function(x) {
+		df <- x %>% group_by(Experiment,Fraction,
+				     Treatment,Accession) %>% 
+			summarize("Median(Intensity)"=median(Intensity),
+				  .groups="drop")
+		return(df)
+	}
+
+	# Combine data for all proteins together.
 	prot_df <- bind_rows(norm_prot)
-	# Insure Fraction and Cfg forcce are factors.
+
+	# To simplify plot, calculate protein-wise mean.
+	prot_df <- prot_df %>% group_by(Accession,`Cfg Force (xg)`,
+					Fraction,Treatment) %>%
+		summarize(Normalized.Intensity=mean(Normalized.Intensity),
+			  .groups="drop")
+
+	# Insure Fraction and Cfg force are factors.
 	# Sort factor levels in a logical order.
 	prot_df$Fraction <- factor(prot_df$Fraction,
 		      levels=c("F4","F5","F6","F7","F8","F9","F10"))
 	prot_df$"Cfg Force (xg)" <- factor(prot_df$"Cfg Force (xg)")
 	levels(prot_df$"Cfg Force (xg)") <- c("5,000","9,000","12,000","15,000",
 				 "30,000", "79,000","120,000")
+
 	# Fit with lm, add fitted values to df.
-	fit <- lm(Normalized.Intensity ~ Fraction + Genotype, data = prot_df)
+	fit <- lm(Normalized.Intensity ~ Fraction + Treatment, data = prot_df)
 	prot_df$Fitted.Intensity <- fit$fitted.values
+
 	# Generate plot.
 	plot <- ggplot(prot_df)
 	plot <- plot + aes(x = `Cfg Force (xg)`)
 	plot <- plot + aes(y = Normalized.Intensity)
-	plot <- plot + aes(group = interaction(Experiment,Treatment,Accession))
-	plot <- plot + aes(color = Genotype)
+	plot <- plot + aes(group = interaction(Treatment,Accession))
+	plot <- plot + aes(color = Treatment)
 	plot <- plot + geom_line(alpha=0.31)
 	plot <- plot + geom_line(aes(y=Fitted.Intensity),size=1.5,alpha=0.5)
 	plot <- plot + geom_point(aes(shape=Treatment, fill=Treatment),size=1.5)
 	plot <- plot + scale_colour_manual(name="Replicate",
-					   values = c(module_color,wt_color))
+					   values = c(wt_color,module_color))
 	plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
 	plot <- plot + theme(axis.text.x = element_text(color="black",size=11,
 							angle = 0, hjust = 1, 
@@ -184,9 +209,11 @@ for (module in all_modules){
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + theme(legend.position = "none")
 	plot <- plot + ggtitle(paste("Module:",module))
+
 	# Add module annotations.
 	yrange <- range(plot$data$Normalized.Intensity)
 	ymax <- yrange[1] + 0.10 * diff(yrange)
+	
 	#plot <- plot + 
 	#	annotation_custom(gtab, 
 	#			  xmin = -Inf, xmax = 2.0, 
