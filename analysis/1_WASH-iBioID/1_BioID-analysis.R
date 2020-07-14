@@ -59,14 +59,13 @@ check_group_CV <- function(tidy_prot) {
 	return(cv_summary)
 }
 
-
 #-------------------------------------------------------------------------------
 ## Prepare the workspace.
 #-------------------------------------------------------------------------------
 
 # Load renv.
 root <- getrd()
-renv::load(root,quiet=TRUE)
+renv::load(root)
 
 # Imports.
 suppressPackageStartupMessages({
@@ -122,7 +121,11 @@ warning(paste(length(keratins),
 tidy_prot <- tidy_prot %>% filter(Accession %notin% keratins)
 
 # Load mitochondrial protein list from twesleyb/geneLists.
-data(list=geneLists("mito"))
+mito_list <- geneLists("mitocarta2")
+if (length(mito_list)==0) { 
+	stop("Problem loading mitochrondrial contaiminants.")
+}
+data(list=mito_list)
 mito_entrez <- unlist(mitocarta2,use.names=FALSE)
 mito_prot <- getIDs(mito_entrez,from="entrez",to="uniprot",species="mouse")
 
