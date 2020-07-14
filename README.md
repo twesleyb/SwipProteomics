@@ -79,6 +79,10 @@ Modules were identified in the enhanced protein covaration graph using the `leid
   <img src="./figs/github/Permutation_Histogram.png" height="250" />
   </p>
 
+<p align="center">
+  <img src="./figs/github/test.png" />
+  </p>
+
 ## Differential protein and Module Abundance
 * [edgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html) used
     to model proteins and modules and test for differential abundance between WT
