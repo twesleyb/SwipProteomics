@@ -1,0 +1,8 @@
+ID,Sequence (5'-3'),Note
+1,ttgagaatactcacaagagg agg,CRISPR sgRNA (N20+PAM) targeting mouse Wasch4 gene for introducing C/G mutation.
+2,ctacaaagttgagggtcagacggggaacaattatatagaaa,WASHC4 C/G mutagensis forward primer
+3,ctacaaagttgagggtcagacggggaacaattatatagaaa,WASHC4 C/G mutagensis reverse primer
+4,atttcgaaggccaaagaatatacatctccgaaatttctatatcattgttcgtcctcttgtgagtattctcaaaactagaagtgagttattgatgggtgttaatacagattcagtttccataaagca,Forward strand of the repair oligo used to introduce C/G mutation into mouse Washc4 gene.
+5,tgctttatggaaactgaatctgtattaacacccatcaataactcacttctagttttgagaatactcacaagaggacgaacaatgatatagaaatttcggagatgtatattctttggccttcgaaat,Reverse strand of the repair oligo used to introduce C/G mutation into mouse Washc4 gene.
+6,tgcttgtagatgtttttcct,Forward primer for genotyping SWIPP109R mice.
+7,gttaacatgatcctatggcg,Reverse primer for genotyping SWIPP109R mice.
