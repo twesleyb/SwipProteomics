@@ -1,6 +1,6 @@
 # SwipProteomics
-This repository contains the data and source code for the analysis by [Courtland _et al._, 2020](manuscript/nat-neuro/main/SWIP_paper_JC_v25.pdf).
-This includes the:
+This repository contains the proteomics data and source code for the analysis 
+performed by [Courtland _et al._, 2020](manuscript/neuron/main/SWIP_paper_v31_Neuron.pdf):
 * Analysis of  __WASH iBioID__ Proteomics
 * Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
 
@@ -28,12 +28,12 @@ These data suggest that the entire WASH complex may be
 destabilized in the presence of SWIP<sup>P1019R</sup>.
 
 <p align="center">
-  <img src="./figs/github/DNA_Protein.png" height="500" />
+  <img src="./figs/github/DNA_Protein.png"/>
   </p>
 
 ### Endo-lysosome Network Dysfunction in SWIP<sup>P1019R</sup> Brain
-To study the changes to the brain proteome caused by SWIP P1019R, we... 
-Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
+To study the changes to the brain proteome caused by SWIP P1019R, we 
+utilized 16-plex TMT-proteomics we quantified __5,894__ proteins from 
 __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> MUT mice.
 
 We observed a significant reduction in the abundance of WASH complex proteins
@@ -41,7 +41,7 @@ __SWIP__, __WASH1__, __Fam21__, and __Strumpellin__. These data confirm that the
 entire WASH complex* is dysrupted in the presence of SWIP<sup>P1019R<\sup>.
 
 <p align="center">
-  <img src="./figs/github/WASHC_TMT.png" height="500" />
+  <img src="./figs/github/TMT_Design.png"/>
   </p>
 
 ## METHODS
