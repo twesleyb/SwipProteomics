@@ -1,0 +1,123 @@
+#!/usr/bin/env Rscript
+
+#' ---
+#' title: 
+#' description:
+#' author: 
+#' ---
+
+## ARGUMENTS:
+
+## OUTPUT: 
+
+#---------------------------------------------------------------------
+## Misc function - getrd().
+#---------------------------------------------------------------------
+
+# Get the repository's root directory.
+getrd <- function(here=getwd(), dpat= ".git") {
+	in_root <- function(h=here, dir=dpat) { 
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) { 
+		here <- dirname(here) 
+	}
+	root <- here
+	return(root)
+}
+
+#-------------------------------------------------------------------------------
+## Prepare the workspace.
+#-------------------------------------------------------------------------------
+
+# Load renv.
+root <- getrd()
+renv::load(root,quiet=TRUE)
+
+# Imports
+suppressPackageStartupMessages({
+	library(dplyr) # For manipulating data.
+	library(igraph) # For networks.
+	library(getPPIs) # For mapping gene names.
+	library(data.table) # For data.tables.
+})
+
+# Load any additional functions in root/R.
+devtools::load_all()
+
+# Load the graph partition.
+data(partition)
+data(gene_map)
+
+# Get Entrez ids associated with these Uniprot ids.
+# names(partition) == [UniprotKB]
+idx <-  match(names(partition),gene_map$uniprot)
+entrez <- gene_map$entrez[idx]
+
+#---------------------------------------------------------------------
+## Create PPI graph.
+#---------------------------------------------------------------------
+
+# Load PPIs from getPPIs.
+data(musInteractome)
+
+# Subset dataset--get PPIs among our proteins of interest.
+ppis <- musInteractome %>% 
+	filter(osEntrezA %in% entrez & osEntrezB %in% entrez)
+
+# Annotate ppis with Gene Names.
+if (!all(!is.na(match(ppis$osEntrezA,gene_map$entrez)))){ stop("A") }
+if (!all(!is.na(match(ppis$osEntrezB,gene_map$entrez)))){ stop("B") }
+
+# colnames(gene_map) 
+# [1] "uniprot" "entrez"  "symbol"  "id"
+idxA <- match(ppis$osEntrezA,gene_map$entrez)
+idxB <- match(ppis$osEntrezB,gene_map$entrez)
+
+ppis <- tibble::add_column(ppis,SymbolA=gene_map$symbol[idxA],.after="osEntrezA")
+ppis <- tibble::add_column(ppis,SymbolB=gene_map$symbol[idxB],.after="osEntrezB")
+
+# Save as csv file.
+#myfile <- file.path(root,"tables","Network_PPIs.csv")
+#fwrite(ppis,myfile)
+
+#---------------------------------------------------------
+# Get a subset of the data for proteins of interest.
+#---------------------------------------------------------
+
+# Load the partition of the graph.
+data(partition)
+
+modules <- split(names(partition),partition)
+names(modules) <- paste0("M",names(modules))
+prots <- modules[["M11"]]
+goi <- gene_map$symbol[match(prots,gene_map$uniprot)]
+
+sub_ppis <- ppis %>% 
+	filter(SymbolA %in% goi & SymbolB %in% goi)
+
+# nrow(sub_ppis)
+# [1] 78
+
+# length(goi)
+# [1] 58
+
+# clean-up the data.
+
+cols <- c("SymbolA","SymbolB","osEntrezA","osEntrezB","Interactor_A_Taxonomy",
+	  "Confidence_score","Source_database","Methods","Publications")
+
+clean_ppis <- sub_ppis %>% select(all_of(cols))
+
+colnames(clean_ppis) <- c("SymbolA","SymbolB","EntrezA","EntrezB","Source Organism",
+			  "HitPredict Confidence Score","Source Database","Methods","References")
+
+
+# check the data.
+n_ppis <- length(unique(c(clean_ppis$SymbolA,clean_ppis$SymbolB)))
+
+# save the data
+myfile <- file.path(root,"tables","sub_ppis.csv")
+fwrite(clean_ppis,myfile)
