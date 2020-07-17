@@ -1,12 +1,12 @@
 # SPECIFIC AIMS
 Loss-of-function mutations in ROGDI are causally linked to Kohlschütter-Tönz syndrome (KTS), 
-an autosomal-recessive epilepsy disorder characterized by spontaneous seizures, mild to severe 
-intellectual impairment, and amelogenesis imperfecta, a loss of the tooth enamel (OMIM #614574)1-5. 
+a rare autosomal-recessive epilepsy disorder characterized by seizures and amelogenesis 
+imperfecta, a loss of the tooth enamel (OMIM #614574)1-5. 
 
-As the function of Rogdi is not known, how the loss of Rogdi results in epilepsy is unclear. 
-We recently performed a proteomics-based study to resolve the in vivo molecular composition of the 
-inhibitory postsynaptic density (iPSD) in which we identified Rogdi at this site6. 
-Moreover, 21% of the iPSD proteome was found to be genetically implicated in autism 
+As the function of ROGDI is not known, how its loss results in epilepsy is unclear. 
+
+Previously we identified Rogdi in a iPSD proteomics preparation.
+
 and/or epilepsy disorders in humans. These data suggest that iPSD dysfunction may be 
 a common epileptogenic mechanism, and more specifically, that the loss of Rogdi may 
 produce deficits in GABAergic inhibition that drives epilepsy in KTS.
@@ -234,3 +234,13 @@ Deficits in GABAergic inhibition cause epilepsy.
 75. 	Puranam RS, He XP, Yao L, Le T, Jang W, Rehder CW, Lewis DV, McNamara JO. Disruption of Fgf13 causes synaptic excitatory-inhibitory imbalance and genetic epilepsy and febrile seizures plus. J Neurosci. 2015 Jun 10;35(23):8866-8881. PMCID: PMC4461691
  76.   In vivo proximity proteomics of nascent synapses reveals a novel regulator of cytoskeleton-mediated synaptic maturation. Erin F. Spence, Shataakshi Dube, Akiyoshi Uezu, Margaret Locke, Erik J. Soderblom, and Scott H. Soderling. Nature Communications, In-publication 2018.
 
+
+
+## Notes:
+
+* ATP6V1G1 and ATP6V1G2 paper - G1 low abundance may localize to lysosomes 
+G2 enriched in LS1 fraction containing Synaptophysin enrichment.  G1 but not G2
+enriched in Lamp1 enriched lysome fraction.
+
+Malenka paper
+a,c,c',c'',d,e
