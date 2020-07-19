@@ -101,4 +101,4 @@ hyper_dt <- tibble::add_column(hyper_dt, "n Lysosomal Proteins"=n,.after="N")
 #message("Modules that are enriched for Lysosome genes:")
 knitr::kable(head(hyper_dt %>% arrange(`P-value`)))
 
-#fwrite(hyper_dt,"lyso_gse.csv")
+fwrite(hyper_dt,file=file.path(rdatdir,"lyso_gse.csv"))

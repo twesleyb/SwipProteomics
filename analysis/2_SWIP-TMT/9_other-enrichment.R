@@ -125,4 +125,3 @@ sig_modules <- dt %>% filter(FDR < 0.05)
 
 # Pretty print.
 knitr::kable(sig_modules)
-
