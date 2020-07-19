@@ -51,10 +51,10 @@ rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
 # Load the data from root/data.
-data(hlgd)
-data(gene_map)
-data(partition)
-data(tmt_protein)
+data(hlgd) # human and mouse Lysosome genes from http://lysosome.unipg.it/ 
+data(gene_map) # gene mapping data
+data(partition) # graph partition
+data(tmt_protein) # the proteomics data
 
 #--------------------------------------------------------------------
 ## Do work.
@@ -62,6 +62,10 @@ data(tmt_protein)
 
 # Load lysosome entrez ids.
 lyso_prots <- unique(unlist(hlgd))
+
+knitr::kable(data.table("Lysosome Proteins" = length(lyso_prots)))
+
+# FIXME: GO BACK AND MAKE SUURE THAT LYSO GENES ARE MOUSE!
 
 # Map module uniprot to entrez.
 idx <- match(names(partition),gene_map$uniprot)
@@ -72,7 +76,9 @@ background <- unique(c(unlist(modules),lyso_prots))
 
 # Loop to perform hypergeometric test for enrichment.
 results_list <- list()
-message("\nPerforming hypergeometric tests to assess Lysosome protein enrichment.")
+message(paste("\nPerforming hypergeometric tests to assess",
+	     "modules for lysosome protein enrichment."))
+
 for (i in c(1:length(modules))) {
 	       results_list[[i]] <- hyperTest(lyso_prots,modules[[i]],background)
 }
