@@ -132,9 +132,6 @@ gene_lists <- list(
 		   "Han et al., Shank3" = unique(han2013shank3proteome$IP)
 		   )
 
-# Examine size of pathways.
-knitr::kable(sapply(gene_lists,length))
-
 # Combine with mouse hallmark genes and some other larger datasets.
 gene_lists <- c(gene_lists,
 		mshallmark,
@@ -142,6 +139,17 @@ gene_lists <- c(gene_lists,
 		takamori2006SV,
 		synsysnet,
 		lopitDCpredictions)
+
+# Examine size of pathways.
+#knitr::kable(sapply(gene_lists,length))
+message(paste("\nAll pathways:"))
+knitr::kable(sapply(c(gene_lists,
+		      # Additional lists with lots of groups:
+		      mshallmark,
+		      boyken2013presynapse,
+		      takamori2006SV,
+		      synsysnet,
+		      lopitDCpredictions),length))
 
 # Loop to perform GSE for each pathway.
 results <- list()
