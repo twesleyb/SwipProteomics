@@ -142,14 +142,8 @@ gene_lists <- c(gene_lists,
 
 # Examine size of pathways.
 #knitr::kable(sapply(gene_lists,length))
-message(paste("\nAll pathways:"))
-knitr::kable(sapply(c(gene_lists,
-		      # Additional lists with lots of groups:
-		      mshallmark,
-		      boyken2013presynapse,
-		      takamori2006SV,
-		      synsysnet,
-		      lopitDCpredictions),length))
+message(paste("\nAll pathway sizes:"))
+knitr::kable(sapply(gene_lists,length))
 
 # Loop to perform GSE for each pathway.
 results <- list()
@@ -211,5 +205,9 @@ message(paste("\nNumber of significantly DA modules with",
 	      "something interesting going on:", nsig_sig))
 
 # Pretty print -- all modules.
-sig_dt$Pathway <- substr(sig_dt$Pathway,1,20)
-knitr::kable(sig_dt %>% arrange(as.numeric(gsub("M","",Module))))
+#sig_dt$Pathway <- substr(sig_dt$Pathway,1,20)
+#knitr::kable(sig_dt %>% arrange(as.numeric(gsub("M","",Module))))
+
+# Save the data.
+myfile <- file.path(rdatdir,"GSEA_Results.csv")
+fwrite(sig_dt,myfile)
