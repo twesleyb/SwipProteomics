@@ -106,7 +106,7 @@ names(takamori2006SV) <- paste("Takamoir et al., Presynapse:",
 names(synsysnet) <- paste("SynSysNet:",names(synsysnet))
 
 # Clean up lopit dc predictions.
-names(lopitDCpredictions) <- paste("Geladaki et al. LopitDC,:",names(lopitDCpredictions))
+names(lopitDCpredictions) <- paste("LopitDC:",names(lopitDCpredictions))
 
 # Collect list of entrez ids for pathways of interest.
 gene_lists <- list(
@@ -203,8 +203,5 @@ message(paste("\nNumber of significantly DA modules with",
 	      "something interesting going on:", nsig_sig))
 
 # Pretty print -- all modules.
+sig_dt$Pathway <- substr(sig_dt$Pathway,1,20)
 knitr::kable(sig_dt %>% arrange(as.numeric(gsub("M","",Module))))
-
-# Pretty print -- just sig modules.
-knitr::kable(sig_dt %>% filter(Module %in% sig_modules) %>%
-	arrange(as.numeric(gsub("M","",Module))))
