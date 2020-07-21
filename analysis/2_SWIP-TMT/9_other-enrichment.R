@@ -73,6 +73,17 @@ data(list="han2013shank3proteome")
 data(list="takamori2006SV")
 data(list="synsysnet")
 data(list="lopitDCpredictions")
+data(list="takano2020") # takano2020 - tripartite bioid
+data(list="msgene")
+data(list="alsgene")
+data(list="alsodgene")
+data(list="alzgene")
+data(list="disgeneLSD")
+data(list="pdgene")
+data(list="lelieveld2016ID")
+data(list="rauch2012ID")
+data(list="deligt2012ID")
+data(list="corum")
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
@@ -87,7 +98,8 @@ data(sig_modules) # modules with sig DA.
 
 # Collect list of modules, map Uniprot accession to Entrez..
 modules <- split(names(partition),partition)[-1]
-module_entrez <- lapply(modules,function(x) gene_map$entrez[match(x,gene_map$uniprot)])
+module_entrez <- lapply(modules,function(x) { 
+				gene_map$entrez[match(x,gene_map$uniprot)] })
 all_entrez <- unlist(module_entrez,use.names=FALSE)
 
 # Collect WASH BioID genes.
@@ -129,7 +141,16 @@ gene_lists <- list(
 		   "Presynaptic Active Zone" = weingarten2014AZ$weingarten2014AZ,
 		   "Iossifov et al., ASD" = iossifov_genes,
 		   "Lee et al., Shank3" = unique(unlist(lee2017shank3proteome[c(1,2)])),
-		   "Han et al., Shank3" = unique(han2013shank3proteome$IP)
+		   "Han et al., Shank3" = unique(han2013shank3proteome$IP),
+		   "Tripartite Synapse BioID" = takano2020$takano2020,
+		   "Lysosome Storage Disorder" = disgeneLSD$"lysosomal storage diseases",
+		   "Multiple Sclerosis" = msgene$MS,
+		   "Alzheimers" = alzgene$ALZ,
+		   "ALS" = unique(c(alsgene$ALS,alsodgene$ALS)),
+		   "Parkisons" = pdgene$PD,
+		   "Lelieveld et al., ID" = lelieveld2016ID$"ID Diagnostic Genes",
+		   "Rauch et al., ID" = rauch2012ID$rauch2012ID,
+		   "Deligt et al., ID" = deligt2012ID$deligt2012ID
 		   )
 
 # Combine with mouse hallmark genes and some other larger datasets.
@@ -205,8 +226,9 @@ message(paste("\nNumber of significantly DA modules with",
 	      "something interesting going on:", nsig_sig))
 
 # Pretty print -- all modules.
-#sig_dt$Pathway <- substr(sig_dt$Pathway,1,20)
-#knitr::kable(sig_dt %>% arrange(as.numeric(gsub("M","",Module))))
+temp_dt <- sig_dt
+temp_dt$Pathway <- substr(temp_dt$Pathway,1,25)
+knitr::kable(temp_dt %>% arrange(as.numeric(gsub("M","",Module))))
 
 # Save the data.
 myfile <- file.path(rdatdir,"GSEA_Results.csv")
