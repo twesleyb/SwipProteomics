@@ -27,7 +27,7 @@ getrd <- function(here=getwd(), dpat= ".git") {
 }
 
 mask <- function(dm, threshold) {
-	# Apply a threshold (mask) a matrix.
+	# Apply a mask (threshold) to a matrix.
        	mask_ <- matrix(as.numeric(dm > threshold),nrow=nrow(dm), ncol=nrow(dm))
 	return(mask_ * dm)
 }
@@ -90,14 +90,19 @@ ne_adjm <- convert_to_adjm(edges)
 ## Create igraph graph.
 #--------------------------------------------------------------------
 
+# Drop M0 from graph.
+M0 <- names(which(partition==0))
+idx <- colnames(ne_adjm) %in% M0
+tmp_adjm <- ne_adjm[!idx,!idx]
+
 # Threshold the graph.
 # Search for an appropriate threshold.
-# By manual search the 'best' threshold is somewhere between 1.5 and 2.0.
-#is_connected(mask(ne_adjm, threshold = 1.6051))
+# By manual search the 'best' threshold is...
+#is_connected(mask(tmp_adjm, threshold = 24.526))
 
 # Create igraph graph from thresholded adjm.
-threshold = 1.6051
-adjm <- mask(ne_adjm, threshold)
+threshold = 24.526
+adjm <- mask(ne_adjm[!idx,!idx], threshold)
 g <- graph_from_adjacency_matrix(adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
 
@@ -124,8 +129,7 @@ winfile <- gsub("/mnt/d/", "D:/", myfile)
 cysnetw <- importNetworkFromFile(winfile)
 Sys.sleep(3); unlink(myfile)
 
-# For REALLY large networks you need to tell cytoscape to create a view of the
-# network. I coded this before...
+# For large networks you need to tell cytoscape to create a network view.
 result = tryCatch({
 	getNetworkViews()
 }, warning = function(w) {
@@ -180,10 +184,19 @@ invisible({ setVisualStyle("mysteez") }); Sys.sleep(3)
 invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
 
 # Save network image.
-netw_image <- file.path(figsdir, "Network_Overview")
-winfile <- gsub("/mnt/d/", "D:/", netw_image)
-exportImage(winfile, "svg")
-message("\nConvert svg image to tiff before pushing to git (too big)!")
+#netw_image <- file.path(figsdir, "Network_Overview")
+#winfile <- gsub("/mnt/d/", "D:/", netw_image)
+#exportImage(winfile, "svg")
+#message("\nConvert svg image to tiff before pushing to git (too big)!")
 
 # Free up some memory.
 invisible({ cytoscapeFreeMemory() })
+
+# Save cytoscape sesh.
+# NOTE: When on WSL, need to use Windows path format bc
+# Cytoscape is a Windows program.
+myfile <- file.path(netwdir,"Network")
+winfile <- gsub("/mnt/d/","D:/",myfile) 
+saveSession(winfile)
+
+message("\nDone!")
