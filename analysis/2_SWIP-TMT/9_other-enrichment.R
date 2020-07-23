@@ -84,6 +84,14 @@ data(list="lelieveld2016ID")
 data(list="rauch2012ID")
 data(list="deligt2012ID")
 data(list="corum")
+data(list="peng2004psd")
+data(list="chen2014AMPARs")
+data(list="biesemann2014sortedsynaptosomes")
+data(list="dosemeci2007PSD95proteome")
+
+# Clean up peng data.
+peng2004psd$All <- NULL
+names(peng2004psd) <- paste("Peng et al., 2004:",names(peng2004psd))
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
@@ -150,7 +158,10 @@ gene_lists <- list(
 		   "Parkisons" = pdgene$PD,
 		   "Lelieveld et al., ID" = lelieveld2016ID$"ID Diagnostic Genes",
 		   "Rauch et al., ID" = rauch2012ID$rauch2012ID,
-		   "Deligt et al., ID" = deligt2012ID$deligt2012ID
+		   "Deligt et al., ID" = deligt2012ID$deligt2012ID,
+		   "Chen et al., 2014: AMPAR" = chen2014AMPARs$"AMPAR Proteome",
+		   "Biesmann Sorted" = biesemann2014sortedsynaptosomes$"FASS Enriched (>2)",
+		   "DLG4-Proteome" = dosemeci2007PSD95proteome$"Affinity Purified PSD95-Complex"
 		   )
 
 # Combine with mouse hallmark genes and some other larger datasets.
@@ -159,7 +170,9 @@ gene_lists <- c(gene_lists,
 		boyken2013presynapse,
 		takamori2006SV,
 		synsysnet,
-		lopitDCpredictions)
+		lopitDCpredictions,
+		peng2004psd,
+		corum)
 
 # Examine size of pathways.
 #knitr::kable(sapply(gene_lists,length))
