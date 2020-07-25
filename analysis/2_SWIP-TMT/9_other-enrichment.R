@@ -146,7 +146,6 @@ gene_lists <- list(
 		   "Iossifov et al., ASD" = iossifov_genes,
 		   "Lee et al., Shank3" = unique(unlist(lee2017shank3proteome[c(1,2)])),
 		   "Han et al., Shank3" = unique(han2013shank3proteome$IP),
-		   "Tripartite Synapse BioID" = takano2020$takano2020,
 		   "Lysosome Storage Disorder" = disgeneLSD$"lysosomal storage diseases",
 		   "Multiple Sclerosis" = msgene$MS,
 		   "Alzheimers" = alzgene$ALZ,
@@ -172,10 +171,11 @@ gene_lists <- c(gene_lists,
 
 # Examine size of pathways.
 #knitr::kable(sapply(gene_lists,length))
-message(paste("\nAll pathway sizes:"))
-knitr::kable(sapply(gene_lists,length))
+#message(paste("\nAll pathway sizes:"))
+#knitr::kable(sapply(gene_lists,length))
 
 # Loop to perform GSE for each pathway.
+message("\nPerforming GSE analysis for all modules:")
 results <- list()
 pbar <- txtProgressBar(max=length(gene_lists),style=3)
 for (experiment in names(gene_lists)){
@@ -242,3 +242,7 @@ knitr::kable(temp_dt %>% arrange(as.numeric(gsub("M","",Module))))
 # Save the data.
 myfile <- file.path(rdatdir,"GSEA_Results.csv")
 fwrite(sig_dt,myfile)
+
+# Save the data.
+myfile <- file.path(rdatdir,"Full_GSEA_Results.csv")
+fwrite(dt,myfile)
