@@ -51,43 +51,39 @@ rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
 # Load the gene lists from geneLists.
-data(list="iPSD") # iPSD$Arhgef9, Gphn, InSyn1, iPSD
-data(list="ciPSD") # ciPSD$ciPSD
-data(list="spence2019") # spence2019$"wrp_P5-interactome"
-data(list="gao2020") # gao2020$PV, SST, CamkII
-data(list="dube2020") # dube2020$"syp-preesynapse"
-data(list="mshallmark") #mshallmark
-data(list="hlgd") #hlgd
-data(list=c("sfariAnimal","sfariGene"))
-data(list="synGO") # synGO$...
-data(list="mitocarta2") # mitocarta2$mitocarta2
-data(list=c("iossifov2012ASD","iossifov2014ASD"))
-data(list="wilkinson2017gapgef")
-data(list="wang2017Epilepsy")
-data(list="weingarten2014AZ")
-data(list="mshallmark")
-data(list="boyken2013presynapse")
-data(list="synGO")
-data(list="lee2017shank3proteome")
-data(list="han2013shank3proteome")
-data(list="takamori2006SV")
-data(list="synsysnet")
-data(list="lopitDCpredictions")
-data(list="takano2020") # takano2020 - tripartite bioid
-data(list="msgene")
-data(list="alsgene")
-data(list="alsodgene")
-data(list="alzgene")
-data(list="disgeneLSD")
-data(list="pdgene")
-data(list="lelieveld2016ID")
-data(list="rauch2012ID")
-data(list="deligt2012ID")
-data(list="corum")
-data(list="peng2004psd")
-data(list="chen2014AMPARs")
-data(list="biesemann2014sortedsynaptosomes")
-data(list="dosemeci2007PSD95proteome")
+data(list="iPSD") # iPSD (Arhgef9, Gphn, InSyn1) proteome from Uezu et al.
+data(list="spence2019") # Nascent synapse proteome from Spence et al.
+data(list="gao2020") # Interneuron proteome from Gao et al. -- can we use this?
+data(list="dube2020") # Presynapse proteome from Dube et al. -- can we use this?
+data(list="mshallmark") # Mouse hallmark genes from BROAD.
+data(list="hlgd") # Human (+mouse) lysosome genes.
+data(list=c("sfariAnimal","sfariGene")) # SFARI ASD database
+data(list="synGO") # SynGO Neuron paper from Koopmanns et al.
+data(list="mitocarta2") # Mitochondrial gene/protein database.
+data(list=c("iossifov2012ASD","iossifov2014ASD")) # ASD genes from Iossifov+.
+data(list="wilkinson2017gapgef") # Syngap1 IP 
+data(list="wang2017Epilepsy") # Epilepsy genes
+data(list="weingarten2014AZ") # Active zone proteome
+data(list="boyken2013presynapse") # Presynaptic genes from Boyken et al.
+data(list="lee2017shank3proteome") # Shank3 proteome from Lee et al.,
+data(list="han2013shank3proteome") # Shank3 proteome from Lee et al.,
+data(list="takamori2006SV") # Takamori SV proteome.
+data(list="synsysnet") # SynSysNet synaptic protein database.
+data(list="lopitDCpredictions") # Predicted subcellular locations from Geledaki.
+data(list="msgene") # MS genes
+data(list="alsgene") # ALS genes
+data(list="alsodgene") # ALS online database
+data(list="alzgene") # Alzheimer genes
+data(list="disgeneLSD") # LSD genes from DisGeneNet.
+data(list="pdgene") # PD genes
+data(list="lelieveld2016ID") # ID genes from levivel et al.,
+data(list="rauch2012ID") # ID genes
+data(list="deligt2012ID") # ID genes
+data(list="corum") # CORUM protein complexes.
+data(list="peng2004psd") # Peng 2004 PSD proteome.
+data(list="chen2014AMPARs") # AMPAR proteome.
+data(list="biesemann2014sortedsynaptosomes") # FACS (e/in) sorted synaptosomes.
+data(list="dosemeci2007PSD95proteome") # DLG4 proteome.
 
 # Clean up peng data.
 peng2004psd$All <- NULL
