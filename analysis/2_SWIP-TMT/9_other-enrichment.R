@@ -35,7 +35,6 @@ getrd <- function(here=getwd(), dpat= ".git") {
 root <- getrd()
 renv::load(root,quiet=TRUE)
 
-quit()
 # Global imports.
 suppressPackageStartupMessages({
 	library(dplyr)
