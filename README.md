@@ -57,43 +57,48 @@ function, a robust alternative to Pearson's coorelation.
 To remove noise from the graph, network enhancment __[[3]](./refs/Wang_2018.pdf)__, 
 was performed using the `neten` R package [(github)](https://github.com/twesleyb/neten).
 
+<p align="center">
+  <img src="./figs/github/Network_Enhancement.png" height="250" />
+  </p>
+
 #### Community Detection
-Mojdules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
- We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
- Surpsie quantifies the probability of observing a module with at least is the negative logarithm probablility of drawing m edges without
- Surprise well suited to identifying substructure in graphs. 
- replacement.
+Modules were identified in the enhanced protein covaration graph using the `Leiden algorithm` and
+the Python leidenalg library [(github)](https://github.com/vtraag/leidenalg)__[4]__.
+Leidenalg utilizes a quality statistic to identify optimal partitions of the graph.  
+
+We utilized the [Surprise](refs/Traag_2015.pdf) metric to optimize clustering. Surpsie quantifies 
+the probability of observing a module with at least is the negative logarithm 
+probablility of drawing m edges without replacement.
 
 <p align="center">
   <img src="./figs/github/Leiden.png" height="250" />
   </p>
 
-<p align="center">
-  <img src="./figs/github/Network_Enhancement.png" height="250" />
-  </p>
-
-
-* [NetRep](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) and original paper [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf). 
+#### Module Preservation
+To enforce module quality, permutation testing was performed to identify modules
+whose underlying toplogy was not different from 10,000 random permutations of
+the graph using `NetRep` [cran](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html) __[5]__.
 
 <p align="center">
   <img src="./figs/github/Permutation_Histogram.png" height="250" />
   </p>
 
-<p align="center">
-  <img src="./figs/github/test.png" />
-  </p>
+#### Differential Protein and Module Abundance
+The `edgeR` package [bioconductor](https://bioconductor.org/packages/release/bioc/html/edgeR.html) was used
+to model proteins and modules and test for differential abundance between WT and SWIP MUT mice __[6]__.
 
-## Differential protein and Module Abundance
-* [edgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html) used
-    to model proteins and modules and test for differential abundance between WT
-    and SWIP MUT mice.
+## iBioID Analysis
+Mitochondrial contaiminants were removed from the iBioID proteome. Mitochondrial
+proteins from MitoCarta2 were downloaded from `geneLists` [(github)](https://github.com/twesleyb/geneLists).
 
-## Misc
-* Remove mitochondrial contaiminants [geneLists](https://github.com/twesleyb/geneLists).
-* Interactions among WASH interactome as well as SWIP TMT proteome compiled using [getPPIs](https://github.com/twesleyb/getPPIs) 
-  which currates PPIs from the [HitPredict](http://www.hitpredict.org/) database.
-* [Colors](https://github.com/kevinwuhoo/randomcolor-py) installed with [conda](https://anaconda.org/conda-forge/randomcolor).
+## Protein-Protein Interactions (PPIs)
+Interactions among proteins were compiled using `getPPIs` [(github)](https://github.com/twesleyb/getPPIs),
+a compilation of PPIs from the [HitPredict](http://www.hitpredict.org/) database.
 
+## Module Colors
+The python `randomcolor` library [(github)](https://github.com/kevinwuhoo/randomcolor-py)
+was used to generate a large number of aestethically appealing colors. Download
+`randomcolor` from [conda](https://anaconda.org/conda-forge/randomcolor).
 
 ## Results 
 We show that this point mutation disrupts expression of the
@@ -104,34 +109,42 @@ biomarkers of neurodegeneration.
 ## Explore
 To explore the data, download or install this repository as an R package.
 
+Using git:
 ```Bash
 # Clone the repository.
 git clone twesleyb/SwipProteomics
 ```
 
+Using R and `devtools`:
 ```R
-# Download as an R package.
+# Download as an R package with devtools.
 devtools::install_github('twesleyb/SwipProteomics')
 ```
 
+## Datasets
+Key datasets can be accessed within R using the `data` function.
 ```R
-# Load the data.
-devtools::load_all()
+
+library(SwipProteomics)
+
 data(tmt_proteomics) # the final normalized TMT data
+
 data(partition) # the partition of the protein covariation graph
 ```
 
 ## Reproducibility 
-Effort was made to make the analysis as reproducible as possible. Reproduce the
-R environment used to perform that analysis using [conda](https://docs.anaconda.com/anaconda/install/) 
-and [renv](https://anaconda.org/conda-forge/r-renv). 
-Install all additional Python dependencies with conda (e.g. [Leidenalg](https://anaconda.org/conda-forge/leidenalg)). 
-Install all additional R dependencies with [renv](https://github.com/rstudio/renv). 
-The conda environment can reproduced from the `SwipProteomics.yml` file.
-The renv environment can reproduced from `renv.lock` file.
+Effort was made to make the analysis as reproducible as possible.   
+
+Reproduce the R environment used to perform that analysis using [conda](https://docs.anaconda.com/anaconda/install/) 
+and [renv](https://anaconda.org/conda-forge/r-renv).   
+
+All additional Python dependencies were installed with conda (e.g. [Leidenalg](https://anaconda.org/conda-forge/leidenalg)). 
+All additional R dependencies  were installed within the [renv](https://github.com/rstudio/renv) environment.
 
 ## References
 [1] [Ropers _et al._, 2011](refs/Ropers_2011.pdf)  
 [2] [Geladaki _et al._, 2019](refs/Geladaki_2019.pdf)  
 [3] [Wang _et al._, 2018](refs/Wang_2018.pdf)  
 [4] [Traag _et al._, 2019](refs/Traag_2019.pdf)  
+[5] [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf)  
+[6] [McCarth _et al._, 2012](refs/McCarth_2012.pdf)  
