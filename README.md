@@ -6,7 +6,7 @@ performed by [Courtland _et al._, 2020](manuscript/main/SWIP_Manuscript_v33_Comb
 * Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
 
 ### The WASH complex member SWIP: an intellectual disability gene
-__Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
+__Ropers _et al.___ __[[1]](./refs/Ropers_2011.pdf)__ identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
 This genetic mutation causes a single amino acid substitution in __SWIP__,
 a <ins>S</ins>trumpellin and <ins>W</ins>ASH <ins>I</ins>nteracting <ins>P</ins>rotein 
@@ -54,12 +54,11 @@ __7__ subcellular fractions prepared from WT control and SWIP<sup>P1019R<\sup> M
 A symmetric, signed protein covaration matrix was built using the `bicor`
 function, a robust alternative to Pearson's coorelation.
 
-To remove noise from the graph, I used network enhancment [3].
-My `neten` code [(github)](https://github.com/twesleyb/neten) was forked from an R port [(github.com/microbma/neten)](https://github.com/microbma/neten) 
-of the original Matlab code [(github.com/wangboyunze/Network_Enhancement)](https://github.com/wangboyunze/Network_Enhancement).
+To remove noise from the graph, network enhancment __[[3]](./refs/Wang_2018.pdf)__, 
+was performed using the `neten` R package [(github)](https://github.com/twesleyb/neten).
 
-## Community Detection
-Modules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
+#### Community Detection
+Mojdules were identified in the enhanced protein covaration graph using the `leiden algorithm` [(github)](https://github.com/vtraag/leidenalg)[4].
  We utilized the [Surprise](refs/Traag_2015.pdf) quality metric to optimize clustering.
  Surpsie quantifies the probability of observing a module with at least is the negative logarithm probablility of drawing m edges without
  Surprise well suited to identifying substructure in graphs. 
