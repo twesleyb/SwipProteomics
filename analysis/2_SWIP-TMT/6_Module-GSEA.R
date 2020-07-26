@@ -69,6 +69,7 @@ data(sig_modules) # modules with sig DA.
 modules <- split(names(partition),partition)[-1]
 module_entrez <- lapply(modules,function(x) { 
 				gene_map$entrez[match(x,gene_map$uniprot)] })
+names(module_entrez) <- paste0("M",names(module_entrez))
 all_entrez <- unlist(module_entrez,use.names=FALSE)
 
 # Collect WASH BioID genes.
@@ -132,16 +133,11 @@ for (experiment in names(gene_lists)){
 				       .after="N Pathway Genes")
 	# Sort by fold enrichment.
 	hyper_dt <- hyper_dt %>% arrange(desc(`Fold enrichment`))
-
-	# Add gene names.
-	# FIXME:
-	genes <- getPPIs::getIDs(gene_lists[[experiment]],from="entrez",to="symbol",species="mouse")
-	hyper_dt$"Pathway Genes" <- sapply(sapply(module_entrez,function(x) genes[names(genes) %in% x]),paste,collapse=";")
-
+	Entrez <- sapply(module_entrez[hyper_dt$Module],function(x) x[x %in% as.numeric(gene_lists[[experiment]])])
+	hyper_dt$Proteins <- lapply(Entrez,function(x) { paste(gene_map$symbol[match(x,gene_map$entrez)],collapse="; ") })
 	# Return the results.
 	results[[experiment]] <- hyper_dt
 	setTxtProgressBar(pbar,value=match(experiment,names(gene_lists)))
-
 }
 close(pbar)
 
