@@ -53,7 +53,9 @@ tabsdir <- file.path(root, "tables")
 # Load the gene lists from geneLists.
 data(list="corum") # CORUM protein complexes.
 data(list="lopitDCpredictions") # Predicted subcellular locations from Geledaki.
-data(list="synGO") # Koopmans et al., SynGO database.
+data(list="takamori2006SV")
+
+#data(list="synGO") # Koopmans et al., SynGO database.
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
@@ -88,15 +90,18 @@ names(lopitDCpredictions) <- paste("LopitDC:",names(lopitDCpredictions))
 names(corum) <- paste("CORUM:",names(corum))
 
 # Clean-up names of pre- and post- synaptic go terms in SynGO.
-idx1 <- which(grepl("GO:0098794",names(synGO))) # postsynapse
-idx2 <- which(grepl("GO:0098793",names(synGO))) # presynapse
-names(synGO)[idx1] <- paste0("SYNGO:Postsynapse (",names(synGO)[idx1],")")
-names(synGO)[idx2] <- paste0("SYNGO:Presynapse (",names(synGO)[idx2],")")
+#idx1 <- which(grepl("GO:0098794",names(synGO))) # postsynapse
+#idx2 <- which(grepl("GO:0098793",names(synGO))) # presynapse
+#names(synGO)[idx1] <- paste0("SYNGO:Postsynapse (",names(synGO)[idx1],")")
+#names(synGO)[idx2] <- paste0("SYNGO:Presynapse (",names(synGO)[idx2],")")
+
+# Clean-up takamori names.
+names(takamori2006SV) <- paste("Takamori et al., 2006:",names(takamori2006SV))
 
 # Collect list of entrez ids for pathways of interest.
 gene_lists <- c(list("WASH-iBioID"=wash_genes),corum,lopitDCpredictions,
-		list("Seaman et al., 1997 Retriever:"=names(retriever)),
-		synGO)
+		list("Seaman et al., 1997: Retriever Complex"=names(retriever)),
+		takamori2006SV)
 
 # Remove lists with less than 3 proteins.
 #drop <- which(sapply(gene_lists,length) < 3)
