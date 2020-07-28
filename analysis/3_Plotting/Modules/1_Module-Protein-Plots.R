@@ -168,28 +168,31 @@ grouped_plots <- list()
 all_modules <- unique(partition[partition!=0])
 all_modules <- all_modules[order(all_modules)] # Sort
 
+# Loop to do work.
+message("\nAligning module prortein plots.")
+pbar <- txtProgressBar(max=length(all_modules),style=3)
 for (module in all_modules){
-
 	# Get the protein data for a module.
 	prots <- names(which(partition == module))
 	module_plots <- plots[prots]
 	protein_list <- lapply(module_plots,function(x) x$data)
-
+	# Remove any null data arising from pesky prot.
+	idx <- sapply(protein_list,is.null)
+	if (any(idx)) { 
+		message(paste("Warning: NULL data is removed."))
+		protein_list <- protein_list[-which(idx)] 
+	}
 	# Get modules colors.
 	module_color <- module_colors[paste0("M",module)]
-
 	# Normalize/scale.
 	norm_prot <- lapply(protein_list,norm_to_max)
-
 	# Combine data for all proteins together.
 	prot_df <- bind_rows(norm_prot)
-
 	# To simplify plot, calculate protein-wise mean.
 	prot_df <- prot_df %>% group_by(Accession,`Cfg Force (xg)`,
 					Fraction,Treatment) %>%
 		summarize(Normalized.Intensity=mean(Normalized.Intensity),
 			  .groups="drop")
-
 	# Insure Fraction and Cfg force are factors.
 	# Sort factor levels in a logical order.
 	prot_df$Fraction <- factor(prot_df$Fraction,
@@ -197,11 +200,9 @@ for (module in all_modules){
 	prot_df$"Cfg Force (xg)" <- factor(prot_df$"Cfg Force (xg)")
 	levels(prot_df$"Cfg Force (xg)") <- c("5,000","9,000","12,000","15,000",
 				 "30,000", "79,000","120,000")
-
 	# Fit with lm, add fitted values to df.
 	fit <- lm(Normalized.Intensity ~ Fraction + Treatment, data = prot_df)
 	prot_df$Fitted.Intensity <- fit$fitted.values
-
 	# Generate plot.
 	plot <- ggplot(prot_df)
 	plot <- plot + aes(x = `Cfg Force (xg)`)
@@ -225,14 +226,14 @@ for (module in all_modules){
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + theme(legend.position = "none")
 	plot <- plot + ggtitle(paste("Module:",module))
-
 	# Add module annotations.
 	yrange <- range(plot$data$Normalized.Intensity)
 	ymax <- yrange[1] + 0.10 * diff(yrange)
-
         # Add plot to list.
 	grouped_plots[[module]] <- plot
+	setTxtProgressBar(pbar,value=match(module,all_modules))
 } # EOL
+close(pbar)
 names(grouped_plots) <- paste0("M",c(1:length(grouped_plots)))
 
 # Save.
