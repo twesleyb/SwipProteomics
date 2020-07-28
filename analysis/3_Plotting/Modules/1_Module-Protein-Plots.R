@@ -7,8 +7,8 @@
 #' ---
 
 ## OPTIONS:
-save_all = FALSE
-save_sig = TRUE
+save_all = TRUE
+save_sig = FALSE
 wt_color = "#47b2a4" # teal blue
 
 ## Input data in root/data/
@@ -33,6 +33,24 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	}
 	root <- here
 	return(root)
+}
+
+# Define a function that scales things to align all proteins from a
+# module.
+norm_to_max <- function(df) {
+	norm <- function(x) { log2(x)*(1/max(log2(x))) }
+	df$Normalized.Intensity <- norm(df$Intensity)
+	return(df)
+}
+
+# Get median replicate for each protein.
+# Using the median simplifies the appearance of thee plots.
+get_median <- function(x) {
+	df <- x %>% group_by(Experiment,Fraction,
+			     Treatment,Accession) %>% 
+		summarize("Median(Intensity)"=median(Intensity),
+			  .groups="drop")
+	return(df)
 }
 
 #---------------------------------------------------------------------
@@ -84,7 +102,7 @@ data(sig_modules) # 37 sig modules
 
 # All proteins. Remove problematic protein.
 all_proteins <- unique(tmt_protein$Accession)
-all_proteins <- all_proteins[all_proteins!="E9Q6J5"]
+#all_proteins <- all_proteins[all_proteins!="E9Q6J5"]
 
 # Loop to generate plots for all_proteins.
 message(paste0("\nGenerating plots for all proteins..."))
@@ -118,10 +136,13 @@ remainder_plots <- plots[remainder_prots]
 plots <- c(sorted_plots,remainder_plots)
 
 # Drop pesky prot.
+nout <- sum(is.na(names(plots)))
+message(paste("Warning: removing",nout,"plot(s)."))
 plots <- plots[-which(is.na(names(plots)))]
 
 # Annotate plots with module assignment.
 message("\tAnnotating plots with module assignment.")
+pbar <- txtProgressBar(max=length(plots),style=3)
 for (i in c(1:length(plots))) {
 	protein <- names(plots)[i]
 	plot <- plots[[protein]]
@@ -131,7 +152,9 @@ for (i in c(1:length(plots))) {
 	ypos <- yrange[1] - 0.1* diff(yrange)
 	plot <- plot + annotate(geom="label",x=7, y=ypos, label=module)
 	plots[[protein]] <- plot
+	setTxtProgressBar(pbar,value=i)
 }
+close(pbar)
 
 #--------------------------------------------------------------------
 ## Combine plots for all proteins from a module together. 
@@ -143,6 +166,7 @@ data(module_colors)
 # Loop to do the work.
 grouped_plots <- list()
 all_modules <- unique(partition[partition!=0])
+all_modules <- all_modules[order(all_modules)] # Sort
 
 for (module in all_modules){
 
@@ -150,31 +174,22 @@ for (module in all_modules){
 	prots <- names(which(partition == module))
 	module_plots <- plots[prots]
 	protein_list <- lapply(module_plots,function(x) x$data)
+
 	# Get modules colors.
 	module_color <- module_colors[paste0("M",module)]
-	# Define a function that scales things to align.
-	norm_to_max <- function(df) {
-		norm <- function(x) { log2(x)*(1/max(log2(x))) }
-		df$Normalized.Intensity <- norm(df$Intensity)
-		return(df)
-	}
-	# Normalize 
+
+	# Normalize/scale.
 	norm_prot <- lapply(protein_list,norm_to_max)
-	# Get median replicate for each protein.
-	get_median <- function(x) {
-		df <- x %>% group_by(Experiment,Fraction,
-				     Treatment,Accession) %>% 
-			summarize("Median(Intensity)"=median(Intensity),
-				  .groups="drop")
-		return(df)
-	}
+
 	# Combine data for all proteins together.
 	prot_df <- bind_rows(norm_prot)
+
 	# To simplify plot, calculate protein-wise mean.
 	prot_df <- prot_df %>% group_by(Accession,`Cfg Force (xg)`,
 					Fraction,Treatment) %>%
 		summarize(Normalized.Intensity=mean(Normalized.Intensity),
 			  .groups="drop")
+
 	# Insure Fraction and Cfg force are factors.
 	# Sort factor levels in a logical order.
 	prot_df$Fraction <- factor(prot_df$Fraction,
@@ -182,9 +197,11 @@ for (module in all_modules){
 	prot_df$"Cfg Force (xg)" <- factor(prot_df$"Cfg Force (xg)")
 	levels(prot_df$"Cfg Force (xg)") <- c("5,000","9,000","12,000","15,000",
 				 "30,000", "79,000","120,000")
+
 	# Fit with lm, add fitted values to df.
 	fit <- lm(Normalized.Intensity ~ Fraction + Treatment, data = prot_df)
 	prot_df$Fitted.Intensity <- fit$fitted.values
+
 	# Generate plot.
 	plot <- ggplot(prot_df)
 	plot <- plot + aes(x = `Cfg Force (xg)`)
@@ -208,13 +225,10 @@ for (module in all_modules){
 	plot <- plot + theme(axis.line.y=element_line())
 	plot <- plot + theme(legend.position = "none")
 	plot <- plot + ggtitle(paste("Module:",module))
+
 	# Add module annotations.
 	yrange <- range(plot$data$Normalized.Intensity)
 	ymax <- yrange[1] + 0.10 * diff(yrange)
-	#plot <- plot + 
-	#	annotation_custom(gtab, 
-	#			  xmin = -Inf, xmax = 2.0, 
-	#			  ymin =-Inf, ymax = ymax)
 
         # Add plot to list.
 	grouped_plots[[module]] <- plot
