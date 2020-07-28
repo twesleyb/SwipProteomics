@@ -53,6 +53,7 @@ tabsdir <- file.path(root, "tables")
 # Load the gene lists from geneLists.
 data(list="corum") # CORUM protein complexes.
 data(list="lopitDCpredictions") # Predicted subcellular locations from Geledaki.
+data(list="synGO") # Koopmans et al., SynGO database.
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
@@ -65,7 +66,11 @@ data(sig_modules) # modules with sig DA.
 ## Do work.
 #--------------------------------------------------------------------
 
-# Collect list of modules, map Uniprot accession to Entrez..
+# Add retriever complexes.
+retriever <- c("Vps35l","Vps26c","Vps29")
+names(retriever) <- gene_map$entrez[match(retriever,gene_map$symbol)]
+
+# Collect list of modules, map Uniprot accession to Entrez.
 modules <- split(names(partition),partition)[-1]
 module_entrez <- lapply(modules,function(x) { 
 				gene_map$entrez[match(x,gene_map$uniprot)] })
@@ -82,12 +87,20 @@ names(lopitDCpredictions) <- paste("LopitDC:",names(lopitDCpredictions))
 # Clean-up corum names:
 names(corum) <- paste("CORUM:",names(corum))
 
+# Clean-up names of pre- and post- synaptic go terms in SynGO.
+idx1 <- which(grepl("GO:0098794",names(synGO))) # postsynapse
+idx2 <- which(grepl("GO:0098793",names(synGO))) # presynapse
+names(synGO)[idx1] <- paste0("SYNGO:Postsynapse (",names(synGO)[idx1],")")
+names(synGO)[idx2] <- paste0("SYNGO:Presynapse (",names(synGO)[idx2],")")
+
 # Collect list of entrez ids for pathways of interest.
-gene_lists <- c(list("WASH-iBioID"=wash_genes),corum,lopitDCpredictions)
+gene_lists <- c(list("WASH-iBioID"=wash_genes),corum,lopitDCpredictions,
+		list("Seaman et al., 1997 Retriever:"=names(retriever)),
+		synGO)
 
 # Remove lists with less than 3 proteins.
-drop <- which(sapply(gene_lists,length) < 3)
-gene_lists <- gene_lists[-drop]
+#drop <- which(sapply(gene_lists,length) < 3)
+#gene_lists <- gene_lists[-drop]
 
 # Loop to perform GSE for each pathway.
 message("\nPerforming GSE analysis for all modules:")
