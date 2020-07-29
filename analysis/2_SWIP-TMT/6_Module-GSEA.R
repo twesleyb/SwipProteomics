@@ -51,9 +51,17 @@ rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
 # Load the gene lists from geneLists.
-data(list="corum") # CORUM protein complexes.
-data(list="lopitDCpredictions") # Predicted subcellular locations from Geledaki.
-data(list="takamori2006SV")
+data(list="corum") # CORUM protein complexes. 1
+data(list="lopitDCpredictions") # Predicted subcellular locations from Geledaki. 2
+data(list="takamori2006SV") # Presynaptic proteome from Takamori et al. 3
+data(list="ePSD") # Uezu et al., 2016 4
+data(list="iPSD") # Uezu et al., 2016 5
+
+# Add retriever complex.
+retriever <- c("Vps35l","Vps26c","Vps29")  # Retriever complex from McNally et al., 2017. 6
+
+# Load WASH interactome.
+data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
 
 #data(list="synGO") # Koopmans et al., SynGO database.
 
@@ -61,7 +69,6 @@ data(list="takamori2006SV")
 data(gene_map) # gene mapping data
 data(partition) # graph partition
 data(tmt_protein) # the proteomics data
-data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020.
 data(sig_modules) # modules with sig DA.
 
 #--------------------------------------------------------------------
@@ -69,7 +76,6 @@ data(sig_modules) # modules with sig DA.
 #--------------------------------------------------------------------
 
 # Add retriever complexes.
-retriever <- c("Vps35l","Vps26c","Vps29")
 names(retriever) <- gene_map$entrez[match(retriever,gene_map$symbol)]
 
 # Collect list of modules, map Uniprot accession to Entrez.
@@ -98,10 +104,21 @@ names(corum) <- paste("CORUM:",names(corum))
 # Clean-up takamori names.
 names(takamori2006SV) <- paste("Takamori et al., 2006:",names(takamori2006SV))
 
+# Clean-up iPSD names.
+names(iPSD) <- paste("Uezu et al., 2016:", names(iPSD))
+
+# Clean-up ePSD names.
+names(ePSD) <- paste("Uezu et al., 2016:", names(ePSD))
+
 # Collect list of entrez ids for pathways of interest.
-gene_lists <- c(list("WASH-iBioID"=wash_genes),corum,lopitDCpredictions,
-		list("Seaman et al., 1997: Retriever Complex"=names(retriever)),
-		takamori2006SV)
+gene_lists <- c(list("WASH-iBioID"=wash_genes), # 1
+		corum, # 2
+		lopitDCpredictions, # 3
+		list("McNally et al., 2017: Retriever Complex"=names(retriever)), # 4
+		takamori2006SV, # 5
+		iPSD, # 6
+		ePSD # 7
+		)
 
 # Remove lists with less than 3 proteins.
 #drop <- which(sapply(gene_lists,length) < 3)
@@ -174,5 +191,5 @@ message(paste("\nNumber of significantly DA modules with",
 	      "something interesting going on:", nsig_sig))
 
 # Save the data.
-myfile <- file.path(rdatdir,"GSEA_Results.csv")
+myfile <- file.path(rdatdir,"Module_GSEA_Results.csv")
 fwrite(sig_dt,myfile)
