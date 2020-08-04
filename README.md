@@ -12,26 +12,30 @@ Below is a model of the WASH complex as well as a model of SWIP's predicted
 3D structure with the position of the __P1019R__ amino acid substitution 
 highlighted in red.
 
+<p align="center">
+  <img width="" height="" src="./figs/github/Swip.gif">
+  </p>
 
-## METHODS
-
-#### Genetic Dysruption of SWIP
-To study SWIP<sup>P1019R</sup>, a point mutation was made in the 
-mouse __Washc4__ gene using CRISPR genome editing. 
 
 #### Spatial proteomics
-Geladaki _et al_., [[2]](refs/Geladaki_2019.pdf).
-Using 16-plex TMT-proteomics we quantified __5,894__ proteins from 
-__7__ subcellular fractions prepared from WT control and 
-SWIP<sup>P1019R<\sup> MUT mice.
+Spatial proteomics is the proteomic analysis of subcellular fractions prepared by centrifuging at different speeds.
+We prepared 7 subcellular fractions from SWIP WT and MUT mouse brain using an adapted version of the HyperLOPIT DC 
+protocol established by Geladaki _et al_.[[2]](refs/Geladaki_2019.pdf).
+
+We used 16-plex TMT proteomics to quantify __5,894__ proteins in these seven
+subcellular fractions. We analze the abundance profiles of proteins across these
+seven fractions for patterns of correlation. Many proteins function through
+their interactions with other proteins. Proteins that interact and function
+together are found in specialized subcellular comparments. Many of which are
+membrane bound. In many  regards this is an improvement upon approaches like
+WGCNA.
 
 #### Network construction
-A symmetric, signed protein covaration matrix was built using the `bicor`
+A symmetric, signed protein covaration matrix was built using the `WGCNA::bicor`
 function, a robust alternative to Pearson's coorelation.
 
-To remove noise from the graph, network enhancment [[3]](./refs/Wang_2018.pdf), 
-was performed using the `neten` R package 
-[(github)](https://github.com/twesleyb/neten).
+To remove noise from the graph, network enhancement [[3]](./refs/Wang_2018.pdf), 
+was performed using an R fork [(github)](https://github.com/microbma/neten) of the original Matlab code. 
 
 #### Community Detection
 Modules were identified in the enhanced protein covaration graph using 
@@ -47,7 +51,7 @@ is the negative logarithm probablility of drawing m edges without replacement.
 
 #### Module Preservation
 To enforce module quality, permutation testing was performed to identify 
-modules whose underlying toplogy was not different from 10,000 random 
+and remove modules whose underlying toplogy was not different from 10,000 random 
 permutations of the graph using `NetRep` 
 [(Cran)](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html)
 [[6]](refs/Ritchie_2016.pdf).  
@@ -55,8 +59,8 @@ permutations of the graph using `NetRep`
 #### Differential Protein and Module Abundance
 The `edgeR` package 
 [(BioConductor)](https://bioconductor.org/packages/release/bioc/html/edgeR.html)
-was used to model proteins and modules and test for differential abundance 
-between WT and SWIP MUT mice [[7]](refs/McCarthy_2012.pdf).  
+used to model proteins and modules and test for differential abundance 
+between WT and SWIP MUT mice.
 
 #### Protein-Protein Interactions (PPIs)
 Interactions among proteins were compiled using `getPPIs` 
@@ -69,50 +73,44 @@ was used to generate a large number of aestethically appealing colors. Download
 `randomcolor` from [conda](https://anaconda.org/conda-forge/randomcolor).
 
 #### Gene Set Enrichment analysis
-Mitochondrial contaiminants were removed from the iBioID proteome. 
-Mitochondrial proteins from [MitoCarta2](url) were downloaded from 
-`geneLists` [(github)](https://github.com/twesleyb/geneLists).
+Gene set enrichment analysis was performed using lists of genes from 
+`geneLists` [(github)](https://github.com/twesleyb/geneLists) and the
+hypergeometric function in R.
 
-## Results 
-We show that this point mutation disrupts expression of the
-WASH complex in the brain and results in empaired endosomal trafficking in
-neurons. Mice exhibit impaired cognition and motor deficites as well as cellular 
-biomarkers of neurodegeneration. 
+## Reproducibility 
+Effort was made to make the analysis as reproducible as possible.   
+Please not however, that randomness in the permutation testing proceedure means
+that the exact result may not be reproduced if the code were run again.
 
-## Explore
-To explore the data, download or install this repository as an R package.
-
-Using git:
-```Bash
-# Clone the repository.
-git clone twesleyb/SwipProteomics
-```
-
-Using R and `devtools`:
+This repository can be downloaded as an R package using devtools.
 ```R
-# Download as an R package with devtools.
-devtools::install_github('twesleyb/SwipProteomics')
+devtools::install.packages()
 ```
 
 ## Datasets
-Key datasets can be accessed within R using the `data` function.
+The raw data and key datasets are in the `data/` directory and can be accessed 
+within R using the `data` function.
 ```R
 
 library(SwipProteomics)
 
 data(tmt_proteomics) # the final normalized TMT data
 
-data(partition) # the partition of the protein covariation graph
+data(adjm) # the bicor protein covariation matrix
+
+data(ne_adjm) # the enhanced network
+
+data(partition) # the Leidenalg partition of the protein covariation graph
 ```
-
-## Reproducibility 
-Effort was made to make the analysis as reproducible as possible.   
-
-Reproduce the R environment used to perform that analysis using [conda](https://docs.anaconda.com/anaconda/install/) 
+It's recommended to try and reproduce the research environment using 
+[conda](https://docs.anaconda.com/anaconda/install/) 
 and [renv](https://anaconda.org/conda-forge/r-renv).   
 
-All additional Python dependencies were installed with conda (e.g. [Leidenalg](https://anaconda.org/conda-forge/leidenalg)). 
-All additional R dependencies  were installed within the [renv](https://github.com/rstudio/renv) environment.
+Create a conda environment and then install renv:
+`(venv) $ conda install -c conda-forge r-renv`
+
+All additional Python dependences should be installed with conda (e.g. [Leidenalg](https://anaconda.org/conda-forge/leidenalg)). 
+All additional R dependencies should be installed in the R environment managed by renv [renv](https://github.com/rstudio/renv).
 
 ## References
 [1] [Ropers _et al._, 2011](refs/Ropers_2011.pdf)  
@@ -121,4 +119,3 @@ All additional R dependencies  were installed within the [renv](https://github.c
 [4] [Traag _et al._, 2015](refs/Traag_2015.pdf)  
 [5] [Traag _et al._, 2019](refs/Traag_2019.pdf)  
 [6] [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf)  
-[7] [McCarthy _et al._, 2012](refs/McCarthy_2012.pdf)  
