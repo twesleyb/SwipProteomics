@@ -1,9 +1,6 @@
 # SwipProteomics
 This repository contains the proteomics data and source code for the analysis 
-performed by [Courtland _et al._, 2020](manuscript/main/SWIP_Manuscript_v33_Combined_Neuron.pdf):
-
-* Analysis of  __WASH iBioID__ Proteomics
-* Analysis of __SWIP<sup>P1019R</sup> 16-plex TMT__ Spatial Proteomics
+performed by [Courtland _et al._, 2020](manuscript/).
 
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
