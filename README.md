@@ -13,7 +13,7 @@ Below is a model of the WASH complex as well as a model of SWIP's predicted
 highlighted in red.
 
 <p align="center">
-  <img width="" height="" src="./figs/github/Swip.gif">
+  <img width="250" height="250" src="./figs/github/Swip.gif">
   </p>
 
 
