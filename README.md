@@ -1,6 +1,6 @@
 # SwipProteomics
 This repository contains the proteomics data and source code for the analysis 
-performed by [Courtland _et al._, 2020](manuscript/).
+performed by [Courtland _et al._, 2020](link/to/elife/).
 
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
@@ -12,10 +12,14 @@ Below is a model of the WASH complex as well as a model of SWIP's predicted
 3D structure with the position of the __P1019R__ amino acid substitution 
 highlighted in red.
 
-<p align="center">
-  <img width="250" height="250" src="./figs/github/Swip.gif">
-  </p>
+| __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
+|------------------|---------------------------|
+|![](./figs/github/WASH_Complex.png)|![](./models/Swip.gif)|
 
+
+<p align="center">
+  <img src="./figs/github/DNA_Protein.png"/>
+  </p>
 
 #### Spatial proteomics
 Spatial proteomics is the proteomic analysis of subcellular fractions prepared by centrifuging at different speeds.
@@ -30,12 +34,20 @@ together are found in specialized subcellular comparments. Many of which are
 membrane bound. In many  regards this is an improvement upon approaches like
 WGCNA.
 
+<p align="center">
+  <img src="./figs/github/TMT_Design.png"/>
+  </p>
+
 #### Network construction
 A symmetric, signed protein covaration matrix was built using the `WGCNA::bicor`
 function, a robust alternative to Pearson's coorelation.
 
 To remove noise from the graph, network enhancement [[3]](./refs/Wang_2018.pdf), 
 was performed using an R fork [(github)](https://github.com/microbma/neten) of the original Matlab code. 
+
+<p align="center">
+  <img src="./figs/github/Network_Enhancement.png" height="250" />
+  </p>
 
 #### Community Detection
 Modules were identified in the enhanced protein covaration graph using 
@@ -49,12 +61,20 @@ of the graph. We utilized the `Surprise` metric to optimize clustering
 Surprise quantifies the probability of observing a module with at least 
 is the negative logarithm probablility of drawing m edges without replacement.
 
+<p align="center">
+  <img src="./figs/github/Leiden.png" height="250" />
+  </p>
+
 #### Module Preservation
 To enforce module quality, permutation testing was performed to identify 
 and remove modules whose underlying toplogy was not different from 10,000 random 
 permutations of the graph using `NetRep` 
 [(Cran)](https://cran.r-project.org/web/packages/NetRep/vignettes/NetRep.html)
 [[6]](refs/Ritchie_2016.pdf).  
+
+<p align="center">
+  <img src="./figs/github/Permutation_Histogram.png" height="250" />
+  </p>
 
 #### Differential Protein and Module Abundance
 The `edgeR` package 
