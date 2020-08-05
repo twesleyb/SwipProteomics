@@ -127,8 +127,10 @@ It's recommended to try and reproduce the research environment using
 [conda](https://docs.anaconda.com/anaconda/install/) 
 and [renv](https://anaconda.org/conda-forge/r-renv).   
 
-Create a conda environment and then install renv:
-`(venv) $ conda install -c conda-forge r-renv`
+Create a conda environment and then install renv with conda:
+```
+(SwipProteomics) $ conda install -c conda-forge r-renv
+```
 
 All additional Python dependences should be installed with conda (e.g. [Leidenalg](https://anaconda.org/conda-forge/leidenalg)). 
 All additional R dependencies should be installed in the R environment managed by renv [renv](https://github.com/rstudio/renv).
