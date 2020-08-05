@@ -21,7 +21,7 @@ highlighted in red.
   <img src="./figs/github/DNA_Protein.png"/>
   </p>
 
-#### Spatial proteomics
+## Spatial proteomics
 Spatial proteomics is the proteomic analysis of subcellular fractions prepared by centrifuging at different speeds.
 We prepared 7 subcellular fractions from SWIP WT and MUT mouse brain using an adapted version of the HyperLOPIT DC 
 protocol established by Geladaki _et al_.[[2]](refs/Geladaki_2019.pdf).
@@ -38,7 +38,7 @@ WGCNA.
   <img src="./figs/github/TMT_Design.png"/>
   </p>
 
-#### Network construction
+## Network construction
 A symmetric, signed protein covaration matrix was built using the `WGCNA::bicor`
 function, a robust alternative to Pearson's coorelation.
 
@@ -49,7 +49,7 @@ was performed using an R fork [(github)](https://github.com/microbma/neten) of t
   <img src="./figs/github/Network_Enhancement.png" height="250" />
   </p>
 
-#### Community Detection
+## Community Detection
 Modules were identified in the enhanced protein covaration graph using 
 the Leiden algorithm as implemented by the `leidenalg` package 
 [(github)](https://github.com/vtraag/leidenalg) [[4]](refs/Traag_2019.pdf).
@@ -65,7 +65,7 @@ is the negative logarithm probablility of drawing m edges without replacement.
   <img src="./figs/github/Leiden.png" height="250" />
   </p>
 
-#### Module Preservation
+## Module Preservation
 To enforce module quality, permutation testing was performed to identify 
 and remove modules whose underlying toplogy was not different from 10,000 random 
 permutations of the graph using `NetRep` 
@@ -76,11 +76,13 @@ permutations of the graph using `NetRep`
   <img src="./figs/github/Permutation_Histogram.png" height="250" />
   </p>
 
-#### Differential Protein and Module Abundance
+## Differential Protein and Module Abundance
 The `edgeR` package 
 [(BioConductor)](https://bioconductor.org/packages/release/bioc/html/edgeR.html)
 used to model proteins and modules and test for differential abundance 
 between WT and SWIP MUT mice.
+
+## Additional Methods
 
 #### Protein-Protein Interactions (PPIs)
 Interactions among proteins were compiled using `getPPIs` 
@@ -106,8 +108,6 @@ This repository can be downloaded as an R package using devtools.
 ```R
 devtools::install.packages()
 ```
-
-## Datasets
 The raw data and key datasets are in the `data/` directory and can be accessed 
 within R using the `data` function.
 ```R
@@ -122,6 +122,7 @@ data(ne_adjm) # the enhanced network
 
 data(partition) # the Leidenalg partition of the protein covariation graph
 ```
+
 It's recommended to try and reproduce the research environment using 
 [conda](https://docs.anaconda.com/anaconda/install/) 
 and [renv](https://anaconda.org/conda-forge/r-renv).   
