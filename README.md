@@ -14,7 +14,7 @@ highlighted in red.
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
-|![](./figs/github/WASH_Complex.png)|![](./models/Swip.gif)|
+|![](./figs/github/WASH_Complex.png)|![](./figs/github/Swip.gif)|
 
 
 <p align="center">
