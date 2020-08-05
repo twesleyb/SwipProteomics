@@ -142,3 +142,14 @@ All additional R dependencies should be installed in the R environment managed b
 [4] [Traag _et al._, 2015](refs/Traag_2015.pdf)  
 [5] [Traag _et al._, 2019](refs/Traag_2019.pdf)  
 [6] [Ritchie _et al._, 2016](refs/Ritchie_2016.pdf)  
+
+Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
+
+This work is licensed under a
+[Creative Commons Attribution 4.0 International License][cc-by].
+
+[![CC BY 4.0][cc-by-image]][cc-by]
+
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
