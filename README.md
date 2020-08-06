@@ -111,10 +111,12 @@ Please not however, that randomness in the permutation testing proceedure means
 that the exact result may not be reproduced if the code were run again.
 
 This repository can be downloaded as an R package using devtools.
+NOTE: currently the package contains all of the project's data in `data` and is
+quite large. The download is 121.8 Mb and may take several minutes.
 ```R
 devtools::install.packages()
 ```
-The raw data and key datasets are in the `data/` directory and can be accessed 
+The raw data and key datasets can be accessed 
 within R using the `data` function.
 ```R
 
