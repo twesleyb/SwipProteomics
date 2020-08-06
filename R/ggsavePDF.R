@@ -2,8 +2,6 @@
 #'
 #' Function for saving multiple ggplots to single pdf.
 #'
-#' @param
-#'
 #' @return none
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
@@ -11,8 +9,6 @@
 #' @references none
 #'
 #' @keywords none
-#'
-#' @export
 #'
 #' @examples
 #' ggsavePDF(plots, file)

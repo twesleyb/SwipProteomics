@@ -10,8 +10,6 @@
 #' @references \url{https://stackoverflow.com/questions/13867325/get-width-of-plot-area-in-ggplot2}
 #' @keywords grob size height width
 #'
-#' @export
-#'
 #' @examples
 #' ggsaveTable(grob)
 ggsaveTable <- function(mytable, myfile) {

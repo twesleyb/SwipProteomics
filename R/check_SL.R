@@ -1,8 +1,5 @@
 #' check_SL
 #'
-#' @export
-#'
-
 # This function checks the column sums of 2 random samples from each
 # experiment.
 check_SL <- function(tp) {

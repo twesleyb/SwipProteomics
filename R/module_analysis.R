@@ -1,5 +1,4 @@
 #' module_analysis
-#' @export
 module_analysis <- function(data,partition,groups,nThreads){
 
 	# This is a nasty bit of code that does the statistical comparisons of

@@ -12,7 +12,6 @@
 #'
 #' @examples
 #' write_excel()
-#' @export
 
 write_excel <- function(data, file, rowNames = FALSE, colNames = TRUE, ...) {
   suppressPackageStartupMessages({

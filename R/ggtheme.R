@@ -12,10 +12,6 @@
 #'
 #' @keywords none
 #'
-#' @import ggplot2
-#'
-#' @export
-#'
 #' @examples
 #' ggtheme()
 ggtheme <- function() {

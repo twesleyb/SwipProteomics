@@ -1,6 +1,5 @@
 #' is_valid_path
 #' Check if a path to a file exists.
-#' @export
 is_valid_path <- function(file_path) {
 	# Does file_path look like a path?
 	is_path <- grepl("/",file_path)

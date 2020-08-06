@@ -14,8 +14,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' js(x, y)
 js <- function(x, y) {

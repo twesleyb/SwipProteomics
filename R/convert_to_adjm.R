@@ -1,8 +1,5 @@
 #' convert_to_adjm
 #'
-#' @export
-#'
-
 convert_to_adjm <- function(edges) {
 	suppressPackageStartupMessages({ library(data.table) })
 	adjm <- edges %>% as.data.table() %>% 

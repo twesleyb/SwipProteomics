@@ -2,9 +2,6 @@
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #'
-#' @export
-#'
-
 hyperTest <- function(listA,listB,background,enrichment=TRUE){
 	# hyperTest - perform hypergeometric test.
 	listA <- listA[listA %in% background]

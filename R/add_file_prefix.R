@@ -1,6 +1,5 @@
 #' add_file_prefix
 #' add a prefix to filename
-#' @export
 add_file_prefix <- function(file_path, file_name = NULL, output_dir = NULL, 
 			width = 2,date=FALSE) {
   # Profide either a full path to a file,

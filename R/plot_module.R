@@ -1,6 +1,5 @@
 # Function to generate module plots.
 #' plot_module
-#' @export 
 plot_module <- function(module_stats,module) {
 
 	suppressPackageStartupMessages({

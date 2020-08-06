@@ -4,13 +4,6 @@ rgb2col <- function(r,g,b) {
 	colourMap = data.frame(colourNames = colours(),t(col2rgb(colours())))
 
 	#input test colours
-	r = 155
-	g 
-	testDF = data.frame(colourNames="testCol",red = r,green = g,blue = b)
-
-	#combine both tables
-	combDF = rbind(testDF,colourMap)
-
 	#convert in matrix representation 
 	combMat= (as.matrix(combDF[,-1]))
 

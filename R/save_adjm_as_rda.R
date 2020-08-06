@@ -1,8 +1,5 @@
 #' save_adjm_as_rda
 #'
-#' @export
-#'
-
 # Define a function that saves adjm as an edge list 
 # data.frame as an rda object.
 save_adjm_as_rda <- function(adjm,file) {

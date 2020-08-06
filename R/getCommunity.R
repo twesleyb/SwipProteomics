@@ -12,8 +12,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' getCommunity(graph, seeds)
 getCommunity <- function(graph, seeds, k = 2) {

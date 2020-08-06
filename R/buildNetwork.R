@@ -13,10 +13,6 @@
 #'
 #' @keywords none
 #'
-#' @import dplyr
-#'
-#' @export
-#'
 #' @examples
 #' buildNetwork()
 buildNetwork <- function(hitpredict, mygenes, taxid,quiet=TRUE) {

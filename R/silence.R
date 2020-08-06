@@ -12,8 +12,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' silence(myfun(x))
 silence <- function(x) {

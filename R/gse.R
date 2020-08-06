@@ -14,8 +14,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' gse()
 gse <- function(gene_list,GeneSetcollection, background = "given", ...) {

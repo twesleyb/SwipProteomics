@@ -16,6 +16,12 @@ highlighted in red.
 |------------------|---------------------------|
 |![](./figs/github/WASH_Complex.png)|![](./figs/github/Swip.gif)|
 
+The P1019R missense mutation causes the exchange of Proline, an internal neutral
+amino acid with an Arginine, a charged amino acid. This is predicted to be
+structurally disruptive, in the domain thought to be critical to binding its 
+namesake Strumpellin. 
+
+Accordingly, MUT SWIP is deficient in binding Strumpellin and WASH1.
 
 <p align="center">
   <img src="./figs/github/DNA_Protein.png"/>

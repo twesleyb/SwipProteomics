@@ -12,8 +12,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' check_modules(selfPreservation)
 check_modules <- function(x, strength = "strong", stats = c(1:7), alpha = 0.05) {

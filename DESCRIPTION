@@ -2,13 +2,13 @@ Package: swipProteomics
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Tyler",
+           family = "Bradshaw",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "tyler.w.bradshaw@duke.edu",
+           comment = c(ORCID = "0000-0003-4480-1187"))
+Description: WASH BioID and SWIP TMT proteomics data from Courtland et al., 2020.
+License: CC4
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.1.1

@@ -12,8 +12,6 @@
 #'
 #' @keywords none
 #'
-#' @export
-#'
 #' @examples
 #' col2hex(color, maxValue = 255)
 col2hex <- function(color, maxValue = 255) {

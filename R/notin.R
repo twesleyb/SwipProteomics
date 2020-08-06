@@ -10,9 +10,4 @@
 #'
 #' @keywords none
 #'
-#' @import dplyr
-#'
-#' @export
-#'
-#' @examples
 `%notin%` <- Negate(`%in%`)

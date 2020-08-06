@@ -3,8 +3,6 @@
 #' A function to perform GO enrichmnet analysis of protein co-expression
 #' modules.
 #'
-#' @param
-#'
 #' @return none
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
@@ -12,8 +10,6 @@
 #' @references none
 #'
 #' @keywords none
-#'
-#' @export
 #'
 #' @examples
 #' moduleGOenrichment()
