@@ -1,6 +1,6 @@
 # SwipProteomics
 This repository contains the proteomics data and source code for the analysis 
-performed by [Courtland _et al._, 2020](link/to/elife/).
+performed by [Courtland _et al._,2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
 
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
@@ -16,29 +16,24 @@ highlighted in red.
 |------------------|---------------------------|
 |![](./figs/github/WASH_Complex.png)|![](./figs/github/Swip.gif)|
 
-The P1019R missense mutation causes the exchange of Proline, an internal neutral
-amino acid with an Arginine, a charged amino acid. This is predicted to be
-structurally disruptive, in the domain thought to be critical to binding its 
-namesake Strumpellin. 
-
-Accordingly, MUT SWIP is deficient in binding Strumpellin and WASH1.
+The P1019R missense mutation results in the exchange of proline (Pro, P), an internal neutral
+amino acid with an arginine (Arg, R), a charged amino acid. This mutation is found in the WASHC4 
+domain that is thought be be critical for its interaction with Strumpellin, and
+is predicted to be structurally disruptive. Accordingly, we found that MUT SWIP disrupts its 
+ntraction Strumpellin and WASH1.
 
 <p align="center">
   <img src="./figs/github/DNA_Protein.png"/>
   </p>
 
 ## Spatial proteomics
-Spatial proteomics is the proteomic analysis of subcellular fractions prepared by centrifuging at different speeds.
-We prepared 7 subcellular fractions from SWIP WT and MUT mouse brain using an adapted version of the HyperLOPIT DC 
-protocol established by Geladaki _et al_.[[2]](refs/Geladaki_2019.pdf).
-
-We used 16-plex TMT proteomics to quantify __5,894__ proteins in these seven
-subcellular fractions. We analze the abundance profiles of proteins across these
-seven fractions for patterns of correlation. Many proteins function through
-their interactions with other proteins. Proteins that interact and function
-together are found in specialized subcellular comparments. Many of which are
-membrane bound. In many  regards this is an improvement upon approaches like
-WGCNA.
+We performed subcellular fractionation and TMT proteomics, or spatial
+proteomics, by adapting the protocol established by Geladaki _et al_.[[2]](refs/Geladaki_2019.pdf).
+We prepared 7 subceullar fractions from brain, in all quantifying __5,894__ proteins.
+By analyzing the correlated abundance profiles of proteins across all
+seven fractions we reoncstructed a brain spatial proteomics network in which
+modules of highly correlated proteins represent groups of interacting,
+colocalizing, functionally related proteins.
 
 <p align="center">
   <img src="./figs/github/TMT_Design.png"/>
