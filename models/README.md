@@ -1,6 +1,8 @@
 # SWIP Predicted Protein Structure
-A structure of the SWIP protein was generated using 
-# Making the gif.
+A structure of the SWIP protein was generated using [Phyre]().
+The SWIP protein has no recognizable domains, but is highly helical. 
+SWIP interacts directly with Strumpellin, probably through its C-terminus (Jia
+et al., Figure S5).
 
 In pymol, generate a gif of the SWIP protein can be generated using the following commands:
 ```

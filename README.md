@@ -9,9 +9,11 @@ This mutation causes a single amino acid substitution in __SWIP__,
 a <ins>S</ins>trumpellin and <ins>W</ins>ASH <ins>I</ins>nteracting <ins>P</ins>rotein 
 and component of the pentameric __WASH complex__. 
 
-Below is a model of the WASH complex as well as a model of SWIP's predicted 
+Below is a schematic of the WASH complex as well as a model of SWIP's predicted 
 3D structure with the position of the __P1019R__ amino acid substitution 
 highlighted in red.
+
+[HIGHLIGHT SWIP C-terminus -- required and sufficient for interaction with Strumpellin]
 
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
