@@ -19,10 +19,12 @@ highlighted in red.
 
 The P1019R missense mutation results in the exchange of proline (P), an internal neutral
 amino acid, with an arginine (R), a charged amino acid. This mutation is found in the WASHC4 
-domain that is thought be be critical for its interaction with Strumpellin [REF], and
-is predicted to be structurally disruptive [REF]. Accordingly, we found that MUT SWIP mice
-have decreased levels of WASH1 and Strumpellin, and the SWIP mutation disrupts its 
-interaction both WASH1 and Strumpellin [add some data].
+domain that is thought be be critical for its interaction with Strumpellin 
+[(Jia et al., 2010; pmid 20498093)](https://pubmed.ncbi.nlm.nih.gov/20498093/), and
+is predicted to be structurally disruptive [(Missense3d)](http://www.sbg.bio.ic.ac.uk/~missense3d/). 
+Accordingly, we found that MUT SWIP mice have decreased levels of WASH1 and 
+Strumpellin, and the SWIP mutation disrupts its interaction both WASH1 and Strumpellin 
+[add some data].
 
 <p align="center">
   <img src="./figs/github/DNA_Protein.png"/>
