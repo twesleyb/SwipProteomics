@@ -3,7 +3,7 @@ renv/
 rdata/
 ARCHIVE/
 figs/AI/
-manuscript/
+#manuscript/
 
 ## project specific files to ignore.
 *.swp

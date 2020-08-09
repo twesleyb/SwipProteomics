@@ -1,0 +1,130 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% PREAMBLE 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt]{elife} %\documentclass[11pt,lineno]{elife} 
+
+\usepackage{lipsum} % Required to insert dummy text
+\usepackage[version=4]{mhchem}
+\usepackage{siunitx}
+\usepackage{ragged2e} % For \justify
+
+\DeclareSIUnit\Molar{M}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 0. ARTICLE SETUP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\input{0_TITLE}}
+
+% Authors 
+% NOTE: numbers refer to author's affiliation.
+\author[1\authfn{0}]{Jamie Courtland}
+\author[1\authfn{0}]{Tyler W. A. Bradshaw}
+\author[2]{Greg Waitt}
+\author[2,3]{Erik J. Soderblom}
+\author[2]{Tricia Ho}
+\author[4]{Anna Rajab}
+\author[5]{Ricardo Vancini}
+\author[2\authfn{1}]{Il Hwan Kim}
+\author[3]{Scott H. Soderling}
+
+% Affiliations
+\affil[1]{Department of Neurobiology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[2]{Proteomics and Metabolomics Shared Resource, 
+Duke University School of Medicine, Durham, NC 27710, USA}
+\affil[3]{Department of Cell Biology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[4]{Burjeel Hospital, VPS Healthcare, Muscat, Oman}
+\affil[5]{Department of Pathology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+
+% Author Attributes
+\contrib[\authfn{0}]{These authors contributed equally to this work.}
+\presentadd[\authfn{1}]{Department of Anatomy and Neurobiology, 
+University of Tennessee Health Science Center, Memphis, TN 38163, USA}
+
+% Author Emails
+\corr{jlc123@duke.edu}{JC}
+\corr{tyler.w.bradshaw@duke.edu}{TWAB}
+\corr{greg.waitt@duke.edu}{GW}
+\corr{erik.soderblom@duke.edu}{EJB}
+\corr{tricia.ho@duke.edu}{TH}
+\corr{drannarajab@gmail.com}{DR}
+\corr{ricardo.vancini@duke.edu}{RV}
+\corr{ikim9@uthsc.edu}{IK}
+\corr{scott.soderling@duke.edu}{SHS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 1. ABSTRACT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\input{1_ABSTRACT}
+
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 2. INTRODUCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+\input{2_INTRO}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 3. RESULTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Results}
+
+\input{3_RESULTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 4. DISCUSSION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Discussion}
+
+\input{4_DISCUSSION}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 5. METHODS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Methods and Materials}
+
+\input{5_METHODS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 6.  ACKNOWLEDGMENTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\section{Acknowledgments}
+%\input{6_ACKNOWLEDGMENTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 7.  REFERENCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\section{References}
+
+%\input{REFS}
+
+% This command displays all refs in the bib file. 
+% PLEASE DELETE IT BEFORE YOU SUBMIT YOUR MANUSCRIPT!
+\nocite{*} 
+
+%\bibliography{8_REFS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% END
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
