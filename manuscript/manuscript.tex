@@ -8,6 +8,7 @@
 \usepackage[version=4]{mhchem}
 \usepackage{siunitx}
 \usepackage{ragged2e} % For \justify
+\usepackage{tabularx} % For page-width tables: https://tex.stackexchange.com/questions/10535
 
 \DeclareSIUnit\Molar{M}
 
@@ -73,6 +74,8 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% 2. INTRODUCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{fullwidth}
 
 \section{Introduction}
 
@@ -151,5 +154,7 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% END
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{fullwidth}
 
 \end{document}
