@@ -4,6 +4,10 @@ The SWIP protein has no recognizable domains, but is highly helical.
 SWIP interacts directly with Strumpellin, probably through its C-terminus (Jia
 et al., Figure S5).
 
+<p align='center'>
+    <img src='../figs/github/SWIP_P1019R.png' height = '250' />
+    </p>
+
 In pymol, generate a gif of the SWIP protein can be generated using the following commands:
 ```
 # Generate a gif.

@@ -13,8 +13,6 @@ Below is a schematic of the WASH complex as well as a model of SWIP's predicted
 3D structure with the position of the __P1019R__ amino acid substitution 
 highlighted in red.
 
-[HIGHLIGHT SWIP C-terminus -- required and sufficient for interaction with Strumpellin]
-
 | __WASH Complex__ | __SWIP<sup>P1019R</sup>__ |
 |------------------|---------------------------|
 |![](./figs/github/WASH_Complex.png)|![](./figs/github/Swip.gif)|
