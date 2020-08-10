@@ -4,11 +4,16 @@
 
 \documentclass[11pt]{elife} %\documentclass[11pt,lineno]{elife} 
 
+% NOTE: to install packages: tlmgr install <package>
 \usepackage{lipsum} % Required to insert dummy text
 \usepackage[version=4]{mhchem}
 \usepackage{siunitx}
 \usepackage{ragged2e} % For \justify
 \usepackage{tabularx} % For page-width tables: https://tex.stackexchange.com/questions/10535
+\usepackage{textgreek} % For greek symbols, e.g. beta
+% Package textgreek Error: Cannot find the file lgrenc.def.
+% ^ must install textgreek, sudo apt install texlive-lang-greek.
+\usepackage{gensymb} % For degree symbol.
 
 \DeclareSIUnit\Molar{M}
 
@@ -98,43 +103,55 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 \input{04_DISCUSSION}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 5. METHODS
+%%% 5. MATERIALS AND METHODS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Methods and Materials}
+\section{Acknowledgements}
 
-\input{09_METHODS}
+\input{05_ACKNOWLEDGEMENTS}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 6.  AUTHOR CONTRIBUTIONS
+%%% 6. CONTRIBUTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Author Contributions}
+
 \input{06_CONTRIBUTIONS}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 7.  DECLARATION OF INTERESTS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 7. DECLARATION OF COMPETING INTERESTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Competing Interests}
+
 \input{07_AUTHOR_INTERESTS}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 8.  RESOURCE AVAILABILITY
+%%% 8. RESOURCE AVAIILABILITY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Resource Availability}
+
 \input{08_RESOURCE_AVAILABILITY}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 9.  METHODS
+%%% 9. METHODS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Materials and Methods}
+
 \input{09_METHODS}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 10.  REFERENCES
+%%% 10. QUALITATIVE AND STATISTICAL ANALISIS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Quantification and Statistical Analysis}
+
+\input{10_QUANTITATIVE_ANALYSIS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 11.  REFERENCES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % This command displays all refs in the bib file. 
@@ -142,14 +159,16 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 \nocite{*} 
 
 \section{References}
-\bibliography{8_REFS}
+
+\bibliography{11_REFERENCES}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 11.  FUNDING SOURCES
+%%% 12.  FUNDING SOURCES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Funding Sources}
-\input{11_FUNDING_SOURCES}
+
+\input{12_FUNDING_SOURCES}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% END
