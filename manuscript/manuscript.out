@@ -1,7 +1,7 @@
 \BOOKMARK [1][-]{section*.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section*.2}{Results}{}% 2
 \BOOKMARK [2][-]{subsection*.3}{Identification of the in vivo WASH complex proteome}{section*.2}% 3
-\BOOKMARK [2][-]{subsection*.4}{SWIPP1019R destabilizes the WASH complex}{section*.2}% 4
+\BOOKMARK [2][-]{subsection*.4}{The SWIPP1019R mutation destabilizes the WASH complex}{section*.2}% 4
 \BOOKMARK [2][-]{subsection*.5}{Spatial proteomics analysis of SWIPP1019R mutant mouse brain}{section*.2}% 5
 \BOOKMARK [2][-]{subsection*.6}{SWIP mutant neurons display endo-lysosomal structural abnormalities}{section*.2}% 6
 \BOOKMARK [2][-]{subsection*.7}{SWIPP1019R mutant brains exhibit lipofuscin accumulation and markers of cell death}{section*.2}% 7
@@ -23,14 +23,14 @@
 \BOOKMARK [2][-]{subsection*.23}{Plasmid DNA Constructs}{section*.18}% 23
 \BOOKMARK [2][-]{subsection*.24}{AAV Viral Preparation}{section*.18}% 24
 \BOOKMARK [2][-]{subsection*.25}{Immunocytochemistry}{section*.18}% 25
-\BOOKMARK [3][-]{subsubsection*.26}{Primary antibodies for ICC}{subsection*.25}% 26
-\BOOKMARK [3][-]{subsubsection*.27}{Secondary antibodies for ICC}{subsection*.25}% 27
+\BOOKMARK [3][-]{subsubsection*.26}{Primary antibodies}{subsection*.25}% 26
+\BOOKMARK [3][-]{subsubsection*.27}{Secondary antibodies}{subsection*.25}% 27
 \BOOKMARK [2][-]{subsection*.28}{Immunohistochemistry}{section*.18}% 28
-\BOOKMARK [3][-]{subsubsection*.29}{Primary antibodies for IHC}{subsection*.28}% 29
+\BOOKMARK [3][-]{subsubsection*.29}{Primary antibodies}{subsection*.28}% 29
 \BOOKMARK [3][-]{subsubsection*.30}{Secondary antibodies}{subsection*.28}% 30
 \BOOKMARK [2][-]{subsection*.31}{Western Blotting}{section*.18}% 31
-\BOOKMARK [3][-]{subsubsection*.32}{Primary antibodies for Western Blotting}{subsection*.31}% 32
-\BOOKMARK [3][-]{subsubsection*.33}{Secondary antibodies for Western Blotting}{subsection*.31}% 33
+\BOOKMARK [3][-]{subsubsection*.32}{Primary antibodies}{subsection*.31}% 32
+\BOOKMARK [3][-]{subsubsection*.33}{Secondary antibodies}{subsection*.31}% 33
 \BOOKMARK [2][-]{subsection*.34}{Immunoprecipitation}{section*.18}% 34
 \BOOKMARK [2][-]{subsection*.35}{Electron Microscopy}{section*.18}% 35
 \BOOKMARK [2][-]{subsection*.36}{iBioID Sample Preparation}{section*.18}% 36
@@ -38,16 +38,18 @@
 \BOOKMARK [2][-]{subsection*.38}{LOPIT-DC Subcellular Fractionation}{section*.18}% 38
 \BOOKMARK [2][-]{subsection*.39}{16-plex TMT LC-MS/MS}{section*.18}% 39
 \BOOKMARK [2][-]{subsection*.40}{Mouse Behavioral Assays}{section*.18}% 40
-\BOOKMARK [2][-]{subsection*.41}{Y-maze}{section*.18}% 41
-\BOOKMARK [2][-]{subsection*.42}{Novel Object Recognition}{section*.18}% 42
-\BOOKMARK [2][-]{subsection*.43}{TreadScan}{section*.18}% 43
-\BOOKMARK [2][-]{subsection*.44}{Fear Conditioning}{section*.18}% 44
-\BOOKMARK [2][-]{subsection*.45}{Hearing Test}{section*.18}% 45
-\BOOKMARK [2][-]{subsection*.46}{Somatosensation}{section*.18}% 46
+\BOOKMARK [3][-]{subsubsection*.41}{Y-maze}{subsection*.40}% 41
+\BOOKMARK [3][-]{subsubsection*.42}{Novel Object Recognition}{subsection*.40}% 42
+\BOOKMARK [3][-]{subsubsection*.43}{TreadScan}{subsection*.40}% 43
+\BOOKMARK [3][-]{subsubsection*.44}{Fear Conditioning}{subsection*.40}% 44
+\BOOKMARK [3][-]{subsubsection*.45}{Hearing Test}{subsection*.40}% 45
+\BOOKMARK [3][-]{subsubsection*.46}{Somatosensation}{subsection*.40}% 46
 \BOOKMARK [1][-]{section*.47}{Quantification and Statistical Analysis}{}% 47
-\BOOKMARK [2][-]{subsection*.49}{Imaris 3D reconstruction}{section*.47}% 48
-\BOOKMARK [2][-]{subsection*.50}{Cleaved Caspase-3 Image Analysis}{section*.47}% 49
-\BOOKMARK [2][-]{subsection*.51}{iBioID Quantitative Analysis}{section*.47}% 50
-\BOOKMARK [2][-]{subsection*.52}{TMT Proteomics Quantitative Analysis}{section*.47}% 51
-\BOOKMARK [1][-]{section*.53}{References}{}% 52
-\BOOKMARK [1][-]{section*.54}{Funding Sources}{}% 53
+\BOOKMARK [2][-]{subsection*.48}{Imaris 3D reconstruction}{section*.47}% 48
+\BOOKMARK [2][-]{subsection*.49}{Cleaved Caspase-3 Image Analysis}{section*.47}% 49
+\BOOKMARK [2][-]{subsection*.50}{iBioID Quantitative Analysis}{section*.47}% 50
+\BOOKMARK [2][-]{subsection*.51}{TMT Proteomics Quantitative Analysis}{section*.47}% 51
+\BOOKMARK [2][-]{subsection*.52}{Module Gene Set Enrichment Analysis}{section*.47}% 52
+\BOOKMARK [2][-]{subsection*.53}{Network Visualization}{section*.47}% 53
+\BOOKMARK [1][-]{section*.54}{References}{}% 54
+\BOOKMARK [1][-]{section*.55}{Funding Sources}{}% 55
