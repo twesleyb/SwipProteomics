@@ -2,28 +2,37 @@
 %%% PREAMBLE 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Document class -- customized eLife templage.
-\documentclass[11pt]{elife} %\documentclass[11pt,lineno]{elife} 
+% Document class -- a customized eLife template.
+\documentclass[11pt]{elife} 
 
-% NOTE: to install packages: tlmgr install <package>
 \usepackage{lipsum} % Required to insert dummy text
 \usepackage[version=4]{mhchem}
 \usepackage{siunitx}
 \usepackage{ragged2e} % For \justify
 \usepackage{tabularx} % For page-width tables: https://tex.stackexchange.com/questions/10535
-\usepackage{textgreek} % For greek symbols, e.g. beta
-% Package textgreek Error: Cannot find the file lgrenc.def.
-% ^ must install textgreek, sudo apt install texlive-lang-greek.
+\usepackage{textgreek} % For greek symbols, e.g. beta. See NOTE below.
 \usepackage{gensymb} % For degree symbol.
+
+% NOTE1: to install packages: tlmgr install <package>
+% NOTE2: RE package textgreek Error: Cannot find the file lgrenc.def.
+% ^ must install textgreek, sudo apt install texlive-lang-greek.
 %\usepackage{graphix} % For including images.
 
 \DeclareSIUnit\Molar{M}
 
 % Location of figures.
-\graphicspath{ {./figs/} }
+\graphicspath{ {./images/} }
+
+% Any additional functions (LaTeX macros):
+\newcommand*{\figuretitle}[1]{
+	{\centering
+	 \textbf{#1}
+	 \medskip
+	 \par\medskip}
+	}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 0. ARTICLE SETUP
+%%% 0. TITLE, AUTHORS, and AFFILIATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \title{\input{00_TITLE}}
@@ -81,9 +90,6 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 \end{abstract}
 
-\vspace*{\fill}
-\date{\today}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% 2. INTRODUCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -93,6 +99,13 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 \section{Introduction}
 
 \input{02_INTRO}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Test figure.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 1.
+\input{./figures/Figure_01}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% 3. RESULTS
