@@ -3,7 +3,7 @@
 * 00_TITLE.tex
 * 01_ABSTRACT.tex
 * 02_INTRO.tex
-* 03_RESULTS.tex
+* 03_RESULTS.tex - Contains the results as well as figures.
 * 04_DISCUSSION.tex
 * 05_ACKNOWLEDGEMENTS.tex
 * 06_CONTRIBUTIONS.tex
