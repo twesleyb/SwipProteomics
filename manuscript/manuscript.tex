@@ -1,0 +1,185 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% PREAMBLE 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Document class -- a customized eLife template.
+\documentclass[11pt]{elife} 
+
+\usepackage{lipsum} % Required to insert dummy text
+\usepackage[version=4]{mhchem}
+\usepackage{siunitx}
+\usepackage{ragged2e} % For \justify
+\usepackage{tabularx} % For page-width tables: https://tex.stackexchange.com/questions/10535
+\usepackage{textgreek} % For greek symbols, e.g. beta. See NOTE below.
+\usepackage{gensymb} % For degree symbol.
+
+% NOTE1: to install packages: tlmgr install <package>
+% NOTE2: RE package textgreek Error: Cannot find the file lgrenc.def.
+% ^ must install textgreek, sudo apt install texlive-lang-greek.
+%\usepackage{graphix} % For including images.
+
+\DeclareSIUnit\Molar{M}
+
+% Location of figures.
+\graphicspath{ {./figures/} }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 0. TITLE, AUTHORS, and AFFILIATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\input{00_TITLE}}
+
+% Authors 
+% NOTE: numbers refer to author's affiliation.
+\author[1\authfn{0}]{Jamie Courtland}
+\author[1\authfn{0}]{Tyler W. A. Bradshaw}
+\author[2]{Greg Waitt}
+\author[2,3]{Erik J. Soderblom}
+\author[2]{Tricia Ho}
+\author[4]{Anna Rajab}
+\author[5]{Ricardo Vancini}
+\author[2\authfn{1}]{Il Hwan Kim}
+\author[3]{Scott H. Soderling}
+
+% Affiliations
+\affil[1]{Department of Neurobiology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[2]{Proteomics and Metabolomics Shared Resource, 
+Duke University School of Medicine, Durham, NC 27710, USA}
+\affil[3]{Department of Cell Biology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[4]{Burjeel Hospital, VPS Healthcare, Muscat, Oman}
+\affil[5]{Department of Pathology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+
+% Author Attributes
+\contrib[\authfn{0}]{These authors contributed equally to this work.}
+\presentadd[\authfn{1}]{Department of Anatomy and Neurobiology, 
+University of Tennessee Health Science Center, Memphis, TN 38163, USA}
+
+% Author Emails
+\corr{jlc123@duke.edu}{JC}
+\corr{tyler.w.bradshaw@duke.edu}{TWAB}
+\corr{greg.waitt@duke.edu}{GW}
+\corr{erik.soderblom@duke.edu}{EJB}
+\corr{tricia.ho@duke.edu}{TH}
+\corr{drannarajab@gmail.com}{DR}
+\corr{ricardo.vancini@duke.edu}{RV}
+\corr{ikim9@uthsc.edu}{IK}
+\corr{scott.soderling@duke.edu}{SHS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 1. ABSTRACT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\input{01_ABSTRACT}
+
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 2. INTRODUCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{fullwidth}
+
+\section{Introduction}
+
+\input{02_INTRO}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 3. RESULTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Results}
+
+\input{03_RESULTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 4. DISCUSSION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Discussion}
+
+\input{04_DISCUSSION}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 5. MATERIALS AND METHODS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Acknowledgements}
+
+\input{05_ACKNOWLEDGEMENTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 6. CONTRIBUTIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Author Contributions}
+
+\input{06_CONTRIBUTIONS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 7. DECLARATION OF COMPETING INTERESTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Competing Interests}
+
+\input{07_AUTHOR_INTERESTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 8. RESOURCE AVAIILABILITY
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Resource Availability}
+
+\input{08_RESOURCE_AVAILABILITY}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 9. METHODS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Materials and Methods} % Also include \section{Quantification and Statistical Analysis}
+
+\input{09_METHODS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 10. SUPPLEMENTARY RESULTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\section{Supplementary Results} % Also include \section{Quantification and Statistical Analysis}
+%
+%\input{10_SUPPLEMENTARY_RESULTS}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 11.  REFERENCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% This command displays all refs in the bib file. 
+% PLEASE DELETE IT BEFORE YOU SUBMIT YOUR MANUSCRIPT!
+\nocite{*} 
+
+\section{References}
+
+\bibliography{11_REFERENCES}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 12.  FUNDING SOURCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Funding Sources}
+
+\input{12_FUNDING_SOURCES}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% END
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{fullwidth}
+
+\end{document}
