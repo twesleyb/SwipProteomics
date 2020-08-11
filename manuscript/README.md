@@ -22,3 +22,9 @@ Produces: `manuscript.pdf`.
 #### Other important files:
 * `elife.cls` Specifies the formatting of the document.
 * `vancouver-elife.bst` Specifies the formatting of the BibTeX `.bib` file.
+
+## NOTES:
+* IMO Latex is buggy. 
+* GOTCHA: sometimes you need to compile twice inorder for figure references to
+    be inserted properly. Try compiling again if you get ?? in place of figure
+    reference.
