@@ -1,21 +1,19 @@
-# SWIP Predicted Protein Structure
+# SWIP's predicted structure
 
-* Swip_1019PR.pse - Pymol file containing a model of the SWIP mutant protein.
-* Swip_P1019R.pdb - PDB file containing a model of the SWIP mutant protein.
-* Swip_WT.pdb - Universal pdb file with a modeel of the SWIP protein.
-* Swip_WT.pse - PyMol file with model of the SWIP protein.
-* hWASHC4.prot - SnapGene file with map of the human WASHC4 protein.
-* mWASHC4.prot - SnapGene file with map of the mouse WASHC4 protein.
-
-A structure of the SWIP protein was generated using [Phyre]().
-The SWIP protein has no recognizable domains, but is highly helical. 
-SWIP interacts directly with Strumpellin, probably through its C-terminus (Jia
-et al., Figure S5).
+A structure of the SWIP protein was generated using [Phyre](http://www.sbg.bio.ic.ac.uk/phyre2/html/page.cgi?id=index).
+The SWIP protein has no recognizable domains, but is predcited to be highly helical. 
+It's structure appears to be modular, organized into two major domains. 
+SWIP interacts directly with Strumpellin, this interaction is thought to be
+mediated through its C-terminus ([Jia et al., 2010](../refs/Jia_2010)). The
+SWIP<sup>P1019<\sup> mutation is found in the C-terminal domain and is predicted
+to be structurally disruptive [(Missense3d)](http://www.sbg.bio.ic.ac.uk/~missense3d/). 
+The P1019R mutation is highlighted in the model below.
 
 <p align='center'>
     <img src='../figs/github/SWIP_P1019R.png' height = '250' />
     </p>
 
+## Creating a gif of the SWIP protein
 In pymol, generate a gif of the SWIP protein can be generated using the following commands:
 ```
 # Generate a gif.
@@ -40,3 +38,12 @@ ffmpeg -i infile.avi -f image2 image-%03d.jpg
 # Convert the images to a gif.
 img2gif JPG/ 1 -1 wt.gif
 ```
+
+#### Files in this directory:
+* hWASHC4.prot
+* mWASHC4.prot
+* Swip_1019PR.pse
+* Swip_P1019R.pdb
+* Swip_WT.pdb
+* Swip_WT.pse
+
