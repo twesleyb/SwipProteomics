@@ -101,7 +101,8 @@ plot <- plot + theme(panel.background = element_blank())
 plot <- plot + theme(panel.border=element_rect(colour="black",fill="NA",size=1))
 plot <- plot + theme(axis.title.x = element_blank())
 plot <- plot + scale_x_discrete(labels=xlabels)
-plot <- plot + ylab("log2(Adjusted Intensity)")
+plot <- plot + ylab("log2(AdjustedT Intensity)")
+t
 
 # Add some lines to break up the data.
 plot <- plot + geom_vline(xintercept=seq(2.5,length(prots)*2,by=2),

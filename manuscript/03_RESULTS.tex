@@ -30,16 +30,6 @@ experimental replicates, which were further analyzed for those with significant
 enrichment in WASH1-BioID2 samples over solubleBioID2 negative controls 
 \textbf{(Table S1)}. 
 
-
-%\begin{figure}
-%\begin{fullwidth}
-%\includegraphics[width=0.95\linewidth, keepaspectratio]{Figure_01}
-%\label{fig:Figure_01}
-%\end{fullwidth}
-%\end{figure}
-
-%-------------------------------------------------------------------------------
-
 The resulting neuronal WASH proteome included 174 proteins that were
 significantly enriched (Fold-change $\geq$ 3.0, Benjamini-Hochberg P-Adjust $<$ 0.1,
 \textbf{Figure 1G}). Of these proteins, we identified all five WASH complex components
@@ -376,18 +366,24 @@ old in mice (which is thought to be equivalent to ~30-35 years old in humans)
 %1 & 18 & F & + \\
 %\end{tabularx}
 
-%-------------------------------------------------------------------------------
-% FIGURES AND LEGENDS and legends
-%-------------------------------------------------------------------------------
-
-%%% Figure 1.
-\begin{figure}[ht]
+%%% FIGURE 1.
+\begin{figure}[!ht]
 	\begin{fullwidth}
 	\begin{center}
-	\includegraphics[width=0.90\paperwidth,keepaspectratio]{Figure_01}
-	%\caption{Simple caption.}
-	\caption{ \textbf{Identification of the WASH complex proteome in vivo confirms a
-		neuronal role in endosomal trafficking.}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.8\paperwidth,keepaspectratio]{Figure_01}
+	\caption{\textbf{Identification of the WASH complex proteome in vivo confirms a
+		neuronal role in endosomal trafficking.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
 		(A) The WASH complex is composed of five subunits, Washc1 (WASH1), Washc2
 		(FAM21), Washc3 (CCDC53), Washc4 (SWIP), and Washc5 (Strumpellin). Human
 		mutations in these components are associated with spastic paraplegia (De Bot et
@@ -435,226 +431,373 @@ old in mice (which is thought to be equivalent to ~30-35 years old in humans)
 	\end{fullwidth}
 \end{figure}
 
-%Figure 2. Spatial proteomics and network covariation analysis reveal significant
-%disruptions to the WASH complex and an endosomal module in SWIPP1019R mutant
-%mouse brain
-%(A) Mouse model of the human SWIPP1019R missense mutation created using CRISPR.
-%A C>G point mutation was introduced into exon29 of murine Washc4, leading to a
-%P1019R amino acid substitution. We hypothesize (H1) that this mutation causes
-%instability of the WASH complex.  
-%(B) Representative western blot and quantification of WASH components,
-%Strumpellin and WASH1 (predicted sizes in kDa: 134 and 72, respectively), as
-%well as loading control β-Tubulin (55kDa) from whole adult whole brain lysate
-%prepared from SWIP WT (Washc4C/C) and SWIP homozygous MUT (Washc4G/G) mice.  Bar
-%plots show quantification of band intensities relative to WT (n=3 mice per
-%genotype). Strumpellin (WT 100.0 ± 5.2%, MUT 3.5 ± 0.7%, t2.1=18.44, p=0.0024)
-%and WASH1 (WT 100.0 ± 3.8%, MUT 1.1 ± 0.4%, t2.1=25.92, p=0.0013) were
-%significantly decreased. Equivalent amounts of protein were analyzed in each
-%condition (β-Tubulin: WT 100.0 ± 8.2%, MUT 94.1 ± 4.1%, U=4, p>0.99). 
-%(C) Spatial TMT proteomics experimental design. 7 subcellular fractions were
-%prepared from one WT and one MUT mouse (10mo). These samples, as well as two
-%pooled quality control (QC) samples, were labeled with unique TMT tags and
-%concatenated for simultaneous LC-MS/MS analysis. This experiment was repeated
-%three times (3 WT and 3 MUT brains total). To detect network-level changes,
-%proteins were clustered into modules, and general linearized models (GLMs) were
-%used to identify differences in module abundance between WT and MUT samples. The
-%network shows an overview of the spatial proteomics graph in which the 37
-%differentially abundant modules are indicated by colored nodes. 
-%(D) Protein module 19 (M19) contains subunits of the WASH, CCC, and Retriever
-%complexes. Node size denotes its weighted degree centrality (~importance in
-%module); purple node color indicates proteins with altered abundance in MUT
-%brain relative to WT; black node border denotes proteins identified in the
-%WASH1-BioID proteome (Figure 1); red, yellow, and green borders highlight
-%protein components of the CCC, Retriever, and WASH complexes; black edges
-%indicate known protein-protein interactions; and grey-red edges denote the
-%relative strength of protein covariation within a module (gray = weak, red =
-%strong). P-adjust values represent enrichment of proteins identified in the
-%CORUM database adjusted for multiple comparisons (Giurgiu et al., 2019). 
-%(E) Difference in normalized protein abundance for four WASH proteins found in
-%M19 (SWIP: WT 6.28 ± 0.41, MUT 4.89 ± 0.28, p=3.98x10-28; WASH1: WT 6.41 ± 0.47,
-%MUT 4.65 ± 0.62, p=7.92x10-18; FAM21: WT 6.29 ± 0.48, MUT 5.29 ± 0.49,
-%p=3.27x10-16; Strumpellin: WT 7.85 ± 0.52, MUT 6.59 ± 0.53, p=9.06x10-25) and
-%one control (Tubulin 4a: WT 8.57 ± 0.52, MUT 8.52 ± 0.58, p>0.99) across all
-%three experimental replicates (n=3 independent experiments), presented as
-%log2(adjusted protein intensities). 
-%(F) Normalized average intensities for every protein within M19 across all seven
-%subcellular fractions analyzed. Teal lines delineate protein levels in WT
-%samples, purple lines delineate protein levels in MUT samples (averaged across
-%three experimental replicates). Bolded lines demarcate the fitted intensity
-%values for WT and MUT proteins (n=3 independent experiments). 
-%(G) Difference in M19 abundance, adjusted for fraction differences and presented
-%as log2(adjusted module abundance) (WT 13.21 ± 0.003, MUT 12.99 ± 0.003,
-%p=0.0007; n=3 independent experiments). 
-%
-%Figure 3. Disruption of lysosomal protein networks in SWIPP1019R mutant brain
-%(A) Simplified schematic of the endo-lysosomal pathway in neurons. Inset depicts
-%representative lysosomal enzymes, such as proteases (CTSA, CTSB, CTSL),
-%glycosidases (GLA, GLB1, MAN2B1), and sulfatases (GNS, IDS).  
-%(B) Network graph of module 159 (M159). All proteins in M159 exhibit altered
-%abundance in MUT brain, including lysosomal proteins, CTSA, PLA2G15, and GM2A. 
-%(C) Module 2 (M2) contains multiple lysosomal proteins with increased abundance
-%in MUT brain compared to WT, including CTSS, CTSL, GRN, IDS, MAN2B1. 
-%(D) Module 213 (M213) contains multiple proteins with increased abundance in MUT
-%brain, including lysosomal proteins, GLB1, GNS, CTSB, MAN2B2, and PLBD2. Network
-%attributes (B-D): Node size denotes its weighted degree centrality (~importance
-%in module),  node color indicates proteins with altered abundance in MUT brain
-%relative to WT, purple outline highlight proteins identified as lysosomal in
-%(Geladaki et al., 2019), black edges indicate known protein-protein
-%interactions, and grey-red edges denote the relative strength of protein
-%covariation within a module (gray = weak, red = strong). P-Adjust values
-%represent enrichment of proteins identified as lysosomal in Geladaki et al.,
-%2019. 
-%(E) The overall effect of genotype on M159 module abundance (WT 10.83 ± 0.002,
-%MUT 10.94 ± 0.002, p=0.031). 
-%(F) The overall effect of genotype on M2 module abundance (WT 13.74 ± 0.001, MUT
-%13.85 ± 0.0009, p=0.0006). 
-%(G) The overall effect of genotype on M213 abundance (WT 12.17 ± 0.002, MUT
-%12.33 ± 0.002, p=0.0037). Data reported as mean ± SEM, error bars are SEM.
-%*p<0.05, ** p<0.01, ***p<0.001, empirical Bayes quasi-likelihood F-test with
-%Bonferroni correction (E-G).
-%
-%Figure 4. SWIPP1019R mutant neurons display structural abnormalities in
-%endo-lysosomal compartments in vitro 
-%(A) Experimental design. Cortices were dissected from P0 pups, and neurons were
-%dissociated and cultured on glass coverslips for 15 days. Cultures were fixed,
-%stained, and imaged using confocal microscopy. 3D puncta volumes were
-%reconstructed from z-stack images using Imaris software. 
-%(B-C) Representative 3D reconstructions of WT and MUT DIV15 neurons
-%(respectively) stained for EEA1 (yellow) and MAP2 (magenta). 
-%(D-E) Representative 3D reconstructions of WT and MUT DIV15 neurons
-%(respectively) stained for Cathepsin D (cyan) and MAP2 (magenta). 
-%(F) Graph of the average number of EEA1+ volumes per soma in each image (WT 95.0
-%± 5.5, n=24 neurons; MUT 103.7 ± 3.7, n=24 neurons; t40.2=1.314, p=0.1961). 
-%(G) Graph of the average EEA1+ volume size per soma shows larger EEA1+ volumes
-%in MUT neurons (WT 0.15 ± 0.01 µm3, n=24 neurons; MUT 0.30 ± 0.02 µm3, n=24
-%neurons; U=50, p<0.0001). 
-%(H) Graph of the average number of Cathepsin D+ volumes per soma illustrates
-%less Cathepsin D+ volumes in MUT neurons (WT 30.4 ± 1.4, n=42; MUT 17.2 ± 0.9,
-%n=42; t71=7.943, p<0.0001). 
-%(I) Graph of the average Cathepsin D+ volume size per soma demonstrates larger
-%Cathepsin D+ volumes in MUT neurons (WT 0.54 ± 0.02 µm3, n=42; MUT 0.69 ± 0.04
-%µm3, n=42; t63=3.701, p=0.0005). 
-%(J) Histogram of EEA1+ volumes illustrate differences in size distributions
-%between MUT and WT neurons. 
-%(K) Histogram of CathD+ volumes show differences in size distributions between
-%MUT and WT neurons. Analyses included at least three separate culture
-%preparations. Scale bars, 5 µm (B-E). Data reported as mean ± SEM, error bars
-%are SEM. ***p<0.001, ****p<0.0001, two-tailed t-tests or Mann-Whitney U test
-%(G).
-%
-%Figure 5. SWIPP1019R mutant brains exhibit markers of abnormal endo-lysosomal
-%structures and cell death in vivo
-%(A-B) Representative images of adolescent (P42) WT and MUT motor cortex stained
-%with cleaved caspase-3 (CC3, green).
-%(C) Anatomical representation of mouse brain with motor cortex highlighted in
-%red, adapted from the Allen Brain Atlas (Oh et al., 2014). 
-%(D-E) Representative image of adult (10 mo) WT and MUT motor cortex stained with
-%CC3 (green).  
-%(F, G, I, and J) DAPI co-stained images for (A, B, D, and E, respectively).
-%Scale bar for (A-J), 15 µm. 
-%(H) Graph depicting the normalized percentage of DAPI+ nuclei that are positive
-%for CC3 per image. No difference is seen at P42, but the amount of CC3+ nuclei
-%is significantly higher in aged MUT mice (P42 WT 6.97 ± 0.80%, P42 MUT 5.26 ±
-%0.90%, 10mo WT 25.38 ± 2.05%, 10mo MUT 44.01 ± 1.90%, H=74.12, p<0.0001). We
-%observed no difference in number of nuclei per image between genotypes. 
-%(K) Representative transmission electron microscopy (TEM) image taken of soma
-%from adult (7mo) WT motor cortex. Arrowheads delineate electron-dense lipofuscin
-%material, Nuc = nucleus. 
-%(L) Representative transmission electron microscopy (TEM) image taken of soma
-%from adult (7mo) MUT motor cortex. 
-%(M) Inset from (K) highlights lysosomal structure in WT soma. Pseudo-colored
-%region depicts lipofuscin area, demarcated as L. 
-%(N) Inset from (L) highlights large lipofuscin deposit in MUT soma (L,
-%pseudo-colored region) with electron-dense and electron-lucent lipid-like
-%(asterisk) components. 
-%(O) Graph of areas of electron-dense regions of interest (ROI) shows increased
-%ROI size in MUT neurons (WT 2.4x105 ± 2.8x104 nm2, n=50 ROIs; MUT 8.2x105 ± 9.7
-%x104 nm2, n=75 ROIs; U=636, p<0.0001). 
-%(P) Graph of the average number of presumptive lysosomes with associated
-%electron-dense material reveals increased number in MUT samples (WT 3.14 ± 0.72
-%ROIs, n=14 images; MUT 10.86 ± 1.42 ROIs, n=14 images; U=17, p<0.0001). For (N)
-%and (O), images were taken from multiple TEM grids, prepared from n=3 animals
-%per genotype. Scale bar for all TEM images, 1 µm. Data reported as mean ± SEM,
-%error bars are SEM. ***p<0.001, ****p<0.0001, Kruskal-Wallis test (F),
-%Mann-Whitney U test (O-P).
-%
-%Figure 6. SWIPP1019R mutant mice display persistent deficits in cued fear memory
-%recall 
-%(A) Experimental fear conditioning paradigm. After acclimation to a conditioning
-%chamber, mice received a mild aversive 0.4mA footshock paired with a 2900Hz
-%tone. 48 hours later, the mice were placed in a chamber with different tactile
-%and visual cues. The mice acclimated for two minutes and then the 2900Hz tone
-%was played (no footshock) and freezing behavior was assessed. 
-%(B) Line graphs of WT and MUT freezing response during cued tone memory recall.
-%Data represented as average freezing per genotype in 30 s time bins. The tone is
-%presented after t = 120 s, and remains on for 120 seconds (Tone ON). Two
-%different cohorts of mice were used for age groups P42 (top) and 6.5mo (bottom).
-%Two-way ANOVA analysis of average freezing during Pre-Tone and Tone periods
-%reveal a Genotype x Time effect at P42 (WT n=10, MUT n=10, F1,18=4.944,
-%p=0.0392) and 6.5mo (WT n=13, MUT n=11, F1,22= 13.61, p=0.0013). 
-%(C) Graphs showing the average %time freezing per animal before and during tone
-%presentation. Top: freezing is reduced by 20% in MUT adolescent mice compared to
-%WT littermates (Pre-tone WT 16.5 ± 2.2%, n=10; Pre-tone MUT 13.0 ± 1.8%, n=10;
-%t36=0.8569, p=0.6366; Tone WT 52.8 ± 3.8%, n=10; Tone MUT 38.0 ± 3.6%, n=10;
-%t36=3.539, p=0.0023), Bottom: freezing is reduced by over 30% in MUT adult mice
-%compared to WT littermates (Pre-tone WT 21.1 ± 2.7%, n=13; Pre-tone MUT 23.7 ±
-%3.8%, n=11; t44=0.4675, p=0.8721; Tone WT 69.7 ± 4.3%, n=13; Tone MUT 53.1 ±
-%5.2%, n=11; t44=2.921, p=0.0109). Data reported as mean ± SEM, error bars are
-%SEM. *p<0.05, **p<0.01, two-way ANOVAs (B) and Sidak’s post-hoc analyses (C).
-%
-%Figure 7. SWIPP1019R mutant mice exhibit surprising motor deficits that are
-%confirmed in human patients 
-%(A) Rotarod experimental setup. Mice walked atop a rod rotating at 32rpm for 5
-%minutes, and the duration of time they remained on the rod before falling was
-%recorded. 
-%(B) Line graph of average duration animals remained on the rod per genotype
-%across four trials, with an inter-trial interval of 40 minutes. The same cohort
-%of animals was tested at two different ages, P45 (top) and 5.5 months (bottom).
-%Genotype had a significant effect on task performance at both ages (top, P45:
-%genotype effect, F1,25=7.821, p=0.0098. bottom, 5.5mo: genotype effect, F1,23=
-%7.573, p=0.0114). 
-%(C) Graphs showing the average duration each animal remained on the rod across
-%trials. At both ages, the MUT mice exhibited an almost 50% reduction in their
-%ability to remain on the rod (Top, P45: WT 169.9 ± 25.7 s, MUT 83.8 ± 15.9 s,
-%U=35, p=0.0054. Bottom, 5.5mo: WT 135.9 ± 20.9 s, MUT 66.7 ± 9.5 s, t18=3.011,
-%p=0.0075). 
-%(D) TreadScan task. Mice walked on a treadmill for 20 s while their gate was
-%captured with a high-speed camera. Diagrams of gait parameters measured in (E-G)
-%are shown below the TreadScan apparatus. 
-%(E) Average swing time per stride for hindlimbs. At P45 (top), there is no
-%significant difference in rear swing time (WT 156.2 ± 22.4 ms, MUT 132.3 ± 19.6
-%ms, U=83, p=0.7203). At 5.5mo (bottom), MUT mice display significantly longer
-%rear swing time (WT 140 ± 6.2 ms, MUT 252.0 ± 21.6 ms, t12=4.988, p=0.0003). 
-%(F) Average stride length for hindlimbs. At P45 (top), there is no significant
-%difference in stride length (WT 62.3 ± 2.0 mm, MUT 60.5 ± 2.1 mm, U=75,
-%p=0.4583). At 5.5mo (bottom), MUT mice take significantly longer strides with
-%their hindlimbs (WT 60.8 ± 0.8 mm, MUT 73.6 ± 2.7 mm, t11.7=4.547, p=0.0007). 
-%(G) Average homologous coupling for front and rear limbs. Homologous coupling is
-%0.5 when the left and right feet are completely out of phase. At P45 (top), WT
-%and MUT mice exhibit normal homologous coupling (WT 0.48 ± 0.005, MUT 0.48 ±
-%0.004, U=76.5, p=0.4920). At 5.5 mo (bottom), MUT mice display decreased
-%homologous coupling, suggestive of abnormal gait symmetry (WT 0.48 ± 0.003, MUT
-%0.46 ± 0.004, t18.8=3.715, p=0.0015). At P45: n=14 WT, n=13 MUT; At 5.5mo: n=14
-%WT, n=11 MUT. 
-%(H) Table of motor findings in clinical exam of human patients with the
-%homozygous SWIPP1019R mutation. All patients exhibit motor dysfunction (+ =
-%symptom present). Data reported as mean ± SEM, error bars are SEM. *p<0.05,
-%**p<0.01, ***p<0.001, ****p<0.0001, two-way repeated measure ANOVAs (B),
-%Mann-Whitney U tests and two-tailed t-tests (C-G).
 
-%Figure 8. Model of neuronal endo-lysosomal pathology in SWIPP1019R mutant mice
-%(A) Wild-type WASH function in mouse brain. Under normal conditions, the WASH
-%complex interacts with many endosomal proteins and cytoskeletal regulators, such
-%as the Arp2/3 complex. These interactions enable restructuring of the endosome
-%surface (actin in gray) and allow for cargo segregation and scission of
-%vesicles. Substrates are transported to the late endosome for lysosomal
-%degradation, to the Golgi network for modification, or to the cell surface for
-%recycling. 
-%(B) Loss of WASH function leads to increased lysosomal degradation in mouse
-%brain. Destabilization of the WASH complex leads to enlarged endosomes and
-%lysosomes, with increased substrate accumulation at the lysosome. This suggests
-%an increase in flux through the endo-lysosomal pathway, possibly as a result of
-%mis-localized endosomal substrates. 
-%(C) Wild-type mice exhibit normal motor function. 
-%(D) SWIPP1019R mutant mice display progressive motor dysfunction in association
-%with these subcellular alterations.
+%%% FIGURE 2.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.8\paperwidth,keepaspectratio]{Figure_02}
+	\caption{\textbf{Spatial proteomics and network covariation analysis reveal significant
+		disruptions to the WASH complex and an endosomal module in
+		SWIP\textsuperscript{P1019R} brain}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+		(A) Mouse model of the human SWIPP1019R missense mutation created using CRISPR.
+		A C>G point mutation was introduced into exon29 of murine Washc4, leading to a
+		P1019R amino acid substitution. We hypothesize (H1) that this mutation causes
+		instability of the WASH complex.  
+		(B) Representative western blot and quantification of WASH components,
+		Strumpellin and WASH1 (predicted sizes in kDa: 134 and 72, respectively), as
+		well as loading control β-Tubulin (55kDa) from whole adult whole brain lysate
+		prepared from SWIP WT (Washc4C/C) and SWIP homozygous MUT (Washc4G/G) mice.  Bar
+		plots show quantification of band intensities relative to WT (n=3 mice per
+		genotype). Strumpellin (WT 100.0 ± 5.2\%, MUT 3.5 ± 0.7\%, t2.1=18.44, p=0.0024)
+		and WASH1 (WT 100.0 ± 3.8\%, MUT 1.1 ± 0.4\%, t2.1=25.92, p=0.0013) were
+		significantly decreased. Equivalent amounts of protein were analyzed in each
+		condition (β-Tubulin: WT 100.0 ± 8.2\%, MUT 94.1 ± 4.1\%, U=4, p>0.99). 
+		(C) Spatial TMT proteomics experimental design. 7 subcellular fractions were
+		prepared from one WT and one MUT mouse (10mo). These samples, as well as two
+		pooled quality control (QC) samples, were labeled with unique TMT tags and
+		concatenated for simultaneous LC-MS/MS analysis. This experiment was repeated
+		three times (3 WT and 3 MUT brains total). To detect network-level changes,
+		proteins were clustered into modules, and general linearized models (GLMs) were
+		used to identify differences in module abundance between WT and MUT samples. The
+		network shows an overview of the spatial proteomics graph in which the 37
+		differentially abundant modules are indicated by colored nodes. 
+		(D) Protein module 19 (M19) contains subunits of the WASH, CCC, and Retriever
+		complexes. Node size denotes its weighted degree centrality (~importance in
+		module); purple node color indicates proteins with altered abundance in MUT
+		brain relative to WT; black node border denotes proteins identified in the
+		WASH1-BioID proteome (Figure 1); red, yellow, and green borders highlight
+		protein components of the CCC, Retriever, and WASH complexes; black edges
+		indicate known protein-protein interactions; and grey-red edges denote the
+		relative strength of protein covariation within a module (gray = weak, red =
+		strong). P-adjust values represent enrichment of proteins identified in the
+		CORUM database adjusted for multiple comparisons (Giurgiu et al., 2019). 
+		(E) Difference in normalized protein abundance for four WASH proteins found in
+		M19 (SWIP: WT 6.28 ± 0.41, MUT 4.89 ± 0.28, p=3.98x10-28; WASH1: WT 6.41 ± 0.47,
+		MUT 4.65 ± 0.62, p=7.92x10-18; FAM21: WT 6.29 ± 0.48, MUT 5.29 ± 0.49,
+		p=3.27x10-16; Strumpellin: WT 7.85 ± 0.52, MUT 6.59 ± 0.53, p=9.06x10-25) and
+		one control (Tubulin 4a: WT 8.57 ± 0.52, MUT 8.52 ± 0.58, p>0.99) across all
+		three experimental replicates (n=3 independent experiments), presented as
+		log2(adjusted protein intensities). 
+		(F) Normalized average intensities for every protein within M19 across all seven
+		subcellular fractions analyzed. Teal lines delineate protein levels in WT
+		samples, purple lines delineate protein levels in MUT samples (averaged across
+		three experimental replicates). Bolded lines demarcate the fitted intensity
+		values for WT and MUT proteins (n=3 independent experiments). 
+		(G) Difference in M19 abundance, adjusted for fraction differences and presented
+		as log2(adjusted module abundance) (WT 13.21 ± 0.003, MUT 12.99 ± 0.003,
+		p=0.0007; n=3 independent experiments). 
+	}
+	\label{fig:fig2}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 3.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.9\paperwidth,keepaspectratio]{Figure_03}
+	\caption{\textbf{Disruption of lysosomal protein networks in
+		SWIP\textsuperscript{P1019R} mutant brain.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+		(A) Simplified schematic of the endo-lysosomal pathway in neurons. Inset depicts
+		representative lysosomal enzymes, such as proteases (CTSA, CTSB, CTSL),
+		glycosidases (GLA, GLB1, MAN2B1), and sulfatases (GNS, IDS).  
+		(B) Network graph of module 159 (M159). All proteins in M159 exhibit altered
+		abundance in MUT brain, including lysosomal proteins, CTSA, PLA2G15, and GM2A. 
+		(C) Module 2 (M2) contains multiple lysosomal proteins with increased abundance
+		in MUT brain compared to WT, including CTSS, CTSL, GRN, IDS, MAN2B1. 
+		(D) Module 213 (M213) contains multiple proteins with increased abundance in MUT
+		brain, including lysosomal proteins, GLB1, GNS, CTSB, MAN2B2, and PLBD2. Network
+		attributes (B-D): Node size denotes its weighted degree centrality (~importance
+		in module),  node color indicates proteins with altered abundance in MUT brain
+		relative to WT, purple outline highlight proteins identified as lysosomal in
+		(Geladaki et al., 2019), black edges indicate known protein-protein
+		interactions, and grey-red edges denote the relative strength of protein
+		covariation within a module (gray = weak, red = strong). P-Adjust values
+		represent enrichment of proteins identified as lysosomal in Geladaki et al.,
+		2019. 
+		(E) The overall effect of genotype on M159 module abundance (WT 10.83 ± 0.002,
+		MUT 10.94 ± 0.002, p=0.031). 
+		(F) The overall effect of genotype on M2 module abundance (WT 13.74 ± 0.001, MUT
+		13.85 ± 0.0009, p=0.0006). 
+		(G) The overall effect of genotype on M213 abundance (WT 12.17 ± 0.002, MUT
+		12.33 ± 0.002, p=0.0037). Data reported as mean ± SEM, error bars are SEM.
+		*p<0.05, ** p<0.01, ***p<0.001, empirical Bayes quasi-likelihood F-test with
+		Bonferroni correction (E-G).
+	}
+	\label{fig:fig3}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 4.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	%\captionsetup{labelformat=empty}
+	\includegraphics[width=0.8\paperwidth,keepaspectratio]{Figure_04}
+	\caption{\textbf{SWIP\textsuperscript{P1019R} mutant neurons display structural abnormalities in
+		endo-lysosomal compartments in vitro.}
+		(A) Experimental design. Cortices were dissected from P0 pups, and neurons were
+		dissociated and cultured on glass coverslips for 15 days. Cultures were fixed,
+		stained, and imaged using confocal microscopy. 3D puncta volumes were
+		reconstructed from z-stack images using Imaris software. 
+		(B-C) Representative 3D reconstructions of WT and MUT DIV15 neurons
+		(respectively) stained for EEA1 (yellow) and MAP2 (magenta). 
+		(D-E) Representative 3D reconstructions of WT and MUT DIV15 neurons
+		(respectively) stained for Cathepsin D (cyan) and MAP2 (magenta). 
+		(F) Graph of the average number of EEA1+ volumes per soma in each image (WT 95.0
+		± 5.5, n=24 neurons; MUT 103.7 ± 3.7, n=24 neurons; t40.2=1.314, p=0.1961). 
+		(G) Graph of the average EEA1+ volume size per soma shows larger EEA1+ volumes
+		in MUT neurons (WT 0.15 ± 0.01 µm3, n=24 neurons; MUT 0.30 ± 0.02 µm3, n=24
+		neurons; U=50, p<0.0001). 
+		(H) Graph of the average number of Cathepsin D+ volumes per soma illustrates
+		less Cathepsin D+ volumes in MUT neurons (WT 30.4 ± 1.4, n=42; MUT 17.2 ± 0.9,
+		n=42; t71=7.943, p<0.0001). 
+		(I) Graph of the average Cathepsin D+ volume size per soma demonstrates larger
+		Cathepsin D+ volumes in MUT neurons (WT 0.54 ± 0.02 µm3, n=42; MUT 0.69 ± 0.04
+		µm3, n=42; t63=3.701, p=0.0005). 
+		(J) Histogram of EEA1+ volumes illustrate differences in size distributions
+		between MUT and WT neurons. 
+		(K) Histogram of CathD+ volumes show differences in size distributions between
+		MUT and WT neurons. Analyses included at least three separate culture
+		preparations. Scale bars, 5 µm (B-E). Data reported as mean ± SEM, error bars
+		are SEM. ***p<0.001, ****p<0.0001, two-tailed t-tests or Mann-Whitney U test (G).
+		}
+	\label{fig:fig4}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 5.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.9\paperwidth,keepaspectratio]{Figure_05}
+	\caption{\textbf{SWIP\textsuperscript{P1019R} mutant brains exhibit
+		markers of abnormal endo-lysosomal structures and cell death in
+		vitro.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+                (A-B) Representative images of adolescent (P42) WT and MUT motor cortex stained
+		with cleaved caspase-3 (CC3, green).
+		(C) Anatomical representation of mouse brain with motor cortex highlighted in
+		red, adapted from the Allen Brain Atlas (Oh et al., 2014). 
+		(D-E) Representative image of adult (10 mo) WT and MUT motor cortex stained with
+		CC3 (green).  
+		(F, G, I, and J) DAPI co-stained images for (A, B, D, and E, respectively).
+		Scale bar for (A-J), 15 µm. 
+		(H) Graph depicting the normalized percentage of DAPI+ nuclei that are positive
+		for CC3 per image. No difference is seen at P42, but the amount of CC3+ nuclei
+		is significantly higher in aged MUT mice (P42 WT 6.97 ± 0.80\%, P42 MUT 5.26 ±
+		0.90\%, 10mo WT 25.38 ± 2.05\%, 10mo MUT 44.01 ± 1.90\%, H=74.12, p<0.0001). We
+		observed no difference in number of nuclei per image between genotypes. 
+		(K) Representative transmission electron microscopy (TEM) image taken of soma
+		from adult (7mo) WT motor cortex. Arrowheads delineate electron-dense lipofuscin
+		material, Nuc = nucleus. 
+		(L) Representative transmission electron microscopy (TEM) image taken of soma
+		from adult (7mo) MUT motor cortex. 
+		(M) Inset from (K) highlights lysosomal structure in WT soma. Pseudo-colored
+		region depicts lipofuscin area, demarcated as L. 
+		(N) Inset from (L) highlights large lipofuscin deposit in MUT soma (L,
+		pseudo-colored region) with electron-dense and electron-lucent lipid-like
+		(asterisk) components. 
+		(O) Graph of areas of electron-dense regions of interest (ROI) shows increased
+		ROI size in MUT neurons (WT 2.4x105 ± 2.8x104 nm2, n=50 ROIs; MUT 8.2x105 ± 9.7
+		x104 nm2, n=75 ROIs; U=636, p<0.0001). 
+		(P) Graph of the average number of presumptive lysosomes with associated
+		electron-dense material reveals increased number in MUT samples (WT 3.14 ± 0.72
+		ROIs, n=14 images; MUT 10.86 ± 1.42 ROIs, n=14 images; U=17, p<0.0001). For (N)
+		and (O), images were taken from multiple TEM grids, prepared from n=3 animals
+		per genotype. Scale bar for all TEM images, 1 µm. Data reported as mean ± SEM,
+		error bars are SEM. ***p<0.001, ****p<0.0001, Kruskal-Wallis test (F),
+		Mann-Whitney U test (O-P).
+	}
+	\label{fig:fig5}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 6.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.9\paperwidth,keepaspectratio]{Figure_06}
+	\caption{\textbf{SWIP\textsuperscript{P1019R} mutant mice display persistent deficits 
+		in cued fear memory recall.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+		(A) Experimental fear conditioning paradigm. After acclimation to a conditioning
+		chamber, mice received a mild aversive 0.4mA footshock paired with a 2900Hz
+		tone. 48 hours later, the mice were placed in a chamber with different tactile
+		and visual cues. The mice acclimated for two minutes and then the 2900Hz tone
+		was played (no footshock) and freezing behavior was assessed. 
+		(B) Line graphs of WT and MUT freezing response during cued tone memory recall.
+		Data represented as average freezing per genotype in 30 s time bins. The tone is
+		presented after t = 120 s, and remains on for 120 seconds (Tone ON). Two
+		different cohorts of mice were used for age groups P42 (top) and 6.5mo (bottom).
+		Two-way ANOVA analysis of average freezing during Pre-Tone and Tone periods
+		reveal a Genotype x Time effect at P42 (WT n=10, MUT n=10, F1,18=4.944,
+		p=0.0392) and 6.5mo (WT n=13, MUT n=11, F1,22= 13.61, p=0.0013). 
+		(C) Graphs showing the average \%time freezing per animal before and during tone
+		presentation. Top: freezing is reduced by 20\% in MUT adolescent mice compared to
+		WT littermates (Pre-tone WT 16.5 ± 2.2\%, n=10; Pre-tone MUT 13.0 ± 1.8\%, n=10;
+		t36=0.8569, p=0.6366; Tone WT 52.8 ± 3.8\%, n=10; Tone MUT 38.0 ± 3.6\%, n=10;
+		t36=3.539, p=0.0023), Bottom: freezing is reduced by over 30\% in MUT adult mice
+		compared to WT littermates (Pre-tone WT 21.1 ± 2.7\%, n=13; Pre-tone MUT 23.7 ±
+		3.8\%, n=11; t44=0.4675, p=0.8721; Tone WT 69.7 ± 4.3\%, n=13; Tone MUT 53.1 ±
+		5.2\%, n=11; t44=2.921, p=0.0109). Data reported as mean ± SEM, error bars are
+		SEM. *p<0.05, **p<0.01, two-way ANOVAs (B) and Sidak’s post-hoc analyses (C).
+	}
+	\label{fig:fig6}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 7.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.9\paperwidth,keepaspectratio]{Figure_07}
+	\caption{\textbf{SWIP\textsuperscript{P1019R} mutant mice exhibit
+		surprising motor deficits that are confirmed in human
+		patients.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+	(A) Rotarod experimental setup. Mice walked atop a rod rotating at 32rpm for 5
+	minutes, and the duration of time they remained on the rod before falling was
+	recorded. 
+	(B) Line graph of average duration animals remained on the rod per genotype
+	across four trials, with an inter-trial interval of 40 minutes. The same cohort
+	of animals was tested at two different ages, P45 (top) and 5.5 months (bottom).
+	Genotype had a significant effect on task performance at both ages (top, P45:
+	genotype effect, F1,25=7.821, p=0.0098. bottom, 5.5mo: genotype effect, F1,23=
+	7.573, p=0.0114). 
+	(C) Graphs showing the average duration each animal remained on the rod across
+	trials. At both ages, the MUT mice exhibited an almost 50\% reduction in their
+	ability to remain on the rod (Top, P45: WT 169.9 ± 25.7 s, MUT 83.8 ± 15.9 s,
+	U=35, p=0.0054. Bottom, 5.5mo: WT 135.9 ± 20.9 s, MUT 66.7 ± 9.5 s, t18=3.011,
+	p=0.0075). 
+	(D) TreadScan task. Mice walked on a treadmill for 20 s while their gate was
+	captured with a high-speed camera. Diagrams of gait parameters measured in (E-G)
+	are shown below the TreadScan apparatus. 
+	(E) Average swing time per stride for hindlimbs. At P45 (top), there is no
+	significant difference in rear swing time (WT 156.2 ± 22.4 ms, MUT 132.3 ± 19.6
+	ms, U=83, p=0.7203). At 5.5mo (bottom), MUT mice display significantly longer
+	rear swing time (WT 140 ± 6.2 ms, MUT 252.0 ± 21.6 ms, t12=4.988, p=0.0003). 
+	(F) Average stride length for hindlimbs. At P45 (top), there is no significant
+	difference in stride length (WT 62.3 ± 2.0 mm, MUT 60.5 ± 2.1 mm, U=75,
+	p=0.4583). At 5.5mo (bottom), MUT mice take significantly longer strides with
+	their hindlimbs (WT 60.8 ± 0.8 mm, MUT 73.6 ± 2.7 mm, t11.7=4.547, p=0.0007). 
+	(G) Average homologous coupling for front and rear limbs. Homologous coupling is
+	0.5 when the left and right feet are completely out of phase. At P45 (top), WT
+	and MUT mice exhibit normal homologous coupling (WT 0.48 ± 0.005, MUT 0.48 ±
+	0.004, U=76.5, p=0.4920). At 5.5 mo (bottom), MUT mice display decreased
+	homologous coupling, suggestive of abnormal gait symmetry (WT 0.48 ± 0.003, MUT
+	0.46 ± 0.004, t18.8=3.715, p=0.0015). At P45: n=14 WT, n=13 MUT; At 5.5mo: n=14
+	WT, n=11 MUT. 
+	(H) Table of motor findings in clinical exam of human patients with the
+	homozygous SWIPP1019R mutation. All patients exhibit motor dysfunction (+ =
+	symptom present). Data reported as mean ± SEM, error bars are SEM. *p<0.05,
+	**p<0.01, ***p<0.001, ****p<0.0001, two-way repeated measure ANOVAs (B),
+	Mann-Whitney U tests and two-tailed t-tests (C-G).
+	}
+	\label{fig:fig7}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+
+%%% FIGURE 8.
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=empty}
+	\includegraphics[width=0.9\paperwidth,keepaspectratio]{Figure_08}
+	\caption{\textbf{Model of neuronal endo-lysosomal pathology in
+		SWIP\textsuperscript{P1019R} mutant mice.}}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
+\begin{figure}[!ht]
+	\begin{fullwidth}
+	\begin{center}
+	\captionsetup{labelformat=adja-page}
+	\ContinuedFloat
+	\caption{
+		(A) Wild-type WASH function in mouse brain. Under normal conditions, the WASH
+		complex interacts with many endosomal proteins and cytoskeletal regulators, such
+		as the Arp2/3 complex. These interactions enable restructuring of the endosome
+		surface (actin in gray) and allow for cargo segregation and scission of
+		vesicles. Substrates are transported to the late endosome for lysosomal
+		degradation, to the Golgi network for modification, or to the cell surface for
+		recycling. 
+		(B) Loss of WASH function leads to increased lysosomal degradation in mouse
+		brain. Destabilization of the WASH complex leads to enlarged endosomes and
+		lysosomes, with increased substrate accumulation at the lysosome. This suggests
+		an increase in flux through the endo-lysosomal pathway, possibly as a result of
+		mis-localized endosomal substrates. 
+		(C) Wild-type mice exhibit normal motor function. 
+		(D) SWIPP1019R mutant mice display progressive motor dysfunction in association
+		with these subcellular alterations.
+	}
+	\label{fig:fig8}
+	\end{center}
+	\end{fullwidth}
+\end{figure}

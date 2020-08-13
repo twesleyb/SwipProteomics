@@ -10,8 +10,9 @@
 \usepackage{siunitx}
 \usepackage{ragged2e} % For \justify
 \usepackage{tabularx} % For page-width tables: https://tex.stackexchange.com/questions/10535
-\usepackage{textgreek} % For greek symbols, e.g. beta. See NOTE below.
+\usepackage{textgreek} % For greek symbols, e.g. beta. See NOTE.
 \usepackage{gensymb} % For degree symbol.
+\usepackage{caption} % For captions that span multiple pages.
 
 % NOTE1: to install packages: tlmgr install <package>
 % NOTE2: RE package textgreek Error: Cannot find the file lgrenc.def.
@@ -22,6 +23,9 @@
 
 % Location of figures.
 \graphicspath{ {./figures/} }
+
+% Multipage caption format.
+\DeclareCaptionLabelFormat{adja-page}{\hrulefill\\#1 #2 \emph{(Continued from previous page)}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% 0. TITLE, AUTHORS, and AFFILIATIONS
