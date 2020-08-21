@@ -11,6 +11,9 @@ figs/AI/
 *.report 
 renv.lock
 
+## ignore user's bin
+bin/
+
 ## R.gitignore
 
 # History files
