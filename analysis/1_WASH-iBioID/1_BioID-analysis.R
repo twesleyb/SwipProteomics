@@ -38,11 +38,10 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-# Calculate the Coefficient of Covarition (CV).
-cv <- function(x) { sd(x)/mean(x) }
-
 # Check CV of WASH, Control, and SPQC groups.
 check_group_CV <- function(tidy_prot) {
+	# Calculate the Coefficient of Covarition (CV).
+	cv <- function(x) { sd(x)/mean(x) }
 	# Annotate with QC and biological replicates groups.
 	tmp_dt <- tidy_prot %>% as.data.table()
 	tmp_dt$Group <- sapply(strsplit(tmp_dt$Sample," "),"[",2)
