@@ -691,7 +691,7 @@ myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
 
 # Save tidy_protein (final normalized protein in tidy format) as rda object. 
-myfile <- file.path(datadir,"tmt_protein.rda")
-save(tmt_protein,file=myfile,version=2)
+myfile <- file.path(datadir,"swip_tmt.rda")
+swip_tmt <- tmt_protein; save(swip_tmt,file=myfile,version=2)
 
 message("\nDone!")
