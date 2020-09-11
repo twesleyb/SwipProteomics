@@ -2,7 +2,7 @@
 
 #' ---
 #' title: Swip Proteomics Plotting
-#' description: generate module protein plots
+#' description: generate module plots showing all proteins
 #' authors: Tyler W Bradshaw
 #' ---
 
