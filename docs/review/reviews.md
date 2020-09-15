@@ -6,28 +6,50 @@ to address the following reviewer comments and concerns:
 > Why was WASH1 used as the fusion target for BioID? Is BioID2 alone a good
 > control for this experiment? Had the authors considered using WASH1 with its
 > N-terminal WASH assembly domain removed as a better control?
-Jamie
+
 I think the suggestion to use a mutant WASH with its N-terminal domain removed
-is really interesting. Mutant WASH1 would no longer interact with the WASH
-complex, and localize elsewhere. Control for the effect of expressing WASH?
-Actually maybe poor control bc overexpression of mutant WASH1 may act in a
-dominant negative manner. I thin soluble BioID expression here is better.
+is really interesting. Jia et al., 2010 found that WASH1's N-terminus (aa 1-51)
+are required for interactions with Fam21, SWIP, Strumpellin, CCDC53 and CAPZa.
+So, you'd predict that WASH1-N51-BiRA would localize elsewhere and may provide 
+a control for WASH1 non-specific binding. However, the unintendend consequences
+of overexpressing this mutant protein are undesirable as a control.
+BioID is a suitable control as it (more uniformly) controls for BirA expression 
+throughtout the cell.
 
 > Why was SPS-MS3 not used as the mass spectrometry approach? More accurate
 > data may have been achieved even with the application of FAIMS.
 Pretty sure it is SPS-MS3. Clarify with core.
+```Greg
+
+From Greg:
+
+We did not use MS3 since we now have FAIMS to add an additional level of
+specificity.  The reporter ions can be quantitated via MS2. (The additional MS
+level in MS3 v. MS2 is to further isolate the peptide from interference before
+reporter ion quant).
+
+Here is an explanation from the PD 2.4 manual on reporter ion quant:  We used
+the default S/N method.
+
+"Reporter Abundance Based On: For reporter ion quantification, the PSM abundance
+can be based on either S/N or peak intensity. The Automatic setting bases the
+abundance on S/N for quantification spectra acquired using Orbitrap MS and bases
+the abundance on intensity for quantification spectra acquired suing ion trap
+MS."
+```
 
 > There are currently no plots of the data and the authors use a bespoke data
 > analysis pipeline. It is not clear whether the experiment was successful and
 > the results crucially depend on successful separation of the organelles. The
 > paper is currently missing western blots to confirm separation of the
 > organelles, upon which the analysis pipeline depends.
-I can include some preprocessing plots of the data if necessary.
-* Boxplot showing normalization of samples
+* To add: Boxplot showing normalization of samples
 * We can show good seperation of the Fractions by PCA.
+
 Previously, we omitted the protein PCA that was in the supplement because our fear that it 
 may point towards overclustering. This plot would also go towards showing
 separation of the 'organelles' == clusters. 
+Looking back at this plot, yes I think we overclustered things.
 
 > To the reader the power of using a spatial proteomics approach such as the
 > LOPIT-DC method of Geladaki et al seems to be a bit lost here. The authors
@@ -113,7 +135,8 @@ add sample PCA. These could go in the same supplemental figure.
 > Nature Commun. 2016). These lists could easily have been adapted and used to
 > visualize organelle separation using straightforward approaches such as PCA.
  This is easy: take their lists and label PCA with it--I expect it wont look
- very good. I can do this.
+ very good. I can do this. But then I have to do it with out data. Our plot
+ shows that we overclustered.
 
 Indeed, this is what I first did. Truthfully we just didn't get the pRoloc
 workflow to work. 
@@ -131,13 +154,14 @@ Include discussion of two PATHS
 > the isotopic envelope is involved in computing the intensity. Thus the
 > analysis is not appropriate for the task. LIMMA, DEP, MSqRob, DeqMS,
 > MSstatsTMT would all be appropriate methods.
-Boils down to: ARE THE DAT COUNTS?
+Boils down to: ARE THE DATA COUNTS?
 
 I thought it was counts:
 integral under isotopic envelop = count of number of reporter ions in a time
 window?
 I think we are SPS3 and data is count of number of reporter ions
 
+ADD pvalue plot:
 A recommended way to evaluate
 statistical model appropriateness in differential expression
 omics experiments (where most genes/proteins do not have
