@@ -51,7 +51,7 @@ figsdir <- file.path(root,"figs","Proteins")
 #---------------------------------------------------------------------
 
 # Load the proteomics data.
-data(tmt_protein)
+data(swip_tmt) # tmt_protein
 
 # Load partition.
 data(partition)

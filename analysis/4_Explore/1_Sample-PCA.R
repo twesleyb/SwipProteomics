@@ -7,12 +7,10 @@ fig_height = 5
 ## OUTPUT:
 # * pdf of module protein pca plot.
 
-#--------------------------------------------------------------------
-## Misc function - getrd
-#--------------------------------------------------------------------
+## Misc functions -------------------------------------------------------------
 
-# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
+	# get a git repo's root directory
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -25,58 +23,42 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-#---------------------------------------------------------------------
-## Prepare the workspace.
-#---------------------------------------------------------------------
+## Prepare the workspace ------------------------------------------------------
 
-# Load renv.
+# Load renv
 root <- getrd()
 renv::load(root,quiet=TRUE)
 
-# Global Imports.
+# global imports
 suppressPackageStartupMessages({
 	library(dplyr)
 	library(ggplot2)
 	library(data.table)
 })
 
-# Local Imports.
+# local imports
 suppressMessages({ devtools::load_all() })
 
-# Project directories:
+# project directories:
 figsdir <- file.path(root,"figs","Samples")
 
-# If necessary, create figsdir.
+# if necessary, create figsdir
 if (!dir.exists(figsdir)) {
 	dir.create(figsdir)
 }
 
-#---------------------------------------------------------------------
-## Prepare the data for ploting.
-#---------------------------------------------------------------------
+## Prepare the data for ploting -----------------------------------------------
 
-# Load the proteomics data.
-data(tmt_protein)
+# load the proteomics data
+data(swip_tmt)
 
-# Load partition.
-data(partition)
-
-# Load colors.
-data(module_colors)
-
-# All modules.
-modules <- split(names(partition),partition)
-names(modules) <- paste0("M",names(modules))
-
-# Drop QC and coerce data to data.matrix.
-dm <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
-	filter(Accession %in% names(partition)) %>%
-	as.data.table() %>%
+# cast into a matrix
+dm <- tmt_protein %>%  
 	reshape2::dcast(Accession ~ Sample, value.var= "Intensity") %>%
 		as.data.table() %>% as.matrix(rownames="Accession")
 
-# Sample PCA.
-pca <- prcomp(log2(t(dm)))
+# PCA
+pca <- prcomp(log2(t(dm))) # log2
 pca_summary <- as.data.frame(t(summary(pca)$importance))
 idx <- order(pca_summary[["Proportion of Variance"]],decreasing=TRUE)
 pca_summary <- pca_summary[idx,]
@@ -93,11 +75,11 @@ y_label <- paste0(names(top2_pc)[2],
 df <- as.data.frame(pca$x[,names(top2_pc)])
 colnames(df) <- c("x","y")
 
-# Annotate with group info.
+# annotate with group info
 idx <- match(rownames(df),tmt_protein$Sample)
 df$group <- interaction(tmt_protein$Genotype[idx],tmt_protein$Fraction[idx])
 
-# Generate the plot.
+# generate the plot
 plot <- ggplot(df, aes(x,y,color=group)) + geom_point()
 plot <- plot + xlab(x_label)
 plot <- plot + ylab(y_label)
