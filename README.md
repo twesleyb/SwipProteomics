@@ -2,6 +2,7 @@
 This repository contains the proteomics data and source code for the analysis 
 performed by [Courtland _et al._, 2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
 
+<<<<<<< HEAD
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
@@ -160,3 +161,45 @@ This work is licensed under a [Creative Commons Attribution 4.0 International Li
 
 [cc-by]: http://creativecommons.org/licenses/by/4.0/
 [cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
+=======
+Analysis of SWIP<sup>P1019R</sup> (Washc4) mutant mouse brain spatial proteomics
+
+## Swip Pro1019Arg Mutation
+
+<p align="center">
+  <img src="./models/Swip.gif" height="250" />
+</p>
+<p align="center">The SWIP protein with location of P1019R highlighted in red.<p align="center">
+
+## Background
+The SWIP P1019R point mutation was identified in humans with intellecutual and
+motor impairments. 
+
+## Methods
+Using TMT-proteomics we quantify 5,894 proteins across seven mouse brain subcellular
+fractions. 
+
+## Results 
+We show that this point mutation disrupts expression of the
+WASH complex in the brain and results in empaired endosomal trafficking in
+neurons. Mice exhibit impaired cognition and motor deficites as well as cellular 
+biomarkers of neurodegeneration. 
+
+## Conclusions
+
+
+## Explore
+To explore the data, download or install this repository as an R package.
+```
+git clone twesleyb/SwipProteomics
+```
+```R
+# Download as an R package.
+devtools::install_github('twesleyb/SwipProteomics')
+
+```
+
+## Reproducibility 
+Effort was made to make the analysis as reproducible as possible. Reproduce the
+R environment used to perform that analysis using [conda]() and [renv]().
+>>>>>>> 94dece43b955711d647aa4147600c8d6dc417597
