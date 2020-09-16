@@ -1,20 +1,17 @@
-## project specific directories to ignore.
+# project specific directories to ignore
 renv/
 rdata/
 ARCHIVE/
 figs/AI/
-#manuscript/
 
-## project specific files to ignore.
+# project specific files to ignore
 *.swp
 *.swn
-*.report 
+*.report
 renv.lock
 
-## ignore user's bin
+# ignore user's bin
 bin/
-
-## R.gitignore
 
 # History files
 .Rhistory
