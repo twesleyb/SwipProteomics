@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+
 # title: SwipProteomics
 # description: analysis of Swip TMT with MSstats
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
@@ -39,5 +40,5 @@ suppressWarnings({ devtools::load_all() })
 data(tidy_peptide) # tmt_protein
 
 
-
+colnames(tidy_peptide)
 
