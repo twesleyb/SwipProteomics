@@ -117,7 +117,7 @@ suppressWarnings({ devtools::load_all() })
 datadir <- file.path(rootdir, "data") # Key pieces of data saved as rda.
 rdatdir <- file.path(rootdir, "rdata") # Temporary data files.
 downdir <- file.path(rootdir, "downloads") # Misc downloads/temporary files.
-tabsdir <- file.path(rootdir,"manuscript","tables") # Output tables saved as excel files.
+tabsdir <- file.path(rootdir, "tables") # Output tables saved as excel files.
 
 # Create project output directories if necessary.
 # FIXME: 
