@@ -119,7 +119,8 @@ rdatdir <- file.path(rootdir, "rdata") # Temporary data files.
 downdir <- file.path(rootdir, "downloads") # Misc downloads/temporary files.
 tabsdir <- file.path(rootdir,"manuscript","tables") # Output tables saved as excel files.
 
-# Create output directories if necessary.
+# Create project output directories if necessary.
+# FIXME: 
 if (!dir.exists(datadir)) { dir.create(datadir) }
 if (!dir.exists(downdir)) { dir.create(downdir) }
 if (!dir.exists(rdatdir)) { dir.create(rdatdir) }
@@ -677,6 +678,10 @@ write_excel(final_results,myfile,rowNames=FALSE)
 # Save raw data -- tidy_peptide.
 myfile <- file.path(rdatdir,"tidy_peptide.csv")
 fwrite(tidy_peptide,myfile)
+
+# Save raw peptide data for analysis with MSstats or other workflows.
+myfile <- file.path(rdatdir,"tidy_peptide.rda")
+save(tidy_peptide,file=myfile,version=2)
 
 # Save tmt_protein
 myfile <- file.path(rdatdir,"tmt_protein.csv")
