@@ -38,7 +38,7 @@ suppressPackageStartupMessages({
 suppressWarnings({ devtools::load_all() })
 
 data(tidy_peptide) # tmt_protein
+data(input.pd) # MSstatsTMT dataset
 
-
-colnames(tidy_peptide)
-
+knitr::kable(str(input.pd))
+knitr::kable(str(tidy_peptide))
