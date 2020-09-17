@@ -6,13 +6,6 @@
 #' authors: Tyler W A Bradshaw
 #' ---
 
-## NOTE: The functions used in this script are not robust. They were written
-## to work with the input arguments that they are provided, and in many cases 
-## will not perform as expected if passed different arguments. I attempted to
-## keep the data in a tidy-ish format throughout. This decision makes some
-## operations like plotting easier, but makes other operations like
-## normalization more cumbersome and computationally costly.
-
 ## INPUT data is in root/data/TMT_.zip.
 # The zipped directory contains sample meta data and raw peptide data from PD:
 zip_file = "TMT.zip" 
@@ -79,6 +72,13 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 #---------------------------------------------------------------------
 ## Misc function - getrd().
 #---------------------------------------------------------------------
+
+## NOTE: The functions used in this script are not robust. They were written
+## to work with the input arguments that they are provided, and in many cases 
+## will not perform as expected if passed different arguments. I attempted to
+## keep the data in a tidy-ish format throughout. This decision makes some
+## operations like plotting easier, but makes other operations like
+## normalization more cumbersome and computationally costly.
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
