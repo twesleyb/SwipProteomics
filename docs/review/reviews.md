@@ -1,19 +1,19 @@
 # SwipProteomics eLife Reviewer comments
 
-Please provide more information about the experimental design and data analysis
-to address the following reviewer comments and concerns:
+Please provide more information about the experimental design and data
+analysis to address the following reviewer comments and concerns:
 
 > Why was WASH1 used as the fusion target for BioID? Is BioID2 alone a good
-> control for this experiment? Had the authors considered using WASH1 with its
-> N-terminal WASH assembly domain removed as a better control?
+> control for this experiment? Had the authors considered using WASH1 with
+> its N-terminal WASH assembly domain removed as a better control?
 
 I think the suggestion to use a mutant WASH with its N-terminal domain removed
 is really interesting. Jia et al., 2010 found that WASH1's N-terminus (aa 1-51)
 are required for interactions with Fam21, SWIP, Strumpellin, CCDC53 and CAPZa.
-So, you'd predict that WASH1-N51-BiRA would localize elsewhere and may provide 
+So, you'd predict that WASH1-N51-BiRA would localize elsewhere and may provide
 a control for WASH1 non-specific binding. However, the unintendend consequences
 of overexpressing this mutant protein are undesirable as a control.
-BioID is a suitable control as it (more uniformly) controls for BirA expression 
+BioID is a suitable control as it (more uniformly) controls for BirA expression
 throughtout the cell.
 
 > Why was SPS-MS3 not used as the mass spectrometry approach? More accurate
@@ -46,9 +46,9 @@ MS."
 * To add: Boxplot showing normalization of samples
 * We can show good seperation of the Fractions by PCA.
 
-Previously, we omitted the protein PCA that was in the supplement because our fear that it 
+Previously, we omitted the protein PCA that was in the supplement because our fear that it
 may point towards overclustering. This plot would also go towards showing
-separation of the 'organelles' == clusters. 
+separation of the 'organelles' == clusters.
 Looking back at this plot, yes I think we overclustered things.
 
 > To the reader the power of using a spatial proteomics approach such as the
@@ -92,7 +92,7 @@ I keep reading this thinking they are onto a good comment, but then am confused
 by the time I finish the sentence.
 
 > The authors should confirm that the endosomal enriched fraction is the
->  same in both WT and mutation experiments. 
+>  same in both WT and mutation experiments.
 Which fraction is 'endosome enriched'?
 
 > In their proteome data, the authors argue that 37 out of 255 modules exhibit
@@ -112,7 +112,7 @@ but are not discussed have no strong enrichment for known biological processes.
 > electrical-dense inclusions in the cell bodies of MUT neurons are "visually"
 > consistent with lipofusine accumulation. The authors need to use biochemical
 > or histological methods to prove their point. This will significantly
-> strengthen their arguments.  
+> strengthen their arguments.
 
 I thought the TEM images of lipofuscin. Jamie wrote 'visually consistent' to be
 conservative. These look like lipofuscin and this is the fields standard.
@@ -139,7 +139,7 @@ add sample PCA. These could go in the same supplemental figure.
  shows that we overclustered.
 
 Indeed, this is what I first did. Truthfully we just didn't get the pRoloc
-workflow to work. 
+workflow to work.
 
 Need to think back to when we tried to make modules by semi-manual curration.
 Ultimately, I favor a data driven approach.
@@ -155,6 +155,14 @@ Include discussion of two PATHS
 > analysis is not appropriate for the task. LIMMA, DEP, MSqRob, DeqMS,
 > MSstatsTMT would all be appropriate methods.
 Boils down to: ARE THE DATA COUNTS?
+* DeqMS - based on limma, protein-wise estimate of variance (edgeR)
+* MSqRob - peptide level?
+* Limma
+* DEP - also based on limma?
+* MSstatsTMT
+
+Send plot to EdgeR author
+how to evaluate goodness of fit?
 
 I thought it was counts:
 integral under isotopic envelop = count of number of reporter ions in a time
@@ -187,6 +195,8 @@ I will work on making it more clear.
 
 The reviewer is correct. linear models could be fit to the data with a module
 term and a factor for protein. This would be more appropriate. I can try this.
+At the  cost of computational complexity.
+
 Practicallity was a motivating factor here.
 
 > From the figure it looks like the spatial proteomics data was normalized so
@@ -199,9 +209,9 @@ I need to look back, but I think this is correct.
 > in a column. Why did the authors not summarize peptides to proteins via the
 > median or sum and then normalize so that proteins sum to 1 across the
 > fractions?
-Yes, this is different from other spatial proteomics. 
+Yes, this is different from other spatial proteomics.
 I can add a table which describes what we did.
-What the reviewer describes is the proloc norm appraoch often used in spatial 
+What the reviewer describes is the proloc norm appraoch often used in spatial
 proteomics. because we did not do proloc i did not do it this way.
 
 > There are no plots of the finally normalized spatial proteomics data to see
@@ -224,7 +234,7 @@ agree
 > experiment can solve most of this concern. It has been shown recently the
 > R33, a retromer chaperone, can strengthen retromer function and improves
 > memory in a mouse model of AD (PMID: 31964406). The authors can consider
-> testing this drug in their model.  
+> testing this drug in their model.
 >
 > Reviewer 3 • The authors suggest that the
 > WASH complex may not interact as closely with retromer as it does in other
@@ -260,14 +270,14 @@ re domapine: not sure, need to learn more about this
 
 > [Introduction Lines 42-44] I do not quite understand the first sentence - is
 > "throughout their elaborate processes" needed?  The first paragraph of the
-> introduction lacks citations.  
+> introduction lacks citations.
 
 need  to reference text
 
 > 86-103, it would good to mention highlight that other spatial proteomics
 > approaches have successfully explore trafficking pathways:
 
-Agreed, need to elaborate on how our approach is different, and why, and 
+Agreed, need to elaborate on how our approach is different, and why, and
 reference previous spatial proteomics:
 
 * AP-4 vesicles contribute to spatial control of autophagy via RUSC-dependent
@@ -285,15 +295,15 @@ Need to add the following citation:
 
 * Benjamini, Y. and Hochberg, Y., 1995. Controlling the false discovery rate: a
    practical and powerful approach to multiple testing. Journal of the Royal
-   statistical society: series B (Methodological), 57(1), pp.289-300.  
+   statistical society: series B (Methodological), 57(1), pp.289-300.
 
 > Line 143-144, the authors might find it useful that SNX1, SNX3 are regulators of
 > golgin-97-vesicles destined to the trans-Golgi from the endosomes
 > Determining the content of vesicles captured by golgin tethers using LOPIT-DC
-> (Shin et al. bioRxiv 841965; doi: https://doi.org/10.1101/841965 ) 
+> (Shin et al. bioRxiv 841965; doi: https://doi.org/10.1101/841965 )
 Interesting
 
-> Lines 211, GLMs are missing a citation 
+> Lines 211, GLMs are missing a citation
 add reference
 
 > Figure 2 is quite difficult to follow, some of
@@ -301,7 +311,7 @@ add reference
 > Since the authors have included graphs, as in nodes with edges, and graphs as
 > in barcharts it would be good to be more precise in the latter case.
 
-clarify nomenclature: 
+clarify nomenclature:
 * graph: matrix representation of a collection of nodes/edges
 * figure: a bar chart or any plot
 * graph: the visaul represeantion of a network as done e.g. Cytoscaope
@@ -347,12 +357,12 @@ Agreed
   Bioconductor workflow for the Bayesian analysis of spatial proteomics.
   F1000Research, 8.
 
-> In Figure 2B is the data normalised to the protein loading control. 
+> In Figure 2B is the data normalised to the protein loading control.
 > I could not tell from the description.
 Jamie
 
 
-> It would be beneficial to clarify the different subcellular fractions 
+> It would be beneficial to clarify the different subcellular fractions
 yes
 
 > Discussion has a typo
