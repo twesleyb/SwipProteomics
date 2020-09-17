@@ -1,0 +1,22 @@
+
+Building input graph: 1
+
+Building input graph: 2
+
+Using Surprise to find an optimal partition in graph 1.
+Initial partition: Clustering with 4912 elements and 108 clusters
+
+Using Surprise to find an optimal partition in graph 2.
+Initial partition: Clustering with 4909 elements and 557 clusters
+Modularity: 0.013876848508433584
+Quality: 9158166.35715152
+Modularity: 0.17834317305794878
+Quality: 77362.39879433214
+
+Optimizing multiplex partition.
+Traceback (most recent call last):
+  File "./multi-leiden.py", line 327, in <module>
+    diff = optimiser.optimise_partition_multiplex(
+  File "/home/twesleyb/projects/SwipProteomics/venv/lib/python3.8/site-packages/leidenalg/Optimiser.py", line 380, in optimise_partition_multiplex
+    diff_inc = _c_leiden._Optimiser_optimise_partition_multiplex(
+ValueError: std::exception

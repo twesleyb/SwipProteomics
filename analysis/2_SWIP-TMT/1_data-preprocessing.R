@@ -7,7 +7,7 @@
 #' ---
 
 ## NOTE: The functions used in this script are not robust. They were written
-## to work with the input arguments that they are provided, and in many cases 
+## to work with the input arguments that they are provided, and in many cases
 ## will not perform as expected if passed different arguments. I attempted to
 ## keep the data in a tidy-ish format throughout. This decision makes some
 ## operations like plotting easier, but makes other operations like
@@ -15,7 +15,7 @@
 
 ## INPUT data is in root/data/TMT_.zip.
 # The zipped directory contains sample meta data and raw peptide data from PD:
-zip_file = "TMT.zip" 
+zip_file = "TMT.zip"
 input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
 
@@ -47,7 +47,7 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 # NOTE: can be loaded in R with data(tmt_protein).
 
 ## OUTPUT for downstream analysis in root/rdata/
-# Input files/temporary files that are passed to other scripts including 
+# Input files/temporary files that are passed to other scripts including
 # the Python Leidenalg clustering script are saved in root/rdata.
 
 ## Order of data processing operations:
@@ -58,21 +58,21 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 # * Summarize to protein level by summing all peptides for a protein.
 # * Protein-level sample loading normalization.
 # * IRS normalization - equalize protein measurements from different peptides.
-# * Sample pool normalization - assumes that mean of pooled QC technical 
+# * Sample pool normalization - assumes that mean of pooled QC technical
 #   replicates is equal to mean of all biological replicates.
 # * Protein level filtering - remove proteins identified by a single peptide;
-#   remove proteins with too many missing values; remove proteins that are not 
-#   reproducible (exhibit high inter-experimental variablility across the 3x 
+#   remove proteins with too many missing values; remove proteins that are not
+#   reproducible (exhibit high inter-experimental variablility across the 3x
 #   biological replicates).
 # * Assess intra-fraction differential abundance with a general linear model.
 #   GLM: [Protein Abundance] ~ 0 + Fraction.Genotype.
-# * Assess WT v MUT differential abundance across all fractions with a 
+# * Assess WT v MUT differential abundance across all fractions with a
 #   GLM: [Protein Abundance] ~ Fraction + Genotype.
 
 ## NOTE:
-# The dependencies for this project were managed within a conda virtual 
+# The dependencies for this project were managed within a conda virtual
 # environment into which R and renv, an R package for managing R libraries,
-# were installed. All additional R dependencies were installed using 
+# were installed. All additional R dependencies were installed using
 # renv. The anRichment package was installed from source (see installation
 # script in root/).
 
@@ -82,13 +82,13 @@ set.seed = as.numeric(Sys.time()) # seed for random operations.
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
-	in_root <- function(h=here, dir=dpat) { 
-		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+	in_root <- function(h=here, dir=dpat) {
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE)))
 		return(check)
 	}
 	# Loop to find root.
-	while (!in_root(here)) { 
-		here <- dirname(here) 
+	while (!in_root(here)) {
+		here <- dirname(here)
 	}
 	root <- here
 	return(root)
@@ -97,11 +97,11 @@ getrd <- function(here=getwd(), dpat= ".git") {
 #---------------------------------------------------------------------
 ## Prepare the workspace.
 #---------------------------------------------------------------------
-# Prepare the R workspace for the analysis. 
+# Prepare the R workspace for the analysis.
 
 # Load renv -- use renv::load NOT activate!
 rootdir <- getrd()
-renv::load(rootdir,quiet=TRUE) 
+renv::load(rootdir,quiet=TRUE)
 
 # Load required packages and functions.
 suppressPackageStartupMessages({
@@ -141,7 +141,7 @@ peptides <- fread(myfile)
 myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
 samples <- fread(myfile)
 
-# Format Cfg force column -- this is the Force in g's used to obtain 
+# Format Cfg force column -- this is the Force in g's used to obtain
 # the subcellular fraction.
 samples$"Cfg Force (xg)" <- formatC(samples$"Cfg Force (xg)",big.mark=",")
 
@@ -198,7 +198,7 @@ rm(list=c("ig_prots","uniprot","entrez","missing",
 ## Tidy-up the input data from Proteome Discover.
 #---------------------------------------------------------------------
 
-# Convert PD df into tidy df. 
+# Convert PD df into tidy df.
 # Samples should contain the following columns:
 # Treatment, Channel, Sample, Experiment
 message("\nLoading raw data from Proteome Discover (PD2.2).")
@@ -226,9 +226,9 @@ rm(list=c("cols","df","n_samples","n_proteins","n_peptides"))
 ## Perform sample loading normalization.
 #---------------------------------------------------------------------
 
-# Perform sample normalization. Normalization is done for each 
+# Perform sample normalization. Normalization is done for each
 # experiment independently (group by Experiment:Sample).
-# NOTE: Grouping by Experiment, Channel does't work because 
+# NOTE: Grouping by Experiment, Channel does't work because
 # Sample TMT channels (e.g. 126N were used in different expirements).
 message("\nPerforming sample loading normalization.")
 sl_peptide <- normSL(tidy_peptide, groupBy=c("Experiment","Sample"))
@@ -252,7 +252,7 @@ check_SL(sl_peptide) # Equal within an experiment.
 # NOTE: KNN imputing is done for each experimental group seperately.
 message("\nImputing a small number of missing peptide values.")
 imputed_peptide <- imputeKNNpep(sl_peptide, groupBy="Experiment",
-				samples_to_ignore="SPQC",quiet=FALSE) 
+				samples_to_ignore="SPQC",quiet=FALSE)
 
 #---------------------------------------------------------------------
 ## Examine reproducibility of QC measurements.
@@ -260,10 +260,10 @@ imputed_peptide <- imputeKNNpep(sl_peptide, groupBy="Experiment",
 # Assess reproducibility of QC measurements and remove QC samples
 # that are irreproducible.
 # This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
-# For each experiment, the ratio of QC measurments is calculated. 
+# For each experiment, the ratio of QC measurments is calculated.
 # These ratios are then binned based on average Intensity into
-# 5 bins. For each bin, measuremnts that are outside 
-# +/- 4x standard deviations from the bin's mean are removed. 
+# 5 bins. For each bin, measuremnts that are outside
+# +/- 4x standard deviations from the bin's mean are removed.
 
 message("\nRemoving peptides with irreproducible QC measurements.")
 filt_peptide <- filtQC(imputed_peptide,controls="SPQC",quiet=FALSE)
@@ -288,9 +288,9 @@ check_SL(sl_protein)
 ## Perform IRS Normalization.
 #---------------------------------------------------------------------
 
-# Equalize QC measurements between experiments. Adjusts protein 
+# Equalize QC measurements between experiments. Adjusts protein
 # measurements of biological replicates simultaneously.
-# Accounts for protein quantification by different peptides in 
+# Accounts for protein quantification by different peptides in
 # each experiment.
 message(paste("\nStandardizing protein measurements between",
 	      "experiments by IRS normalization."))
@@ -298,8 +298,8 @@ irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 
 # Check, protein-wise QC measurements are now equal in a random protein.
 # Generate list of QC proteins, and check the average of the three Exps.
-qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>% 
-	group_by(Accession,Experiment) %>% 
+qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
+	group_by(Accession,Experiment) %>%
 	dplyr::summarize(Treatment = unique(Treatment),
 		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
 		  .groups = "drop") %>% group_by(Accession) %>% group_split()
@@ -311,7 +311,7 @@ knitr::kable(sample(qc_proteins,1))
 #---------------------------------------------------------------------
 
 # QC samples were generated by pooling all biological replicates.
-# Normalize mean of all QC samples to be equal to the mean of all 
+# Normalize mean of all QC samples to be equal to the mean of all
 # biological replicates.
 message(paste("\nAccounting for experimental batch effect by",
 	      "performing sample pool normalization."))
@@ -329,7 +329,7 @@ protein_list <- protein_list[!idx]
 # Get a random protein's data as an example.
 protein <- sample(protein_list,1)[[1]]
 protein$Sample_Pool <- protein$Treatment == "SPQC"
-df <- protein %>% group_by(Sample_Pool) %>% 
+df <- protein %>% group_by(Sample_Pool) %>%
 	dplyr::summarize(Accession = unique(Accession),
 		  Treatement=paste(unique(Treatment),collapse=" + "),
 		  "Mean(Intensity)"=mean(Intensity), .groups="drop")
@@ -345,7 +345,7 @@ rm(list=c("df","protein_list","idx","protein"))
 # * Were identified by a single peptide.
 # * Contain too many (>50%) missing values.
 # * Contain any missing QC values.
-# * Have outlier protein measurements: 
+# * Have outlier protein measurements:
 #   mean(logRatio(replicates)) outside +/- nSD * mean(binned logRatio))
 message(paste("\nFiltering proteins, this may take several minutes."))
 filt_protein <- filtProt(spn_protein,
@@ -371,7 +371,7 @@ imputed_protein <- imputeKNNprot(filt_protein,ignore="SPQC")
 ## Identify Sample outliers.
 #---------------------------------------------------------------------
 
-# Calculate Oldham's normalized sample connectivity (zK) in order to 
+# Calculate Oldham's normalized sample connectivity (zK) in order to
 # identify outlier samples.
 # This approach was adapted from Oldham et al., 2012 (pmid: 22691535).
 zK <- sampleConnectivity(filt_protein)
@@ -380,16 +380,16 @@ outlier_samples <- c(names(zK)[zK < -1 * oldham_threshold],
 
 # There are no sample outliers.
 check <- length(outlier_samples) == 0
-if (check) { 
+if (check) {
 	message("\nNo sample level outliers were identified.")
-} else { 
-	stop("Why are there outlier samples?") 
+} else {
+	stop("Why are there outlier samples?")
 }
 
 #---------------------------------------------------------------------
 ## Intrafraction protein differential abundance.
 #---------------------------------------------------------------------
-# Use EdgeR glm to evaluate differential protein abundance for 
+# Use EdgeR glm to evaluate differential protein abundance for
 # WT v Mutant comparisons within a fraction.
 # NOTE: Model = ~ Fraction + Treatment | Treatment = Genotype.Fraction
 message(paste("\nEvaluating intra-fraction protein differential abundance."))
@@ -421,12 +421,12 @@ message(paste("\nTotal number of unique DA proteins:",n_sig))
 # Proteins that are commonly dysregulated:
 combined_results <- rbindlist(results_list,idcol="Fraction")
 idx <- match(combined_results$Accession,gene_map$uniprot)
-combined_results$Gene <- gene_map$symbol[idx] 
-df <- combined_results %>% group_by(Accession) %>% 
+combined_results$Gene <- gene_map$symbol[idx]
+df <- combined_results %>% group_by(Accession) %>%
 	dplyr::summarize(Gene = unique(Gene),
 			 nSig = sum(FDR<0.1),
-			 nFractions = length(FDR), 
-			 .groups = "drop") %>% 
+			 nFractions = length(FDR),
+			 .groups = "drop") %>%
 	filter(nSig==nFractions)
 
 # Status:
@@ -459,7 +459,7 @@ alt_results <- tibble::add_column(alt_results,PAdjust,.after="FDR")
 # Summary of DA proteins with any logFC.
 #bounds <- logFC_threshold
 sig1 <- alt_results$FDR < 0.05
-sig2 <- alt_results$PAdjust < BF_alpha 
+sig2 <- alt_results$PAdjust < BF_alpha
 #updown <- alt_results$logFC < bounds['lwr'] | alt_results$logFC < bounds['upr']
 message("\nSummary of WT v MUT DA proteins:")
 df <- data.table("FDR < 0.05"=sum(sig1),
@@ -475,7 +475,7 @@ colnames(alt_results)[idy] <- paste0("Adjusted.",
 ## Calculate Protein abundance adjusted for fraction differences.
 #---------------------------------------------------------------------
 
-# NOTE: these adjusted values are not used for modeling, only 
+# NOTE: these adjusted values are not used for modeling, only
 # plotting purposes.
 
 # Calculate protein abundance, adjusted for fraction differences.
@@ -488,14 +488,14 @@ dm <- limma::removeBatchEffect(logCPM,
 			       design=model.matrix(~treatment,data=dge$samples))
 
 # Collect results.
-dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+dt <- as.data.table(dm,keep.rownames="Accession") %>%
 		reshape2::melt(id.var="Accession",
 			       variable.name="Sample",
 			       value.name="Adjusted.Intensity")
 dt$Sample <- as.character(dt$Sample)
 
 # Combine Adjusted protein with additional sample meta data.
-tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
+tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>%
 	as.data.table()
 adjusted_prot <- left_join(tmp_prot,dt,
 			   by=intersect(colnames(tmp_prot),colnames(dt)))
@@ -520,7 +520,7 @@ tmt_protein <- left_join(tmt_protein,temp_dt,
 			 by=intersect(colnames(tmt_protein),colnames(temp_dt)))
 
 # Remove QC data.
-tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
+tmt_protein <- tmt_protein %>% filter(Treatment != "SPQC") %>%
 	as.data.table()
 
 # Combine tmt_protein with adjusted data and stats.
@@ -539,7 +539,7 @@ tmt_protein <- tmt_protein %>% dplyr::select(Experiment, Sample, Channel,
 				      "Date of Brain Fractionation",
 				      "Mouse ID", Sex, DOB, "Age (mo)",
 				      Accession, Entrez, Symbol, Peptides,
-				      Intensity, Adjusted.Intensity, 
+				      Intensity, Adjusted.Intensity,
 				      logFC, Adjusted.logFC,
 				      PercentWT, Adjusted.PercentWT,
 				      F, Adjusted.F,
@@ -562,7 +562,7 @@ rm(list=c("idx","idy"))
 
 # Add normalized protein data to statistical results.
 norm_df <- tmt_protein %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var="Intensity") 
+	dcast(Accession ~ Sample,value.var="Intensity")
 norm_dm <- norm_df %>% as.matrix(rownames="Accession")
 
 # Loop to add normalized protein data to glm statistical results.
@@ -590,7 +590,7 @@ for (i in 1:length(results_list)){
 for (namen in names(results_list)) {
 	df <- results_list[[namen]]
 	idy <- grep("Abundance",colnames(df))
-	dm <- df %>% dplyr::select(Accession, all_of(idy)) %>% 
+	dm <- df %>% dplyr::select(Accession, all_of(idy)) %>%
 		as.matrix(rownames="Accession")
 	idy <- grep("Control",colnames(dm))
 	WT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
@@ -626,13 +626,13 @@ col_order <- c(col_order[grepl("WT",col_order)],
 sorted_cols <- paste("Adjusted",as.character(col_names[col_order]),sep=".")
 all_cols <- c(colnames(alt_results)[colnames(alt_results) %notin% sorted_cols],
 	      sorted_cols)
-alt_results <- alt_results %>% dplyr::select(all_of(all_cols)) %>% 
+alt_results <- alt_results %>% dplyr::select(all_of(all_cols)) %>%
 	as.data.table()
 
 # Calculate group mean and SEM.
 df <- alt_results
 idy <- grep("Abundance",colnames(df))
-dm <- df %>% dplyr::select(Accession, all_of(idy)) %>% 
+dm <- df %>% dplyr::select(Accession, all_of(idy)) %>%
 	as.matrix(rownames="Accession")
 idy <- grep("Control",colnames(dm))
 WT_means <- apply(dm,1,function(x) log2(mean(x[idy])))
@@ -690,7 +690,7 @@ saveRDS(glm_results,myfile)
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
 
-# Save tidy_protein (final normalized protein in tidy format) as rda object. 
+# Save tidy_protein (final normalized protein in tidy format) as rda object.
 myfile <- file.path(datadir,"swip_tmt.rda")
 swip_tmt <- tmt_protein; save(swip_tmt,file=myfile,version=2)
 
