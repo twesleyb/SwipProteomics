@@ -32,26 +32,35 @@ renv::load(root,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
+	library(dplyr)
 	library(MSstats)
 	library(MSstatsTMT)
 	library(data.table)
-	library(dplyr)
 })
 
 # load functions in root/R 
 suppressWarnings({ devtools::load_all() })
 
 # load data in root/data
-data(input.pd) # MSstatsTMT dataset
+myfile <- list.files(file.path(root,"data"),pattern="PSM",full.names=TRUE)
+psm_data <- list("raw"=data.table::fread(myfile))
+
+# keep psms with 1 matching protein
+psm_data[["filt"]] <- psm_data[["raw"]] %>% filter(`Number of Proteins` == 1)
+
+# keep peptides with no missed cleavage
+psm_data[["no missed cleavage"]] <- psm_data[["filt"]] %>% filter(`Number of Missed Cleavages` == 0)
+
+# summary:
+knitr::kable(t(formatC(sapply(psm_data,nrow),big.mark=",")))
+
+#data(input.pd) # MSstatsTMT dataset
 
 # tidy_peptide from root/rdata, its big ~ 99 mb
-load(file.path(root,"rdata","tidy_peptide.rda")) 
+#load(file.path(root,"rdata","tidy_peptide.rda")) 
 
-
-str(tidy_peptide)
-str(input.pd)
-
-quit()
+#str(tidy_peptide)
+#str(input.pd)
 
 ## build input to MSstats -----------------------------------------------------
 ## REALLY NEED MORE INFO ABOUT THE COLUMNS
@@ -66,8 +75,24 @@ quit()
 # * BioReplicate
 # * Intensity
 
-input_df <- data.table("Protein" = as.factor(tidy_peptide[["Accession"]]), # Uniprot Accession
-		 "PSM" = as.factor(paste(tidy_peptide[["Sequence"]],tidy_peptide[["Modifications"]],sep="_")),
+# Number of Missed Cleavages --> remove peptides with missed cleavage?
+# Number of Proteins --> remove multiples?
+# total Ions
+# ions matched
+#raw_psm$"Number of Proteins"[94]
+#raw_psm$"Master Protein Accessions"[94]
+#all(sapply(psm_data[["no missed cleavage"]][["Master Protein Accessions"]],length)==1)
+
+df <- psm_data[["no missed cleavage"]]
+# exctact sample info from "Spectrum File"
+ids <- gsub("ID","", sapply(strsplit(df$"Spectrum File","_"),"[",1))
+j
+samples$"Proteomics ID" <- sapply(strsplit(samples$Sample,"\\."),"[",5)
+
+unique(df[["Spectrum File"]])
+
+input_df <- data.table("ProteinName" = as.factor(df[["Master Protein Accessions"]]), # Uniprot Accession
+		 "PSM" = as.factor(df[["Annotated Sequence"]]),
 		 "TechRepMixture" = as.factor(tidy_peptide[["Fraction"]]),
 		 "Mixture" = as.factor(tidy_peptide[["Experiment"]]), # Exp1, Exp2, Exp3
 		 "Run" = as.factor(tidy_peptide[["Sample"]]), # Sample Name
