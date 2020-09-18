@@ -6,12 +6,13 @@
 
 ## input -------------------------------------------------------------
 # * Kahn et al., Supplemental Table S01
-data_url <- "https://bit.ly/2ZPu86T" # pwilmart/IRS_normalization
+data_url <- "https://bit.ly/2ZPu86T" # pwilmart/IRS_normalization/data.csv
 
-## set-up for NB GOF simulation:
+## options for NB GOF simulation:
 sim <- 999 # the number of simulations
+n_rows <- 500 # the number of genes to randomly sample and analyze
 conf.env <- 0.95 # confidence
-nthreads <- detectCores() - 1 # number of threads for parallel processing
+nthreads <- parallel::detectCores() - 1 # number of threads for parallel processing
 
 # data source:
 #	Khan, Shahid Y., et al. "Proteome Profiling of
@@ -30,6 +31,7 @@ suppressPackageStartupMessages({
 	library(NBGOF)
 	library(limma)
 	library(edgeR)
+	library(dplyr)
 	library(data.table)
 })
 
@@ -51,8 +53,7 @@ df <- reshape2::melt(raw_data,
 df$Condition <- sapply(strsplit(as.character(df$Sample),"_"),"[",1)
 df$Experiment <- sapply(strsplit(as.character(df$Sample),"_"),"[",2)
 
-
-# lets get a subset of samples cooresponding to one biological group
+# collect a subset of samples cooresponding to one biological group (Condition)
 all_groups <- unique(df$Condition)
 subdf <- df %>% filter(Condition == sample(all_groups,1))
 
@@ -60,23 +61,24 @@ subdf <- df %>% filter(Condition == sample(all_groups,1))
 dm <- subdf %>% dcast(Accession ~ Sample,value.var = "Intensity") %>%
 	as.data.table() %>% as.matrix(rownames="Accession") %>% na.omit()
 
-
-# collect subset of rows
-n_rows <- 500
+# collect subset of random rows
 idx <- sample(nrow(dm),n_rows)
 subdm <- dm[idx,]
 
 # asses NB fit
-
-
-## model matrix for arab.sub:
-x = as.matrix(rep(1,3)) # a single group
-
-## GOF tests for different dispersion models:
-dispersion_models <- c("Common","Trendend","Tagwise-Common","Tagwise-Trended")
-edgeR_gof <- lapply(dispersion_models, function(m) {
-			    nb.gof.m(counts=subdm,x=as.matrix(rep(1,3)),
-				     sim=sim, model=m, seed=1, ncores=nthreads) })
+dispersion_models <- c("Common","Trendend","Tagwise-Common",
+		       "Tagwise-Trended","Genewise")
+dispersion_methods <- c("CoxReid","auto","CoxReid","auto","auto")
+results <- list()
+for (mod in dispersion_models){
+	i <- match(mod,dispersion_models)
+	results[[mod]] <- nb.gof.m(counts=subdm,
+				   x=as.matrix(rep(1,3)),
+				   sim=10, 
+				   model=mod,
+				   method=dispersion_methods[i],
+				   ncores=nthreads) 
+}#EOL
 
 
 
