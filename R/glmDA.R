@@ -8,11 +8,11 @@ glmDA <- function(tp,comparisons,samples,samples_to_ignore){
 		library(edgeR)
 		library(tibble)
 	})
-	
+
 	# Cast tp into data matrix for EdgeR.
 	tp_in <- tp
-	dm <- tp %>% 
-		dcast(Accession ~ Sample, value.var="Intensity") %>% 
+	dm <- tp %>%
+		dcast(Accession ~ Sample, value.var="Intensity") %>%
 		as.matrix(rownames=TRUE)
 
 	# Create dge object.
@@ -22,7 +22,7 @@ glmDA <- function(tp,comparisons,samples,samples_to_ignore){
 	dge <- calcNormFactors(dge)
 
 	# Drop samples to ignore from dge object.
-	# We dont want to utilize QC when estimating dispersion or 
+	# We dont want to utilize QC when estimating dispersion or
 	# performing statistical testing.
 	drop <- grepl(samples_to_ignore,rownames(dge$samples))
 	dge$samples <- dge$samples[!drop,]
@@ -46,6 +46,7 @@ glmDA <- function(tp,comparisons,samples,samples_to_ignore){
 
 	# Estimate dispersion.
 	dge <- estimateDisp(dge, design, robust = TRUE)
+	#save(dge,file="dge.rda",version=2)
 
 	# Fit a general linear model.
 	fit <- glmQLFit(dge, design, robust = TRUE)
@@ -56,7 +57,7 @@ glmDA <- function(tp,comparisons,samples,samples_to_ignore){
 	contrast_list <- split(g,idx)
 	contrast_list <- lapply(contrast_list,unique)
 	contrast_list <- lapply(contrast_list,function(x) x[order(x)])
-	contrast_list <- lapply(contrast_list,function(x) { 
+	contrast_list <- lapply(contrast_list,function(x) {
 					 paste(x,collapse="-") })
 
 	# Loop to generate contrasts for edgeR::glm.
