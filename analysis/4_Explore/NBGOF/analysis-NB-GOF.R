@@ -58,15 +58,20 @@ x <- as.matrix(rep(1,3))
 # GOF tests for different dispersion models:
 # edgeR models: Common, Trended, Tagwise-Common,Tagwise-Trend
 n_sim = 999
-edgeR_models <- c("Common","Trended",
-		  "Tagwise-Common","Tagwise-Trend")
+models <- c("Common"="CoxReid","Trended"="auto", "Genewise"="auto",
+		  "Tagwise-Common"="CoxReid","Tagwise-Trend"="auto")
 results <- list()
-for (dispersion_model in edgeR_models){
-	message(paste("Simulating", dispersion_model, "dispersion model."))
-	gof <- nb.gof.m(counts=subdm, x=x, sim=n_sim,
-		  model=dispersion_model, ncores=n_cores)
+for (mod in names(models)){
+	message(paste("Simulating", mod,
+		      "dispersion model."))
+	gof <- nb.gof.m(counts=subdm,
+			x=as.matrix(rep(1,3)),
+			sim=n_sim,
+		        model=mod,
+		        method=models[mod],
+			ncores=n_cores)
 	summary(gof,conv.env=0.95,data.node="SWIP TMT")
-	results[[dispersion_model]] <- gof
+	results[[mod]] <- gof
 }
 
 # save the restults
