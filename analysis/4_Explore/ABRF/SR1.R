@@ -17,7 +17,7 @@ raw <- read.csv(file="SkylineIntensities_unique.tsv", sep="\t")
 
 head(raw)
 
-colnames(raw) <- c("PeptideSequence", "ProteinName", "Run", "Precursor.Mz", "PrecursorCharge", "Product.Mz", 
+colnames(raw) <- c("PeptideSequence", "ProteinName", "Run", "Precursor.Mz", "PrecursorCharge", "Product.Mz",
                    "ProductCharge", "FragmentIon", "Retention.Time", "Intensity", "Probability", "QValue")
 
 ## class of intensity is factor, change it as numeric
@@ -53,7 +53,7 @@ dim(tmp)
 
 ## check unique rows
 tmptmp <- xtabs(~fea, tmp)
-unique(tmptmp) # there are some features which has more than one measurement 
+unique(tmptmp) # there are some features which has more than one measurement
 unique(tmptmp)/36
 
 ## get feature id which has more than one measurement per run
@@ -87,33 +87,33 @@ selectfeature <- NULL
 ## get the combination of feature and precursor.mz which need to be kept
 
 for(i in 1:length(featureid)){
-  
+
   sub <- tmp[tmp$fea == featureid[i], ]
   sub$fea.precursor.mz <- paste(sub$fea, sub$Precursor.Mz, sep="_")
-  
+
   # 1. get any m/z which have less NA Qvalue,
   sub <- sub[!is.na(sub$QValue), ]
   count <- xtabs(~ fea.precursor.mz, sub)
-  
+
   if ( any(count[-1] != count[1]) ) {
     selectfeature <- c(selectfeature, names(count[which.max(count)]))
   } else {
-    
+
     # 2. if the number of NA Q values are the same, use precursor.mz with more Q values less than 0.10
     sub <- sub[sub$QValue < 0.1, ]
     count <- xtabs(~ fea.precursor.mz, sub)
-    
+
     if ( any(count[-1] != count[1]) ) {
       selectfeature <- c(selectfeature, names(count[which.max(count)]))
     } else {
-    
+
       # 3. if the number of NA and less than 0.10 Q values are the same, use precursor.mz with highest mean intensity.
       meanfeature <- aggregate(Intensity ~ fea.precursor.mz, data=sub, function(x) median(x, na.rm=TRUE))
       meanfeature <- meanfeature[order(meanfeature$Intensity, decreasing=T), ]
-    
+
       ## choose top n
       maxfeature <- meanfeature$fea.precursor.mz[1]
-    
+
       selectfeature <- c(selectfeature, as.character(maxfeature))
     }
   }
@@ -135,7 +135,7 @@ dim(raw2)
 raw2$fea.precursor.mz <- paste(raw2$fea, raw2$Precursor.Mz, sep="_")
 
 raw2 <- raw2[which(raw2$fea.precursor.mz %in% selectfeature), ]
-dim(raw2) 
+dim(raw2)
 raw2 <- raw2[, -which(colnames(raw2) %in% "fea.precursor.mz")]
 
 raw <- rbind(raw1, raw2)
@@ -176,21 +176,21 @@ raw2new <- NULL
 
 ## loop for 60 features which have multiple measurements per run
 for(i in 1:length(featureid)){
-  
+
   sub <- raw2[raw2$fea == featureid[i], ]
-  
+
   ## sum of mooisotopic peaks
-  data_w <- dcast( PeptideSequence + ProteinName + Precursor.Mz + PrecursorCharge + Product.Mz 
-                   + ProductCharge + FragmentIon ~ Run, data=sub, value.var='Intensity', 
-                   fun.aggregate=function(x) max(x, na.rm=TRUE), fill=NULL) 
-  
+  data_w <- dcast( PeptideSequence + ProteinName + Precursor.Mz + PrecursorCharge + Product.Mz
+                   + ProductCharge + FragmentIon ~ Run, data=sub, value.var='Intensity',
+                   fun.aggregate=function(x) max(x, na.rm=TRUE), fill=NULL)
+
   ## make long format
   newdata <- melt(data_w, id.vars=c('PeptideSequence', 'ProteinName', 'Precursor.Mz', 'PrecursorCharge',
                                     'Product.Mz', 'ProductCharge', 'FragmentIon'))
   colnames(newdata)[colnames(newdata) %in% c("variable","value")] <- c('Run','Intensity')
-  
+
   raw2new <- rbind(raw2new, newdata)
-  
+
   print(i)
 }
 
@@ -218,14 +218,14 @@ raw$pepprecursor <- paste(raw$PeptideSequence, raw$PrecursorCharge, sep="_")
 dim(raw)
 
 ## sum of mooisotopic peaks
-data_w <- dcast( pepprecursor ~ Run, data=raw, value.var='Intensity', fun.aggregate=sum, fill=NULL) 
+data_w <- dcast( pepprecursor ~ Run, data=raw, value.var='Intensity', fun.aggregate=sum, fill=NULL)
 
 ## make long format
 newdata <- melt(data_w, id.vars=c('pepprecursor'))
 colnames(newdata)[colnames(newdata) %in% c("variable","value")] <- c('Run','Intensity')
 
 ## assignn protein name
-uniinfo <- unique(raw[, c("ProteinName", "PeptideSequence", "PrecursorCharge", "pepprecursor")])		
+uniinfo <- unique(raw[, c("ProteinName", "PeptideSequence", "PrecursorCharge", "pepprecursor")])
 raw <- merge(newdata, uniinfo, by="pepprecursor")
 dim(raw)
 head(raw)
@@ -235,10 +235,10 @@ head(raw)
 ## 1.4 assign the annotation
 
 ## read annotation information
-annot <- data.frame(Run=unique(raw$Run), 
-                    Condition = c('Condition1', 'Condition2', 'Condition3', 
-                                  'Condition2', 'Condition3', 'Condition4', 
-                                  'Condition3', 'Condition4', 'Condition2', 
+annot <- data.frame(Run=unique(raw$Run),
+                    Condition = c('Condition1', 'Condition2', 'Condition3',
+                                  'Condition2', 'Condition3', 'Condition4',
+                                  'Condition3', 'Condition4', 'Condition2',
                                   'Condition4', 'Condition1', 'Condition1'),
                     BioReplicate = c('1', '2', '3', '2', '3', '4', '3', '4', '2', '4', '1', '1'))
 
@@ -273,7 +273,7 @@ quant <- dataProcess(raw,
                      summaryMethod="TMP",
                      cutoffCensored="minFeature",
                      censoredInt="0",
-                     MBimpute=TRUE, 
+                     MBimpute=TRUE,
                      skylineReport=TRUE)
 
 
@@ -314,4 +314,3 @@ groupComparisonPlots(Skyline.intensity.comparison.result, type="VolcanoPlot", ad
 groupComparisonPlots(Skyline.intensity.comparison.result, type="Heatmap", address="Skyline_intensity_")
 
 groupComparisonPlots(Skyline.intensity.comparison.result, type="ComparisonPlot", address="Skyline_intensity_")
-

@@ -1,14 +1,18 @@
-#!/usr/bin/env rscript
+#!/usr/bin/env Rscript
 
-## functions ------------------------------------------------------------------
+# title: SwipProteomics
+# description: anaysis of the goodness of fit of negative binomial models
+# author: Tyler W Bradshaw <twesleyb10@gmail.com>
+
+## Misc functions -------------------------------------------------------------
 
 getrd <- function(here=getwd(), dpat= ".git") {
 	# get the repository's root directory
 	in_root <- function(h=here, dir=dpat) {
-		check <- any(grepl(dir,list.dirs(h,recursive=false)))
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE)))
 		return(check)
 	}
-	# loop to find root.
+	# Loop to find root.
 	while (!in_root(here)) {
 		here <- dirname(here)
 	}
@@ -16,80 +20,55 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-## ----required packages, echo = false, warning=false, results="hide"-----------
+# Prepare the R environment ---------------------------------------------------
 
+# load renv
 root <- getrd()
-renv::load(root)
+renv::load(root,quiet=TRUE)
 
-suppresspackagestartupmessages({
-  library("dep")
-  library("dplyr")
-  library("biocstyle")
+# imports
+suppressPackageStartupMessages({
+	library(DEP)
+	library(dplyr)
+	library(data.table)
 })
 
-## ----install, eval = false----------------------------------------------------
-#
-#  if (!requirenamespace("biocmanager", quietly=true))
-#      install.packages("biocmanager")
-#  biocmanager::install("dep")
-#
-#  library("dep")
-#
+# Load functions in root/R and data in root/data.
+suppressWarnings({ devtools::load_all() })
 
-## ----run_app, eval = false----------------------------------------------------
-#  # for lfq analysis
-#  run_app("lfq")
-#
-#  # for tmt analysis
-#  run_app("tmt")
+# load data from NBGOF package
+data(swip_tmt) # tmt_protein
+data(samples) # sample meta data
 
-## ----load data----------------------------------------------------------------
+# cast the data into a matrix
+dm <- swip_tmt %>%
+	filter(Treatment != "SPQC") %>%
+	dcast(Accession ~ Sample, value.var = "Intensity") %>%
+	as.data.table() %>%
+	as.matrix(rownames="Accession")
 
-# the data is provided with the package
-data <- ubilength
+## generate a summarizedexperiment object using an experimental design --------
+experimental_design <- ""
 
-# we filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "potential.contaminants" and "reverse", respectively.
-data <- filter(data, reverse != "+", potential.contaminant != "+")
+library(SummarizedExperiment)
 
-## ----dimension----------------------------------------------------------------
-dim(data)
+samples_df <- samples %>% select(Sample,Genotype,Treatment,Fraction,Channel,Experiment) %>% as.data.frame()
 
-## ----colnames-----------------------------------------------------------------
-colnames(data)
+se = SummarizedExperiment(assays=dm,colData=samples_df)
 
-## ----unique-------------------------------------------------------------------
-# are there any duplicated gene names?
-data$gene.names %>% duplicated() %>% any()
 
-# make a table of duplicated gene names
-data %>% group_by(gene.names) %>% summarize(frequency = n()) %>%
-  arrange(desc(frequency)) %>% filter(frequency > 1)
 
-## ----unique_names-------------------------------------------------------------
-# make unique names using the annotation in the "gene.names" column as primary names and the annotation in "protein.ids" as name for those that do not have an gene name.
-data_unique <- make_unique(data, "gene.names", "protein.ids", delim = ";")
 
-# are there any duplicated names?
-any_duplicates <- data$name %>% duplicated() %>% any()
-if (any_duplicates) { stop("there are duplicated gene names!") }
 
-## ----expdesign, echo = false--------------------------------------------------
-# display experimental design
-knitr::kable(ubilength_expdesign)
 
-## ----to_exprset---------------------------------------------------------------
-# generate a summarizedexperiment object using an experimental design
-lfq_columns <- grep("lfq.", colnames(data_unique)) # get lfq column numbers
-experimental_design <- ubilength_expdesign
-data_se <- make_se(data_unique, lfq_columns, experimental_design)
 
-# generate a summarizedexperiment object by parsing condition information from
-# the column names
-lfq_columns <- grep("lfq.", colnames(data_unique)) # get lfq column numbers
-data_se_parsed <- make_se_parse(data_unique, lfq_columns)
 
-# let's have a look at the summarizedexperiment object
-data_se
+
+
+
+
+
+
 
 
 ## ----plot_data_nofilt, fig.width = 4, fig.height = 4--------------------------

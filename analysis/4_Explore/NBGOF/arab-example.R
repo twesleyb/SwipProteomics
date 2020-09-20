@@ -22,7 +22,7 @@ m = 500    # number of genes retained
 
 # consider a single group with 3 replicates
 samp.idx = sample(1:dim(good.arab)[1], m)
-arab.sub = good.arab[samp.idx,1:3] 
+arab.sub = good.arab[samp.idx,1:3]
 lib.sizes = colSums(arab.sub)
 y = arab.sub
 
@@ -31,6 +31,8 @@ x = as.matrix(rep(1,3)) # a single group
 
 ## GOF tests for different dispersion models:
 fnbp.arab = nb.gof.m(counts=y, x=x, sim=sim, model="NBP", seed=1, ncores=nc)
+
+summary(fnbp.arab)
 
 # ERROR:
 # Error in if (method == "MAPL") { : argument is of length zero
