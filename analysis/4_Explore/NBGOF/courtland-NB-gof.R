@@ -58,8 +58,9 @@ x <- as.matrix(rep(1,3))
 # GOF tests for different dispersion models:
 # edgeR models: Common, Trended, Tagwise-Common,Tagwise-Trend
 n_sim = 999
-models <- c("Common"="CoxReid","Trended"="auto", "Genewise"="auto",
-		  "Tagwise-Common"="CoxReid","Tagwise-Trend"="auto")
+models <- c("Common"="CoxReid",
+	    "Trended"="auto",
+	    "Genewise"="auto")
 results <- list()
 for (mod in names(models)){
 	message(paste("Simulating", mod,

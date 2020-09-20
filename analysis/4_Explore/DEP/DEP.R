@@ -1,35 +1,55 @@
-## ----required packages, echo = FALSE, warning=FALSE, results="hide"-----------
-suppressPackageStartupMessages({
-  library("BiocStyle")
-  library("DEP")
+#!/usr/bin/env rscript
+
+## functions ------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# get the repository's root directory
+	in_root <- function(h=here, dir=dpat) {
+		check <- any(grepl(dir,list.dirs(h,recursive=false)))
+		return(check)
+	}
+	# loop to find root.
+	while (!in_root(here)) {
+		here <- dirname(here)
+	}
+	root <- here
+	return(root)
+}
+
+## ----required packages, echo = false, warning=false, results="hide"-----------
+
+root <- getrd()
+renv::load(root)
+
+suppresspackagestartupmessages({
+  library("dep")
   library("dplyr")
+  library("biocstyle")
 })
 
-## ----install, eval = FALSE----------------------------------------------------
-#  
-#  if (!requireNamespace("BiocManager", quietly=TRUE))
-#      install.packages("BiocManager")
-#  BiocManager::install("DEP")
-#  
-#  library("DEP")
-#  
+## ----install, eval = false----------------------------------------------------
+#
+#  if (!requirenamespace("biocmanager", quietly=true))
+#      install.packages("biocmanager")
+#  biocmanager::install("dep")
+#
+#  library("dep")
+#
 
-## ----run_app, eval = FALSE----------------------------------------------------
-#  # For LFQ analysis
-#  run_app("LFQ")
-#  
-#  # For TMT analysis
-#  run_app("TMT")
+## ----run_app, eval = false----------------------------------------------------
+#  # for lfq analysis
+#  run_app("lfq")
+#
+#  # for tmt analysis
+#  run_app("tmt")
 
 ## ----load data----------------------------------------------------------------
-# Loading a package required for data handling
-library("dplyr")
 
-# The data is provided with the package
-data <- UbiLength
+# the data is provided with the package
+data <- ubilength
 
-# We filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "Potential.contaminants" and "Reverse", respectively. 
-data <- filter(data, Reverse != "+", Potential.contaminant != "+")
+# we filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "potential.contaminants" and "reverse", respectively.
+data <- filter(data, reverse != "+", potential.contaminant != "+")
 
 ## ----dimension----------------------------------------------------------------
 dim(data)
@@ -38,48 +58,52 @@ dim(data)
 colnames(data)
 
 ## ----unique-------------------------------------------------------------------
-# Are there any duplicated gene names?
-data$Gene.names %>% duplicated() %>% any()
+# are there any duplicated gene names?
+data$gene.names %>% duplicated() %>% any()
 
-# Make a table of duplicated gene names
-data %>% group_by(Gene.names) %>% summarize(frequency = n()) %>% 
+# make a table of duplicated gene names
+data %>% group_by(gene.names) %>% summarize(frequency = n()) %>%
   arrange(desc(frequency)) %>% filter(frequency > 1)
 
 ## ----unique_names-------------------------------------------------------------
-# Make unique names using the annotation in the "Gene.names" column as primary names and the annotation in "Protein.IDs" as name for those that do not have an gene name.
-data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
+# make unique names using the annotation in the "gene.names" column as primary names and the annotation in "protein.ids" as name for those that do not have an gene name.
+data_unique <- make_unique(data, "gene.names", "protein.ids", delim = ";")
 
-# Are there any duplicated names?
-data$name %>% duplicated() %>% any()
+# are there any duplicated names?
+any_duplicates <- data$name %>% duplicated() %>% any()
+if (any_duplicates) { stop("there are duplicated gene names!") }
 
-## ----expdesign, echo = FALSE--------------------------------------------------
-# Display experimental design
-knitr::kable(UbiLength_ExpDesign)
+## ----expdesign, echo = false--------------------------------------------------
+# display experimental design
+knitr::kable(ubilength_expdesign)
 
 ## ----to_exprset---------------------------------------------------------------
-# Generate a SummarizedExperiment object using an experimental design
-LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
-experimental_design <- UbiLength_ExpDesign
-data_se <- make_se(data_unique, LFQ_columns, experimental_design)
+# generate a summarizedexperiment object using an experimental design
+lfq_columns <- grep("lfq.", colnames(data_unique)) # get lfq column numbers
+experimental_design <- ubilength_expdesign
+data_se <- make_se(data_unique, lfq_columns, experimental_design)
 
-# Generate a SummarizedExperiment object by parsing condition information from the column names
-LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
-data_se_parsed <- make_se_parse(data_unique, LFQ_columns)
+# generate a summarizedexperiment object by parsing condition information from
+# the column names
+lfq_columns <- grep("lfq.", colnames(data_unique)) # get lfq column numbers
+data_se_parsed <- make_se_parse(data_unique, lfq_columns)
 
-# Let's have a look at the SummarizedExperiment object
+# let's have a look at the summarizedexperiment object
 data_se
 
 
-## ----plot_data_noFilt, fig.width = 4, fig.height = 4--------------------------
-# Plot a barplot of the protein identification overlap between samples
+## ----plot_data_nofilt, fig.width = 4, fig.height = 4--------------------------
+# plot a barplot of the protein identification overlap between samples
 plot_frequency(data_se)
 
 ## ----filter_missval-----------------------------------------------------------
-# Filter for proteins that are identified in all replicates of at least one condition
+# filter for proteins that are identified in all replicates of at least one
+# condition
 data_filt <- filter_missval(data_se, thr = 0)
 
 # Less stringent filtering:
-# Filter for proteins that are identified in 2 out of 3 replicates of at least one condition
+# Filter for proteins that are identified in 2 out of 3 replicates of at least
+# one condition
 data_filt2 <- filter_missval(data_se, thr = 1)
 
 ## ----plot_data, fig.width = 4, fig.height = 4---------------------------------
@@ -95,7 +119,8 @@ plot_coverage(data_filt)
 data_norm <- normalize_vsn(data_filt)
 
 ## ----plot_norm, fig.width = 4, fig.height = 5---------------------------------
-# Visualize normalization by boxplots for all samples before and after normalization
+# Visualize normalization by boxplots for all samples before and after
+# normalization
 plot_normalization(data_filt, data_norm)
 
 ## ----plot_missval, fig.height = 4, fig.width = 3------------------------------
@@ -110,10 +135,12 @@ plot_detect(data_filt)
 # All possible imputation methods are printed in an error, if an invalid function name is given.
 impute(data_norm, fun = "")
 
-# Impute missing data using random draws from a Gaussian distribution centered around a minimal value (for MNAR)
+# Impute missing data using random draws from a Gaussian distribution centered
+# around a minimal value (for MNAR)
 data_imp <- impute(data_norm, fun = "MinProb", q = 0.01)
 
-# Impute missing data using random draws from a manually defined left-shifted Gaussian distribution (for MNAR)
+# Impute missing data using random draws from a manually defined left-shifted
+# Gaussian distribution (for MNAR)
 data_imp_man <- impute(data_norm, fun = "man", shift = 1.8, scale = 0.3)
 
 # Impute missing data using the k-nearest neighbour approach (for MAR)
@@ -125,7 +152,8 @@ data_imp_knn <- impute(data_norm, fun = "knn", rowmax = 0.9)
 plot_imputation(data_norm, data_imp)
 
 ## ----statistics---------------------------------------------------------------
-# Differential enrichment analysis  based on linear models and empherical Bayes statistics
+# Differential enrichment analysis  based on linear models and empherical Bayes
+# statistics
 
 # Test every sample versus control
 data_diff <- test_diff(data_imp, type = "control", control = "Ctrl")
@@ -134,7 +162,7 @@ data_diff <- test_diff(data_imp, type = "control", control = "Ctrl")
 data_diff_all_contrasts <- test_diff(data_imp, type = "all")
 
 # Test manually defined comparisons
-data_diff_manual <- test_diff(data_imp, type = "manual", 
+data_diff_manual <- test_diff(data_imp, type = "manual",
                               test = c("Ubi4_vs_Ctrl", "Ubi6_vs_Ctrl"))
 
 ## ----add_reject---------------------------------------------------------------
@@ -151,13 +179,14 @@ plot_cor(dep, significant = TRUE, lower = 0, upper = 1, pal = "Reds")
 
 ## ----heatmap, fig.height = 5, fig.width = 3-----------------------------------
 # Plot a heatmap of all significant proteins with the data centered per protein
-plot_heatmap(dep, type = "centered", kmeans = TRUE, 
+plot_heatmap(dep, type = "centered", kmeans = TRUE,
              k = 6, col_limit = 4, show_row_names = FALSE,
              indicate = c("condition", "replicate"))
 
 ## ----heatmap2, fig.height = 5, fig.width = 3----------------------------------
-# Plot a heatmap of all significant proteins (rows) and the tested contrasts (columns)
-plot_heatmap(dep, type = "contrast", kmeans = TRUE, 
+# Plot a heatmap of all significant proteins (rows) and the tested contrasts
+# (columns)
+plot_heatmap(dep, type = "contrast", kmeans = TRUE,
              k = 6, col_limit = 10, show_row_names = FALSE)
 
 ## ----volcano, fig.height = 5, fig.width = 5-----------------------------------
@@ -199,12 +228,12 @@ df_long <- get_df_long(dep)
 #  load("data.RData")
 
 ## ----LFQ, message = FALSE-----------------------------------------------------
-# The data is provided with the package 
+# The data is provided with the package
 data <- UbiLength
 experimental_design <- UbiLength_ExpDesign
 
 # The wrapper function performs the full analysis
-data_results <- LFQ(data, experimental_design, fun = "MinProb", 
+data_results <- LFQ(data, experimental_design, fun = "MinProb",
       type = "control", control = "Ctrl", alpha = 0.05, lfc = 1)
 
 ## ----report2, eval = FALSE----------------------------------------------------
@@ -227,18 +256,17 @@ results_table %>% filter(significant) %>% nrow()
 full_data <- data_results$dep
 
 # Use the full data to generate a heatmap
-plot_heatmap(full_data, type = "contrast", kmeans = TRUE, 
+plot_heatmap(full_data, type = "contrast", kmeans = TRUE,
              k = 6, col_limit = 4, show_row_names = FALSE)
 
 ## ----TMT, eval = FALSE--------------------------------------------------------
 #  # Need example data
 #  TMTdata <- example_data
 #  Exp_Design <- example_Exp_Design
-#  
+#
 #  # The wrapper function performs the full analysis
 #  TMTdata_results <- TMT(TMTdata, expdesign = Exp_Design, fun = "MinProb",
 #      type = "control", control = "Control", alpha = 0.05, lfc = 1)
 
 ## ----session_info, echo = FALSE-----------------------------------------------
 sessionInfo()
-
