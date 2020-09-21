@@ -35,7 +35,6 @@ renv::load(root,quiet=TRUE)
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
-	#library(MSstats)
 	library(MSstatsTMT)
 	library(data.table)
 })
@@ -43,13 +42,15 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressWarnings({ devtools::load_all() })
 
+# load the sample data ---------------------------------------------------
+
 # load sample data in root/rdata
 myfile <- file.path(root,"rdata",input_samples)
 col_names <- c("S","Replicate","Run","Sample",
 	       "Channel","ID","Condition","Mixture")
 samples <- readxl::read_excel(myfile,col_names=col_names)
 
-# clean-up
+# clean-up sample info
 samples$S <- NULL
 samples$Sample <- NULL
 samples$Replicate <- gsub("F","",samples$Replicate)
@@ -59,6 +60,7 @@ samples$Condition[grep("SPQC",samples$Condition)] <- "SPQC"
 samples$BioReplicate <- interaction(samples$Condition,
 				    samples$Replicate)
 
+# build annotation df:
 # Run, Fraction, TechRepMixturee, Channel, Conditon, Bioreplicate,Mixture
 anno_df <- data.table(Run=as.factor(samples$ID),
 		      Fraction=rep(1,nrow(samples)),
@@ -67,7 +69,8 @@ anno_df <- data.table(Run=as.factor(samples$ID),
 		      Condition=as.factor(samples$Condition),
 		      BioReplicate=as.factor(samples$BioReplicate),
 		      Mixture=as.factor(samples$Mixture))
-)
+
+# load the PSM data ---------------------------------------------------
 
 # load PSM data in root/rdata
 myfile <- file.path(root,"rdata",input_psm)
@@ -75,12 +78,10 @@ psm_df <- readxl::read_excel(myfile)
 
 x = psm_data[[1]]
 
+# coerce data to MSstats format -----------------------------------------------
+
 df <- PDtoMSstatsTMTFormat(psm_df, anno_df,
 		     rmPSM_withMissing_withinRun=TRUE)
-
-
-data(raw.pd) # MSstats raw PD data
-
 
 # keep psms with 1 matching protein
 #psm_data[["filt"]] <- psm_data[["raw"]] %>% filter(`Number of Proteins` == 1)
@@ -101,7 +102,7 @@ data(raw.pd) # MSstats raw PD data
 
 ## build input to MSstats -----------------------------------------------------
 ## REALLY NEED MORE INFO ABOUT THE COLUMNS
-# the data should contain the following columns:
+# the dta should contain the following columns:
 # * ProteinName - uniprot Accession
 # * PSM - peptide spectrum match = an ionized peptide, what is measured
 # * TechRepMixture - QC?

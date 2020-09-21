@@ -28,7 +28,9 @@ library("dplyr")
 # The data is provided with the package
 data <- UbiLength
 
-# We filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "Potential.contaminants" and "Reverse", respectively. 
+# We filter for contaminant proteins and decoy database hits, which are
+# indicated by "+" in the columns "Potential.contaminants" and "Reverse",
+# respectively. 
 data <- filter(data, Reverse != "+", Potential.contaminant != "+")
 
 ## ----dimension----------------------------------------------------------------
@@ -46,7 +48,9 @@ data %>% group_by(Gene.names) %>% summarize(frequency = n()) %>%
   arrange(desc(frequency)) %>% filter(frequency > 1)
 
 ## ----unique_names-------------------------------------------------------------
-# Make unique names using the annotation in the "Gene.names" column as primary names and the annotation in "Protein.IDs" as name for those that do not have an gene name.
+# Make unique names using the annotation in the "Gene.names" column as primary
+# names and the annotation in "Protein.IDs" as name for those that do not have
+# an gene name.
 data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
 
 # Are there any duplicated names?
