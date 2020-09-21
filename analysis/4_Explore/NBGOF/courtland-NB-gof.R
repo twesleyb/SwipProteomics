@@ -58,25 +58,22 @@ x <- as.matrix(rep(1,3))
 # GOF tests for different dispersion models:
 # edgeR models: Common, Trended, Tagwise-Common,Tagwise-Trend
 n_sim = 999
-edgeR_models <- c("Common","Trended",
-		  "Tagwise-Common","Tagwise-Trend")
+models <- c("Common"="CoxReid","Trended"="auto", "Genewise"="auto",
+		  "Tagwise-Common"="CoxReid","Tagwise-Trend"="auto")
 results <- list()
-for (mod in edgeR_models){
-	message(paste("Simulating", mod, "dispersion model."))
-	results[[mod]] <- nb.gof.m(counts=subdm, x=x, sim=n_sim,
-		  model=mod, ncores=n_cores)
+for (mod in names(models)){
+	message(paste("Simulating", mod,
+		      "dispersion model."))
+	gof <- nb.gof.m(counts=subdm,
+			x=as.matrix(rep(1,3)),
+			sim=n_sim,
+		        model=mod,
+		        method=models[mod],
+			ncores=n_cores)
+	summary(gof,conv.env=0.95,data.node="SWIP TMT")
+	results[[mod]] <- gof
 }
 
-# error when using Tagwise-Common
-# seemsl ike the most likely dispersion utilized by edgeR is the
-# tagwise-trended dispersion
-
-# dispersions utilized:
-y <- nb.gof.m(counts=subdm, x=x, sim=n_sim,
-	  model="Trended", ncores=n_cores)
-summary(y)
-
-
-
-
-summary(dm_gof,conv.env=0.95, data.note="Control.F4")
+# save the restults
+myfile <- file.path(root,"rdata","dispersion_simulations.RData")
+saveRDS(results,file=myfile)

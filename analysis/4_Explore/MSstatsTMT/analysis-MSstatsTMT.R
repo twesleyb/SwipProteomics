@@ -4,18 +4,22 @@
 # description: analysis of Swip TMT with MSstats
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 
+## Input ----------------------------------------------------------------------
+# input data in root/rdata (too big for root/data as is)
+input_psm = "5359_PSM_Report.xlsx"
+input_samples = "5359_Samples.xlsx"
 
 ## Misc Functions -------------------------------------------------------------
 
 getrd <- function(here=getwd(), dpat= ".git") {
 	# get the repository's root directory
-	in_root <- function(h=here, dir=dpat) { 
-		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
+	in_root <- function(h=here, dir=dpat) {
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE)))
 		return(check)
 	}
 	# Loop to find root.
-	while (!in_root(here)) { 
-		here <- dirname(here) 
+	while (!in_root(here)) {
+		here <- dirname(here)
 	}
 	root <- here
 	return(root)
@@ -25,52 +29,85 @@ getrd <- function(here=getwd(), dpat= ".git") {
 # Prepare the R environment ---------------------------------------------------
 
 # load renv
-#root <- Sys.getEnv("ROOT") # set by activate script in 
-#FIXME: where is 'Error in readRDS(file) : unknown input format' coming from?
 root <- getrd()
 renv::load(root,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
-	library(MSstats)
+	#library(MSstats)
 	library(MSstatsTMT)
 	library(data.table)
 })
 
-# load functions in root/R 
+# load functions in root/R
 suppressWarnings({ devtools::load_all() })
 
-# load data in root/data
-myfile <- list.files(file.path(root,"data"),pattern="PSM",full.names=TRUE)
-psm_data <- list("raw"=data.table::fread(myfile))
+# load sample data in root/rdata
+myfile <- file.path(root,"rdata",input_samples)
+col_names <- c("S","Replicate","Run","Sample",
+	       "Channel","ID","Condition","Mixture")
+samples <- readxl::read_excel(myfile,col_names=col_names)
+
+# clean-up
+samples$S <- NULL
+samples$Sample <- NULL
+samples$Replicate <- gsub("F","",samples$Replicate)
+samples$Condition[grep("Control",samples$Condition)] <- "Control"
+samples$Condition[grep("Mutant",samples$Condition)] <- "Mutant"
+samples$Condition[grep("SPQC",samples$Condition)] <- "SPQC"
+samples$BioReplicate <- interaction(samples$Condition,
+				    samples$Replicate)
+
+# Run, Fraction, TechRepMixturee, Channel, Conditon, Bioreplicate,Mixture
+anno_df <- data.table(Run=as.factor(samples$ID),
+		      Fraction=rep(1,nrow(samples)),
+		      TechRepMixture=as.factor(samples$Channel),
+		      Channel=as.factor(samples$Channel),
+		      Condition=as.factor(samples$Condition),
+		      BioReplicate=as.factor(samples$BioReplicate),
+		      Mixture=as.factor(samples$Mixture))
+)
+
+# load PSM data in root/rdata
+myfile <- file.path(root,"rdata",input_psm)
+psm_df <- readxl::read_excel(myfile)
+
+x = psm_data[[1]]
+
+df <- PDtoMSstatsTMTFormat(psm_df, anno_df,
+		     rmPSM_withMissing_withinRun=TRUE)
+
+
+data(raw.pd) # MSstats raw PD data
+
 
 # keep psms with 1 matching protein
-psm_data[["filt"]] <- psm_data[["raw"]] %>% filter(`Number of Proteins` == 1)
+#psm_data[["filt"]] <- psm_data[["raw"]] %>% filter(`Number of Proteins` == 1)
 
 # keep peptides with no missed cleavage
-psm_data[["no missed cleavage"]] <- psm_data[["filt"]] %>% filter(`Number of Missed Cleavages` == 0)
+#psm_data[["no missed cleavage"]] <- psm_data[["filt"]] %>% filter(`Number of Missed Cleavages` == 0)
 
 # summary:
-knitr::kable(t(formatC(sapply(psm_data,nrow),big.mark=",")))
+#knitr::kable(t(formatC(sapply(psm_data,nrow),big.mark=",")))
 
 #data(input.pd) # MSstatsTMT dataset
 
 # tidy_peptide from root/rdata, its big ~ 99 mb
-#load(file.path(root,"rdata","tidy_peptide.rda")) 
+#load(file.path(root,"rdata","tidy_peptide.rda"))
 
 #str(tidy_peptide)
 #str(input.pd)
 
 ## build input to MSstats -----------------------------------------------------
 ## REALLY NEED MORE INFO ABOUT THE COLUMNS
-# the data should contain the following columns:  
+# the data should contain the following columns:
 # * ProteinName - uniprot Accession
 # * PSM - peptide spectrum match = an ionized peptide, what is measured
 # * TechRepMixture - QC?
-# * Mixture 
+# * Mixture
 # * Run
-# * Channel 
+# * Channel
 # * Condition
 # * BioReplicate
 # * Intensity

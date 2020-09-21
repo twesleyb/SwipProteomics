@@ -3,12 +3,14 @@ renv/
 rdata/
 ARCHIVE/
 figs/AI/
+docs/email/
+docs/notes/
 #manuscript/
 
 ## project specific files to ignore.
 *.swp
 *.swn
-*.report 
+*.report
 renv.lock
 
 ## ignore user's bin
