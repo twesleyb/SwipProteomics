@@ -59,7 +59,9 @@ samples$Condition[grep("SPQC",samples$Condition)] <- "SPQC"
 samples$BioReplicate <- interaction(samples$Condition,
 				    samples$Replicate)
 
-# Run, Fraction, TechRepMixturee, Channel, Conditon, Bioreplicate,Mixture
+# Create annotation dataframe for MSstats
+# Required columns: Run, Fraction, TechRepMixturee, Channel,
+# Conditon, Bioreplicate, and Mixture
 anno_df <- data.table(Run=as.factor(samples$ID),
 		      Fraction=rep(1,nrow(samples)),
 		      TechRepMixture=as.factor(samples$Channel),
@@ -67,21 +69,29 @@ anno_df <- data.table(Run=as.factor(samples$ID),
 		      Condition=as.factor(samples$Condition),
 		      BioReplicate=as.factor(samples$BioReplicate),
 		      Mixture=as.factor(samples$Mixture))
-)
+
+fwrite(anno_df,"SWIP_TMT_annotation_data.csv")
+fwrite(psm_df,"SWIP_TMT_PSM_data.csv")
 
 # load PSM data in root/rdata
+# NOTE: the data is large and make take several minutes to load
 myfile <- file.path(root,"rdata",input_psm)
 psm_df <- readxl::read_excel(myfile)
 
-x = psm_data[[1]]
+colnames(psm_df)
 
-df <- PDtoMSstatsTMTFormat(psm_df, anno_df,
-		     rmPSM_withMissing_withinRun=TRUE)
+se <- PDtoMSstatsTMTFormat(psm_df, anno_df,
+			   rmPSM_withMissing_withinRun=TRUE)
 
+
+
+x = proteinSummarization(input_df,
+			 method="msstats",
+			 global_norm=TRUE,
+			 reference_norm=TRUE,
+			 remove_norm_channel=TRUE)
 
 data(raw.pd) # MSstats raw PD data
-
-
 # keep psms with 1 matching protein
 #psm_data[["filt"]] <- psm_data[["raw"]] %>% filter(`Number of Proteins` == 1)
 
@@ -137,10 +147,3 @@ input_df <- data.table("ProteinName" = as.factor(df[["Master Protein Accessions"
 		 "Condition" = as.factor(tidy_peptide[["Treatment"]]), # SPQC, WT, MUT
 		 "BioReplicate" = as.factor(paste(tidy_peptide[["Experiment"]],tidy_peptide[["Treatment"]],sep="_")),
 		 "Intensity" = as.numeric(tidy_peptide[["Intensity"]]))
-
-
-x = proteinSummarization(input_df,
-			 method="msstats",
-			 global_norm=TRUE,
-			 reference_norm=TRUE,
-			 remove_norm_channel=TRUE)
