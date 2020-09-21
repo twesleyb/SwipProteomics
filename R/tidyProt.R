@@ -1,22 +1,42 @@
 tidyProt <- function(raw_data,id.vars,species=NULL,
 		     samples=NULL,summary=FALSE){
-	# Function to tidy proteomics data.
-	# Imports.
+	#----------------------------------------------------------------------
+	# title: tidyProt
+	# description: a function to tidy proteomics data.
+	#----------------------------------------------------------------------
+
+	# misc function, lquote -----------------------------------------------
+	lquote <- function(string, single = TRUE) {
+	  # Wrap a string in single or double quotes.
+	  single_quote <- "'"
+	  double_quote <- "\""
+	  if (single) {
+	    # Single quote.
+	    return(paste0(single_quote, string, single_quote))
+	  } else {
+	    # Double quote.
+	    return(paste0(double_quote, string, double_quote))
+	  }
+	}
+
+	# Imports --------------------------------------------------------------
 	suppressPackageStartupMessages({
 		library(data.table)
-		library(TBmiscr)
+		#library(TBmiscr)
 		library(tibble)
 		library(dplyr)
 	})
-	# Collect relevant columns. 
+
+	# Collect relevant columns.
 	#colNames <- colnames(PDdata)
 	#colIDs <- c(grep(accessionCol,colNames),
 	#	    grep(sequenceCol,colNames),
 	#	    grep(modCol,colNames),
 	#	    grep(dataCol,colNames))
+
 	# Melt and fix column names.
 	#dt <- PDdata %>% dplyr::select(colIDs) %>%  as.data.table()
-	dt <- as.data.table(raw_data) %>% 
+	dt <- as.data.table(raw_data) %>%
 		melt(id.vars = id.vars,
 		     variable.name="Sample",
 		     value.name="Intensity",
@@ -40,7 +60,7 @@ tidyProt <- function(raw_data,id.vars,species=NULL,
 	#df <- tibble::add_column(df,Channel=samples$Channel[idx],.after=1)
 	#df <- tibble::add_column(df,Treatment=samples$Treatment[idx],.after=1)
 	# Reorder columns.
-	#df <- df %>% 
+	#df <- df %>%
 	#	dplyr::select(c("Experiment","Sample","Channel","Treatment",
 	#		 "Accession","Sequence","Modifications","Intensity"))
 	#tp <- as.data.table(df)

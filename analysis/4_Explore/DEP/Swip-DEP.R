@@ -1,98 +1,92 @@
 #!/usr/bin/env Rscript
 
-## ----required packages, echo = FALSE, warning=FALSE, results="hide"-----------
+# title: SwipProteomics
+# description: anaysis of the goodness of fit of negative binomial models
+# author: Tyler W Bradshaw <twesleyb10@gmail.com>
+
+## Misc functions -------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# get the repository's root directory
+	in_root <- function(h=here, dir=dpat) {
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE)))
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) {
+		here <- dirname(here)
+	}
+	root <- here
+	return(root)
+}
+
+# Prepare the R environment ---------------------------------------------------
+
+# load renv
+root <- getrd()
+renv::load(root,quiet=TRUE)
+
+# imports
 suppressPackageStartupMessages({
-  library("BiocStyle")
-  library("DEP")
-  library("dplyr")
+	library(DEP)
+	library(dplyr)
+	library(data.table)
 })
 
-## ----install, eval = FALSE----------------------------------------------------
-#
-#  if (!requireNamespace("BiocManager", quietly=TRUE))
-#      install.packages("BiocManager")
-#  BiocManager::install("DEP")
-#
-#  library("DEP")
-#
+# Load functions in root/R and data in root/data.
+suppressWarnings({ devtools::load_all() })
 
-## ----run_app, eval = FALSE----------------------------------------------------
-#  # For LFQ analysis
-#  run_app("LFQ")
-#
-#  # For TMT analysis
-#  run_app("TMT")
+# load data from NBGOF package
+data(swip_tmt) # tmt_protein
+data(samples) # sample meta data
 
-## ----load data----------------------------------------------------------------
-# Loading a package required for data handling
-library("dplyr")
+data(data_se)
 
-# The data is provided with the package
-data <- UbiLength
+# cast the data into a matrix
+dm <- swip_tmt %>%
+	filter(Treatment != "SPQC") %>%
+	dcast(Accession ~ Sample, value.var = "Intensity") %>%
+	as.data.table() %>%
+	as.matrix(rownames="Accession")
 
-<<<<<<< HEAD
-# We filter for contaminant proteins and decoy database hits, which are
-# indicated by "+" in the columns "Potential.contaminants" and "Reverse",
-# respectively. 
-=======
-# We filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "Potential.contaminants" and "Reverse", respectively.
->>>>>>> 0f3e47ab5014d57833c1cf2d4909c5f6e7153c61
-data <- filter(data, Reverse != "+", Potential.contaminant != "+")
+## generate a summarizedexperiment object using an experimental design --------
 
-## ----dimension----------------------------------------------------------------
-dim(data)
+library(SummarizedExperiment)
 
-## ----colnames-----------------------------------------------------------------
-colnames(data)
+#label,condition,replicate
+df <- as.data.table(dm,keep.rownames="name")
+make_se(df,columns,columns,expdesign)
 
-## ----unique-------------------------------------------------------------------
-# Are there any duplicated gene names?
-data$Gene.names %>% duplicated() %>% any()
+samples_df <- samples %>%
+	select(Sample,Genotype,Treatment,Fraction,Channel,Experiment) %>%
+	as.data.frame()
+samples_df$name <- samples$Sample
+samples_df$ID <- samples$Sample
+se <- SummarizedExperiment(assays=dm,colData=samples_df)
+data_diff <- test_diff(se, type = "control", control = "Ctrl")
 
-# Make a table of duplicated gene names
-data %>% group_by(Gene.names) %>% summarize(frequency = n()) %>%
-  arrange(desc(frequency)) %>% filter(frequency > 1)
-
-## ----unique_names-------------------------------------------------------------
-# Make unique names using the annotation in the "Gene.names" column as primary
-# names and the annotation in "Protein.IDs" as name for those that do not have
-# an gene name.
-data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
-
-# Are there any duplicated names?
-data$name %>% duplicated() %>% any()
-
-## ----expdesign, echo = FALSE--------------------------------------------------
-# Display experimental design
-knitr::kable(UbiLength_ExpDesign)
-
-## ----to_exprset---------------------------------------------------------------
-# Generate a SummarizedExperiment object using an experimental design
-LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
-experimental_design <- UbiLength_ExpDesign
-data_se <- make_se(data_unique, LFQ_columns, experimental_design)
-
-# Generate a SummarizedExperiment object by parsing condition information from the column names
-LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
-data_se_parsed <- make_se_parse(data_unique, LFQ_columns)
-
-# Let's have a look at the SummarizedExperiment object
-#data_se
-save(data_se,file="data_se.rda",version=2)
-
-quit()
+# Examine example data
+names(attributes(data_se))
+attr(data_se,"metadata") # empty
+attr(data_se,"NAMES") # gene names
+attr(data_se,"colData") # design matrix: label,ID,condition,replicate
+attr(data_se,"elementMetadata") # protein-wise meta data
+attr(data_se,"class") # SummarizedExperiment
+attr(data_se,"assays") # list length 1, matrix
 
 
-## ----plot_data_noFilt, fig.width = 4, fig.height = 4--------------------------
-# Plot a barplot of the protein identification overlap between samples
+## ----plot_data_nofilt, fig.width = 4, fig.height = 4--------------------------
+# plot a barplot of the protein identification overlap between samples
 plot_frequency(data_se)
 
 ## ----filter_missval-----------------------------------------------------------
-# Filter for proteins that are identified in all replicates of at least one condition
+# filter for proteins that are identified in all replicates of at least one
+# condition
 data_filt <- filter_missval(data_se, thr = 0)
 
 # Less stringent filtering:
-# Filter for proteins that are identified in 2 out of 3 replicates of at least one condition
+# Filter for proteins that are identified in 2 out of 3 replicates of at least
+# one condition
 data_filt2 <- filter_missval(data_se, thr = 1)
 
 ## ----plot_data, fig.width = 4, fig.height = 4---------------------------------
@@ -108,7 +102,8 @@ plot_coverage(data_filt)
 data_norm <- normalize_vsn(data_filt)
 
 ## ----plot_norm, fig.width = 4, fig.height = 5---------------------------------
-# Visualize normalization by boxplots for all samples before and after normalization
+# Visualize normalization by boxplots for all samples before and after
+# normalization
 plot_normalization(data_filt, data_norm)
 
 ## ----plot_missval, fig.height = 4, fig.width = 3------------------------------
@@ -123,10 +118,12 @@ plot_detect(data_filt)
 # All possible imputation methods are printed in an error, if an invalid function name is given.
 impute(data_norm, fun = "")
 
-# Impute missing data using random draws from a Gaussian distribution centered around a minimal value (for MNAR)
+# Impute missing data using random draws from a Gaussian distribution centered
+# around a minimal value (for MNAR)
 data_imp <- impute(data_norm, fun = "MinProb", q = 0.01)
 
-# Impute missing data using random draws from a manually defined left-shifted Gaussian distribution (for MNAR)
+# Impute missing data using random draws from a manually defined left-shifted
+# Gaussian distribution (for MNAR)
 data_imp_man <- impute(data_norm, fun = "man", shift = 1.8, scale = 0.3)
 
 # Impute missing data using the k-nearest neighbour approach (for MAR)
@@ -138,10 +135,11 @@ data_imp_knn <- impute(data_norm, fun = "knn", rowmax = 0.9)
 plot_imputation(data_norm, data_imp)
 
 ## ----statistics---------------------------------------------------------------
-# Differential enrichment analysis  based on linear models and empherical Bayes statistics
+# Differential enrichment analysis  based on linear models and empherical Bayes
+# statistics
 
 # Test every sample versus control
-data_diff <- test_diff(data_imp, type = "control", control = "Ctrl")
+data_diff <- test_diff(se, type = "control", control = "Ctrl")
 
 # Test all possible comparisons of samples
 data_diff_all_contrasts <- test_diff(data_imp, type = "all")
@@ -169,7 +167,8 @@ plot_heatmap(dep, type = "centered", kmeans = TRUE,
              indicate = c("condition", "replicate"))
 
 ## ----heatmap2, fig.height = 5, fig.width = 3----------------------------------
-# Plot a heatmap of all significant proteins (rows) and the tested contrasts (columns)
+# Plot a heatmap of all significant proteins (rows) and the tested contrasts
+# (columns)
 plot_heatmap(dep, type = "contrast", kmeans = TRUE,
              k = 6, col_limit = 10, show_row_names = FALSE)
 

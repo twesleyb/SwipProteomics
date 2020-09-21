@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
-title: Leidenalg Clustering 
-description: clustering the protein network with Leidenalg + Surprise 
+title: Leidenalg Clustering
+description: clustering the protein network with Leidenalg + Surprise
 authors: Tyler W A Bradshaw
 '''
 
@@ -13,11 +13,11 @@ max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
 optimization_method = 'Surprise'
-n_iterations = -1  # Not the number of recursive iterations, but the number 
+n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 ## Input data:
@@ -62,32 +62,32 @@ from Py.myfun import *
 # Leidenalg supports the following optimization methods:
 methods = {
         # Modularity
-        "Modularity": {'partition_type' : 'ModularityVertexPartition', 
+        "Modularity": {'partition_type' : 'ModularityVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : None, 'n_iterations' : n_iterations},
         # Surprise
-        "Surprise": {'partition_type' : 'SurpriseVertexPartition', 
+        "Surprise": {'partition_type' : 'SurpriseVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : None, 'n_iterations' : n_iterations},
         # RBConfiguration
-        "RBConfiguration": {'partition_type' : 'RBConfigurationVertexPartition', 
+        "RBConfiguration": {'partition_type' : 'RBConfigurationVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
         # RBER
-        "RBER": {'partition_type' : 'RBERVertexPartition', 
+        "RBER": {'partition_type' : 'RBERVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
         # CPM
-        "CPM": {'partition_type' : 'CPMVertexPartition', 
+        "CPM": {'partition_type' : 'CPMVertexPartition',
             'weights' : True, 'signed' : True,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
             'n_iterations' : n_iterations},
         # Significance
         # FIXME: Significance method doesn't seem to be working.
-        "Significance": 
-        {'partition_type' : 'SignificanceVertexPartition', 
+        "Significance":
+        {'partition_type' : 'SignificanceVertexPartition',
             'weights': None, 'signed' : False,
             'resolution_parameter' : None,
             'n_iterations' : n_iterations}
@@ -106,10 +106,10 @@ print("Performing Leidenalg clustering utilizing the {}".format(method),
 #---------------------------------------------------------------------
 
 # Load graph adjacency matrix.
-myfile = os.path.join(rdatdir,adjm_file) 
-adjm = read_csv(myfile, header = 0, index_col = 0) 
+myfile = os.path.join(rdatdir,adjm_file)
+adjm = read_csv(myfile, header = 0, index_col = 0)
 
-# Create igraph graph object and add to parameters dictionary. 
+# Create igraph graph object and add to parameters dictionary.
 # Note, this can take several minutes.
 if parameters.get('weights') is not None:
     # Create a weighted graph.
@@ -126,7 +126,7 @@ else:
 #--------------------------------------------------------------------
 
 # Update partition type parameter.
-# Dynamically load the partition_type class. 
+# Dynamically load the partition_type class.
 # This is the method to be used to optimize the clustering.
 parameters['partition_type'] = getattr(import_module('leidenalg'),method)
 
@@ -134,7 +134,7 @@ parameters['partition_type'] = getattr(import_module('leidenalg'),method)
 out = [key for key in parameters if parameters.get(key) is None]
 for key in out: del parameters[key]
 
-# Perform Leidenalg module detection. 
+# Perform Leidenalg module detection.
 if parameters.get('resolution_parameter') is None:
 
     # Single resolution methods + first iteration if recursive.
@@ -167,7 +167,7 @@ if parameters.get('resolution_parameter') is None:
 
         while any(too_big):
             # Perform clustering for any subgraphs that are too big.
-            idx = [i for i, too_big in enumerate(too_big) if too_big] 
+            idx = [i for i, too_big in enumerate(too_big) if too_big]
             parameters['graph'] = subgraphs.pop(idx[0])
             part = find_partition(**parameters)
             optimiser = Optimiser()
@@ -175,7 +175,7 @@ if parameters.get('resolution_parameter') is None:
             # Add to list.
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
-            
+
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
@@ -218,14 +218,14 @@ if recursive:
     myfile = os.path.join(rdatdir, output_name + "_initial_partition.csv")
     df.to_csv(myfile)
 
-# Collect partition results and save as csv. 
+# Collect partition results and save as csv.
 if len(profile) == 1:
     # Single resolution profile:
     results = {
             'Modularity' : [partition.modularity for partition in profile],
             'Membership' : [partition.membership for partition in profile],
             'Summary'    : [partition.summary() for partition in profile]}
-else: 
+else:
     # Multi-resolution profile:
     results = {
         'Modularity' : [partition.modularity for partition in profile],
