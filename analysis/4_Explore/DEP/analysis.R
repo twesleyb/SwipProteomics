@@ -69,10 +69,14 @@ stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
 # and 'replicate' information
 exp_design <- data.frame(
 			 label = samples$Sample,
-			 condition = interaction(samples$Treatment,
-						 samples$Fraction),
+			 condition = interaction(samples$Fraction,
+						 samples$Treatment),
 			 replicate = interaction(samples$Treatment,
-						 samples$Experiment)
+						 samples$Experiment),
+			 # you can include additional covariates:
+			 experiment = samples$Experiment,
+			 fraction = samples$Fraction,
+			 treatment = samples$Treatment
 			 )
 
 # check for required columns in input
@@ -92,25 +96,25 @@ prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
 
 # Normalize the data
 # FIXME: need this be done? does it hurt if it doesnt?
-#prot_norm <- normalize_vsn(prot_se)
-save(prot_norm,file="prot_norm.rda",version=2)
+prot_norm <- normalize_vsn(prot_se)
+#save(prot_norm,file="prot_norm.rda",version=2)
 
 # Protein-level analysis of differential abundance ----------------------------
 # Differential enrichment analysis  based on linear models and empherical Bayes
 # statistics
 
-# Test every sample versus control
-#data_diff <- test_diff(prot_norm, type = "control", control = "Control")
-
-# Test all possible comparisons of samples
-#data_diff_all_contrasts <- test_diff(prot_norm, type = "all")
-
 # Test manually defined comparisons
-data_diff <- test_diff(prot_se, type = "manual",
-                              test = c("Control.F5", "Mutant.F5"))
+all_contrasts <- sapply(unique(exp_design$fraction),
+		    paste,unique(exp_design$treatment),simplify=FALSE,sep=".")
+
+# loop to perform tests for every intra-fraction comparison
+results <- lapply(all_contrasts, function(comparison) {
+			  test_diff(prot_se, type = "manual",
+				    test = comparison) })
+		    
 
 # Denote significant proteins based on user defined cutoffs
-dep <- add_rejections(data_diff, alpha = 0.05, lfc = log2(1.5))
+dep_results <- lapply(results,add_rejections, alpha = 0.05)
 
 # Plot the first and second principal components
 # FIXME: WARNING Message
@@ -124,18 +128,17 @@ dep <- add_rejections(data_diff, alpha = 0.05, lfc = log2(1.5))
 ## results_table -----------------------------------------------------------
 
 # Generate a results table
-data_results <- get_results(dep)
+data_results <- lapply(dep_results,get_results)
 
-colnames(data_results)
+# Save as excel
+write_excel(data_results,"results.xlsx")
 
-sum(data_results$significant)
+# Significant proteins
+knitr::kable(sapply(data_results,function(x) sum(x$significant)))
 
 quit()
 
 #####################################################################
-
-
-
 
 data_diff <- test_diff(prot_se, type = "manual",
                               test = c("Control.F5", "Mutant.F5"))
