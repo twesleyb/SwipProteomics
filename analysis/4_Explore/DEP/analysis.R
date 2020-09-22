@@ -97,7 +97,6 @@ prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
 # Normalize the data
 # FIXME: need this be done? does it hurt if it doesnt?
 prot_norm <- normalize_vsn(prot_se)
-#save(prot_norm,file="prot_norm.rda",version=2)
 
 # Protein-level analysis of differential abundance ----------------------------
 # Differential enrichment analysis  based on linear models and empherical Bayes
@@ -131,7 +130,7 @@ dep_results <- lapply(results,add_rejections, alpha = 0.05)
 data_results <- lapply(dep_results,get_results)
 
 # Save as excel
-write_excel(data_results,"results.xlsx")
+write_excel(data_results,file.path(root,tables,"DEP_results.xlsx"))
 
 # Significant proteins
 knitr::kable(sapply(data_results,function(x) sum(x$significant)))

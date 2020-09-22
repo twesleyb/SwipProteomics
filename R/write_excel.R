@@ -26,6 +26,11 @@
 #' @export
 
 write_excel <- function(data, file, rowNames = FALSE, colNames = TRUE, ...) {
+  # imports
+  suppressPackageStartupMessages({
+				 require(openxlsx)
+  })
+  # check that input data is a list
   if (class(data) == "list") {
     list <- data
   } else {
@@ -36,13 +41,14 @@ write_excel <- function(data, file, rowNames = FALSE, colNames = TRUE, ...) {
   if (is.null(names(list))) {
     names(list) <- paste("Sheet", c(1:length(list)))
   }
-  wb <- createWorkbook()
+  wb <- openxlsx::createWorkbook()
   # Loop to add a worksheets:
   for (i in 1:length(list)) {
     df <- as.data.frame(list[[i]])
-    addWorksheet(wb, sheetName = names(list[i]))
-    writeData(wb, sheet = i, df, rowNames = rowNames, colNames = colNames, ...)
+    openxlsx::addWorksheet(wb, sheetName = names(list[i]))
+    openxlsx::writeData(wb, sheet = i, df, 
+			rowNames = rowNames, colNames = colNames, ...)
   }
   # Save workbook.
-  saveWorkbook(wb, file, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb, file, overwrite = TRUE)
 }
