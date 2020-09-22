@@ -37,13 +37,15 @@ if (gene_map$uniprot[idx] == "Q80WG5") {
 #load("data_se.rda")
 
 # cast tidy data into a data.table
-prot_df <- swip_tmt %>% dcast(Accession ~ Sample,value.var = "Intensity") 
+# NOTE: do not log transform the data
+prot_df <- swip_tmt %>% 
+	dcast(Accession ~ Sample,value.var = "Intensity") %>% 
+	as.matrix(rownames="Accession") %>% # coerce to matrix
+	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
 
 # protein data.frame should contain unique protein IDs in 'ID' column
-prot_df$ID <- prot_df$Accession
-
 # check for duplicates
-stopifnot(!any(duplicated(prot_df$IDs))) # there should be no duplicate IDs
+stopifnot(!any(duplicated(prot_df$ID))) # there should be no duplicate IDs
 
 # check for NA
 stopifnot(!any(is.na(prot_df$ID))) # there should be no NA
@@ -89,7 +91,9 @@ prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
 #Execution halted
 
 # Normalize the data
-prot_norm <- normalize_vsn(prot_se)
+# FIXME: need this be done? does it hurt if it doesnt?
+#prot_norm <- normalize_vsn(prot_se)
+save(prot_norm,file="prot_norm.rda",version=2)
 
 # Protein-level analysis of differential abundance ----------------------------
 # Differential enrichment analysis  based on linear models and empherical Bayes
@@ -102,7 +106,7 @@ prot_norm <- normalize_vsn(prot_se)
 #data_diff_all_contrasts <- test_diff(prot_norm, type = "all")
 
 # Test manually defined comparisons
-data_diff <- test_diff(prot_norm, type = "manual",
+data_diff <- test_diff(prot_se, type = "manual",
                               test = c("Control.F5", "Mutant.F5"))
 
 # Denote significant proteins based on user defined cutoffs
@@ -121,3 +125,17 @@ dep <- add_rejections(data_diff, alpha = 0.05, lfc = log2(1.5))
 
 # Generate a results table
 data_results <- get_results(dep)
+
+colnames(data_results)
+
+sum(data_results$significant)
+
+quit()
+
+#####################################################################
+
+
+
+
+data_diff <- test_diff(prot_se, type = "manual",
+                              test = c("Control.F5", "Mutant.F5"))
