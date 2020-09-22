@@ -30,13 +30,9 @@ library("dplyr")
 # The data is provided with the package
 data <- UbiLength
 
-<<<<<<< HEAD
 # We filter for contaminant proteins and decoy database hits, which are
 # indicated by "+" in the columns "Potential.contaminants" and "Reverse",
 # respectively. 
-=======
-# We filter for contaminant proteins and decoy database hits, which are indicated by "+" in the columns "Potential.contaminants" and "Reverse", respectively.
->>>>>>> 0f3e47ab5014d57833c1cf2d4909c5f6e7153c61
 data <- filter(data, Reverse != "+", Potential.contaminant != "+")
 
 ## ----dimension----------------------------------------------------------------

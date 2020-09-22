@@ -25,12 +25,11 @@ Exp3: Fraction 1-7 [1x WT3, 1x MUT3, 2x SPQC3]
 
 
 
-
-
 #### MSstats Protein-wise model:
 lmerTest utilizes lmer and lme4
 
-
+full model:
+lmerTest::lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group + (1|Subject:Group:Mixture), data = data)
 * Documentation should include 'Charge' as this column is also required.
 Minor, but item 'Protein', should be 'ProteinName'.
 
