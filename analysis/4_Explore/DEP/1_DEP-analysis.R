@@ -58,7 +58,13 @@ data(swip_tmt)
 data(samples)
 data(gene_map)
 
+levels(samples$Fraction) <- c("F4","F5","F6","F7","F8","F9","F10")
+samples %>% select(Sample,Experiment,Channel,Treatment,Fraction) %>% 
+	arrange(Experiment,Treatment) %>% knitr::kable()
 
+
+
+quit()
 ## fix gene_map ---------------------------------------------------------------
 
 # fix missing gene name in gene_map
