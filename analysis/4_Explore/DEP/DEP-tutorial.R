@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 
-renv::load("~/projects/SwipProteomics") # renv::load(PROJECT) # script to set PROJECT ENV variable when in project tree?
+# renv::load(PROJECT) # script to set PROJECT ENV variable when in project tree?
+root <- "~/projects/SwipProteomics"
+renv::load(root) 
 
 ## ----required packages, echo = FALSE, warning=FALSE, results="hide"-----------
 suppressPackageStartupMessages({
@@ -56,7 +58,6 @@ data %>% group_by(Gene.names) %>% summarize(frequency = n()) %>%
 # names and the annotation in "Protein.IDs" as name for those that do not have
 # an gene name.
 data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
-save(data_unique,file="data_unique.rda",version=2)
 
 # Are there any duplicated names?
 data$name %>% duplicated() %>% any()
@@ -64,24 +65,25 @@ data$name %>% duplicated() %>% any()
 ## ----expdesign, echo = FALSE--------------------------------------------------
 # Display experimental design
 knitr::kable(UbiLength_ExpDesign)
-save(UbiLength_ExpDesign,file="UbiLength_ExpDesign.rda",version=2)
+exp_design <- UbiLength_ExpDesign
+
+# save exp_design
+save(exp_design,file=file.path(root,"data","exp_design.rda"),version=2)
 
 ## ----to_exprset---------------------------------------------------------------
 # Generate a SummarizedExperiment object using an experimental design
 LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
 experimental_design <- UbiLength_ExpDesign
 data_se <- make_se(data_unique, LFQ_columns, experimental_design)
-save(data_se,file="data_se.rda",version=2)
+#save(data_se,file="data_se.rda",version=2)
 
 # Generate a SummarizedExperiment object by parsing condition information from the column names
 LFQ_columns <- grep("LFQ.", colnames(data_unique)) # get LFQ column numbers
 data_se_parsed <- make_se_parse(data_unique, LFQ_columns)
-save(data_se_parsed,file="data_se_parsed.rda",version=2)
+#save(data_se_parsed,file="data_se_parsed.rda",version=2)
 
 # Let's have a look at the SummarizedExperiment object
 data_se
-
-quit()
 
 ## ----plot_data_noFilt, fig.width = 4, fig.height = 4--------------------------
 # Plot a barplot of the protein identification overlap between samples
@@ -121,7 +123,7 @@ plot_detect(data_filt)
 
 ## ----impute, results = "hide", message = FALSE, warning = FALSE, error = TRUE----
 # All possible imputation methods are printed in an error, if an invalid function name is given.
-impute(data_norm, fun = "")
+#impute(data_norm, fun = "")
 
 # Impute missing data using random draws from a Gaussian distribution centered around a minimal value (for MNAR)
 data_imp <- impute(data_norm, fun = "MinProb", q = 0.01)
@@ -139,6 +141,10 @@ plot_imputation(data_norm, data_imp)
 
 ## ----statistics---------------------------------------------------------------
 # Differential enrichment analysis  based on linear models and empherical Bayes statistics
+data_se <- data_imp
+save(data_se,file=file.path(root,"data","DEP_se.rda"),version=2)
+
+quit()
 
 # Test every sample versus control
 data_diff <- test_diff(data_imp, type = "control", control = "Ctrl")
