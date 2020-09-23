@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
-# title:
-# description:
+# title: SwipProteomics
+# description: analysis of intra-fraction differential abundance with DEP
 # author: twab <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 
@@ -10,7 +10,7 @@
 ROOT <- "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
-FDR_alpha <- 0.05
+FDR_alpha <- 0.05 # BH significance threshold for protein DA
 
 ## FUNCTIONS -----------------------------------------------------------------
 
@@ -20,14 +20,23 @@ fix_colname <- function(df,old_colname,new_colname) {
 	return(df)
 }
 
+
+mkdir <- function(...) {
+	# create a new directory
+	newdir <- file.path(...)
+	if (!dir.exists(newdir)) { 
+		dir.create(newdir)
+		message(paste("created",newdir))
+	}
+}
+
+
 ## Prepare the working environment ----------------------------------------------
 
 # directory for output tables:
-tabsdir <- file.path(ROOT,"tables")
-if (!dir.exists(tabsdir)) { 
-	dir.create(tabsdir)
-	message(paste("created",figsdir))
-}
+tabsdir <- file.path(ROOT,"tables"); mkdir(tabsdir)
+datadir <- file.path(ROOT,"data"); mkdir(datadir)
+
 
 ## Prepare the R environment ---------------------------------------------------
 
@@ -82,8 +91,8 @@ prot_df$name <- gene_map$symbol[match(prot_df$ID,gene_map$uniprot)]
 # check for NA
 stopifnot(!any(is.na(prot_df$name))) # there should be no NA
 
-# multiple Uniprot Accession IDs may be mapped to the same gene Symbol.
-# if any duplicated, make names unique by annotating with # using make.unique
+# Multiple Uniprot Accession IDs may be mapped to the same gene Symbol.
+# If any duplicated, make names unique base::make.unique.
 prot_df$name <- make.unique(prot_df$name,sep="-")
 
 # check for duplicates
@@ -178,8 +187,27 @@ data_results <- lapply(data_results, fix_colname,"name","Symbol")
 data_results <- lapply(data_results, fix_colname,"ID","Accession")
 
 # FIXME: centered calculation is not working, all NA
+# drop these columns
 drop_cols <- function(df) { return(df[,!grepl("_centered",colnames(df))]) }
 data_results <- lapply(data_results,drop_cols)
+
+# define a function that reorganizes the data
+reorganize_cols <- function(df) {
+  idy <- sapply(c("Accession","Symbol","ratio","p.val","p.adj"),grep,colnames(df))
+  return(df %>% select(all_of(idy)))
+}
+
+# reorganize columns
+data_results <- lapply(data_results,reorganize_cols)
+
+# FIXME: change sign of logfc manually or by altering contrasts/design above
+
+# combine results into single df
+dep_df <- bind_rows(data_results,.id="Fraction")
+
+# annotate with Entrez ids
+idx <- match(dep_df$Accession,gene_map$uniprot)
+dep_df <- tibble::add_column(dep_df,Entrez=gene_map$entrez[idx],.after="Symbol")
 
 
 ## save any output ------------------------------------------------------------
@@ -189,4 +217,16 @@ myfile <- file.path(tabsdir,"DEP_results.xlsx")
 write_excel(data_results,myfile)
 message(paste("\nSaved",myfile))
 
-# DONE
+# save DEP results as tidy df
+myfile <- file.path(datadir,"swip_dep.rda")
+swip_dep <- dep_df
+save(swip_dep,file=myfile,version=2)
+message(paste("\nSaved",myfile))
+
+# save se objects
+myfile <- file.path(datadir,"se_list.rda")
+se_list <- dep_results 
+save(se_list,file=myfile,version=2)
+message(paste("\nSaved",myfile))
+
+# DONE!
