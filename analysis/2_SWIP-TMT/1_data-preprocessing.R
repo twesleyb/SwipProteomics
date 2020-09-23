@@ -680,6 +680,7 @@ myfile <- file.path(rdatdir,"tidy_peptide.csv")
 fwrite(tidy_peptide,myfile)
 
 # Save raw peptide data for analysis with MSstats or other workflows.
+# NOTE: fsize == 99 mb, too big to put in data; save in root/Rdata
 myfile <- file.path(rdatdir,"tidy_peptide.rda")
 save(tidy_peptide,file=myfile,version=2)
 
