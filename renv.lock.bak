@@ -523,6 +523,13 @@
       "Repository": "CRAN",
       "Hash": "89cf4b8207269ccf82fbeb6473fd662b"
     },
+    "colorRamps": {
+      "Package": "colorRamps",
+      "Version": "2.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c370deb506aefb49528f085124fbb825"
+    },
     "colorspace": {
       "Package": "colorspace",
       "Version": "1.4-1",
@@ -1275,6 +1282,19 @@
       "Repository": "CRAN",
       "Hash": "9b9b5322c83ee21db73c8ba3787897ca"
     },
+    "org.Mm.eg.db": {
+      "Package": "org.Mm.eg.db",
+      "Version": "3.11.4",
+      "Source": "Bioconductor",
+      "Hash": "133273535e42fadf1d244ef36e372811"
+    },
+    "pbkrtest": {
+      "Package": "pbkrtest",
+      "Version": "0.4-8.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d547eab65958fc4f5d68ad0adfacfcf4"
+    },
     "pcaMethods": {
       "Package": "pcaMethods",
       "Version": "1.80.0",
@@ -1684,6 +1704,12 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "4a5081acfb7b81a572e4384a7aaf2af1"
+    },
+    "variancePartition": {
+      "Package": "variancePartition",
+      "Version": "1.18.3",
+      "Source": "Bioconductor",
+      "Hash": "f305ec75b4db4c6c0cb9ef565c712b1b"
     },
     "vctrs": {
       "Package": "vctrs",
