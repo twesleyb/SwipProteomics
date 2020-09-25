@@ -12,6 +12,7 @@ docs/notes/
 *.swn
 *.report
 renv.lock
+docs/review/
 
 ## ignore user's bin
 bin/

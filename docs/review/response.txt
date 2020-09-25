@@ -1,7 +1,0 @@
-lme4 book chapter 1
-we utilized a mixed-effects models to 
-describe a response vaiable (protein abundance) and some of the covariates that
-have been measured
-mixed-effects models at least one of the covariates is a categorical covariate
-representing experimentaal or observational "units" in the data set. This is
-proteins in a module.

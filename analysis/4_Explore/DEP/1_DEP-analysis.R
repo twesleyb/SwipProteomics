@@ -6,7 +6,7 @@
 # os: windows linux subsystem (WSL)
 
 ## INPUT ----------------------------------------------------------------------
-# specify projject's root directory
+# specify project's root directory
 ROOT <- "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
@@ -63,8 +63,6 @@ samples %>% select(Sample,Experiment,Channel,Treatment,Fraction) %>%
 	arrange(Experiment,Treatment) %>% knitr::kable()
 
 
-
-quit()
 ## fix gene_map ---------------------------------------------------------------
 
 # fix missing gene name in gene_map
