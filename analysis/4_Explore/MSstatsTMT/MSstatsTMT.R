@@ -1,0 +1,331 @@
+#!/usr/bin/env Rscript
+
+#' ---	
+#' title: MSstatsTMT 
+#' A package for analysis of significance in shotgun mass spectrometry-based
+#' proteomic experiments with tandem mass tag (TMT) labeling"	
+#' author: "Ting Huang (<thuang0703@gmail.com>), Meena Choi
+#' (<mnchoi67@gmail.com>), Sicheng Hao (<hao.sic@husky.neu.edu>), Olga
+#' Vitek(<o.vitek@northeastern.edu>)"	
+#' ---	
+
+#' This vignette summarizes the introduction and various options of all
+#' functionalities in MSstatsTMT. 	
+
+#' MSstatsTMT includes the following three steps for statistical testing: 	
+
+#' 1. Converters for different peptide quantification tools to get the input
+#' with required format: `PDtoMSstatsTMTFormat`, `MaxQtoMSstatsTMTFormat`,
+#' `SpectroMinetoMSstatsTMTFormat` and `OpenMStoMSstatsTMTFormat`.	
+#' 2. Protein summarization based on peptide quantification data:
+#' `proteinSummarization`	
+#' 3. Group comparison on protein quantification data:  `groupComparisonTMT`	
+
+## functions ------------------------------------------------------------------
+
+getrd <- function(here=getwd(), dpat= ".git") {
+	# get the repository's root directory
+	in_root <- function(h=here, dir=dpat) {
+		check <- any(grepl(dir,list.dirs(h,recursive=FALSE)))
+		return(check)
+	}
+	# Loop to find root.
+	while (!in_root(here)) {
+		here <- dirname(here)
+	}
+	root <- here
+	return(root)
+}
+
+
+knit_str <- function(robject) {
+	# a helper function to remove repeating whitespace
+	removews <- function(string){
+		return(gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", string, perl=TRUE))
+	}
+	# caputure output of str
+	raw <- capture.output(str(robject))
+	# init a data.frame that will contain info summarizing the robject
+	df <- data.frame("Summary" = gsub("\t", " ",raw[1])) # remove tabs
+	# parse variable names
+	var_namen <- trimws({
+		gsub("\\$","",sapply(strsplit(raw[2:length(raw)],":"),"[",1)) })
+	# parse descriptions of the variables
+	vars <- trimws({
+		gsub("\\$","",sapply(strsplit(raw[2:length(raw)],":"),"[",2)) })
+	# remove trailing ... and truncate to 60 characters
+	clean_vars <- substr(trimws(gsub("\\...|,.."," ",vars)),1,60)
+	res <- cbind(df,data.frame(setNames(as.list(clean_vars),nm=var_namen)))
+	# pretty print the result
+	knitr::kable(t(res),col.names="")
+}
+
+## PDtoMSstatsTMTFormat --------------------------------------------------------
+
+#' ## 1. Converters for different peptide quantification tools	
+ 	
+#' ### PDtoMSstatsTMTFormat()	
+
+#' Preprocess PSM data from Proteome Discoverer and convert into the required
+#' input format for MSstatsTMT.	
+
+#' #### Example	
+
+root <- getrd()
+renv::load(root)
+
+library(MSstatsTMT)	
+
+# read in PD PSM sheet	
+# raw.pd <- read.delim("161117_SILAC_HeLa_UPS1_TMT10_5Mixtures_3TechRep_UPSdB_Multiconsensus_PD22_Intensity_PSMs.txt")	
+data(raw.pd)
+knit_str(raw.pd)
+	
+# Read in annotation including condition and biological replicates per run and channel.	
+# Users should make this annotation file. It is not the output from Proteome Discoverer.	
+# annotation.pd <- read.csv(file="PD_Annotation.csv", header=TRUE)	
+data(annotation.pd)
+knit_str(annotation.pd)	
+	
+# do not remove PSM with missing values within one run	
+input.pd <- PDtoMSstatsTMTFormat(raw.pd, annotation.pd)	
+knit_str(input.pd)
+
+# remove PSM with missing values within one run	
+input.pd.no.miss <- PDtoMSstatsTMTFormat(raw.pd, annotation.pd,	
+                                 rmPSM_withMissing_withinRun = TRUE)	
+head(input.pd.no.miss)	
+#' 	
+#' 	
+#' ### MaxQtoMSstatsTMTFormat()	
+#' 	
+#' Preprocess PSM-level data from MaxQuant and convert into the required input format for MSstatsTMT.	
+#' 	
+#' 	
+#' #### Arguments	
+#' 	
+#' * `evidence` : name of `evidence.txt` data, which includes PSM-level data.	
+#' * `proteinGroups` : name of `proteinGroups.txt` data, which contains the detailed information of protein identifications.	
+#' * `annotation` : data frame which contains column `Run`, `Fraction`, `TechRepMixture`, `Channel`, `Condition`, `BioReplicate`, `Mixture`.	
+#' * `which.proteinid` : Use `Proteins`(default) column for protein name. `Leading.proteins` or `Leading.razor.proteins` can be used instead. However, those can potentially have the shared peptides.	
+#' * `rmProt_Only.identified.by.site` : TRUE will remove proteins with '+' in 'Only.identified.by.site' column from proteinGroups.txt, which was identified only by a modification site. FALSE is the default.	
+#' * `useUniquePeptide` : TRUE(default) removes peptides that are assigned for more than one proteins. We assume to use unique peptide for each protein.	
+#' * `rmPSM_withMissing_withinRun` : TRUE will remove PSM with any missing value within each Run. Default is FALSE.	
+#' * `rmPSM_withfewMea_withinRun` : only for rmPSM_withMissing_withinRun = FALSE. TRUE(default) will remove the features that have 1 or 2 measurements within each Run.	
+#' * `removeProtein_with1Peptide` : TRUE will remove the proteins which have only 1 peptide and charge. Default is FALSE.	
+#' * `summaryforMultipleRows` : sum(default) or max - when there are multiple measurements for certain PSM in certain run, select the PSM with the largest summation or maximal value.	
+#' 	
+#' 	
+#' #### Example	
+#' 	
+# Read in MaxQuant files	
+# proteinGroups <- read.table("proteinGroups.txt", sep="\t", header=TRUE)	
+	
+# evidence <- read.table("evidence.txt", sep="\t", header=TRUE)	
+	
+# Users should make this annotation file. It is not the output from MaxQuant.	
+# annotation.mq <- read.csv(file="MQ_Annotation.csv", header=TRUE)	
+	
+#input.mq <- MaxQtoMSstatsTMTFormat(evidence, proteinGroups, annotation.mq)	
+#head(input.mq)	
+#' 	
+#' 	
+#' ### SpectroMinetoMSstatsTMTFormat()	
+#' 	
+#' Preprocess PSM data from SpectroMine and convert into the required input format for MSstatsTMT.	
+#' 	
+#' 	
+#' #### Arguments	
+#' 	
+#' * `input` : data name of SpectroMine PSM output. Read PSM sheet.	
+#' * `annotation` : data frame which contains column `Run`, `Fraction`, `TechRepMixture`, `Channel`, `Condition`, `BioReplicate`, `Mixture`.	
+#' * `filter_with_Qvalue` : TRUE(default) will filter out the intensities that have greater than qvalue_cutoff in EG.Qvalue column. Those intensities will be replaced with NA and will be considered as censored missing values for imputation purpose.	
+#' * `qvalue_cutoff` : Cutoff for EG.Qvalue. default is 0.01.	
+#' * `useUniquePeptide` : TRUE(default) removes peptides that are assigned for more than one proteins. We assume to use unique peptide for each protein.	
+#' * `rmPSM_withMissing_withinRun` : TRUE will remove PSM with any missing value within each Run. Default is FALSE.	
+#' * `rmPSM_withfewMea_withinRun` : only for `rmPSM_withMissing_withinRun = FALSE`. TRUE(default) will remove the features that have 1 or 2 measurements within each Run.	
+#' * `removeProtein_with1Peptide` : TRUE will remove the proteins which have only 1 peptide and charge. Default is FALSE.	
+#' * `summaryforMultipleRows` : sum(default) or max - when there are multiple measurements for certain PSM in certain run, select the PSM with the largest summation or maximal value.	
+#' * `remove_norm_channel` : TRUE(default) removes `Norm` channels from protein level data.	
+#' * `remove_empty_channel` : TRUE(default) removes `Empty` channels from protein level data.	
+#' 	
+#' 	
+#' #### Example	
+#' 	
+# Read in SpectroMine PSM report	
+# raw.mine <- read.csv('20180831_095547_CID-OT-MS3-Short_PSM Report_20180831_103118.xls', sep="\t")	
+	
+# Users should make this annotation file. It is not the output from SpectroMine	
+# annotation.mine <- read.csv(file="Mine_Annotation.csv", header=TRUE)	
+	
+#input.mine <- SpectroMinetoMSstatsTMTFormat(raw.mine, annotation.mine)	
+#head(input.mine)	
+#' 	
+#' 	
+#' ### OpenMStoMSstatsTMTFormat()	
+#' 	
+#' Preprocess MSstatsTMT report from OpenMS and convert into the required input format for MSstatsTMT.	
+#' 	
+#' 	
+#' #### Arguments	
+#' 	
+#' * `input`: data name of MSstatsTMT report from OpenMS. Read csv file.	
+#' * `useUniquePeptide` : TRUE(default) removes peptides that are assigned for more than one proteins. We assume to use unique peptide for each protein.	
+#' * `rmPSM_withMissing_withinRun` : TRUE will remove PSM with any missing value within each Run. Default is FALSE.	
+#' * `rmPSM_withfewMea_withinRun` : only for rmPSM_withMissing_withinRun = FALSE. TRUE(default) will remove the features that have 1 or 2 measurements within each Run.	
+#' * `removeProtein_with1Peptide` : TRUE will remove the proteins which have only 1 peptide and charge. Default is FALSE.	
+#' * `summaryforMultipleRows` : sum(default) or max - when there are multiple measurements for certain PSM in certain run, select the PSM with the largest summation or maximal value.	
+#' 	
+#' #### Example	
+#' 	
+# read in MSstatsTMT report from OpenMS	
+# raw.om <- read.csv("OpenMS_20200222/20200225_MSstatsTMT_OpenMS_Export.csv")	
+#head(raw.om)	
+	
+# the function only requries one input file	
+#input.om <- OpenMStoMSstatsTMTFormat(raw.om)	
+#head(input.om)	
+#' 	
+#' 	
+#' ## 2. Protein summarization, normalization and visualization	
+#' 	
+#' ### 2.1. proteinSummarization()	
+#' 	
+#' Global median normalization is first applied to peptide level quantification data (equalizing the medians across all the channels and MS runs). Protein-level summarization from peptide level quantification should be performed before testing differentially abundant proteins. Then, normalization between MS runs using normalization channels will be implemented. In particular, protein summarization method `MSstats` assumes missing values are censored and then imputes the missing values before summarizing peptide level data into protein level data. Other methods, including `MedianPolish`, `Median` and `LogSum`, do not impute missing values.	
+#' 	
+#' #### Arguments	
+#' 	
+#' * `data` : Name of the output of PDtoMSstatsTMTFormat function or peptide-level quantified data from other tools. It should have columns named `Protein`, `PSM`, `TechRepMixture`, `Mixture`, `Run`, `Channel`, `Condition`, `BioReplicate`, `Intensity`.	
+#' * `method` : Four different summarization methods to protein-level can be performed : `msstats`(default), `MedianPolish`, `Median`, `LogSum`.	
+#' * `global_norm` :  Global median normalization on peptide level data (equalizing the medians across all the channels and MS runs). Default is TRUE. It will be performed before protein-level summarization.	
+#' * `reference_norm` :  Reference channel based normalization between MS runs. TRUE(default) needs at least one reference channel in each MS run, annotated by `Norm` in Condtion column. It will be performed after protein-level summarization. FALSE will not perform this normalization step. If data only has one run, then reference_norm=FALSE.	
+#' * `remove_norm_channel` :  TRUE(default) removes `Norm` channels from protein level data.	
+#' * `remove_empty_channel` :  TRUE(default) removes `Empty` channels from protein level data.	
+#' * `MBimpute` : only for `method = "msstats"`. TRUE (default) imputes missing values by Accelated failure model. FALSE uses minimum value to impute the missing value for each peptide precursor ion.	
+#' * `maxQuantileforCensored` : We assume missing values are censored. `maxQuantileforCensored` is Maximum quantile for deciding censored missing value, for instance, 0.999. Default is Null.	
+#' 	
+#' #### Example	
+#' 	
+# use MSstats for protein summarization	
+quant.msstats <- proteinSummarization(input.pd,	
+                                      method="msstats",	
+                                      global_norm=TRUE,	
+                                      reference_norm=TRUE,	
+                                      remove_norm_channel = TRUE,	
+                                      remove_empty_channel = TRUE)	
+knit_str(quant.msstats)	
+fwrite(quant.msstats,"msstats_protein.csv")
+
+quit()
+	
+# use Median for protein summarization	
+# since median method doesn't impute missing values, 	
+# we need to use the input data without missing values	
+quant.median <- proteinSummarization(input.pd.no.miss,	
+                                     method="Median",	
+                                     global_norm=TRUE,	
+                                     reference_norm=TRUE,	
+                                     remove_norm_channel = TRUE,	
+                                     remove_empty_channel = TRUE)	
+	
+head(quant.median)	
+#' 	
+#' 	
+#' ### 2.2 dataProcessPlotsTMT()	
+#' 	
+#' Visualization for explanatory data analysis. To illustrate the quantitative data after data-preprocessing and quality control of TMT runs, dataProcessPlotsTMT takes the quantitative data from converter functions (`PDtoMSstatsTMTFormat`, `MQtoMSstatsTMTFormat` and `SpectroMinetoMSstatsTMTFormat`) and summarized data from function `proteinSummarization` as input. It generates two types of figures in pdf files as output :	
+#' 	
+#' (1) profile plot (specify "ProfilePlot" in option type), to identify the potential sources of variation for each protein;	
+#' 	
+#' (2) quality control plot (specify "QCPlot" in option type), to evaluate the systematic bias between MS runs.	
+#' 	
+#' 	
+#' #### Arguments	
+#' 	
+#' * `data.peptide` : name of the data with peptide-level, which can be the output of converter functions (`PDtoMSstatsTMTFormat`, `MQtoMSstatsTMTFormat` and `SpectroMinetoMSstatsTMTFormat`).	
+#' * `data.summarization` : name of the data with protein-level, which can be the output of `proteinSummarization` function.	
+#' * `type` : choice of visualization. "ProfilePlot" represents profile plot of log intensities across MS runs.	
+#' "QCPlot" represents quality control plot of log intensities across MS runs.	
+#' * `ylimUp` : upper limit for y-axis in the log scale.	
+#' FALSE(Default) for Profile Plot and QC Plot use the upper limit as rounded off maximum of log2(intensities) after normalization + 3.	
+#' * `ylimDown` : lower limit for y-axis in the log scale. FALSE(Default) for Profile Plot and QC Plot is 0.	
+#' * `x.axis.size` : size of x-axis labeling for "Run" and "channel" in Profile Plot and QC Plot.	
+#' * `y.axis.size` : size of y-axis labels. Default is 10.	
+#' * `text.size` : size of labels represented each condition at the top of graph in Profile Plot and QC plot. Default is 4.	
+#' * `text.angle` : angle of labels represented each condition at the top of graph in Profile Plot and QC plot. Default is 0.	
+#' * `legend.size` : size of legend above graph in Profile Plot. Default is 7.	
+#' * `dot.size.profile` : size of dots in profile plot. Default is 2.	
+#' * `ncol.guide` : number of columns for legends at the top of plot. Default is 5.	
+#' * `width` : width of the saved file. Default is 10.	
+#' * `height` : height of the saved file. Default is 10.	
+#' * `which.Protein` : Protein list to draw plots. List can be names of Proteins or order numbers of Proteins.	
+#' Default is "all", which generates all plots for each protein. For QC plot, "allonly" will generate one QC plot with all proteins.	
+#' * `originalPlot` : TRUE(default) draws original profile plots, without normalization.	
+#' * `summaryPlot` : TRUE(default) draws profile plots with protein summarization for each channel and MS run.	
+#' * `address` : the name of folder that will store the results. Default folder is the current working directory.	
+#' The other assigned folder has to be existed under the current working directory.	
+#' An output pdf file is automatically created with the default name of "ProfilePlot.pdf" or "QCplot.pdf".	
+#' The command address can help to specify where to store the file as well as how to modify the beginning of the file name.	
+#' If address=FALSE, plot will be not saved as pdf file but showed in window.	
+#' 	
+#' #### Example	
+#' 	
+## Profile plot without norm channnels and empty channels	
+dataProcessPlotsTMT(data.peptide = input.pd,	
+                     data.summarization = quant.msstats,	
+                     type = 'ProfilePlot',	
+                     width = 21, # adjust the figure width since there are 15 TMT runs.	
+                     height = 7)	
+	
+# ## Profile plot with all the channels	
+# quant.msstats.all <- proteinSummarization(input.pd,	
+#                                       method="msstats",	
+#                                       normalization=TRUE,	
+#                                       remove_norm_channel=FALSE,	
+#                                       remove_empty_channel=FALSE)	
+# 	
+# dataProcessPlotsTMT(data.peptide = input.pd,	
+#                      data.summarization = quant.msstats.all,	
+#                      type = 'ProfilePlot',	
+#                      width = 21, # adjust the figure width since there are 15 TMT runs.	
+#                      height = 7)	
+	
+## Quality control plot 	
+# dataProcessPlotsTMT(data.peptide=input.pd,	
+                     # data.summarization=quant.msstats, 	
+                     # type='QCPlot',	
+                     # width = 21, # adjust the figure width since there are 15 TMT runs. 	
+                     # height = 7)	
+#' 	
+#' 	
+#' ## 3. groupComparisonTMT()	
+#' 	
+#' Tests for significant changes in protein abundance across conditions based on a family of linear mixed-effects models in TMT experiment. Experimental design of case-control study (patients are not repeatedly measured) is automatically determined based on proper statistical model.	
+#' 	
+#' ### Arguments	
+#' 	
+#' * `data` : Name of the output of proteinSummarization function. It should have columns named `Protein`, `TechRepMixture`,  `Mixture`, `Run`, `Channel`, `Condition`, `BioReplicate`, `Abundance`.	
+#' * `contrast.matrix` : Comparison between conditions of interests. 1) default is `pairwise`, which compare all possible pairs between two conditions. 2) Otherwise, users can specify the comparisons of interest. Based on the levels of conditions, specify 1 or -1 to the conditions of interests and 0 otherwise. The levels of conditions are sorted alphabetically.	
+#' * `moderated` : If moderated = TRUE, then moderated t statistic will be calculated; otherwise, ordinary t statistic will be used.	
+#' * `adj.method` : adjusted method for multiple comparison. 'BH` is default.	
+#' * `remove_norm_channel` :  TRUE(default) removes `Norm` channels from protein level data.	
+#' * `remove_empty_channel` :  TRUE(default) removes `Empty` channels from protein level data.	
+#' 	
+#' ### Example	
+#' 	
+# test for all the possible pairs of conditions	
+test.pairwise <- groupComparisonTMT(quant.msstats)	
+head(test.pairwise)	
+	
+# Check the conditions in the protein data	
+levels(quant.msstats$Condition)	
+# Only compare condition 0.125 and 1	
+comparison<-matrix(c(-1,0,0,1),nrow=1)	
+# Set the names of each row	
+row.names(comparison)<-"1-0.125"	
+# Set the column names	
+colnames(comparison)<- c("0.125", "0.5", "0.667", "1")	
+comparison	
+	
+test.contrast <- groupComparisonTMT(data = quant.msstats, contrast.matrix = comparison)	
+head(test.contrast)	
