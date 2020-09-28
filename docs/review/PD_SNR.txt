@@ -1,0 +1,14 @@
+Because of ion statistical effects, measurements of intensities are more variable and therefore
+less accurate when the mass peaks arise from a smaller population of ions. When you perform
+precision quantification, you might want to filter out reporter peaks or spectra that have a
+variability that is too high because of ion statistical effects. However, with an Orbitrap
+analyzer, the intensity of a signal is not proportional to the number of ions corresponding to
+the signal. Instead, the number of ions is proportional to the S/N value of a peak
+(number_of_ions = 6  S/N for D30 Orbitraps, and number_of_ions = 4  S/N for D20
+Orbitraps).
+To filter reporter ion quantification input data that is detected from a number of ions that is
+too small, you use the signal-to-noise (S/N) values of the reporter ion peaks instead of their
+intensities to provide such a measurement when ions are acquired in the Orbitrap. You can
+use the settings of the Reporter Abundance Based On parameter of the Reporter Ions
+Quantifier node to select signal-to-noise intensity values. For information on this parameter,
+refer to the Help.

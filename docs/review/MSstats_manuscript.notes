@@ -1,0 +1,35 @@
+MSstatsTMT 
+
+It is based on a flexible family of linear
+mixed-effects models that handle complex patterns of technical artifacts and
+missing values. The approach is implemented in MSstatsTMT, a freely available
+open-source R/Bioconductor package compatible with data processing
+tools such as Proteome Discoverer, MaxQuant, OpenMS and SpectroMine. Evaluation
+on a controlled mixture, simulated datasets, and three biological investigations
+with diverse designs demonstrated that MSstatsTMT balanced the
+sensitivity and the specificity of detecting differentially abundant proteins,
+in particular in large-scale experiments
+with multiple biological mixtures.
+
+
+
+m = 1 Biological mixtures
+# each mixture contains samples from distinct biological subjects labeled with
+# isoobaric tags
+
+each mixture is 	profiled in t = 1 ... T Technical replicate mass spectrometry
+runs. therefore an eexperiment has  a total of M x T MS Runs.
+
+Mixture (m)
+Total Number of mixtures = M 
+TechnicalReplicates (t) of a mixture
+Run (R = M x T )
+
+M = mixture = Experiment = c(1,2,3) = 3
+T = Technical replicates = 1
+C = Condition = Treatment = c(Control, Mutant) = 2
+B = Biological replicates = Fraction = 7
+obs = 3 x 1 x 2 x 7 = 42 
+spqc = 2 * 3 = 6
+total = 48
+
