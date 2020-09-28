@@ -3,6 +3,7 @@ renv/
 rdata/
 ARCHIVE/
 figs/AI/
+sessionInfo.txt
 
 # project specific files to ignore
 *.swp
