@@ -9,8 +9,7 @@ docs/notes/
 sessionInfo.txt
 
 ## project specific files to ignore.
-*.swp
-*.swn
+*.sw*
 *.report
 renv.lock
 docs/review/

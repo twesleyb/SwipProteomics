@@ -1,23 +1,32 @@
-#!/usr/bin/env Rscript
+# MSstatsTMT code to perform protein-wise linear mixed modeling
 
-# description: MSstatsTMT code to perform protein-wise linear mixed modeling
-# NOTE: this code is not intended to be run.
+## lmerTest::lmer Models fit by MSstatsTMT:
+1. `lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group, data)`
 
-# Models fit by MSstatsTMT:
-fit <- fit_full_model_spikedin(sub_data)   # [1]
-fit <- fit_reduced_model_mulrun(sub_data)  # [2]
-fit <- fit_reduced_model_onerun(sub_data)  # [3]
-fit <- fit_full_model(sub_data)            # [4]
-fit <- fit_reduced_model_techrep(sub_data) # [5]
+2. `lmerAbundance ~ 1 + (1|Run) + Group, data)`
 
-# Formula for models fit by MSstatsTMT:
-# 1. Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group
-# 2. Abundance ~ 1 + (1|Run) + Group
-# 3. Abundance ~ 1 + Group
-# 4. Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMix) + Group + (1|Subject:Group:Mixture)
-# 5. Abundance ~ 1 + (1|Run) + Group + (1|Subjec:Group)
+3. `lmer(Abundance ~ 1 + Group, data)`
 
+4. `lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMix) + Group + (1|Subject:Group:Mixture), data)`
 
+5. `lmer(Abundance ~ 1 + (1|Run) + Group + (1|Subjec:Group), data)`
+
+#### lmer Variables
+> Mixture: Concatenation of TMT samples (a TMT experiment)
+> TechRepMixture: technical replicates of a mixture
+> Run: From annotation_dt, should match Spectrum.File in raw.pd. Therefore
+>    this cooresponds to the n Spectrum.Files in raw.pd. A MS analysis.
+> Group: ???
+> Subjec: ???
+
+## MSstatsTMT lmer wrappers:
+1. `fit <- fit_full_model_spikedin(sub_data)`
+2. `fit <- fit_reduced_model_mulrun(sub_data)`
+3. `fit <- fit_reduced_model_onerun(sub_data)`
+4. `fit <- fit_full_model(sub_data)`
+5. `fit <- fit_reduced_model_techrep(sub_data)`
+
+```R
 if (sub_singleSubject) {
   # if no biological variation within each condition and mixture
 
@@ -143,3 +152,4 @@ if (sub_singleSubject) {
 
 ## estimate variance and df from linear models
 # ... code goes on ...
+```
