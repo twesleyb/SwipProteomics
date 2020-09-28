@@ -6,8 +6,9 @@
 
 ## Input ----------------------------------------------------------------------
 # input data in root/rdata (too big for root/data as is)
-input_psm = "5359_PSM_Report.xlsx"
-input_samples = "5359_Samples.xlsx"
+#input_dir = "5359_PSM_Data.zip"
+input_psm = "rdata/5359_PSM_Report.xlsx"
+input_samples = "rdata/5359_Sample_Report.xlsx"
 
 
 # Prepare the R environment ---------------------------------------------------
@@ -19,45 +20,69 @@ renv::load(root,quiet=TRUE)
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
-	library(MSstatsTMT)
 	library(data.table)
+	library(MSstatsTMT)
 })
 
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
+## unzip the directory containing the raw data ---------------------------------
+
+# FIXME: todo
+
 
 # load sample data in root/rdata --------------------------------------
 
-# this excel spreadsheet was from Greg, exported from PD?
+# this excel spreadsheet was from Greg, exported from PD(?)
+myfile <- file.path(root,input_samples)
+
 # pass colnames to read_excel
 col_names <- c("Sample","Mixture","MS.Channel","drop",
 	       "Channel","Proteomics ID","ConditionFraction","Experiment")
-myfile <- file.path(root,"rdata",input_samples)
 samples <- readxl::read_excel(myfile,col_names=col_names)
 
+## read PSM data from excel ------------------------------------------------
+
+# read raw data, NOTE: this takes several minutes
+myfile <- file.path(root,input_psm)
+raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+
+
+## re-format sample annotations for MSstats -----------------------------------
 # Extract relevant annotations for MSstatsTMT
 # Format colums for MSstatsTMT
-f <- function(x) { # x = samples$ConditionFraction
+
+f1 <- function(x) { # x = samples$ConditionFraction
+	# extract sample 'Condition'
 	paste0("F",as.numeric(sapply(strsplit(x,"Control|Mutant|SPQC"),"[",2)))
 }
 
-samples$Fraction <- f(samples$ConditionFraction)
+f2 <- function(x) { # x = samples$ConditionFraction 
+	# extract sample 'Fraction'
+	sapply(strsplit(x,"[0-9]{1,2}"),"[",1)
+}
 
-	paste0("F",as.numeric(sapply(strsplit(samples$ConditionFraction,"Control|Mutant|SPQC"),"[",2)))
-samples$Condition <- sapply(strsplit(samples$ConditionFraction,"[0-9]{1,2}"),"[",1)
+# Munge ConditionFraction Column to Fraction and Condition cols
+samples$Fraction <- f1(samples$ConditionFraction)
+samples$Condition <- f2(samples$ConditionFraction)
 samples$ConditionFraction <- NULL
-samples$Condition[samples$Condition=="SPQC"] <- "Norm" # Channel for normalization!
+
+# Set the formatting of the channel for normalization for MSstats
+samples$Condition[samples$Condition=="SPQC"] <- "Norm" 
+
+# clean-up Mixtrure column 
 samples$Mixture <- gsub("F","M",samples$Mixture)
+
+# Remove un-needed col
 samples$drop <- NULL
-samples$BioReplicate <- paste0(samples$Condition,as.numeric(as.factor(samples$Experiment)))
+
+# FIXME: how should BioReplicate be defined?
+samples$BioReplicate <- paste0(samples$Condition,
+			       as.numeric(as.factor(samples$Experiment)))
 
 
-# read PSM data from excel ------------------------------------------------
-
-# read raw data, this takes several minutes
-myfile <- file.path(root,"rdata",input_psm)
-raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+## re-format PSM data for MSstatsTMT ---------------------------------------------
 
 # make columns look like MSstats by replacing special characters with '.'
 chars <- c(" ","\\[","\\]","\\:","\\(","\\)","\\/","\\+","\\#","\\-")
@@ -77,15 +102,16 @@ colnames(raw_pd) <- gsub("^\\.\\.","X..",colnames(raw_pd))
 all_files <- raw_pd$Spectrum.File
 exp_files <- lapply(split(all_files, sapply(strsplit(all_files,"_"),"[",1)),
 		    unique)
-files_dt <- data.table("Experiment ID" = rep(names(exp_files),times=sapply(exp_files,length)),
-	   "Run" = unlist(exp_files))
+files_dt <- data.table("Experiment ID" = rep(names(exp_files),
+					     times=sapply(exp_files,length)),
+	               "Run" = unlist(exp_files))
 
 # collect all MS.Channels, grouped by Experiment
 all_channels <- samples$MS.Channel
 exp_channels <- split(all_channels, sapply(strsplit(all_channels,"_"),"[",1))
 exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
-	   "MS.Channel" = unlist(exp_channels))
+	             "MS.Channel" = unlist(exp_channels))
 
 # use exp_channels to create numeric ID for MS Fraction
 exp_fraction_list <- lapply(exp_channels, function(x) {
@@ -117,42 +143,27 @@ annotation_dt$Subject <- samples$BioReplicate[idx]
 annotation_dt$Channel <- samples$Channel[idx]
 
 # how to handle repeated measures design? Subject.Fraction
-annotation_dt$BioReplicate <- as.character(interaction(samples$BioReplicate[idx],samples$Fraction[idx]))
+annotation_dt$BioReplicate <- as.character(interaction(samples$BioReplicate[idx],
+						       samples$Fraction[idx]))
 
 # whoops, fix norm#.F# -- should be just norm - the spqc sample
-annotation_dt$BioReplicate[grepl("norm",annotation_dt$BioReplicate)] <- "norm"
+annotation_dt$BioReplicate[grepl("norm",annotation_dt$BioReplicate)] <- "Norm"
 
 # Remove un-needed cols
 annotation_dt$"Experiment ID" <- NULL
 annotation_dt$"MS.Channel" <- NULL
 
-# knitr::kable(annotation_dt[c(1:16),])
-# |Run                                                              | Fraction| TechRepMixture|Mixture |Condition |Subject  |Channel |BioReplicate |
-# |:----------------------------------------------------------------|--------:|--------------:|:-------|:---------|:--------|:-------|:------------|
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        1|              1|M1      |Control   |Control1 |126     |Control1.F4  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        3|              1|M1      |Mutant    |Mutant1  |127N    |Mutant1.F4   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        2|              1|M1      |Control   |Control1 |127C    |Control1.F5  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        5|              1|M1      |Mutant    |Mutant1  |128N    |Mutant1.F5   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        4|              1|M1      |Control   |Control1 |128C    |Control1.F6  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        7|              1|M1      |Mutant    |Mutant1  |129N    |Mutant1.F6   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        6|              1|M1      |Control   |Control1 |129C    |Control1.F7  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        9|              1|M1      |Mutant    |Mutant1  |130N    |Mutant1.F7   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |        8|              1|M1      |Control   |Control1 |130C    |Control1.F8  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       11|              1|M1      |Mutant    |Mutant1  |131N    |Mutant1.F8   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       10|              1|M1      |Control   |Control1 |131C    |Control1.F9  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       13|              1|M1      |Mutant    |Mutant1  |132N    |Mutant1.F9   |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       12|              1|M1      |Control   |Control1 |132C    |Control1.F10 |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       15|              1|M1      |Mutant    |Mutant1  |133N    |Mutant1.F10  |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       14|              1|M1      |norm      |norm1    |133C    |norm         |
-# |ID53395_01_FAIMS_OTIT_FSN20357_5539_021120_F11.raw               |       16|              1|M1      |norm      |norm1    |134N    |norm         |
+# check the annotation file
+knitr::kable(annotation_dt[c(1:16),])
 
 # save to file
-myfile <- file.path(root,"rdata","annotation_dt")
+myfile <- file.path(root,"rdata","annotation_dt.rda")
 save(annotation_dt,file=myfile,version=2)
 message(paste("saved",myfile))
 
 ## coerce data to MSstats format ---------------------------------
 
+# NOTE: this takes a considerable amount of time
 data_pd <- PDtoMSstatsTMTFormat(raw_pd,annotation_dt)
 
 # ** Shared PSMs (assigned in multiple proteins) are removed.
@@ -175,24 +186,24 @@ message(paste("saved",myfile))
 # use MSstats for protein summarization	
 # Sample Summary does not look correct, should be 
 
-# FIXME: Joining, by = (Run, Channel )
+# NOTE: this takes a considerable amount of time
+# FIXME: Joining, by = ("Run", "Channel") # unexpected output
+# FIXME: remove extremely long message about normalization between runs
+# Normalization between MS runs for Protein : Q9DA08 ( 8525  of  8556 )
 data_prot <- proteinSummarization(data_pd,
 				  method="msstats",	
                                   global_norm=TRUE,	
                                   reference_norm=TRUE,	
-                                  remove_norm_channel = TRUE,	
-                                  remove_empty_channel = TRUE)	
+                                  remove_norm_channel = TRUE)
 
 # ** Protein-level summarization done by MSstats.
-# ** 'Norm' information in Condition is required for normalization.
-
 # There were 14 warnings
 # 1: In survreg.fit(X, Y, weights, offset, init = init, controlvals = control...
 # Ran out of iterations and did not converge
 # Please check it. At this moment, normalization is not performed.
 
 # save to file
-myfile <- file.path(root,"rdata","data_prot")
+myfile <- file.path(root,"rdata","data_prot.rda")
 save(data_prot,file=myfile,version=2)
 message(paste("saved",myfile))
 	
@@ -205,10 +216,6 @@ message(paste("saved",myfile))
 
 # test for all the possible pairs of conditions	
 all_results <- groupComparisonTMT(data_prot)	
-o
 
-# The linear models utilized by MSstats:
-# [1]
-
-
-
+# get boundary fit error from  lme... something is not correct with our design
+# or MSstats's interpretation of the design.
