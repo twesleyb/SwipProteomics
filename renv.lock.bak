@@ -237,6 +237,34 @@
       "Source": "Bioconductor",
       "Hash": "e52ac1fcc251078a192ded99741e5ca5"
     },
+    "R.cache": {
+      "Package": "R.cache",
+      "Version": "0.14.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1ca02d43e1a4d49e616bd23bb39b17e6"
+    },
+    "R.methodsS3": {
+      "Package": "R.methodsS3",
+      "Version": "1.8.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "4bf6453323755202d5909697b6f7c109"
+    },
+    "R.oo": {
+      "Package": "R.oo",
+      "Version": "1.24.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5709328352717e2f0a9c012be8a97554"
+    },
+    "R.utils": {
+      "Package": "R.utils",
+      "Version": "2.10.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "a9e316277ff12a43997266f2f6567780"
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.4.1",
@@ -318,17 +346,17 @@
       "Source": "Bioconductor",
       "Hash": "811eb16b3d542aa098d4c89f0985f3bc"
     },
-    "TBmiscr": {
-      "Package": "TBmiscr",
+    "TBmiscR": {
+      "Package": "TBmiscR",
       "Version": "0.0.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "twesleyb",
-      "RemoteRepo": "TBmiscr",
+      "RemoteRepo": "TBmiscR",
       "RemoteRef": "master",
-      "RemoteSha": "51a81d4eb384f5990fc6480e721c957ffd5fc80f",
-      "Hash": "1e8c77f7f543bbddfb081e5bdbdc4993"
+      "RemoteSha": "9637c61934e754b3cc5e1ad02fb94c40ff6ce3b6",
+      "Hash": "96542add8e10a367bfc18e5c1bbb202c"
     },
     "WGCNA": {
       "Package": "WGCNA",
@@ -1634,6 +1662,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "0759e6b6c0957edb1311028a49a35e76"
+    },
+    "styler": {
+      "Package": "styler",
+      "Version": "1.3.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "60b23effde8d08a56a64ebeb92a32749"
     },
     "survival": {
       "Package": "survival",
