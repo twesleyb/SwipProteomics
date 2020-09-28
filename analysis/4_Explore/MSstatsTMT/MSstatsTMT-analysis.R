@@ -1,20 +1,28 @@
 #!/usr/bin/env Rscript
 
 # title: SwipProteomics
-# description: analysis of Swip TMT with MSstats
+# description: analysis of Swip TMT spatial proteomics data with MSstatsTMT
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 
-## Input ----------------------------------------------------------------------
-# input data in root/rdata (too big for root/data as is)
-#input_dir = "5359_PSM_Data.zip"
-input_psm = "rdata/5359_PSM_Report.xlsx"
-input_samples = "rdata/5359_Sample_Report.xlsx"
 
+## Input ----------------------------------------------------------------------
+
+# input data in root/data:
+input_dir = "data/PSM.zip"
+
+# PSM.zip contains:
+input_psm = "PSM/5359_PSM_Report.xlsx"
+input_samples = "PSM/5359_Sample_Report.xlsx"
+
+## Prepare the working environment --------------------------------------------
+
+root <- "~/projects/SwipProteomics"
+datadir <- file.path(root,"data")
+rdatdir <- file.path(root,"rdata") # temporary/large files not tracked by git
 
 # Prepare the R environment ---------------------------------------------------
 
 # load renv
-root <- "~/projects/SwipProteomics"
 renv::load(root,quiet=TRUE)
 
 # imports
@@ -27,27 +35,30 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
+
 ## unzip the directory containing the raw data ---------------------------------
 
-# FIXME: todo
+unzip(input_dir) # unzip PSM.zip into current dir
 
 
 # load sample data in root/rdata --------------------------------------
-
 # this excel spreadsheet was from Greg, exported from PD(?)
-myfile <- file.path(root,input_samples)
 
 # pass colnames to read_excel
 col_names <- c("Sample","Mixture","MS.Channel","drop",
 	       "Channel","Proteomics ID","ConditionFraction","Experiment")
-samples <- readxl::read_excel(myfile,col_names=col_names)
+samples <- readxl::read_excel(input_samples,col_names=col_names)
+
+unlink(input_samples)
 
 ## read PSM data from excel ------------------------------------------------
 
 # read raw data, NOTE: this takes several minutes
-myfile <- file.path(root,input_psm)
-raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+raw_pd <- readxl::read_excel(input_psm,progress=FALSE)
 
+unlink(input_psm) 
+
+unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
 ## re-format sample annotations for MSstats -----------------------------------
 # Extract relevant annotations for MSstatsTMT
@@ -71,7 +82,7 @@ samples$ConditionFraction <- NULL
 # Set the formatting of the channel for normalization for MSstats
 samples$Condition[samples$Condition=="SPQC"] <- "Norm" 
 
-# clean-up Mixtrure column 
+# clean-up Mixture column 
 samples$Mixture <- gsub("F","M",samples$Mixture)
 
 # Remove un-needed col
@@ -142,11 +153,16 @@ annotation_dt$Condition <- samples$Condition[idx]
 annotation_dt$Subject <- samples$BioReplicate[idx]
 annotation_dt$Channel <- samples$Channel[idx]
 
-# how to handle repeated measures design? Subject.Fraction
+# Add BioFraction column 
+# FIXME: how to pass additional covariates to MSstats?
+annotation_dt$BioFraction <- samples$Fraction[idx]
+
+# how to handle repeated measures design? 
 annotation_dt$BioReplicate <- as.character(interaction(samples$BioReplicate[idx],
 						       samples$Fraction[idx]))
 
-# whoops, fix norm#.F# -- should be just norm - the spqc sample
+# whoops, fix norm#.F# -- should be just Norm - the SPQC sample which is
+# analyzed in Technical duplicate for every experiment?
 annotation_dt$BioReplicate[grepl("norm",annotation_dt$BioReplicate)] <- "Norm"
 
 # Remove un-needed cols
@@ -154,12 +170,14 @@ annotation_dt$"Experiment ID" <- NULL
 annotation_dt$"MS.Channel" <- NULL
 
 # check the annotation file
+# this basic design is repeated 3x (M = 3):
 knitr::kable(annotation_dt[c(1:16),])
 
 # save to file
-myfile <- file.path(root,"rdata","annotation_dt.rda")
+myfile <- file.path(datadir,"annotation_dt.rda")
 save(annotation_dt,file=myfile,version=2)
 message(paste("saved",myfile))
+
 
 ## coerce data to MSstats format ---------------------------------
 
@@ -177,7 +195,7 @@ data_pd <- PDtoMSstatsTMTFormat(raw_pd,annotation_dt)
 #knitr::kable(head(data_pd))
 
 # save to file
-myfile <- file.path(root,"rdata","data_pd.rda")
+myfile <- file.path(rdatdir,"data_pd.rda")
 save(data_pd,file=myfile,version=2)
 message(paste("saved",myfile))
 
@@ -203,7 +221,7 @@ data_prot <- proteinSummarization(data_pd,
 # Please check it. At this moment, normalization is not performed.
 
 # save to file
-myfile <- file.path(root,"rdata","data_prot.rda")
+myfile <- file.path(rdatdir,"data_prot.rda")
 save(data_prot,file=myfile,version=2)
 message(paste("saved",myfile))
 	
