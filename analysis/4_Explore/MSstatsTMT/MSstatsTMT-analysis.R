@@ -223,3 +223,9 @@ quit()
 
 # test for all the possible pairs of conditions	
 all_results <- groupComparisonTMT(data_prot)	
+
+myfile <- file.path(rdatdir,"all_results.rda")
+save(all_results,file=myfile,version=2)
+message(paste("\nSaved",myfile))
+
+fwrite(all_results,"MSstatsTMT_Results.csv")
