@@ -10,16 +10,9 @@
 ROOT <- "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
-FDR_alpha <- 0.05 # BH significance threshold for protein DA
+os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
 ## FUNCTIONS -----------------------------------------------------------------
-
-fix_colname <- function(df,old_colname,new_colname) {
-	# change a column's name in a data.frame
-	colnames(df)[which(colnames(df) == old_colname)] <- new_colname
-	return(df)
-}
-
 
 mkdir <- function(...) {
 	# create a new directory
@@ -34,8 +27,8 @@ mkdir <- function(...) {
 ## Prepare the working environment ----------------------------------------------
 
 # directory for output tables:
-tabsdir <- file.path(ROOT,"tables"); mkdir(tabsdir)
-datadir <- file.path(ROOT,"data"); mkdir(datadir)
+#tabsdir <- file.path(ROOT,"tables"); mkdir(tabsdir)
+#datadir <- file.path(ROOT,"data"); mkdir(datadir)
 
 
 ## Prepare the R environment --------------------------------------------------
@@ -45,9 +38,11 @@ renv::load(ROOT,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
-	library(DEP) # twesleyb/DEP
 	library(dplyr) # for manipulating data
-	library(data.table) # for working with data.tables
+	library(WGCNA) # for bicor function
+	library(neten) # for network enhancement
+	library(getPPIs) # for PPI data
+	library(data.table) # for working with tables
 })
 
 # load functions in root/R
@@ -58,10 +53,8 @@ data(swip_tmt)
 data(samples)
 #data(gene_map)
 
-# Set Fraction levels
+# set Fraction levels
 levels(samples$Fraction) <- c("F4","F5","F6","F7","F8","F9","F10")
-samples %>% select(Sample,Experiment,Channel,Treatment,Fraction) %>% 
-	arrange(Experiment,Treatment) %>% knitr::kable()
 
 # load the MSstats processed data
 myfile <- file.path(ROOT,"rdata","data_prot.rda")
@@ -81,197 +74,124 @@ gene_map <- data.frame(uniprot,symbols)
 is_missing <- gene_map$uniprot[is.na(gene_map$symbol)]
 data_prot <- data_prot %>% filter(Protein %notin% is_missing)
 
-## prepare data for DEP -------------------------------------------------------
 
-# cast tidy data into a data.table
-# NOTE: do not log transform the data
-#prot_df <- swip_tmt %>% 
-#	dcast(Accession ~ Sample,value.var = "Intensity") %>% 
-#	as.matrix(rownames="Accession") %>% # coerce to matrix
-#	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
-prot_df <- data_prot %>% as.data.table() %>% 
+#--------------------------------------------------------------------
+## Create protein covariation network.
+#--------------------------------------------------------------------
+
+dm <- data_prot %>% as.data.table() %>% 
 	dcast(Protein ~ Mixture + Channel + Condition, value.var = "Abundance") %>% 
 	as.matrix(rownames="Protein") %>% # coerce to matrix
 	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
 
+# Load the proteomics data.
+data(tmt_protein)
 
-# protein data.frame should contain unique protein IDs in 'ID' column
-# check for duplicates
-stopifnot(!any(duplicated(prot_df$ID))) # there should be no duplicate IDs
+# Cast to a data.matrix.
+dm <- tmt_protein %>% as.data.table() %>%
+	dcast(Sample ~ Accession, value.var="Intensity") %>%
+	as.matrix(rownames=TRUE) %>% log2()
 
-# check for NA
-stopifnot(!any(is.na(prot_df$ID))) # there should be no NA
+# Create correlation (adjacency) matrix.
+message("\nGenerating protein co-variation matrix using bicor().")
+adjm <- WGCNA::bicor(dm)
 
-# protein data.frame should contain unique protein names in 'name' column
-# we will annotate proteins with gene 'symbol's
-prot_df$name <- gene_map$symbol[match(prot_df$ID,gene_map$uniprot)]
+# Enhanced network.
+message("\nPerforming network enhancement with to denoise network.")
+ne_adjm <- neten::neten(adjm)
 
-# check for NA
-stopifnot(!any(is.na(prot_df$name))) # there should be no NA
+#--------------------------------------------------------------------
+## Create PPI network.
+#--------------------------------------------------------------------
 
-# Multiple Uniprot Accession IDs may be mapped to the same gene Symbol.
-# If any duplicated, make names unique base::make.unique.
-prot_df$name <- make.unique(prot_df$name,sep="-")
+# Load mouse PPIs.
+message("\nCreating protein-protein interaction network.")
+data(musInteractome)
 
-# check for duplicates
-stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
+# Collect all entrez cooresponding to proteins in our network.
+proteins <- colnames(adjm)
+entrez <- tmt_protein$Entrez[match(proteins,tmt_protein$Accession)]
+names(proteins) <- entrez
 
+# Collect PPIs among all proteins.
+ppi_data <- musInteractome %>%
+	filter(Interactor_B_Taxonomy %in% os_keep) %>%
+	filter(Interactor_B_Taxonomy %in% os_keep) %>%
+	filter(osEntrezA %in% entrez) %>% 
+	filter(osEntrezB %in% entrez)
 
-## prepare exp_design for DEP --------------------------------------------------
-# build experiment design data.frame from SWIP TMT sample data
-# NOTE: exp_design should contain colums for 'label', 'condition' 
-# and 'replicate' information
-# NOTE: 'condition' is important, it must be the contrast of interest
-# NOTE: DEP currently does not support more complicated experimental designs.
-# Formula Model:
-# 	>>> 	~ 0 + condition (Fraction.Genotype)
+# Save to excel.
+myfile <- file.path(root,"tables","Swip_TMT_Network_PPIs.xlsx")
+write_excel(list("Network PPIs" = ppi_data),file=myfile)
 
-samples$label <- as.character(interaction(paste(gsub("Exp","M",samples$Experiment),samples$Channel,samples$Treatment,sep="_"),samples$Fraction))
+# Create simple edge list (sif) and matrix with node attributes (noa).
+sif <- ppi_data %>% select(osEntrezA, osEntrezB)
+sif$uniprotA <- proteins[as.character(sif$osEntrezA)]
+sif$uniprotB <- proteins[as.character(sif$osEntrezB)]
 
-exp_design <- data.frame(
-			 label = samples$label,
-			 condition = interaction(samples$Fraction,
-						 samples$Treatment),
-			 replicate = interaction(samples$Treatment,
-						 samples$Experiment),
-			 experiment = samples$Experiment,
-			 fraction = samples$Fraction,
-			 treatment = samples$Treatment
-			 )
+# Create igraph object from sif.
+g <- graph_from_data_frame(sif[,c("uniprotA","uniprotB")], directed = FALSE)
+g <- simplify(g)
 
+# Extract as adjm.
+ppi_adjm <- as.matrix(as_adjacency_matrix(g))
 
-# check for required columns in input
-stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
+# Fill matrix.
+all_proteins <- colnames(adjm)
+missing <- all_proteins[all_proteins %notin% colnames(ppi_adjm)]
+x <- matrix(nrow=dim(ppi_adjm)[1],ncol=length(missing))
+colnames(x) <- missing
+ppi_adjm <- cbind(ppi_adjm,x)
+y <- matrix(nrow=length(missing),ncol=dim(ppi_adjm)[2])
+rownames(y) <- missing
+ppi_adjm <- rbind(ppi_adjm,y)
+ppi_adjm <- ppi_adjm[all_proteins,all_proteins]
+ppi_adjm[is.na(ppi_adjm)] <- 0
 
+# Check, all should be the same.
+c1 <- all(colnames(adjm) == colnames(ne_adjm)) 
+c2 <- all(colnames(ne_adjm) == colnames(ppi_adjm))
+if (!(c1 & c2)){ stop() }
 
-## build SummarizedExperiment (se) object -------------------------------------
+# Number of edges and nodes.
+n_edges <- sum(ppi_adjm[upper.tri(ppi_adjm)])
+n_nodes <- ncol(ppi_adjm)
 
-# use DEP helper function to build a SE object
-# specify the column indices containing the numeric data (idy)
-idy <- grep("M[1,2,3]",colnames(prot_df))
-prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
+#--------------------------------------------------------------------
+## Save the data.
+#--------------------------------------------------------------------
 
-# NOTE: you can access the data contained in a sumamrized experiment object with 
-# functions from the SummarizedExperiment package, e.g.:
-# library(SummarizedExperiment)
-# rowDat(se)
-# colData(se)
-# assay(se)
+message("\nSaving the data.")
 
+# Save adjacency matrices as rda objects.
+# To reduce the file size of a large matrix saved as a csv file, 
+# the matrix is saved as an edge list, after removing the diagonal and 
+# lower half of the matrix are removed. 
+# This dataframe is saved as an rda object. It can be cast
+# back into a N x N matrix with the convert_to_adjm function.
 
-## impute missing values -------------------------------------------------------
+myfile <- file.path(root,"data","adjm.rda")
+save_adjm_as_rda(round(adjm,5), myfile)
 
-# Data can be missing at random (MAR) or missing not at random (MNAR).
-# MAR means that values are randomly missing from all samples.
-# In the case of MNAR, values are missing in specific samples and/or for specific proteins.
-# For example, certain proteins might not be quantified in specific conditions, 
-# because they are below the detection limit in these specific samples.  
-# 
-# To mimick these two types of missing values, 
-# we introduce missing values randomly over all data points (MAR)
-# and we introduce missing values in the control samples of
-# 100 differentially expressed proteins (MNAR).
-# The variables used to introduce missing values are depicted below.
+myfile <- file.path(root,"data","ne_adjm.rda")
+save_adjm_as_rda(ne_adjm, myfile)
 
-# Filter proteins based on missing values
+myfile <- file.path(root,"data","ppi_adjm.rda")
+save_adjm_as_rda(ppi_adjm, myfile)
 
-#A first consideration with missing values is whether or not to filter out
-#proteins with too many missing values.
+# Save adjm as csv.
+adjm %>% as.data.table(keep.rownames="Accession") %>%
+	fwrite(file.path(root,"rdata","adjm.csv"))
 
-## Visualize the extend of missing values
-#The number of proteins quantified over the samples can be visualized 
-#to investigate the extend of missing values. 
+# Save enhanced adjm as csv.
+ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
+	fwrite(file.path(root,"rdata","ne_adjm.csv"))
 
-# Plot a barplot of the protein quantification overlap between samples
-plot_frequency(se)
+# Save ppi network as csv.
+ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
+	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
 
-# Many proteins are quantified in all six samples and 
-# only a small subset of proteins were detected in less than half of the samples.
-
-## Filter options
-
-# We can choose to not filter out any proteins at all,
-# filter for only the proteins without missing values,
-# filter for proteins with a certain fraction of quantified samples, and
-# for proteins that are quantified in all replicates of at least one condition.
-
-no_filter <- se
-
-# Filter for proteins that are quantified in all replicates of at least one condition
-condition_filter <- filter_proteins(se, "condition", thr = 0)
-
-# Filter for proteins that have no missing values
-complete_cases <- filter_proteins(se, "complete")
-
-# Filter for proteins that are quantified in at least 2/3 of the samples.
-frac_filtered <- filter_proteins(se, "fraction", min = 0.66)
-
-# To check the consequences of filtering, we calculate the number of background 
-# and DE proteins left in the dataset.
-
-# Mean versus Sd plot
-meanSdPlot(no_filter)
-
-# Data imputation of missing data
-
-# A second important consideration with missing values is
-# whether or not to impute the missing values.
-
-# MAR and MNAR (see [Introduce missing values](#introduce-missing-values)) 
-# require different imputation methods.
-# See the `r Biocpkg("MSnbase") ` vignette and more specifically 
-# the _impute_ function descriptions for detailed information.  
- 
-# ## Explore the pattern of missing values
- 
-# To explore the pattern of missing values in the data, 
-# a heatmap can be plotted indicating whether values are missing (0) or not (1).
-# Only proteins with at least one missing value are visualized.
-
-# Plot a heatmap of proteins with missing values
-plot_missval(no_filter)
-
-# The missing values seem to be randomly distributed across the samples (MAR).
-# However, we do note a block of values that are missing in all control samples
-# (bottom left side of the heatmap).
-# These proteins might have missing values not at random (MNAR).  
- 
-# To check whether missing values are biased to lower intense proteins, 
-# the densities and cumulative fractions are plotted for proteins with 
-# and without missing values.   
-
-# Plot intensity distributions and cumulative fraction of proteins 
-# with and without missing values
-plot_detect(no_filter)
-
-# In our example data, there is no clear difference between the two distributions.  
-
-## Imputation options
-
-# DEP borrows the imputation functions from `r Biocpkg("MSnbase") `.
-# See the `r Biocpkg("MSnbase") ` vignette and more specifically the _impute_ 
-# function description for more information on the imputation methods.  
-
-# All possible imputation methods are printed in an error, if an invalid function name is given.
-impute(no_filter, fun = "")
-
-
-# No imputation
-no_imputation <- no_filter
-
-# Impute missing data using random draws from a 
-# Gaussian distribution centered around a minimal value (for MNAR)
-MinProb_imputation <- impute(no_filter, fun = "MinProb", q = 0.01)
-
-# Impute missing data using random draws from a 
-# manually defined left-shifted Gaussian distribution (for MNAR)
-manual_imputation <- impute(no_filter, fun = "man", shift = 1.8, scale = 0.3)
-
-# Impute missing data using the k-nearest neighbour approach (for MAR)
-knn_imputation <- impute(no_filter, fun = "knn", rowmax = 0.9)
-
-# The effect of data imputation on the distributions can be visualized.
-
-# Plot intensity distributions before and after imputation
-plot_imputation(no_filter, MinProb_imputation, 
-  manual_imputation, knn_imputation)
+# Save norm_protein as matrix. 
+norm_protein <- tmt_protein %>% as.data.table() %>%
+	dcast(Accession ~ Sample, value.var = "Intensity") %>%
+	fwrite(file.path(root,"rdata","norm_protein.csv"))

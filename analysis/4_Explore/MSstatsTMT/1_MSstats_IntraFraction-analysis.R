@@ -250,7 +250,11 @@ myfile <- file.path(rdatdir,"data_pd.rda")
 save(data_pd,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
+
 ## filter proteins ----------------------------------------------------------------
+
+
+## map uniprot to entrez and gene symbols
 
 
 # Protein summarize and normalization -----------------------------------------
@@ -273,7 +277,8 @@ myfile <- file.path(rdatdir,"data_prot.rda")
 save(data_prot,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
-# Remove protein outliers?
+
+## Remove protein outliers? ---------------------------------------------------------
 	
 
 ## Protein-level statistical testing -------------------------------------------
