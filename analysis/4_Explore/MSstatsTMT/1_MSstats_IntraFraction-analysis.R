@@ -118,7 +118,8 @@ unlink(myfile)
 
 # read PSM-level data exported from PD as an excel worksheet
 # NOTE: this takes several minutes!
-message("\nLoading raw PSM data.") 
+message(paste("\nLoading PSM data from ProteomeDiscoverer.",
+	      "This will take several minutes."))
 myfile <- file.path(downdir,input_psm)
 raw_pd <- readxl::read_excel(myfile,progress=FALSE)
 
