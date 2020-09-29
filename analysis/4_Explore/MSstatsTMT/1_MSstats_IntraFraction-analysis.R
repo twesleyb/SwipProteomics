@@ -255,6 +255,12 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
 	             "MS.Channel" = unlist(exp_channels))
 
+# save samples
+myfile <- file.path(root,"data","msstats_samples.rda")
+save(samples,file=myfile,version=2)
+message(paste("\nSaved",myfile))
+
+quit()
 
 ## build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
@@ -324,7 +330,7 @@ msstats_prot <- proteinSummarization(data_pd,
 #load(file.path(rdatdir,"data_prot.rda"))
 
 # save to file
-myfile <- file.path(rdatdir,"msstats_prot.rda")
+myfile <- file.path(root,"data","msstats_prot.rda")
 save(msstats_prot,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 

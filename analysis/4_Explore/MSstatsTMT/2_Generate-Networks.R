@@ -53,33 +53,29 @@ devtools::load_all(ROOT)
 #data(samples)
 #data(gene_map)
 
+data(samples)
+
 # load the MSstats processed data
-myfile <- file.path(ROOT,"rdata","data_prot.rda")
-load(myfile) # data_prot
+myfile <- file.path(ROOT,"rdata","msstats_prot.rda")
+load(myfile) # msstats_prot
+data_prot <- msstats_prot
 
-# create gene_map
-uniprot <- unique(data_prot$Protein)
-symbols <- getPPIs::getIDs(uniprot,from="uniprot",to="symbol",species="mouse")
-entrez <- getPPIs::getIDs(uniprot,from="uniprot",to="entrez",species="mouse")
-gene_map <- data.frame(uniprot,symbols,entrez)
+# load sample metadata
+myfile <- file.path(ROOT,"data","msstats_samples.rda")
+load(myfile) # samples
 
-# FIXME: Need to go upstream in workflow and map uniprot to genes/drop bad prots
-# For now, drop any missing gene symbols
-is_missing <- gene_map$uniprot[is.na(gene_map$symbol) | is.na(gene_map$entrez)]
-warning(paste("Proteins with missing Symbol/Entrez annotations:",length(is_missing)))
-filt_prot <- data_prot %>% filter(Protein %notin% is_missing)
 
 ## Create protein covariation network -----------------------------------------
 
 dm <- filt_prot %>% as.data.table() %>%
-	dcast(Protein ~ Mixture + Channel + Condition, value.var = "Abundance") %>% 
+	dcast(Protein ~ Mixture + Channel + Condition, value.var="Abundance") %>% 
 	as.matrix(rownames="Protein") # coerce to matrix
 
 # drop rows with na
 idx <- apply(dm,1,function(x) any(is.na(x)))
 dm <- dm[!idx,]
 
-dim(dm)
+#dim(dm)
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation matrix using bicor().")
@@ -176,12 +172,15 @@ ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
 ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(ROOT,"rdata","ppi_adjm.csv"))
 
-# Save norm_protein as matrix. 
+# Map colnames to Sample names
+samples$label <- paste(paste(gsub("Exp","M",samples$Experiment),
+			     samples$Channel,sep="_"),
+		       paste(samples$Treatment,samples$Fraction,sep="."),
+		       sep="_")
 idx <- match(colnames(dm),samples$label)
-
 colnames(dm) <- samples$Sample[idx]
 
+# Save norm_protein as matrix. 
 norm_protein <- dm %>% as.data.table(keep.rownames="Accession")
-
 myfile <- file.path(root,"rdata","norm_protein.csv")
 fwrite(norm_protein, myfile)
