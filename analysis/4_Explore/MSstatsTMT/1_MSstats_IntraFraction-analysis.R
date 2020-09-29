@@ -299,7 +299,7 @@ message(paste("\nSaved",myfile))
 
 # NOTE: this takes a considerable amount of time
 message("\nConverting PSM data to MSstatsTMT format.")
-data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt)
+data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, rmProtein_with1Feature = TRUE)
 #load(file.path(rdatdir,"data_pd.rda"))
 
 # save to file
@@ -316,7 +316,7 @@ message(paste("\nSaved",myfile))
 # FIXME: Joining, by = ("Run", "Channel") # unexpected output
 # FIXME: remove extremely long message about normalization between runs
 message("\nPerforming normalization and protein sumamrization.")
-data_prot <- proteinSummarization(data_pd,
+msstats_prot <- proteinSummarization(data_pd,
 				  method="msstats",	
                                   global_norm=TRUE,	
                                   reference_norm=TRUE,	
@@ -324,12 +324,13 @@ data_prot <- proteinSummarization(data_pd,
 #load(file.path(rdatdir,"data_prot.rda"))
 
 # save to file
-myfile <- file.path(rdatdir,"data_prot.rda")
-save(data_prot,file=myfile,version=2)
+myfile <- file.path(rdatdir,"msstats_prot.rda")
+save(msstats_prot,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
+quit()
 
-## Remove protein outliers? ---------------------------------------------------------
+## Remove protein outliers? -----------------------------------------------------
 	
 
 ## Protein-level statistical testing -------------------------------------------
@@ -339,9 +340,11 @@ message(paste("\nSaved",myfile))
 # automatically determined based on proper statistical model.	
 
 # test for all the possible pairs of conditions	
+# FIXME: parallelize!
 all_results <- groupComparisonTMT(data_prot)	
 #load(file.path(rdatdir,"all_results.rda"))
 
+all_results_bak = all_results
 
 ## clean-up MSstats results ----------------------------------------------------
 
@@ -376,6 +379,10 @@ Entrez <- gene_map$entrez[idx]
 filt_results <- tibble::add_column(filt_results,Entrez,.after="Protein")
 filt_results <- tibble::add_column(filt_results,Symbol,.after="Entrez")
 
+# Can we add protein level data to  stats and save as tidy object?
+# format should be swip_msstats
+swip_msstats <- left_join(filt_results,data_prot,by="Protein")
+
 # split into BioFraction's for ease of comprehension
 # extract fraction from label
 fraction <- regmatches(filt_results$Label,
@@ -409,9 +416,20 @@ write_excel(final_results, myfile)
 message(paste("\nSaved",myfile))
 
 # save as rda
-myfile <- file.path(root,"rdata","results_list.rda")
-save(final_results, file=myfile,version=2)
+myfile <- file.path(root,"data","swip_msstats.rda")
+save(swip_msstats, file=myfile,version=2)
 message(paste("\nSaved",myfile))
+
+# any protein overlap?
+sigprot_list <- lapply(results_list,function(x) {
+	      x %>% filter(adj.pvalue<0.05) %>% 
+		      dplyr::select(Protein) %>% 
+		      unlist() %>% as.character() %>% unique() })
+
+top_sigprots <- Reduce(intersect, sigprot_list)
+idx <- match(top_sigprots, gene_map$uniprot)
+message(c("\nProteins that are differentially abundant in all fractions: ",
+	      paste(gene_map$symbol[idx],collapse=", ")))
 
 # Examine the number of significant proteins
 message(paste("\nNumber of differentially abundant (FDR < 0.05) proteins:"))

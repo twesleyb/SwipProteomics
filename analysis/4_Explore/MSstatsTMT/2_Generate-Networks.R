@@ -57,6 +57,7 @@ devtools::load_all(ROOT)
 myfile <- file.path(ROOT,"rdata","data_prot.rda")
 load(myfile) # data_prot
 
+# create gene_map
 uniprot <- unique(data_prot$Protein)
 symbols <- getPPIs::getIDs(uniprot,from="uniprot",to="symbol",species="mouse")
 entrez <- getPPIs::getIDs(uniprot,from="uniprot",to="entrez",species="mouse")
