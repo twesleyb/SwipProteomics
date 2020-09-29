@@ -85,11 +85,12 @@ downdir <- file.path(root,"downloads"); mkdir(downdir)
 # Prepare the R environment ---------------------------------------------------
 
 # load renv
-renv::load(root,quiet=TRUE)
+renv::load(root, quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
+	suppressWarnings({ library(getPPIs) }) # FIXME: annoying warnings!
 	library(data.table)
 	library(MSstatsTMT)
 })
@@ -121,7 +122,7 @@ message("\nLoading raw PSM data.")
 myfile <- file.path(downdir,input_psm)
 raw_pd <- readxl::read_excel(myfile,progress=FALSE)
 
-unlink(myfile) 
+unlink(myfile) # rm input_psm
 unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
 ## re-format sample metadata annotations for MSstats ---------------------------
@@ -333,106 +334,30 @@ results_list <- split(filt_results,fraction)
 #names(results_list)
 # [1] "F10" "F4"  "F5"  "F6"  "F7"  "F8"  "F9"
 
+# sort
+results_list <- results_list[c("F4","F5","F6","F7","F8","F9","F10")]
+
+# sort each df by pvalue and drop rows with issues or NA pvals
+clean_results <- function(x) { # x = results_list[[1]]
+	is_issue <- !is.na(x$issue)
+	x <- x[!is_issue,] # drop rows with issue
+	x$issue <- NULL
+	x <- x[order(x$pvalue),]
+	return(x)
+}
+final_results <- lapply(results_list, clean_results)
+
 # save as excel worksheet
 myfile <- file.path(root,"tables","SWIP_MSstatsTMT_Results.xlsx")
-write_excel(results_list, myfile)
+write_excel(final_results, myfile)
 message(paste("\nSaved",myfile))
 
 # save as rda
 myfile <- file.path(root,"rdata","results_list.rda")
-save(results_list, file=myfile,version=2)
+save(final_results, file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
 # Examine the number of significant proteins
 message(paste("\nNumber of differentially abundant (FDR < 0.05) proteins:"))
 df <- sapply(results_list,function(x) sum(x$adj.pvalue<0.05,na.rm=TRUE))
 knitr::kable(t(df))
-
-quit()
-
-## compare pvalues to DEP and EdgeR pipelines ----------------------------------
-
-# 1. combine EdgeR and DEP stats
-# set global plotting settings
-ggtheme(); set_font("Arial", font_path = fontdir)
-
-# load the data in root/data
-data(swip_tmt) # the preprocessed data (contains edgeR stats)
-data(swip_dep) # the DEP stats
-
-# collect edgeR stats for intra-fraction comparisons
-tmpdf <-  swip_tmt %>% 
-	group_by(Fraction) %>% 
-	dplyr::select(Fraction,Accession,PValue) %>% 
-	unique()
-# combine edgeR and DEP stats
-stats_df <- swip_dep %>% 
-	dplyr::select(Fraction,Accession,p.val) %>% 
-	left_join(tmpdf,by=c("Fraction","Accession"))
-# clean-up colnames
-stats_df <- fix_colname(stats_df,"PValue","EdgeR")
-stats_df <- fix_colname(stats_df,"p.val","DEP")
-
-# 2. add MSstatsTMT stats
-temp_list <- lapply(results_list, function(x) {
-			    x %>% dplyr::select(Protein,pvalue) })
-df <- bind_rows(temp_list,.id="Fraction")
-# fix colnames colnames(df) <- c("Fraction","Accession","MSstatsTMT")
-
-# combine with other stats
-all_stats <- left_join(df,stats_df,by=c("Accession","Fraction"))
-
-# drop rows in which pvals from all methods is NA
-idx <- apply(all_stats, 1, function(x) all(is.na(x[c(3,4,5)])))
-filt_stats <- all_stats[!idx,]
-
-# the spearman rank correlation is very high
-rho1 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$DEP, method="spearman", use='pairwise.complete.obs')
-rho2 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$EdgeR, method="spearman", use='pairwise.complete.obs')
-rho3 <- cor(x=filt_stats$DEP, y=filt_stats$EdgeR, method="spearman", use='pairwise.complete.obs')
-df <- data.frame(rho1,rho2,rho3)
-knitr::kable(df)
-
-## ----------------------------------------------------------------------------
-
-# generate a plot examining coorelation between edgeR and DEP pvalues
-plot <- ggplot(data=stats_df,aes(x=EdgeR,y=DEP))
-plot <- plot + geom_point()
-plot <- plot + xlab("P-Value (edgeR)")
-plot <- plot + ylab("P-Value (DEP)")
-plot <- plot + theme(panel.background = element_blank())
-plot <- plot + theme(panel.border=element_rect(colour="black",fill=NA,size=1))
-
-# save as pdf
-myfile <- file.path(figsdir,"PValue_correlation_scatterplot.pdf")
-ggsave(myfile,plot,height=5,width=5)
-message(paste("\nSaved",myfile))
-
-## ----------------------------------------------------------------------------
-
-# tidy the data
-df <- reshape2::melt(stats_df,id=c("Fraction","Accession"),
-		     value.name = "PValue",
-		     variable.name="Method")
-
-# loop generate p-value histograms for every intra-fraction comparison
-plots <- list()
-for (fraction in unique(df$Fraction)) {
-	plot <- ggplot(df %>% filter(Fraction == fraction),
-		       aes(x=PValue,color=Method))
-	plot <- plot + geom_histogram(bins=100)
-	plot <- plot + theme(panel.background = element_blank())
-	plot <- plot + theme(panel.border=element_rect(colour="black",
-						       fill=NA,size=1))
-	plot <- plot + ggtitle(paste("Fraction:",fraction))
-	plots[[fraction]] <- plot
-}
-
-# save as a single pdf
-myfile <- file.path(figsdir,"PValue_Histograms.pdf")
-ggsavePDF(plots,myfile)
-message(paste("\nSaved",myfile))
-
-if (file.exists("Rplots.pdf")) { unlink("Rplots.pdf") }
-
-# DONE!
