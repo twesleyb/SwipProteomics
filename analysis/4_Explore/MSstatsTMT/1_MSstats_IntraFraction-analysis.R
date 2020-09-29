@@ -7,8 +7,8 @@
 
 ## Input ----------------------------------------------------------------------
 
-# specity the projects root directory:
-root <- "~/projects/SwipProteomics"
+# specify the projects root directory:
+root = "~/projects/SwipProteomics"
 
 # input data in root/data:
 input_dir = "data/PSM.zip"
@@ -161,8 +161,64 @@ samples$BioReplicate <- paste(samples$Condition,
 raw_pd <- reformat_cols(raw_pd)
 
 
-## drop spurious proteins?
-#colnames(raw_pd)
+## drop contaminant proteins ---------------------------------------------------
+
+# drop PSM that are mapped to multiple proteins
+idx_drop <- grepl(";",raw_pd$Master.Protein.Accessions)
+filt_pd <- raw_pd[!idx_drop,]
+
+# keep mouse proteins and drop ig prots
+idx_keep <- grepl("OS=Mus musculus",filt_pd$Protein.Descriptions)
+ig_prots <- c("P01631","P01646","P01665","P01680","P01746","P01750",
+	      "P01786","P01864","P01878","P03975","P06330","P03987")
+
+# drop human keratins, proteins without genes, pig trypsin, a predicted gene
+misc_drop <- c("P13647","P13645","P08779", "P04264","P02533","Q04695",
+	       "Q7Z794","P01626","P01637","P00761","P10404","P02538","Q3ZRW6",
+	       "P04940","Q6KB66","P01723","Q80WG5") 
+
+# filter data
+idx_drop1 <- filt_pd$Master.Protein.Accessions %in% ig_prots 
+idx_drop2 <- filt_pd$Master.Protein.Accessions %in% misc_drop
+filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
+
+# collect all uniprot accession ids
+uniprot <- unique(filt_pd$Master.Protein.Accessions)
+
+# map to entrez
+# NOTE: this may take several minutes
+entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+names(entrez) <- uniprot
+
+# Map any remaining missing IDs by hand.
+message("Mapping missing IDs by hand.\n")
+missing <- entrez[is.na(entrez)]
+mapped_by_hand <- c(P05214=22144, 
+		    P0CG14=214987, 
+		    P84244=15078,
+		    P05214=22144) #tub3a
+entrez[names(mapped_by_hand)] <- mapped_by_hand
+
+# Check: Have we successfully mapped all Uniprot IDs to Entrez?
+check <- sum(is.na(entrez)) == 0
+if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
+
+# Map entrez ids to gene symbols using twesleyb/getPPIs.
+symbols <- getPPIs::getIDs(entrez,from="entrez",to="symbol",species="mouse")
+
+# check there should be no missing gene symbols
+if (any(is.na(symbols))) { stop("Unable to map all Entrez to gene Symbols.") }
+
+# Create gene identifier mapping data.table.
+gene_map <- data.table(uniprot = names(entrez),
+                       entrez = entrez,
+	               symbol = symbols)
+gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
+
+# save the gene map
+myfile <- file.path(root,"rdata","gene_map.rda")
+save(gene_map,file=myfile,version=2)
+message(paste("\nSaved",myfile))
 
 
 ## map Spectrum.Files to MS.Channels ------------------------------------------
@@ -175,13 +231,12 @@ raw_pd <- reformat_cols(raw_pd)
 # have made measurements is 16 x 3 Experiments = 48. In other words, a single
 # 'Spectrum.File' cooresponds to 12x MS.Runs and 16x Samples. 
 
-all_files <- raw_pd$Spectrum.File
+all_files <- filt_pd$Spectrum.File
 
 # collect all Spectrum.Files grouped by Experiment
 # split 'Spectrum.File' at first "_" to extract experiment identifiers
 exp_files <- lapply(split(all_files, sapply(strsplit(all_files,"_"),"[",1)),
 		    unique)
-
 files_dt <- data.table("Experiment ID" = rep(names(exp_files),
 					     times=sapply(exp_files,length)),
 	               "Run" = unlist(exp_files))
@@ -199,7 +254,8 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
 	             "MS.Channel" = unlist(exp_channels))
 
-# build annotation file for MSstats -------------------------------------------
+
+## build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
 # * Run - indicates which channel within a Spectrum.File; this should match
 #     Spectrum.File in raw_pd
@@ -242,14 +298,14 @@ message(paste("\nSaved",myfile))
 
 # NOTE: this takes a considerable amount of time
 message("\nConverting PSM data to MSstatsTMT format.")
-data_pd <- PDtoMSstatsTMTFormat(raw_pd, annotation_dt)
+data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt)
 #load(file.path(rdatdir,"data_pd.rda"))
 
 # save to file
 myfile <- file.path(rdatdir,"data_pd.rda")
 save(data_pd,file=myfile,version=2)
 message(paste("\nSaved",myfile))
-
+quit()
 
 ## filter proteins ----------------------------------------------------------------
 

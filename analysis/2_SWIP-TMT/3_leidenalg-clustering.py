@@ -50,8 +50,7 @@ from igraph import Graph
 from pandas import read_csv, DataFrame
 
 # Directories.
-here = os.getcwd()
-root = dirname(dirname(here))
+root = "~/projects/SwipProteomics"
 rdatdir = os.path.join(root,"rdata")
 funcdir = os.path.join(root,"Py")
 
@@ -120,6 +119,7 @@ else:
     # Create an unweighted graph.
     g = graph_from_adjm(adjm,weighted=False,signed=parameters.pop('signed'))
     parameters['graph'] = g
+#EIS
 
 #--------------------------------------------------------------------
 ## Community detection with the Leiden algorithm.
@@ -143,20 +143,19 @@ if parameters.get('resolution_parameter') is None:
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
+
     if not recursive:
         print("... Final partition: " + partition.summary() + ".", file=stderr)
 
     # Recursively split modules that are too big.
     if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
-
         # Update optimization method.
         method = methods.get(recursive_method).get('partition_type')
         if type(method) is str:
                 parameters['partition_type'] = getattr(import_module('leidenalg'),method)
         elif type(method) == 'type':
                 parameters['partition_type'] = method
-
         # Initial module membership.
         initial_membership = partition.membership
         subgraphs = partition.subgraphs()
@@ -164,7 +163,6 @@ if parameters.get('resolution_parameter') is None:
         n_big = sum(too_big)
         msg = "\nSplitting {} modules that contain more than {} nodes."
         print(msg.format(n_big,max_size),file=stderr)
-
         while any(too_big):
             # Perform clustering for any subgraphs that are too big.
             idx = [i for i, too_big in enumerate(too_big) if too_big]
@@ -175,36 +173,34 @@ if parameters.get('resolution_parameter') is None:
             # Add to list.
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
+        #EOL
 
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
         new_part = {k: v for d in parts for k, v in d.items()}
-
         # Set membership of initial graph.
         membership = [new_part.get(node) for node in partition.graph.vs['name']]
         partition.set_membership(membership)
-
         # Replace partition in profile list.
         profile[0] = partition
         print("... Final partition: " + partition.summary() + ".", file=stderr)
+    #else:
 
-    else:
+    #    # Multi-resolution methods:
+    #    pbar = ProgressBar()
+    #    profile = list()
+    #    resolution_range = linspace(**parameters.get('resolution_parameter'))
 
-        # Multi-resolution methods:
-        pbar = ProgressBar()
-        profile = list()
-        resolution_range = linspace(**parameters.get('resolution_parameter'))
-
-        for resolution in pbar(resolution_range):
-            # Update resolution parameter.
-            parameters['resolution_parameter'] = resolution
-            partition = find_partition(**parameters)
-            optimiser = Optimiser()
-            diff = optimiser.optimise_partition(partition,n_iterations=-1)
-            profile.append(partition)
-        # Ends loop.
-
+    #    for resolution in pbar(resolution_range):
+    #        # Update resolution parameter.
+    #        parameters['resolution_parameter'] = resolution
+    #        partition = find_partition(**parameters)
+    #        optimiser = Optimiser()
+    #        diff = optimiser.optimise_partition(partition,n_iterations=-1)
+    #        profile.append(partition)
+    #    # Ends loop.
+    
 # Ends If/else.
 
 #------------------------------------------------------------------------------

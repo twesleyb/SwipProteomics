@@ -35,6 +35,7 @@ adjm = c(discovery="adjm.csv", test=NULL)
 netw = c(discovery="ne_adjm.csv", test=NULL)
 part = c(discovery="Swip_partition.csv", test=NULL)
 data = c(discovery="norm_protein.csv", test=NULL)
+#FIXME: need to create norm_protein!
 
 ## OUTPUT saved in root/rdata:
 # Partition of the network with preservation enforced. 

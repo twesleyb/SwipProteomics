@@ -7,10 +7,11 @@
 
 ## INPUT ----------------------------------------------------------------------
 # specify project's root directory
-ROOT <- "~/projects/SwipProteomics"
+ROOT = "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
-os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus
+# keep PPIs from human, rat, and mus
+os_keep = as.character(c(9606,10116,1090)) 
 
 ## FUNCTIONS -----------------------------------------------------------------
 
@@ -52,19 +53,10 @@ devtools::load_all(ROOT)
 #data(samples)
 #data(gene_map)
 
-# set Fraction levels
-#levels(samples$Fraction) <- c("F4","F5","F6","F7","F8","F9","F10")
-
 # load the MSstats processed data
 myfile <- file.path(ROOT,"rdata","data_prot.rda")
 load(myfile) # data_prot
 
-# pass MSstats protein data to DEP --> visualization and imputing
-
-
-## create gene map ------------------------------------------------------------
-
-# map uniprot Accession to gene Symbols
 uniprot <- unique(data_prot$Protein)
 symbols <- getPPIs::getIDs(uniprot,from="uniprot",to="symbol",species="mouse")
 entrez <- getPPIs::getIDs(uniprot,from="uniprot",to="entrez",species="mouse")
@@ -184,6 +176,11 @@ ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(ROOT,"rdata","ppi_adjm.csv"))
 
 # Save norm_protein as matrix. 
-#norm_protein <- data_prot %>% as.data.table() %>%
-#	dcast(Accession ~ Sample, value.var = "Intensity") %>%
-#	fwrite(file.path(root,"rdata","norm_protein.csv"))
+idx <- match(colnames(dm),samples$label)
+
+colnames(dm) <- samples$Sample[idx]
+
+norm_protein <- dm %>% as.data.table(keep.rownames="Accession")
+
+myfile <- file.path(root,"rdata","norm_protein.csv")
+fwrite(norm_protein, myfile)
