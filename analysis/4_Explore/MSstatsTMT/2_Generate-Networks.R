@@ -56,7 +56,7 @@ devtools::load_all(ROOT)
 data(samples)
 
 # load the MSstats processed data
-myfile <- file.path(ROOT,"rdata","msstats_prot.rda")
+myfile <- file.path(ROOT,"data","msstats_prot.rda")
 load(myfile) # msstats_prot
 data_prot <- msstats_prot
 
@@ -67,7 +67,7 @@ load(myfile) # samples
 
 ## Create protein covariation network -----------------------------------------
 
-dm <- filt_prot %>% as.data.table() %>%
+dm <- data_prot %>% as.data.table() %>%
 	dcast(Protein ~ Mixture + Channel + Condition, value.var="Abundance") %>% 
 	as.matrix(rownames="Protein") # coerce to matrix
 

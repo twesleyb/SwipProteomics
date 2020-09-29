@@ -260,7 +260,6 @@ myfile <- file.path(root,"data","msstats_samples.rda")
 save(samples,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
-quit()
 
 ## build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
