@@ -2,7 +2,6 @@
 This repository contains the proteomics data and source code for the analysis 
 performed by [Courtland _et al._, 2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
 
-<<<<<<< HEAD
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
@@ -202,4 +201,3 @@ devtools::install_github('twesleyb/SwipProteomics')
 ## Reproducibility 
 Effort was made to make the analysis as reproducible as possible. Reproduce the
 R environment used to perform that analysis using [conda]() and [renv]().
->>>>>>> 94dece43b955711d647aa4147600c8d6dc417597
