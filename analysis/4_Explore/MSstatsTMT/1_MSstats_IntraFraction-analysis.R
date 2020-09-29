@@ -125,6 +125,7 @@ raw_pd <- readxl::read_excel(myfile,progress=FALSE)
 unlink(myfile) # rm input_psm
 unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
+
 ## re-format sample metadata annotations for MSstats ---------------------------
 
 # remove un-needed col
@@ -160,6 +161,10 @@ samples$BioReplicate <- paste(samples$Condition,
 raw_pd <- reformat_cols(raw_pd)
 
 
+## drop spurious proteins?
+#colnames(raw_pd)
+
+
 ## map Spectrum.Files to MS.Channels ------------------------------------------
 # Basically, its just complicated. There were 3x 16-plex TMT experiments.
 # In each, the concatenated TMT mixture was fractionated into 12 fractions in 
@@ -168,32 +173,31 @@ raw_pd <- reformat_cols(raw_pd)
 # Discover. Note that each MS run cooresponds to the measurment of all 16 
 # samples and therefore the total number of TMT channels for which we 
 # have made measurements is 16 x 3 Experiments = 48. In other words, a single
-# 'Spectrum.File' cooresponds to multiple Samples. 
+# 'Spectrum.File' cooresponds to 12x MS.Runs and 16x Samples. 
+
+all_files <- raw_pd$Spectrum.File
 
 # collect all Spectrum.Files grouped by Experiment
 # split 'Spectrum.File' at first "_" to extract experiment identifiers
-all_files <- raw_pd$Spectrum.File
 exp_files <- lapply(split(all_files, sapply(strsplit(all_files,"_"),"[",1)),
 		    unique)
+
 files_dt <- data.table("Experiment ID" = rep(names(exp_files),
 					     times=sapply(exp_files,length)),
 	               "Run" = unlist(exp_files))
 
+# add Fraction annotation
+files_dt$Fraction <- unlist({
+	sapply(exp_files, function(x) as.numeric(as.factor(x)),simplify=FALSE) })
+
 # collect all MS.Channels, grouped by Experiment
 all_channels <- samples$MS.Channel
 exp_channels <- split(all_channels, sapply(strsplit(all_channels,"_"),"[",1))
+
+# as a dt
 exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
 	             "MS.Channel" = unlist(exp_channels))
-
-# use exp_channels to create numeric ID for MS Fraction
-# NOTE: this is MSstats 'Fraction'
-exp_fraction_list <- lapply(exp_channels, function(x) {
-	       setNames(as.numeric(as.factor(x)),x)
-	   })
-x <- unlist(exp_fraction_list)
-named_fractions <- setNames(x,sapply(strsplit(names(x),"\\."),"[",2))
-
 
 # build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
@@ -212,29 +216,21 @@ named_fractions <- setNames(x,sapply(strsplit(names(x),"\\."),"[",2))
 message("\nBuilding sample annotation dataframe for MSstats.") 
 
 # create annotation_dt from Spectrum.Files and MS.Runs
-annotation_dt <- left_join(files_dt,exp_dt,by="Experiment ID")
-
 # add additional freatures from samples
+annotation_dt <- left_join(files_dt,exp_dt,by="Experiment ID")
 idx <- match(annotation_dt$"MS.Channel", samples$MS.Channel)
-annotation_dt$Fraction <- named_fractions[annotation_dt$MS.Channel]
+annotation_dt$BioFraction <- samples$BioFraction[idx]
 annotation_dt$TechRepMixture <- rep(1,length(idx))
 annotation_dt$Mixture <- samples$Mixture[idx]
 annotation_dt$Condition <- samples$Condition[idx]
 annotation_dt$Channel <- samples$Channel[idx]
-annotation_dt$BioFraction <- samples$BioFraction[idx]
 annotation_dt$BioReplicate <- samples$BioReplicate[idx]
 annotation_dt$BioReplicate[grepl("Norm",annotation_dt$BioReplicate)] <- "Norm"
-
 # FIXME: how to pass additional covariates to MSstats?
 # FIXME: how to handle repeated measures design? 
 
 # Remove un-needed cols
-annotation_dt$"Experiment ID" <- NULL
 annotation_dt$"MS.Channel" <- NULL
-
-# check the annotation file
-# this basic design is repeated for each experiment:
-knitr::kable(annotation_dt[c(1:16),]) # 3x
 
 # save to file
 myfile <- file.path(rdatdir,"annotation_dt.rda")
@@ -253,6 +249,8 @@ data_pd <- PDtoMSstatsTMTFormat(raw_pd, annotation_dt)
 myfile <- file.path(rdatdir,"data_pd.rda")
 save(data_pd,file=myfile,version=2)
 message(paste("\nSaved",myfile))
+
+## filter proteins ----------------------------------------------------------------
 
 
 # Protein summarize and normalization -----------------------------------------
@@ -274,6 +272,8 @@ data_prot <- proteinSummarization(data_pd,
 myfile <- file.path(rdatdir,"data_prot.rda")
 save(data_prot,file=myfile,version=2)
 message(paste("\nSaved",myfile))
+
+# Remove protein outliers?
 	
 
 ## Protein-level statistical testing -------------------------------------------
