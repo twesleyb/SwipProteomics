@@ -5,6 +5,9 @@
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 
+# FIXME: suppress warnings about singular fit?
+# FIXME: exchange pbar for messages
+
 ## Input ----------------------------------------------------------------------
 
 # specify the projects root directory:
@@ -18,7 +21,9 @@ input_psm = "PSM/5359_PSM_Report.xlsx"
 input_samples = "PSM/5359_Sample_Report.xlsx"
 
 ## Options --------------------------------------------------------------------
-load_rda = TRUE # load saved objects to speed things up
+load_rda = FALSE # load saved objects to speed things up
+
+n_prots = 10 # subset of proteins to analyze for speed
 
 ## Output ---------------------------------------------------------------------
 # * several intermediate datasets in root/rdata
@@ -95,7 +100,7 @@ suppressPackageStartupMessages({
 	library(dplyr)
 	suppressWarnings({ library(getPPIs) }) # FIXME: annoying warnings!
 	library(data.table)
-	library(MSstatsTMT)
+	library(MSstatsTMT) # twesleyb/MSstatsTMT
 })
 
 # load functions in root/R
@@ -193,9 +198,9 @@ uniprot <- unique(filt_pd$Master.Protein.Accessions)
 if (load_rda) {
   myfile <- file.path(root,"data","msstats_gene_map.rda")
   load(myfile)
-  message("Loaded saved 'gene_map'.")
+  message("Loaded 'gene_map'")
 } else {
-  # map uniprot to entrez
+  # create gene map by mapping uniprot to entrez
   # NOTE: this may take several minutes
   entrez <- mgi_batch_query(uniprot,quiet=TRUE)
   names(entrez) <- uniprot
@@ -262,7 +267,7 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 # save samples
 myfile <- file.path(root,"data","msstats_samples.rda")
 save(samples,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved",basename(myfile),"in",dirname(myfile)))
 
 
 ## build annotation file for MSstats -------------------------------------------
@@ -308,11 +313,12 @@ message(paste("\nSaved",basename(myfile),"in",dirname(myfile)))
 
 if (load_rda) {
 	load(file.path(rdatdir,"data_pd.rda"))
-	message("Loaded saved 'data_pd'.")
+	message("Loaded 'data_pd'")
 } else {
 	message("\nConverting PSM data to MSstatsTMT format.")
 	# NOTE: this takes a considerable amount of time
-	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, rmProtein_with1Feature = TRUE)
+	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
+					rmProtein_with1Feature = TRUE)
 	# save to file
 	myfile <- file.path(rdatdir,"data_pd.rda")
 	save(data_pd,file=myfile,version=2)
@@ -329,7 +335,7 @@ if (load_rda) {
 # FIXME: remove extremely long message about normalization between runs
 if (load_rda) {
   load(file.path(root,"data","msstats_prot.rda"))
-  message("Loaded saved 'msstats_prot'.")
+  message("Loaded 'msstats_prot'")
 } else {
   message("\nPerforming normalization and protein sumamrization.")
   msstats_prot <- proteinSummarization(data_pd,
@@ -349,7 +355,7 @@ if (load_rda) {
 nprot <- unique(msstats_prot$Protein) # There are ~6900 proteins
 
 # Subset for speed:
-rand_prots <- sample(unique(msstats_prot$Protein),10)
+rand_prots <- sample(unique(msstats_prot$Protein),n_prots)
 
 filt_prot <- msstats_prot %>% filter(Protein %in% rand_prots)
 
@@ -367,6 +373,12 @@ all_results <- groupComparisonTMT(filt_prot)
 # just Abundance ~ Condition
 #load(file.path(rdatdir,"all_results.rda"))
 
+# save as rda
+myfile <- file.path(root,"rdata","all_results.rda")
+save(all_results,file=myfile,version=2)
+message(paste("\nSaved",basename(myfile),"in",dirname(myfile)))
+
+quit()
 
 ## clean-up MSstats results ----------------------------------------------------
 
@@ -376,25 +388,7 @@ mutant_groups <- paste("Mutant",paste0("F",seq(4,10)),sep=".")
 contrasts <- paste(control_groups,mutant_groups,sep="-")
 filt_results <- all_results %>% filter(Label %in% contrasts)
 
-# map uniprot accession to gene names using twesleyb/getPPIs
-uniprot <- unique(filt_results$Protein)
-genes <- suppressWarnings({
-	getPPIs::getIDs(uniprot,from="uniprot",to="symbol",species="mouse")
-})
-# FIXME: clean-up/fix getPPIs namespace causing warnings on import
-entrez <- suppressWarnings({
-	getPPIs::getIDs(uniprot,from="uniprot",to="entrez",species="mouse")
-})
-gene_map <- data.frame("uniprot" = uniprot, "symbol" = genes, "entrez" = entrez)
-
-# status
-not_mapped <- sum(is.na(genes))
-warning(paste0("Unable to map UniProt Accession to Gene Symbol for ",
-	      not_mapped, " (",
-	      round(100*(not_mapped/length(uniprot)),2),"%) ",
-	      "proteins."))
-
-# add to the data
+# Symbol and Entrez to the data
 idx <- match(filt_results$Protein,gene_map$uniprot)
 Symbol <- gene_map$symbol[idx]
 Entrez <- gene_map$entrez[idx]

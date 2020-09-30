@@ -6,6 +6,7 @@
 # os: windows linux subsystem (WSL)
 
 ## Input ----------------------------------------------------------------------
+# * all_results.rda - MSstats intrafraction results
 
 # specify the projects root directory:
 root <- "~/projects/SwipProteomics"
@@ -23,6 +24,12 @@ mkdir <- function(...) {
 	}
 }
 
+
+fix_colname <- function(df,old_colname,new_colname) {
+	# change a column's name in a data.frame
+	colnames(df)[which(colnames(df) == old_colname)] <- new_colname
+	return(df)
+}
 
 ## Prepare the working environment --------------------------------------------
 
@@ -48,17 +55,20 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
-
-## compare pvalues to DEP and EdgeR pipelines ----------------------------------
-
-# 1. combine EdgeR and DEP stats
-# set global plotting settings
-ggtheme(); set_font("Arial", font_path = fontdir)
-
 # load the data in root/data
 data(swip_tmt) # the preprocessed data (contains edgeR stats)
 data(swip_dep) # the DEP stats
 
+# load the data in root/rdata
+myfile <- file.path(root,"rdata","all_results.rda")
+load(myfile)
+
+# set global plotting settings
+ggtheme(); set_font("Arial", font_path = fontdir)
+
+## compare pvalues to DEP and EdgeR pipelines ----------------------------------
+
+# 1. combine EdgeR and DEP stats
 # collect edgeR stats for intra-fraction comparisons
 tmpdf <-  swip_tmt %>% 
 	group_by(Fraction) %>% 
@@ -73,10 +83,14 @@ stats_df <- fix_colname(stats_df,"PValue","EdgeR")
 stats_df <- fix_colname(stats_df,"p.val","DEP")
 
 # 2. add MSstatsTMT stats
-temp_list <- lapply(results_list, function(x) {
-			    x %>% dplyr::select(Protein,pvalue) })
-df <- bind_rows(temp_list,.id="Fraction")
-# fix colnames colnames(df) <- c("Fraction","Accession","MSstatsTMT")
+# annotate with fraction
+fraction <- regmatches(all_results$Label,
+		       regexpr("\\F[0-9]{1,2}",all_results$Label))
+all_results$Fraction <- fraction
+# get relevant cols
+df <- all_results %>% dplyr::select(Fraction,Protein,pvalue)
+# fix colnames
+colnames(df) <- c("Fraction","Accession","MSstatsTMT")
 
 # combine with other stats
 all_stats <- left_join(df,stats_df,by=c("Accession","Fraction"))
@@ -86,11 +100,18 @@ idx <- apply(all_stats, 1, function(x) all(is.na(x[c(3,4,5)])))
 filt_stats <- all_stats[!idx,]
 
 # the spearman rank correlation is very high
-rho1 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$DEP, method="spearman", use='pairwise.complete.obs')
-rho2 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$EdgeR, method="spearman", use='pairwise.complete.obs')
-rho3 <- cor(x=filt_stats$DEP, y=filt_stats$EdgeR, method="spearman", use='pairwise.complete.obs')
-df <- data.frame(rho1,rho2,rho3)
+rho1 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$DEP, 
+	    method="spearman", use='pairwise.complete.obs')
+rho2 <- cor(x=filt_stats$MSstatsTMT, y=filt_stats$EdgeR, 
+	    method="spearman", use='pairwise.complete.obs')
+rho3 <- cor(x=filt_stats$DEP, y=filt_stats$EdgeR, 
+	    method="spearman", use='pairwise.complete.obs')
+
+df <- data.table('cor(MSstatsTMT, DEP)'=rho1,
+		 'cor(MSstatsTMT, EdgeR)'=rho2,
+		 'cor(DEP, EdgeR)' = rho3)
 knitr::kable(df)
+
 
 ## ----------------------------------------------------------------------------
 
