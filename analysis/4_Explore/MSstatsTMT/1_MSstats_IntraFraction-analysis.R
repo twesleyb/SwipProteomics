@@ -10,12 +10,15 @@
 # specify the projects root directory:
 root = "~/projects/SwipProteomics"
 
-# input data in root/data:
+# the PSM data is in root/data:
 input_dir = "data/PSM.zip"
 
 # PSM.zip contains:
 input_psm = "PSM/5359_PSM_Report.xlsx"
 input_samples = "PSM/5359_Sample_Report.xlsx"
+
+## Options --------------------------------------------------------------------
+load_rda = TRUE # load saved objects to speed things up
 
 ## Output ---------------------------------------------------------------------
 # * several intermediate datasets in root/rdata
@@ -186,40 +189,41 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
 # collect all uniprot accession ids
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
-# map to entrez
-# NOTE: this may take several minutes
-entrez <- mgi_batch_query(uniprot,quiet=TRUE)
-names(entrez) <- uniprot
-
-# Map any remaining missing IDs by hand.
-message("Mapping missing IDs by hand.\n")
-missing <- entrez[is.na(entrez)]
-mapped_by_hand <- c(P05214=22144, 
-		    P0CG14=214987, 
-		    P84244=15078,
-		    P05214=22144) #tub3a
-entrez[names(mapped_by_hand)] <- mapped_by_hand
-
-# Check: Have we successfully mapped all Uniprot IDs to Entrez?
-check <- sum(is.na(entrez)) == 0
-if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
-
-# Map entrez ids to gene symbols using twesleyb/getPPIs.
-symbols <- getPPIs::getIDs(entrez,from="entrez",to="symbol",species="mouse")
-
-# check there should be no missing gene symbols
-if (any(is.na(symbols))) { stop("Unable to map all Entrez to gene Symbols.") }
-
-# Create gene identifier mapping data.table.
-gene_map <- data.table(uniprot = names(entrez),
-                       entrez = entrez,
-	               symbol = symbols)
-gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
-
-# save the gene map
-myfile <- file.path(root,"data","msstats_gene_map.rda")
-save(gene_map,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+# create gene_map
+if (load_rda) {
+  myfile <- file.path(root,"data","msstats_gene_map.rda")
+  load(myfile)
+  message("Loaded saved 'gene_map'.")
+} else {
+  # map uniprot to entrez
+  # NOTE: this may take several minutes
+  entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+  names(entrez) <- uniprot
+  # Map any remaining missing IDs by hand.
+  message("Mapping missing IDs by hand.\n")
+  missing <- entrez[is.na(entrez)]
+  mapped_by_hand <- c(P05214=22144, 
+  		    P0CG14=214987, 
+  		    P84244=15078,
+  		    P05214=22144) #tub3a
+  entrez[names(mapped_by_hand)] <- mapped_by_hand
+  # Check: Have we successfully mapped all Uniprot IDs to Entrez?
+  check <- sum(is.na(entrez)) == 0
+  if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
+  # Map entrez ids to gene symbols using twesleyb/getPPIs.
+  symbols <- getPPIs::getIDs(entrez,from="entrez",to="symbol",species="mouse")
+  # check there should be no missing gene symbols
+  if (any(is.na(symbols))) { stop("Unable to map all Entrez to gene Symbols.") }
+  # Create gene identifier mapping data.table.
+  gene_map <- data.table(uniprot = names(entrez),
+                         entrez = entrez,
+  	               symbol = symbols)
+  gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
+  # save the gene map
+  myfile <- file.path(root,"data","msstats_gene_map.rda")
+  save(gene_map,file=myfile,version=2)
+  message(paste("\nSaved",basename(myfile),"in",dirname(myfile)))
+}
 
 
 ## map Spectrum.Files to MS.Channels ------------------------------------------
@@ -297,20 +301,23 @@ annotation_dt$"MS.Channel" <- NULL
 # save to file
 myfile <- file.path(rdatdir,"annotation_dt.rda")
 save(annotation_dt,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved",basename(myfile),"in",dirname(myfile)))
 
 
 ## combine annotation_dt and raw_pd to coerce data to MSstats format -----------
 
-# NOTE: this takes a considerable amount of time
-message("\nConverting PSM data to MSstatsTMT format.")
-data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, rmProtein_with1Feature = TRUE)
-#load(file.path(rdatdir,"data_pd.rda"))
-
-# save to file
-myfile <- file.path(rdatdir,"data_pd.rda")
-save(data_pd,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+if (load_rda) {
+	load(file.path(rdatdir,"data_pd.rda"))
+	message("Loaded saved 'data_pd'.")
+} else {
+	message("\nConverting PSM data to MSstatsTMT format.")
+	# NOTE: this takes a considerable amount of time
+	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, rmProtein_with1Feature = TRUE)
+	# save to file
+	myfile <- file.path(rdatdir,"data_pd.rda")
+	save(data_pd,file=myfile,version=2)
+	message(paste("\nSaved",myfile))
+}
 
 
 # Protein summarize and normalization -----------------------------------------
@@ -320,21 +327,32 @@ message(paste("\nSaved",myfile))
 # NOTE: this takes a considerable amount of time
 # FIXME: Joining, by = ("Run", "Channel") # unexpected output
 # FIXME: remove extremely long message about normalization between runs
-message("\nPerforming normalization and protein sumamrization.")
-msstats_prot <- proteinSummarization(data_pd,
+if (load_rda) {
+  load(file.path(root,"data","msstats_prot.rda"))
+  message("Loaded saved 'msstats_prot'.")
+} else {
+  message("\nPerforming normalization and protein sumamrization.")
+  msstats_prot <- proteinSummarization(data_pd,
 				  method="msstats",	
                                   global_norm=TRUE,	
                                   reference_norm=TRUE,	
                                   remove_norm_channel = TRUE)
-
-# save to file
-myfile <- file.path(root,"rdata","msstats_prot.rda")
-save(msstats_prot,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+  # save to file
+  myfile <- file.path(root,"rdata","msstats_prot.rda")
+  save(msstats_prot,file=myfile,version=2)
+  message(paste("\nSaved",myfile))
+}
 
 
 ## Remove protein outliers? -----------------------------------------------------
 	
+nprot <- unique(msstats_prot$Protein) # There are ~6900 proteins
+
+# Subset for speed:
+rand_prots <- sample(unique(msstats_prot$Protein),10)
+
+filt_prot <- msstats_prot %>% filter(Protein %in% rand_prots)
+
 
 ## Protein-level statistical testing -------------------------------------------
 # Tests for significant changes in protein abundance across conditions based on
@@ -344,7 +362,9 @@ message(paste("\nSaved",myfile))
 
 # test for all the possible pairs of conditions	
 # FIXME: parallelize!
-all_results <- groupComparisonTMT(msstats_prot)	
+all_results <- groupComparisonTMT(filt_prot)	
+# Note: for intrafraction comparisons the ANOVA case is utilized. The model is
+# just Abundance ~ Condition
 #load(file.path(rdatdir,"all_results.rda"))
 
 
