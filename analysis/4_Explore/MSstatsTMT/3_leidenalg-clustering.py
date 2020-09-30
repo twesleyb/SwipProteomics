@@ -13,7 +13,8 @@ max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
 optimization_method = 'Surprise'
-n_iterations = -1  # Not the number of recursive iterations, but the number
+n_iterations = -1  
+#^ Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
@@ -136,17 +137,14 @@ for key in out: del parameters[key]
 
 # Perform Leidenalg module detection.
 if parameters.get('resolution_parameter') is None:
-
     # Single resolution methods + first iteration if recursive.
     profile = list()
     partition = find_partition(**parameters)
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
-
     if not recursive:
         print("... Final partition: " + partition.summary() + ".", file=stderr)
-
     # Recursively split modules that are too big.
     if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
@@ -174,7 +172,6 @@ if parameters.get('resolution_parameter') is None:
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
         #EOL
-
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
@@ -186,12 +183,10 @@ if parameters.get('resolution_parameter') is None:
         profile[0] = partition
         print("... Final partition: " + partition.summary() + ".", file=stderr)
     #else:
-
     #    # Multi-resolution methods:
     #    pbar = ProgressBar()
     #    profile = list()
     #    resolution_range = linspace(**parameters.get('resolution_parameter'))
-
     #    for resolution in pbar(resolution_range):
     #        # Update resolution parameter.
     #        parameters['resolution_parameter'] = resolution
@@ -200,7 +195,6 @@ if parameters.get('resolution_parameter') is None:
     #        diff = optimiser.optimise_partition(partition,n_iterations=-1)
     #        profile.append(partition)
     #    # Ends loop.
-    
 # Ends If/else.
 
 #------------------------------------------------------------------------------

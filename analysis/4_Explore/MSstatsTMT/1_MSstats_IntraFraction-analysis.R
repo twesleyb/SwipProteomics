@@ -217,7 +217,7 @@ gene_map <- data.table(uniprot = names(entrez),
 gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 
 # save the gene map
-myfile <- file.path(root,"rdata","gene_map.rda")
+myfile <- file.path(root,"data","msstats_gene_map.rda")
 save(gene_map,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
@@ -326,14 +326,12 @@ msstats_prot <- proteinSummarization(data_pd,
                                   global_norm=TRUE,	
                                   reference_norm=TRUE,	
                                   remove_norm_channel = TRUE)
-#load(file.path(rdatdir,"data_prot.rda"))
 
 # save to file
-myfile <- file.path(root,"data","msstats_prot.rda")
+myfile <- file.path(root,"rdata","msstats_prot.rda")
 save(msstats_prot,file=myfile,version=2)
 message(paste("\nSaved",myfile))
 
-quit()
 
 ## Remove protein outliers? -----------------------------------------------------
 	
@@ -346,10 +344,9 @@ quit()
 
 # test for all the possible pairs of conditions	
 # FIXME: parallelize!
-all_results <- groupComparisonTMT(data_prot)	
+all_results <- groupComparisonTMT(msstats_prot)	
 #load(file.path(rdatdir,"all_results.rda"))
 
-all_results_bak = all_results
 
 ## clean-up MSstats results ----------------------------------------------------
 
@@ -386,7 +383,7 @@ filt_results <- tibble::add_column(filt_results,Symbol,.after="Entrez")
 
 # Can we add protein level data to  stats and save as tidy object?
 # format should be swip_msstats
-swip_msstats <- left_join(filt_results,data_prot,by="Protein")
+swip_msstats <- left_join(filt_results,msstats_prot,by="Protein")
 
 # split into BioFraction's for ease of comprehension
 # extract fraction from label

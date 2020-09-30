@@ -50,22 +50,14 @@ suppressPackageStartupMessages({
 devtools::load_all(ROOT)
 
 # load the data in root/data
-#data(samples)
-#data(gene_map)
-
-data(samples)
-
-# load the MSstats processed data
-myfile <- file.path(ROOT,"data","msstats_prot.rda")
-load(myfile) # msstats_prot
-data_prot <- msstats_prot
-
-# load sample metadata
-myfile <- file.path(ROOT,"data","msstats_samples.rda")
-load(myfile) # samples
+data(samples) # sample metadata
+data(msstats_prot) # load the MSstats processed data
+data(msstats_gene_map) # gene_map
 
 
 ## Create protein covariation network -----------------------------------------
+
+data_prot <- msstats_prot
 
 dm <- data_prot %>% as.data.table() %>%
 	dcast(Protein ~ Mixture + Channel + Condition, value.var="Abundance") %>% 
@@ -151,13 +143,13 @@ message("\nSaving the data.")
 # This dataframe is saved as an rda object. It can be cast
 # back into a N x N matrix with the convert_to_adjm function.
 
-myfile <- file.path(ROOT,"data","adjm.rda")
+myfile <- file.path(ROOT,"rdata","adjm.rda")
 save_adjm_as_rda(round(adjm,5), myfile)
 
-myfile <- file.path(ROOT,"data","ne_adjm.rda")
+myfile <- file.path(ROOT,"rdata","ne_adjm.rda")
 save_adjm_as_rda(ne_adjm, myfile)
 
-myfile <- file.path(ROOT,"data","ppi_adjm.rda")
+myfile <- file.path(ROOT,"rdata","ppi_adjm.rda")
 save_adjm_as_rda(ppi_adjm, myfile)
 
 # Save adjm as csv.
@@ -182,5 +174,5 @@ colnames(dm) <- samples$Sample[idx]
 
 # Save norm_protein as matrix. 
 norm_protein <- dm %>% as.data.table(keep.rownames="Accession")
-myfile <- file.path(root,"rdata","norm_protein.csv")
+myfile <- file.path(ROOT,"rdata","norm_protein.csv")
 fwrite(norm_protein, myfile)
