@@ -461,7 +461,7 @@ groupComparisonTMT <- function(data,
       # extract some basic parameters from the fit
       # if single run case, 
       if (inherits(fit, "lm")) {
-        # then estimate variance and df from linear model
+        # then estimate variance and df from fixed effects model
         av <- anova(fit)
         coeff <- coef(fit)
         s2_df <- av["Residuals", "Df"]
@@ -472,7 +472,7 @@ groupComparisonTMT <- function(data,
           s2 <- av["Residuals", "Mean Sq"]
         }
         linear.models[[prot]] <- list(model = fit)
-      # if not lm, then lmer
+      # if not lm, then lmer, get params from mixed effects model
       } else {
         rho <- list() 
         rho <- .rhoInit(rho, fit, FALSE) # see [7]; was TRUE 
