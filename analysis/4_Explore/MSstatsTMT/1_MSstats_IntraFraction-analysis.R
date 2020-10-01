@@ -22,7 +22,7 @@ input_samples = "PSM/5359_Sample_Report.xlsx"
 
 ## Options --------------------------------------------------------------------
 load_rda = FALSE # load saved objects to speed things up
-save_rda = TRUE # save key R objects?
+save_rda = FALSE # save key R objects?
 n_prots = 10 # subset of proteins to analyze for speed
 
 ## Output ---------------------------------------------------------------------
