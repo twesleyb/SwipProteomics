@@ -5,11 +5,10 @@
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 
-# FIXME: suppress warnings about singular fit?
+# FIXME: catch/suppress warnings about singular fit?
 # FIXME: exchange pbar for messages
 
 ## Input ----------------------------------------------------------------------
-
 # specify the projects root directory:
 root = "~/projects/SwipProteomics"
 
@@ -29,6 +28,59 @@ n_prots = 10 # subset of proteins to analyze for speed
 # * several intermediate datasets in root/rdata
 # * the MSstatsTMT statistical results for intrafraction comparisons saved as
 #   an excel workbook in root/tables
+
+## DESCRIPTION:
+
+# * fit appropriate model
+# * get some basic stats from fit with anova(), coeff()
+# do this thing rhoa to get fixEffs, sigma thopt
+# calculate asymptotic var-covar matrix for theata and sigma
+#rho$fixEffs <- lme4::fixef(rho$model)
+#rho$sigma <- stats::sigma(rho$model)
+#rho$thopt <- lme4::getME(rho$model,"theta")
+
+# given rho, calcApvar
+
+# calcApvar <- function(rho){
+# dd <- .devfunTheta(rho$model) # see [10]
+# #update(fm, devFunOnly = TRUE)
+# 
+#   # calculate 2x2 hessian matrix
+#   h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma)) # see [11]
+#   #       [,1]        [,2]
+#   # [1,]  18.03627   148.6282
+#   # [2,] 148.62825 17146.7792
+#   # calculate Choleski factorization of h (decomposition)
+#   ch <- try(base::chol(h), silent = TRUE)
+#   #       [,1]        [,2]
+#   # [1,] 4.246914  34.99677
+#   # [2,] 0.000000 126.18243
+#   if (inherits(ch, "try-error")) {
+#     return(rho)
+#   }
+#   # calculate the inverse of the Choleski matrix
+#   A <- 2 * base::chol2inv(ch)
+#   #       [,1]        [,2]
+#   # [1,]  0.119417491 -0.0010351106
+#   # [2,] -0.001035111  0.0001256123
+#   # calculate eigenvalue of hessian matrix h (spectral decomposition)
+#   eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
+#   # [1] 17148.06878    16.74671 
+#   # tol ~ sqrt(.Machine$double.eps)
+#   isposA <- !(min(eigval) < sqrt(.Machine$double.eps))
+#   if (!isposA) {
+#     warning("Asymptotic covariance matrix A is not positive!")
+#   }
+#   # return inverse of cholesky matrix of hessian d
+#   # NOTE: important bits:
+#   # looks like .myhess is some sort of wrapper around hessian, using devFunTheta
+#   #  >>>  dd <- .devfunTheta(rho$model) 
+#   #  >>>  h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma))
+#   #  >>>  ch <- try(base::chol(h), silent = TRUE)
+#   #  >>>  A <- 2 * base::chol2inv(ch)
+#   return(A)
+# }
+
 
 ## FUNCTIONS -----------------------------------------------------------------
 
@@ -135,10 +187,9 @@ unlink(myfile)
 if (load_rda) {
 	load(file.path(root,"rdata","raw_pd.rda"))
 } else {
-    message(paste("\nReading PSM data from ProteomeDiscoverer.",
-	                "This will take several minutes."))
     myfile <- file.path(downdir,input_psm)
     raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+    message(paste("\nLoaded PSM data."))
     # clean-up
     unlink(myfile) # rm input_psm
     unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
@@ -216,31 +267,33 @@ uniprot <- unique(filt_pd$Master.Protein.Accessions)
 if (load_rda) {
 	  load(file.path(root,"rdata","msstats_gene_map.rda"))
 } else {
-    message("Mapping Uniprot Accession to Entrez IDs.")
-    # create gene map by mapping uniprot to entrez
-    # NOTE: this may take several minutes
-    entrez <- mgi_batch_query(uniprot,quiet=TRUE)
-    names(entrez) <- uniprot
-    # Map any remaining missing IDs by hand.
-    message("Mapping missing IDs by hand.\n")
-    missing <- entrez[is.na(entrez)]
-    mapped_by_hand <- c(P05214=22144, 
-    		    P0CG14=214987, 
-    		    P84244=15078,
-    		    P05214=22144) #tub3a
-    entrez[names(mapped_by_hand)] <- mapped_by_hand
-    # Check: Have we successfully mapped all Uniprot IDs to Entrez?
-    check <- sum(is.na(entrez)) == 0
-    if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
-    # Map entrez ids to gene symbols using twesleyb/getPPIs.
-    symbols <- getPPIs::getIDs(entrez,from="entrez",to="symbol",species="mouse")
-    # check there should be no missing gene symbols
-    if (any(is.na(symbols))) { stop("Unable to map all Entrez to gene Symbols.") }
-    # Create gene identifier mapping data.table.
-    gene_map <- data.table(uniprot = names(entrez),
-                           entrez = entrez,
-    	               symbol = symbols)
-    gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
+	  message("Mapping Uniprot Accession to Entrez IDs.")
+	  # create gene map by mapping uniprot to entrez
+	  # NOTE: this may take several minutes
+	  entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+	  names(entrez) <- uniprot
+	  # Map any remaining missing IDs by hand.
+	  message("Mapping missing IDs by hand.\n")
+	  missing <- entrez[is.na(entrez)]
+	  mapped_by_hand <- c(P05214=22144, 
+			    P0CG14=214987, 
+			    P84244=15078,
+			    P05214=22144) #tub3a
+	  entrez[names(mapped_by_hand)] <- mapped_by_hand
+	  # Check: Have we successfully mapped all Uniprot IDs to Entrez?
+	  check <- sum(is.na(entrez)) == 0
+	  if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
+	  # Map entrez ids to gene symbols using twesleyb/getPPIs.
+	  symbols <- getPPIs::getIDs(entrez,from="entrez",
+				     to="symbol",species="mouse")
+          # check there should be no missing gene symbols
+	  if (any(is.na(symbols))) { 
+		  stop("Unable to map all Entrez to gene Symbols.") }
+	  # Create gene identifier mapping data.table.
+	  gene_map <- data.table(uniprot = names(entrez),
+				   entrez = entrez,
+			       symbol = symbols)
+	  gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 }
 
 # save the gene map
@@ -342,10 +395,10 @@ if (load_rda) {
 	load(file.path(rdatdir,"data_pd.rda"))
 	message("Loaded 'data_pd'")
 } else {
-	message("\nConverting PSM data to MSstatsTMT format.")
 	# NOTE: this takes a considerable amount of time
 	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
 					rmProtein_with1Feature = TRUE)
+	message("\nConverted PSM data to MSstatsTMT format.")
 }
 
 if (save_rda) {
@@ -400,9 +453,18 @@ filt_prot <- msstats_prot %>% filter(Protein %in% rand_prots)
 
 # test for all the possible pairs of conditions	
 # FIXME: parallelize!
-all_results <- groupComparisonTMT(filt_prot)	
-# Note: for intrafraction comparisons the ANOVA case is utilized. The model is
-# just Abundance ~ Condition
+
+foo = capture.output({
+	all_results <- groupComparisonTMT(filt_prot)	
+})
+
+# there are 9x calls per protein to thpars ... 
+# seems to be a call to update(fm) 
+# maybe from the fit of P42225:
+#[1] "numeric"
+#Run.(Intercept)           sigma 
+#     0.54006363      0.08232073 
+
 #load(file.path(rdatdir,"all_results.rda"))
 
 # save as rda

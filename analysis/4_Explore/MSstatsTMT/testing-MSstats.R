@@ -1,5 +1,18 @@
 #!/usr/bin/env Rscript
 
+# * .proposed.model
+# * .makeContrast
+# * .linear.model.fitting
+# * .checkSingleSubject, ...
+# * .fit_full ...
+# * .updateModel 
+# * .calcApvar
+# * .devfunTheta
+# * .myhess 
+# * .make.contrast.single 
+# * .vcovLThetaL
+# * .mygrad
+
 # title: SwipProteomics
 # description: working through MSstats groupComparisons function
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
@@ -7,6 +20,10 @@
 ## Input ----------------------------------------------------------------------
 # data in root/rdata:
 # * data_prot.rda
+
+## Options --------------------------------------------------------------------
+# total number of proteins to analyze (wash complex(5) + random_prots = nsubset)
+nsubset = 10
 
 ## Prepare the working environment --------------------------------------------
 
@@ -24,39 +41,60 @@ renv::load(root,quiet=TRUE)
 suppressPackageStartupMessages({
 	library(dplyr)
 	library(data.table)
-	library(MSstatsTMT) # twesleyb/MSstatsTMT
+	library(MSstatsTMT) # twesleyb/MSstatsTMT && twesleyb/MSstats
 })
 
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
 
+## load the data --------------------------------------------------------------
+
+# load msstats preprocessed protein data
+load(file.path(rdatdir,"msstats_prot.rda"))
+data_prot <- msstats_prot
+
+# load msstats gene_map
+load(file.path(rdatdir,"msstats_gene_map.rda"))
+# gene_map
+
+
+## get subset of proteins to analyze -------------------------------------------
+
+# get Washc* uniprot ids
+idx <- grepl("Washc*",gene_map[["symbol"]])
+wash_complex <- gene_map[["uniprot"]][idx] %>%
+	setNames(nm = gene_map[["symbol"]][idx])
+
+# all other proteins
+other_prots <- unique(data_prot$Protein[!data_prot$Protein %in% wash_complex])
+
+# get wash_complex + some random proteins
+rand_prots <- c(wash_complex, sample(other_prots,nsubset-length(wash_complex)))
+
+
 ## Perform protein-level statistical tests --------------------------------------
 # Tests for significant changes in protein abundance across conditions based on
 # a family of linear mixed-effects models in TMT experiment.
-
-data(msstats_prot); data_prot <- msstats_prot
-
-# subset the data for testing
-rand_prots <- sample(data_prot$Protein,10)
 
 # test for all the possible pairs of conditions	
 #all_results <- groupComparisonTMT(data_prot)	
 
 # args for groupComparisonTMT
 data = data_prot %>% filter(Protein %in% rand_prots)
-contrast.matrix = 'pairwise'
+contrast.matrix = 'pairwise' # FIXME: load reduced contrast.matrix
 moderated = FALSE
 adj.method = 'BH'
+
 
 # 1 ---------------------------------------------------------------------------
 # init descent
 
-groupComparisonTMT <- function(data,
-                               contrast.matrix = "pairwise",
-                               moderated = FALSE,
-                               adj.method = "BH") {
-
+#groupComparisonTMT <- function(data,
+#                               contrast.matrix = "pairwise",
+#                               moderated = FALSE,
+#                               adj.method = "BH") {
+#
   # check, the  input data should contain the following columns:
   required_cols <- c("Protein", "BioReplicate", "Abundance", "Run", "Channel",
 		     "Condition", "TechRepMixture", "Mixture")
@@ -91,11 +129,11 @@ groupComparisonTMT <- function(data,
   colnames(result)[colnames(result) == "adjusted.pvalue"] <- "adj.pvalue"
 
   # return results
-  return(result)
-}
+  #return(result)
+#} #EOF
 
-# 2 ---------------------------------------------------------------------------
-# going deeper
+## 02 ---------------------------------------------------------------------------
+# .proposed.model
 
 # mostly figured out... 
 # main things: fit the protein wise-models
@@ -104,12 +142,14 @@ groupComparisonTMT <- function(data,
                             moderated = FALSE,
                             contrast.matrix = "pairwise",
                             adj.method = "BH") {
-  # check that there are some Conditions to compare (>2)
+
+  # check that there are some Conditions to compare (>two)
   groups <- as.character(unique(data$Condition))
   if (length(groups) < 2) {
     stop("Input 'data' has fewer than two 'Conditions'. ",
 	 "Please check annotation file input.")
   }
+
   # check input contrast.matrix   
   if (is.matrix(contrast.matrix)) {
     if (!all(colnames(contrast.matrix) %in% groups)) {
@@ -123,12 +163,40 @@ groupComparisonTMT <- function(data,
 	  stop("Problem with input 'contrast.matrix'. ",
 	       "Expected matrix or character vector.")
   }
-  ncomp <- nrow(contrast.matrix)
+
+  #############################################################################
+  ## Since we don't care about all of the contrasts, let's filter them now.
+  # munge to extract 1st and 2nd fractions for contrasts, 
+  # e.g. Control.F7-Mutant.F10: f1 = 'F7'; f2 = 'F10'
+  # we are only interested in intrafraction comparisons: f1 == f2
+  contrast_list <- strsplit(rownames(contrast.matrix),"-")
+  f1 <- sapply(contrast_list,function(x) strsplit(x[1],"\\.")[[1]][2])
+  f2 <- sapply(contrast_list,function(x) strsplit(x[2],"\\.")[[1]][2])
+  idx_keep <- f1 == f2
+  contrast.matrix <- contrast.matrix[idx_keep,]
+  #myfile <- file.path(rdatdir,"contrast.matrix.rda")
+  #save(contrast.matrix,file=myfile,version=2)
+  #############################################################################
+
   # fit the linear model for each protein, see [4 +++]
+  ncomp <- nrow(contrast.matrix)
   fitted.models <- .linear.model.fitting(data)
+
+  #############################################################################
+  myfile <- file.path(rdatdir,"fitted.models.rda") # continue work outside this script
+  save(fitted.models,file=myfile,version=2)
+  #############################################################################
+
+  #############################################################################
+  # get the model from model list
+  #fm_list <- fitted.models[["model"]][[wash_complex["Washc4"]]]
+  #fit <- fm_list[["model"]]
+  #(fit) # washc4 = swip
+
   #save(fitted.models,file="fitted.models.rda",version=2)
   # names(fitted.models)
   # [1] "protein" "model"   "s2"      "s2_df"   "coeff"
+
   ## if moderated, then perform empirical bayes moderation
   if (moderated) {
     ## moderated t-statistic
@@ -309,8 +377,8 @@ groupComparisonTMT <- function(data,
 }
 
 
-# 3 ---------------------------------------------------------------------------
-# short dive
+## 003 ---------------------------------------------------------------------------
+# .makeContrast
 
 .makeContrast <- function(groups) {
   ncomp <- length(groups) * (length(groups) - 1) / 2 # Number of comparison
@@ -337,10 +405,12 @@ groupComparisonTMT <- function(data,
   return(contrast.matrix)
 }
 
-## 4 ---------------------------------------------------------------------------
+## 004 ---------------------------------------------------------------------------
 # fit protein-wise mixed linear models appropriate for the experimental design
 
-.linear.model.fitting <- function(data) {
+# NOTE: depends on 5-11
+
+.linear.model.fitting <- function(data,repeated_measures=FALSE) {
   # check input
   data$Protein <- as.character(data$Protein) 
   proteins <- as.character(unique(data$Protein))
@@ -363,6 +433,25 @@ groupComparisonTMT <- function(data,
     sub_TechReplicate <- .checkTechReplicate(sub_annot)
     sub_BioMixture <- .checkMultiBioMixture(sub_annot)
     sub_singleRun <- .checkSingleRun(sub_annot)
+    ###########################################################################
+    repeated_measures = TRUE
+    message("fitting model for repeated measurements.")
+    if (repeated_measures) {
+      ## repeated_measures = TRUE; fit repeated measures model ...
+      ## lmer(Abundance ~ Condition + (1|BioReplicate), data)
+      #sub_data <- data %>% dplyr::filter(Protein == prot)
+      # fix condition for RM design
+      condition <- sapply(strsplit(as.character(sub_data$Condition),
+				   "\\."),"[",1)
+      sub_data$Condition <- condition
+      # fix bioreplicate for RM design
+      biorep <- sapply(strsplit(as.character(sub_data$BioReplicate),
+				"\\.R[1,2,3]$"),"[",1)
+      sub_data$BioReplicate <- biorep
+      fit <- fit_repeated_measures(sub_data)
+    ###########################################################################
+    } else {
+	    # everything else:
     ## LOGIC TREE TO AUTOMATICALLY FIT APPROPRIATE LM
     if (sub_singleSubject) { # no bio variation within each condition and mix
       if (sub_TechReplicate & sub_BioMixture) { # multiple mix and tech rep
@@ -447,8 +536,9 @@ groupComparisonTMT <- function(data,
         } # single technical replicate MS run
       } # single biological mixture
     } # biological variation
+    } # end repeated measure if/else
     # you now have a fit.
-    #writeLines(capture.output(summary(fit)),"fit.txt")
+    ## this chunk extracts key parameters from the fit:
     # NOTE: see [9-11] before IFS
     if (is.null(fit)) {
 	    # the model is not fittable
@@ -486,7 +576,8 @@ groupComparisonTMT <- function(data,
 	# [1,]  0.119417491 -0.0010351106
 	# [2,] -0.001035111  0.0001256123 
 	# anova
-        av <- anova(rho$model)
+        av <- anova(rho$model) 
+	#^ this depends upon lmerTest's added lmer capabilities
         coeff <- lme4::fixef(rho$model) # didnt we do this somewhere else?
         s2_df <- av$DenDF # DF?
         s2 <- av$"Mean Sq" / av$"F value" # mean^2 / F = Sigma^2
@@ -495,6 +586,7 @@ groupComparisonTMT <- function(data,
         linear.models[[prot]] <- rho
       } # EIS 
     } #EIS
+    # you now have this list rho
     # loop munge
     pro.all <- c(pro.all, prot)
     s2.all <- c(s2.all, s2)
@@ -513,7 +605,7 @@ groupComparisonTMT <- function(data,
 } # EOF
 
 
-## 5 ----------------------------------------------------------------------------
+## 005 ----------------------------------------------------------------------------
 # functions to check the experimental design
 
 ## check single subject within each condition in each mixture
@@ -550,11 +642,12 @@ groupComparisonTMT <- function(data,
 }
 
 
-# 6 ----------------------------------------------------------------------------
+# 006 ----------------------------------------------------------------------------
 # functions to mixed effect linear models (calls lmerTest::lmer)
 
 ## 6.1
 fit_full_model_spikedin <- function(data) {
+  ## FIXME: catch warnings about poor fits 
   #' @importFrom lmerTest lmer
   #' fit the whole plot and subplot model if the data has no biological variation
   #' multiple mixtures with multiple technical replicate runs
@@ -635,8 +728,30 @@ fit_reduced_model_techrep <- function(data) {
   }
 }
 
+###############################################################################
+## 6.x
+# Custom lmer for differences between WT and MUT adjusted for fraction
+# Relevant models:
 
-# 7 ---------------------------------------------------------------------------
+#2. `lmer(ABUNDANCE ~ GROUP + (1|SUBJECT), data)`
+
+#3. `lmer(ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT), data)`
+
+fit_repeated_measures <- function(data) {
+  #' @importFrom lmerTest lmer
+  #' @keywords internal
+  fit <- suppressMessages(try(lmerTest::lmer(Abundance ~ Condition + (1|BioReplicate), data = data), TRUE)) #2
+  #fit <- suppressMessages(try(lmerTest::lmer(Abundance ~ Condition + (1|BioReplicate) + (1|Condition:BioReplicate), data = data), TRUE)) #3
+  if (!inherits(fit, "try-error")) {
+    return(fit)
+  } else { # the parameters are not estimable, return null
+    return(NULL)
+  }
+}
+###############################################################################
+
+
+# 007 ---------------------------------------------------------------------------
 
 .rhoInit <- function(rho, model, change.contr = FALSE, mf.final = NULL) {
   #' @importFrom lme4 fixef getME
@@ -664,7 +779,7 @@ fit_reduced_model_techrep <- function(data) {
 }
 
 
-# 8 ---------------------------------------------------------------------------
+# 008 ---------------------------------------------------------------------------
 # too deep
 # FIXME: consider removing
 # NO, can't scrap this. Utilized by some of the complex envs used in later fun
@@ -730,7 +845,7 @@ fit_reduced_model_techrep <- function(data) {
   )
 }
 
-# 9 ---------------------------------------------------------------------------
+# 009 ---------------------------------------------------------------------------
 # utilizes .devFunTheta and .myhess doing some math I don't understand
 # seems like .devFunTheta is this thing: `ans` = function(thpars) { }
 # which does some math with the lm = fit = model = envff
@@ -794,7 +909,7 @@ fit_reduced_model_techrep <- function(data) {
   return(A)
 }
 
-# 10 ---------------------------------------------------------------------------
+# 010 ---------------------------------------------------------------------------
 # this is confusing... another call to updateModule, but with sneaky param
 # devFunOnly, ... do some math ...
 
@@ -841,7 +956,7 @@ fit_reduced_model_techrep <- function(data) {
 }
 
 
-# 11 ---------------------------------------------------------------------------
+# 011 ---------------------------------------------------------------------------
 
 .myhess <- function(fun, x, fx = NULL, delta = 1e-4) {
   # usage: h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma))
@@ -882,7 +997,7 @@ fit_reduced_model_techrep <- function(data) {
   return(H)
 }
 
-# 12 --------------------------------------------------------------------------
+# 012 --------------------------------------------------------------------------
 #cm <- .make.contrast.single(fit$model, contrast.matrix.single, sub_data)
 
 #fit = fit$model
@@ -954,7 +1069,7 @@ fit_reduced_model_techrep <- function(data) {
 }
 
 
-# 13 ---------------------------------------------------------------------------
+# 013 ---------------------------------------------------------------------------
 
 .vcovLThetaL <- function(fm) {
   ## returns Lc %*% vcov as a function of theta parameters %*% t(Lc)
@@ -994,7 +1109,7 @@ fit_reduced_model_techrep <- function(data) {
 }
 
 
-# 14 ---------------------------------------------------------------------------
+# 014 ---------------------------------------------------------------------------
 
 .mygrad <- function(fun, x, delta = 1e-4,
                     method = c("central", "forward", "backward"), ...) {
@@ -1019,7 +1134,7 @@ fit_reduced_model_techrep <- function(data) {
 }
 
 
-# 15 --------------------------------------------------------------------------
+# 015 --------------------------------------------------------------------------
 
 .issue.checking <- function(data,
                             contrast.matrix) {
