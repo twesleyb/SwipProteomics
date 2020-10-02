@@ -1,28 +1,25 @@
-#!/usr/bin/env Rscript
+#' @import statmod
+#' @importFrom limma squeezeVar
+#' @importFrom dplyr %>% group_by filter
+#' @importFrom stats aggregate anova coef lm median medpolish model.matrix p.adjust pt t.test xtabs
+#' @keywords internal
 
 .proposed.model <- function(data,
                             moderated = TRUE,
                             contrast.matrix = "pairwise",
                             adj.method = "BH") {
-#' @import statmod
-#' @importFrom limma squeezeVar
-#' @importFrom dplyr %>% group_by filter
-#' @importFrom stats aggregate anova coef lm median medpolish 
-#' @import from stats model.matrix p.adjust pt t.test xtabs
-#' @keywords internal
+  #  Abundance <- Group <- Protein <- NULL
 
   groups <- as.character(unique(data$Condition)) # groups
   if (length(groups) < 2) {
-    stop("Please check the 'Condition' column in 'annotation' data.frame",
-	 "There must be at least two conditions!")
+    stop("Please check the Condition column in annotation file. There must be at least two conditions!")
   }
 
-  ## contrast matrix can be matrix or character vector
+  ## contrast matrix can be matrix or character vector.
   if (is.matrix(contrast.matrix)) {
     # comparison come from contrast.matrix
     if (!all(colnames(contrast.matrix) %in% groups)) {
-      stop("Please check input 'contrast.matrix'. ",
-	   "Column names of 'contrast.matrix' must match Conditions!")
+      stop("Please check the contrast.matrix. Column names of contrast.matrix must be matched with conditions!")
     }
   } else {
     # create constrast matrix for pairwise comparison
@@ -30,16 +27,19 @@
   }
   ncomp <- nrow(contrast.matrix)
 
+  ###################### start fitting linear model ######################
   ## fit the linear model for each protein
   fitted.models <- .linear.model.fitting(data)
 
-  ## estimate the prior variance and degree freedom
-  # moderated t-statistic 
-  if (moderated) { 
+  ## perform empirical bayes moderation
+  if (moderated) { ## moderated t statistic
+    ## Estimate the prior variance and degree freedom
+
     eb_input_s2 <- fitted.models$s2[fitted.models$s2_df != 0]
     eb_input_df <- fitted.models$s2_df[fitted.models$s2_df != 0]
-    # perform empirical bayes moderation
+
     eb_fit <- limma::squeezeVar(eb_input_s2, eb_input_df)
+
     if (is.infinite(eb_fit$df.prior)) {
       df.prior <- 0
       s2.prior <- 0
@@ -47,8 +47,7 @@
       df.prior <- eb_fit$df.prior
       s2.prior <- eb_fit$var.prior
     }
-  # ordinary t-statistic
-  } else { 
+  } else { ## ordinary t statistic
     s2.prior <- 0
     df.prior <- 0
   }
@@ -61,24 +60,20 @@
   coeff.all <- fitted.models$coeff # coefficients
 
   num.protein <- length(proteins)
-
-  ## store the inference results
-  res <- as.data.frame(matrix(rep(NA, 7 * num.protein * ncomp), ncol = 7)) 
-  colnames(res) <- c("Protein", "Comparison", "log2FC", 
-		     "pvalue", "SE", "DF", "issue")
+  res <- as.data.frame(matrix(rep(NA, 7 * num.protein * ncomp), ncol = 7)) ## store the inference results
+  colnames(res) <- c("Protein", "Comparison", "log2FC", "pvalue", "SE", "DF", "issue")
   data$Condition <- as.factor(data$Condition) # make sure group is factor
   data$Run <- as.factor(data$Run)
-
-  # check the number of MS runs in the data
-  nrun <- length(unique(data$Run)) 
+  nrun <- length(unique(data$Run)) # check the number of MS runs in the data
   count <- 0
   for (i in seq_along(proteins)) {
+    # message(paste("Testing for Protein :", proteins[i], "(", i, " of ", num.protein, ")"))
 
     ## get the data for protein i
-    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) 
-
+    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) ## data for protein i
     ## record the contrast matrix for each protein
     sub.contrast.matrix <- contrast.matrix
+
     sub_groups <- as.character(unique(sub_data[, c("Condition")]))
     sub_groups <- sort(sub_groups) # sort the groups based on alphabetic order
 
@@ -129,7 +124,7 @@
             variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm)
 
             ## calculate df
-            g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(fit$thopt,fit$sigma))
+            g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(fit$thopt, fit$sigma))
             denom <- try(t(g) %*% fit$A %*% g, silent = TRUE)
             if (inherits(denom, "try-error")) {
               df.post <- s2_df + df.prior

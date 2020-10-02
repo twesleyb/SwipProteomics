@@ -25,12 +25,6 @@ save_rda = TRUE # save key R objects?
 
 ## FUNCTIONS -----------------------------------------------------------------
 
-squote <- function(string) { 
-	# wrap a string in singular quotation marks (')
-	return(paste0("'",string,"'"))
-}
-
-
 mkdir <- function(...,warn=TRUE,report=FALSE) {
 	# create a new directory
 	newdir <- file.path(...)
@@ -48,9 +42,7 @@ mkdir <- function(...,warn=TRUE,report=FALSE) {
 ## Prepare the working environment --------------------------------------------
 
 # project directories
-datadir <- file.path(root,"data"); mkdir(datadir,warn=FALSE)
 rdatdir <- file.path(root,"rdata"); mkdir(rdatdir,warn=FALSE)
-downdir <- file.path(root,"downloads"); mkdir(downdir,warn=FALSE)
 
 
 # Prepare the R environment ---------------------------------------------------
@@ -61,13 +53,12 @@ renv::load(root, quiet=TRUE)
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
-	suppressWarnings({ library(getPPIs) }) # FIXME: annoying warnings!
 	library(data.table)
 	library(MSstatsTMT) # twesleyb/MSstatsTMT
 })
 
 # load functions in root/R
-suppressPackageStartupMessages({ devtools::load_all() })
+#suppressPackageStartupMessages({ devtools::load_all() })
 
 
 ## load preprocessed data ------------------------------------------------------
@@ -87,9 +78,7 @@ msstats_prot <- proteinSummarization(data_pd,
 			  reference_norm=TRUE,	
 			  remove_norm_channel = TRUE)
 
-if (save_rda) {
-  # save to file
-  myfile <- file.path(rdatdir, "msstats_prot.rda")
-  save(msstats_prot,file=myfile,version=2)
-  message(paste("\nSaved",myfile))
-}
+# save to file
+myfile <- file.path(rdatdir, "msstats_prot.rda")
+save(msstats_prot,file=myfile,version=2)
+message(paste("\nsaved",myfile))

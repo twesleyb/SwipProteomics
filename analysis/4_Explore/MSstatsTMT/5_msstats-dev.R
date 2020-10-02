@@ -59,6 +59,11 @@ load_fun <- function() {
 }
 load_fun()
 
+.updateModel(fm0)
+
+fm1 = fitted.models$model$A2ANU3$model
+.updateModel(fm1)
+# Error in list2env(data) : first argument must be a named list 
 
 ## do stats --------------------------------------------------------------------
 
@@ -147,8 +152,4 @@ negative.groups <- colnames(sub.contrast.matrix)[idy]
 # make sure at least one group from each side of the contrast exist
 #if (any(positive.groups %in% sub_groups) &
 #  any(negative.groups %in% sub_groups)) {
-
-
-.make.contrast.single(fit$model,contrast.matrix.single)
-
-
+#.make.contrast.single(fit$model,contrast.matrix.single)

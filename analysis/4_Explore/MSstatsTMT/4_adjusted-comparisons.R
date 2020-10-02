@@ -160,7 +160,7 @@ FC <- (cm %*% coeff)[, 1]
 # returns a function that takes Lc and thpars
 vss <- .vcovLThetaL(fm)
 isLMM(fm) # TRUE
-calling update() to refit model
+#calling update() to refit model
 
 vss <- function(fm, Lc, thpars) {
 	#fm2 = update(fm,REML=FALSE)# do we need to set REML?
