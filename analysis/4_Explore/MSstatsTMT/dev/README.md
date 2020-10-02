@@ -10,6 +10,5 @@
 * dev.fun.theta.R :: .devfunTheta()
 * my.hess.R :: .myhess()
 * vcov.theta.R :: .vcovLThetaL()
-
-* .make.contrast.single 
-* .mygrad
+* make.contrast.single.R :: .make.contrast.single()
+* my.grad.R :: .mygrad()

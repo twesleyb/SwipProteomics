@@ -1,120 +1,138 @@
-#############################################
-## fit the proper linear model for each protein
-#############################################
+#!/usr/bin/env Rscript
+
+#' linear.model.fitting(data)
+#'
+#' fit the proper linear model for each protein
+#'
 #' @importFrom lme4 fixef
 #' @import lmerTest
 #' @importFrom stats vcov
 #' @importFrom dplyr filter
 #' @keywords internal
-#' fit the proper linear model for each protein
-.linear.model.fitting <- function(data) {
-  Abundance <- Condition <- Protein <- NULL
 
-  data$Protein <- as.character(data$Protein) ## make sure protein names are character
-  proteins <- as.character(unique(data$Protein)) ## proteins
+.linear.model.fitting <- function(data) {
+
+  proteins <- as.character(unique(as.character(data$Protein)))
   num.protein <- length(proteins)
-  linear.models <- list() # linear models
-  s2.all <- NULL # sigma^2
-  s2_df.all <- NULL # degree freedom of sigma^2
-  pro.all <- NULL # testable proteins
-  coeff.all <- list() # coefficients
-  ## do inference for each protein individually
+
+  # empty objects for output of LOOP:
+  s2.all <- NULL          # sigma^2
+  pro.all <- NULL         # testable proteins
+  s2_df.all <- NULL       # degree freedom of sigma^2
+  coeff.all <- list()     # coefficients
+  linear.models <- list() # lmers
+
+  ## LOOP to do inference for each protein individually:
   for (i in seq_along(proteins)) {
-    #message(paste("Model fitting for Protein :", proteins[i], "(", i, " of ", num.protein, ")"))
-    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) ## data for protein i
-    # sub_groups <- as.character(unique(sub_data$Condition))
-    # if(length(sub_groups) == 1){
-    #   stop("Only one condition!")
-    # }
-    ## Record the annotation information
+    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) 
+
+    # Record the annotation information
     sub_annot <- unique(sub_data[, c(
       "Run", "Channel", "BioReplicate",
       "Condition", "Mixture", "TechRepMixture"
     )])
 
-    ## check the experimental design
+    # check the experimental design
     sub_singleSubject <- .checkSingleSubject(sub_annot)
     sub_TechReplicate <- .checkTechReplicate(sub_annot)
     sub_bioMixture <- .checkMulBioMixture(sub_annot)
     sub_singleRun <- .checkSingleRun(sub_annot)
 
-    if (sub_singleSubject) { # no biological variation within each condition and mixture
-      if (sub_TechReplicate & sub_bioMixture) { # multiple mixtures and technical replicates
-        # fit the full model with mixture and techrep effects for spiked-in data
-        fit <- fit_full_model_spikedin(sub_data)
+    ## parse the experimental design:
+    if (sub_singleSubject) { # if no Bio variation w/in ea Condition and Mix
 
-        if (is.null(fit)) { # full model is not applicable
-          # fit the reduced model with only run effect
-          fit <- fit_reduced_model_mulrun(sub_data)
+      if (sub_TechReplicate & sub_bioMixture) { # if multi Mix and TechRep
+
+	# fit: lmer(A ~ 1 + (1|M) + (1|M|T) + C)
+        fit <- fit_full_model_spikedin(sub_data) # [1]
+
+        if (is.null(fit)) { # if full model is not applicable
+          # then fit:  lmer(A ~ 1 + (1|R) + C)
+          fit <- fit_reduced_model_mulrun(sub_data) # [2]
         }
 
-        if (is.null(fit)) { # the second model is not applicable
-          # fit one-way anova model
-          fit <- fit_reduced_model_onerun(sub_data)
+        if (is.null(fit)) { # if the second model is not applicable
+          # then fit: lm(A ~ 1 + C)
+          fit <- fit_reduced_model_onerun(sub_data) # [3]
         }
-      } else {
-        if (sub_TechReplicate | sub_bioMixture) { # multiple mixtures or multiple technical replicates
-          # fit the reduced model with only run effect
+
+      } else { 
+
+        if (sub_TechReplicate | sub_bioMixture) { # if multi Mix | TechRep
+
+          # fit [2] 
           fit <- fit_reduced_model_mulrun(sub_data)
 
-          if (is.null(fit)) { # the second model is not applicable
-            # fit one-way anova model
+          if (is.null(fit)) { # if the second model is not applicable
+            # fit [3]
             fit <- fit_reduced_model_onerun(sub_data)
           }
+
         } else { # single run case
-          # fit one-way anova model
+
+          # fit [3]
           fit <- fit_reduced_model_onerun(sub_data)
         }
       }
-    } else { # biological variation exists within each condition and mixture
-      if (sub_bioMixture) { # multiple biological mixtures
-        if (sub_TechReplicate) { # multiple technical replicate MS runs
-          # fit the full model with mixture, techrep, subject effects
-          fit <- fit_full_model(sub_data)
 
-          if (is.null(fit)) { # full model is not applicable
-            # fit the reduced model with run and subject effects
-            fit <- fit_reduced_model_techrep(sub_data)
+    } else { # biological variation exists within each Condition and Mixture
+
+      if (sub_bioMixture) { # if multiple biological mixtures
+
+        if (sub_TechReplicate) { # if multiple technical replicate MS runs
+
+          # fit: lmer(A ~ 1 + (1|M) + (1|M:TechRepMix) + C + (1|BioRep:C:M))
+          fit <- fit_full_model(sub_data) # [4]
+
+          if (is.null(fit)) { # if the full model is not applicable
+            # then fit: lmer(A ~ 1 + (1|Run) + C + (1|BioRep:C)
+            fit <- fit_reduced_model_techrep(sub_data) # [5]
           }
 
-          if (is.null(fit)) { # second model is not applicable
-            # fit one-way anova model
+          if (is.null(fit)) { # if model 5 is not applicable
+            # fit [3]
             fit <- fit_reduced_model_onerun(sub_data)
           }
+
         } else { # single technical replicate MS run
-          # fit the reduced model with only run effect
+	  # fit [2]
           fit <- fit_reduced_model_mulrun(sub_data)
 
-          if (is.null(fit)) { # second model is not applicable
-            # fit one-way anova model
+          if (is.null(fit)) { # if model 2 is not applicable
+            # then fit [3]
             fit <- fit_reduced_model_onerun(sub_data)
           }
         }
-      } else { # single biological mixture
-        if (sub_TechReplicate) { # multiple technical replicate MS runs
-          # fit the reduced model with run and subject effects
-          fit <- fit_reduced_model_techrep(sub_data)
 
-          if (is.null(fit)) { # second model is not applicable
-            # fit one-way anova model
+      } else { # single biological mixture
+
+        if (sub_TechReplicate) { # multiple technical replicate MS runs
+          # fit [5]
+          fit <- fit_reduced_model_techrep(sub_data) 
+
+          if (is.null(fit)) { # if model 5 is not applicable
+	    # fit [3]
             fit <- fit_reduced_model_onerun(sub_data)
           }
+
         } else { # single run
-          # fit one-way anova model
+          # fit [3]
           fit <- fit_reduced_model_onerun(sub_data)
+
         } # single technical replicate MS run
       } # single biological mixture
     } # biological variation
 
     ## estimate variance and df from linear models
+
     if (!is.null(fit)) { # the model is fittable
-      if (inherits(fit, "lm")) { # single run case
-        ## Estimate the coeff from fixed model
+
+      if (inherits(fit, "lm")) { # if single run case [3]
+
+        # estimate the coeff from fixed-effects model
         av <- anova(fit)
-        coeff <- coef(fit)
-
+        coeff <- stats::coef(fit)
         s2_df <- av["Residuals", "Df"]
-
         if (s2_df == 0) {
           s2 <- 0
         } else {
@@ -122,18 +140,22 @@
           s2 <- av["Residuals", "Mean Sq"]
         }
 
+	# store the fitted model in linear.models list
         linear.models[[proteins[i]]] <- list(model = fit)
-      } else {
-        ## Estimate the coeff from lmerTest model
-        rho <- list() ## environment containing info about model
-        rho <- .rhoInit(rho, fit, TRUE) ## save lmer outcome in rho envir variable
-        rho$A <- .calcApvar(rho) ## asymptotic variance-covariance matrix for theta and sigma
 
-        av <- anova(rho$model)
+      } else { # mixed effects models [1, 2, 4, 5]
+
+        # estimate the coeff from mixed-effects model 
+        rho <- list() 
+        rho <- .rhoInit(rho, fit, TRUE) # save lmer outcome in rho envir var
+        rho$A <- .calcApvar(rho) # asymptotic var-covar matrix for theta & sigma
+
+        av <- anova(rho$model) # utilize lmerTest added capability
         coeff <- lme4::fixef(rho$model)
         s2_df <- av$DenDF
         s2 <- av$"Mean Sq" / av$"F value"
 
+	# store the fitted model in linear.models list
         linear.models[[proteins[i]]] <- rho
       }
 
@@ -141,15 +163,16 @@
       s2.all <- c(s2.all, s2)
       s2_df.all <- c(s2_df.all, s2_df)
       coeff.all[[proteins[i]]] <- coeff
+
     } else { # the model is not fittble
-      # message(proteins[i], " is untestable due to no enough measurements.")
       linear.models[[proteins[i]]] <- "unfittable"
       pro.all <- c(pro.all, proteins[i])
       s2.all <- c(s2.all, NA)
       s2_df.all <- c(s2_df.all, NA)
       coeff.all[[proteins[i]]] <- NA
     }
-  } # for each protein
+  } # EOL for each protein
+
   names(s2.all) <- proteins
   names(s2_df.all) <- proteins
 
@@ -160,4 +183,4 @@
     s2_df = s2_df.all,
     coeff = coeff.all
   ))
-}
+} #EOF

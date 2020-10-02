@@ -4,7 +4,6 @@
                             moderated = TRUE,
                             contrast.matrix = "pairwise",
                             adj.method = "BH") {
-#  Abundance <- Group <- Protein <- NULL
 #' @import statmod
 #' @importFrom limma squeezeVar
 #' @importFrom dplyr %>% group_by filter
@@ -14,14 +13,16 @@
 
   groups <- as.character(unique(data$Condition)) # groups
   if (length(groups) < 2) {
-    stop("Please check the Condition column in annotation file. There must be at least two conditions!")
+    stop("Please check the 'Condition' column in 'annotation' data.frame",
+	 "There must be at least two conditions!")
   }
 
-  ## contrast matrix can be matrix or character vector.
+  ## contrast matrix can be matrix or character vector
   if (is.matrix(contrast.matrix)) {
     # comparison come from contrast.matrix
     if (!all(colnames(contrast.matrix) %in% groups)) {
-      stop("Please check the contrast.matrix. Column names of contrast.matrix must be matched with conditions!")
+      stop("Please check input 'contrast.matrix'. ",
+	   "Column names of 'contrast.matrix' must match Conditions!")
     }
   } else {
     # create constrast matrix for pairwise comparison
@@ -29,9 +30,69 @@
   }
   ncomp <- nrow(contrast.matrix)
 
-  ###################### start fitting linear model ######################
   ## fit the linear model for each protein
   fitted.models <- .linear.model.fitting(data)
+
+  # 'fitted.models' contains: 
+  # NOTE: Outline for lmer case only!
+  # [1] protein name = UniProt Accession
+  # [*] model = list():
+  #     [2] fm = fitted lm or lmer object
+  #     [3] fixEffs --| lme4::fixef(fm) -----------|
+  #     [4] sigma ----| stats::sigma(fm) ----------| All from .rhoInit
+  #     [5] thopt ----| lme4::getME(fm, "theta") --|
+  #     [6] A -- rho$A = calcApvar(rho)
+  # [7] s2 = sigma^2
+  # [8] s2_df = degrees of freedom
+  # [9] coeff = coefficients = same as fm$coeff
+
+  #################################################################### 
+  ## rm before running function
+  message("whoops, remove junk!")
+
+  # [1] Protein Accession
+  prot = data$Protein
+
+  # [2] Linear model (lmer)
+  fm = fitted.models$model[[1]]$model
+
+  # [3] Fixed effects (e.g. Condition)
+  fixed_effects = lme4::fixef(fm)
+  stopifnot(all(fixed_effects == fitted.models$model[[1]]$fixEffs))
+
+  # [4] Sigma - residual standard deviation
+  sigma_ <- stats::sigma(fm)
+  stopifnot(sigma_ == fitted.models$model[[1]]$sigma)
+
+  # [5] thopt -  extract theta the random-effects parameter estimates
+  # parameterized as the relative Cholesky factors of each random effect
+  thopt = lme4::getME(fm, "theta") 
+
+  # [6] A - .calcApvar(rho)
+
+  calcApvar <- function(fm) {
+	  # alternative:
+	  dd <- .devfunTheta(fm)
+	  h = .myhess(dd, c(thopt, sigma_)) # hessian
+	  ch = try(chol(h)) # cholesky
+	  A = 2 * chol2inv(ch)
+	  # check
+	  eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
+	  if (min(eigval) < sqrt(.Machine$double.eps)) {
+		  warning("Asymptotic covariance matrix A is not positive!")
+	  }
+	  return(A)
+  }
+  A = calcA(fm)
+  stopifnot(A == fitted.models$model[[1]]$A) 
+  #FIXME: prob dont need devfunTheta if we can call whatever func it is directly
+
+
+
+  # [7] s2 = sigma^2
+
+
+  #################################################################### 
 
   ## perform empirical bayes moderation
   if (moderated) { ## moderated t statistic

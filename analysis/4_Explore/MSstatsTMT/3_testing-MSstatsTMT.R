@@ -1,18 +1,5 @@
 #!/usr/bin/env Rscript
 
-# * .proposed.model
-# * .makeContrast
-# * .linear.model.fitting
-# * .checkSingleSubject, ...
-# * .fit_full ...
-# * .updateModel 
-# * .calcApvar
-# * .devfunTheta
-# * .myhess 
-# * .make.contrast.single 
-# * .vcovLThetaL
-# * .mygrad
-
 # title: SwipProteomics
 # description: working through MSstats groupComparisons function
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
@@ -47,6 +34,13 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
+# load dev functions
+load_devfun <- function() {
+	devfun <- list.files("./dev",pattern="*.R",full.names=TRUE)
+	invisible(sapply(devfun,source))
+}
+
+load_devfun()
 
 ## load the data --------------------------------------------------------------
 
@@ -122,6 +116,8 @@ adj.method = 'BH'
   }
 
   # protein-level inference see [2]
+  data = data[data$Protein %in% sample(data$Protein,1),]
+
   result <- .proposed.model(data, moderated, contrast.matrix, adj.method)
 
   # check column name in order to use groupComparisonPlot from MSstats
@@ -758,19 +754,16 @@ fit_repeated_measures <- function(data) {
   #' @importFrom stats sigma
   # Create rho vector containing info about mixed model
   # model = fit
-  if (change.contr) { # updating model, this looks expensive!
-    rho$model <- .updateModel(model, mf.final = mf.final, 
-			      change.contr = change.contr) # see [8]
+  if (change.contr) { # update model contrast
+      	  rho$model <- .updateModel(model, mf.final = mf.final,
+					  change.contr = change.contr) # see [8]
   } else {
-    # model = fit
-    rho$model <- model
+    rho$model <- model # | model = fit
   }
-  # done for both -- add to empty list rho
   # NOTE: THIS IS THE IMPORTANT STUFF!
   rho$fixEffs <- lme4::fixef(rho$model)
   rho$sigma <- stats::sigma(rho$model)
   rho$thopt <- lme4::getME(rho$model,"theta")
-  # NOTE: THIS IS THE IMPORTANT STUFF! 
   # For each protein, given its lm fit, 
   # * extract the fixed effect estimates (lme4::fixef)
   # * extract the stdev of residuals (stats::sigma)

@@ -1,50 +1,40 @@
 #!/usr/bin/env Rscript
 
-.checkSingleSubject <- function(annotation) {
-###############################################################
-## check single subject within each condition in each mixture
-###############################################################
+#' check.design
 #' @keywords internal
+
+.checkSingleSubject <- function(annotation) {
+  # check if there is a single Biological subject
   temp <- unique(annotation[, c("Mixture", "Condition", "BioReplicate")])
   temp$Condition <- factor(temp$Condition)
   temp$Mixture <- factor(temp$Mixture)
   temp1 <- xtabs(~ Mixture + Condition, data = temp)
   singleSubject <- all(temp1 <= "1")
-
   return(singleSubject)
 }
 
+
 .checkTechReplicate <- function(annotation) {
-#############################################
-## check .checkTechReplicate
-#############################################
-#' @keywords internal
+  # check if there is Technical Replication of Mixture
   temp <- unique(annotation[, c("Mixture", "Run")])
   temp$Mixture <- factor(temp$Mixture)
   temp1 <- xtabs(~Mixture, data = temp)
   TechReplicate <- all(temp1 != "1")
-
   return(TechReplicate)
 }
 
+
 .checkMulBioMixture <- function(annotation) {
-#############################################
-## check whether there are multiple biological mixtures
-#############################################
-#' @keywords internal
+  # check whether there are multiple biological Mixtures
   temp <- unique(annotation[, "Mixture"])
   temp <- as.vector(as.matrix(temp))
-
   return(length(temp) > 1)
 }
 
+
 .checkSingleRun <- function(annotation) {
-#############################################
-## check whether there is only single run
-#############################################
-#' @keywords internal
+  # check whether there is only single run
   temp <- unique(annotation[, "Run"])
   temp <- as.vector(as.matrix(temp))
-
   return(length(temp) == 1)
 }
