@@ -4,12 +4,11 @@
 #' calculate the asymptotic variance-covariance matrix of variance parameters 
 #' @keywords internal
 
-.calcApvar <- function(rho) {
+.calcApvar <- function(fm,thopt,sigma) {
   # based on theta parameters and sigma
 
-  dd <- .devfunTheta(rho$model)
-  h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma))
-
+  dd <- .devfunTheta(fm)
+  h <- .myhess(dd, c(thopt, sigma))
   ch <- try(chol(h), silent = TRUE)
 
   if (inherits(ch, "try-error")) {

@@ -20,8 +20,8 @@
 
   # here devFunOnly is passed as sneaky arg to .updateModel
   # seems like cutting out updateModel with update doesn't affect things
-  #ff <- .updateModel(fm, devFunOnly = TRUE) # does this substituion matter?
-  ff <- update(fm, devFunOnly=TRUE)
+  ff <- .updateModel(fm, devFunOnly = TRUE) # does this substituion matter?
+  #ff <- update(fm, devFunOnly=TRUE)
   reml <- lme4::getME(fm, "is_REML")
 
   envff <- environment(ff)
