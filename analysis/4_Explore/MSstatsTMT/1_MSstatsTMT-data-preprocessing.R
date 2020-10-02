@@ -22,67 +22,14 @@ input_samples = "PSM/5359_Sample_Report.xlsx"
 ## Options --------------------------------------------------------------------
 load_rda = FALSE # load saved objects to speed things up
 save_rda = FALSE # save key R objects?
-n_prots = 10 # subset of proteins to analyze for speed
 
 ## Output ---------------------------------------------------------------------
 # * several intermediate datasets in root/rdata
 # * the MSstatsTMT statistical results for intrafraction comparisons saved as
 #   an excel workbook in root/tables
 
-## DESCRIPTION:
 
-# * fit appropriate model
-# * get some basic stats from fit with anova(), coeff()
-# do this thing rhoa to get fixEffs, sigma thopt
-# calculate asymptotic var-covar matrix for theata and sigma
-#rho$fixEffs <- lme4::fixef(rho$model)
-#rho$sigma <- stats::sigma(rho$model)
-#rho$thopt <- lme4::getME(rho$model,"theta")
-
-# given rho, calcApvar
-
-# calcApvar <- function(rho){
-# dd <- .devfunTheta(rho$model) # see [10]
-# #update(fm, devFunOnly = TRUE)
-# 
-#   # calculate 2x2 hessian matrix
-#   h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma)) # see [11]
-#   #       [,1]        [,2]
-#   # [1,]  18.03627   148.6282
-#   # [2,] 148.62825 17146.7792
-#   # calculate Choleski factorization of h (decomposition)
-#   ch <- try(base::chol(h), silent = TRUE)
-#   #       [,1]        [,2]
-#   # [1,] 4.246914  34.99677
-#   # [2,] 0.000000 126.18243
-#   if (inherits(ch, "try-error")) {
-#     return(rho)
-#   }
-#   # calculate the inverse of the Choleski matrix
-#   A <- 2 * base::chol2inv(ch)
-#   #       [,1]        [,2]
-#   # [1,]  0.119417491 -0.0010351106
-#   # [2,] -0.001035111  0.0001256123
-#   # calculate eigenvalue of hessian matrix h (spectral decomposition)
-#   eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
-#   # [1] 17148.06878    16.74671 
-#   # tol ~ sqrt(.Machine$double.eps)
-#   isposA <- !(min(eigval) < sqrt(.Machine$double.eps))
-#   if (!isposA) {
-#     warning("Asymptotic covariance matrix A is not positive!")
-#   }
-#   # return inverse of cholesky matrix of hessian d
-#   # NOTE: important bits:
-#   # looks like .myhess is some sort of wrapper around hessian, using devFunTheta
-#   #  >>>  dd <- .devfunTheta(rho$model) 
-#   #  >>>  h <- .myhess(dd, c(rho$thopt, sigma = rho$sigma))
-#   #  >>>  ch <- try(base::chol(h), silent = TRUE)
-#   #  >>>  A <- 2 * base::chol2inv(ch)
-#   return(A)
-# }
-
-
-## FUNCTIONS -----------------------------------------------------------------
+## Functions -----------------------------------------------------------------
 
 squote <- function(string) { 
 	# wrap a string in singular quotation marks (')
@@ -400,7 +347,7 @@ if (load_rda) {
 	# NOTE: this takes a considerable amount of time
 	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
 					rmProtein_with1Feature = TRUE)
-	message("\nConverted PSM data to MSstatsTMT format.")
+	message("\nConverted input PSM data from PD to MSstatsTMT format.")
 }
 
 if (save_rda) {
