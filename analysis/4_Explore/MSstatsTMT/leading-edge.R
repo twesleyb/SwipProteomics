@@ -1,26 +1,37 @@
  #!/usr/bin/env Rscript 
 
-# 'fitted.models' contains: 
-# NOTE: Outline for lmer case only!
-# [1] protein name = UniProt Accession
-# [*] model = list():
-#     [2] fm = fitted lm or lmer object
-#     [3] fixEffs --| lme4::fixef(fm) -----------|
-#     [4] sigma ----| stats::sigma(fm) ----------| All from .rhoInit
-#     [5] thopt ----| lme4::getME(fm, "theta") --|
-#     [6] A -- rho$A = calcApvar(rho)
-# [7] s2 = sigma^2
-# [8] s2_df = degrees of freedom
-# [9] coeff = coefficients = same as fm$coeff
+# description: Working through MSstatsTMT protein-level models and 
+# statistical comparisons
+
+# input:
+# * preprocessed protein-level data from PDtoMSstatsTMTFormat()
+
+## key statistics:
+# [*] protein name - UniProt Accession
+# [*] fm - fitted lm or lmer object
+# [*] sigma
+# [*] theta (thopt)
+# [*] A (Apvar)
+# [*] s2 - sigma^2
+# [*] s2_df - degrees of freedom
+# [*] coeff - coefficients 
+
+## prepare environment --------------------------------------------------------
 
 # load renv
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-# load the MSstats preprocessed protein-level data
-load(file.path(root,"rdata","msstats_prot.rda"))
+# imports
+suppressPackageStartupMessages({
+	library(dplyr) # all other calls should be in the form pac::fun
+})
 
-# function to source functions in dev
+
+## functions ------------------------------------------------------------------
+
+# function to source MSstatsTMT's internal functions in dev
+# consider moving MSstatsTMT to source or something
 load_fun <- function() {
 	# NOTE: ./dev is assumed to be in cwd
 	# these are core MSstats functions utilized by groupComparisons()
@@ -28,202 +39,250 @@ load_fun <- function() {
 	invisible(sapply(fun,source))
 }
 
+
+## main -----------------------------------------------------------------------
+
+# load MSstatsTMT's guts
 load_fun()
 
-# Workthrough 
-
-# check results against MSstatsTMT output:
-#load(file.path(root,"rdata","fitted.models.rda"))
-# == fitted.models # len(fitted.models) == 5
-
-# these steps reproduce the objects contained within the list 
-# returned by .linear.model.fitting(data) with alot less munge
-# fitted.models <- .linear.model.fitting(data)
+# load the MSstats preprocessed protein-level data [INPUT]
+myfile <- file.path(root,"rdata","msstats_prot.rda")
+load(myfile)
 
 # load msstats preprocessed protein data
 load(file.path(root,"rdata","msstats_prot.rda"))
 data_prot <- msstats_prot
-#proteins <- unique(data_prot$Protein)
-#prot <- sample(proteins,1)
-prot <- "Q3UMB9"
 
-data = data_prot[data_prot$Protein == prot,]
+## ----------------------------------------------------------------------------
+## Input: 
 
+# tidy protein level data 
+# contrast type
+# protein
+
+# Let's analyze SWIP
+
+# Subset the data
+data = data_prot[data_prot$Protein == protein,]
+
+## INPUTS
+# * data from MSstatsTMT::summarizeProtein()
 contrast.matrix = "pairwise"
-moderated = FALSE
+moderated = FALSE 
 adj.method = "BH"
-remove_norm_channel = TRUE
-remove_empty_channel = TRUE
+protein <- "Q3UMB9"
 
-#groupComparisonTMT <- function(data,
-#                               contrast.matrix = "pairwise",
-#                               moderated = FALSE,
-#                               adj.method = "BH",
-#                               remove_norm_channel = TRUE,
-#                               remove_empty_channel = TRUE) {
 
-## check input data
-required.info <- c(
-"Protein", "BioReplicate", "Abundance", "Run", "Channel",
-"Condition", "TechRepMixture", "Mixture"
-)
-
-if (!all(required.info %in% colnames(data))) {
-  missedAnnotation <- which(!(required.info %in% colnames(data)))
-  missedAnnotation.comb <- paste(required.info[missedAnnotation], collapse = ", ")
-  if (length(missedAnnotation) == 1) {
-    stop(paste(
-      "Please check the required input. ** columns :",
-      missedAnnotation.comb, "is missed."
-    ))
-  } else {
-    stop(paste(
-      "Please check the required input. ** columns :",
-      missedAnnotation.comb, ", are missed."
-    ))
-  }
+# remove rows with NA intensities
+if (any(is.na(data))) { 
+	data <- data[!is.na(data$Abundance), ]
+	warning("Missing values were removed from input 'data'.")
 }
 
-## remove 'Empty' column : It should not used for further analysis
-if (remove_empty_channel & is.element("Empty", unique(data$Condition))) {
-  data <- data[data$Condition != "Empty", ]
-  data$Condition <- factor(data$Condition)
-}
+## fit protein-level models
 
-## remove 'Norm' column : It should not used for further analysis
-if (remove_norm_channel & is.element("Norm", unique(data$Condition))) {
-  data <- data[data$Condition != "Norm", ]
-  data$Condition <- factor(data$Condition)
-}
+# for intra-fraction comparisons MSstatsTMT fits the model:
+# >>> Abundance ~ 1 + (1|Run) + Condition
 
-## remove the rows with NA intensities
-data <- data[!is.na(data$Abundance), ]
+fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
 
-## Inference
-load_fun()
+# Where 'Abundance' is the response, 'Run' is a mixed-effect, and 'Condition'
+# is a fixed-effect. The model is fit by a call to lmerTest::lmer().
+# lmerTest is a package that wraps 'lme4'.
 
-library(dplyr)
-# fit: A ~ 1 + (1|Run) + C 
-#result <- .proposed.model(data, moderated, contrast.matrix, adj.method)
+# 'Run' cooresponds to a single multi-plex TMT experiment.
+# This is the affect of experimental Batch.
 
-moderated = TRUE
-contrast.matrix = "pairwise"
-adj.method = "BH"
+# 'Condition' for intrafraction comparisons is Treatment::BioFraction 
+# (e.g. Control.F7 and Mutant.F9)
 
-  # create constrast matrix for pairwise comparisons between conditions
-  conditions <- as.character(unique(data$Condition))
-  contrast.matrix <- .makeContrast(conditions)
-  ncomp <- nrow(contrast.matrix)
 
-  ## fit the linear model for each protein
-  fitted.models <- .linear.model.fitting(data)
+# create constrast matrix for pairwise comparisons between conditions
+## all of this is done to 
+#conditions <- as.character(unique(data$Condition))
+#all_contrasts <- .makeContrast(conditions)
 
-  # fitted.models is a list that contains the fm and things calculated from fm
-  # we are struggling to reproduce A asymptoptic var-covar matrix
-  #.linear.model.fitting <- function(data) {
+# fixme: we are not really interested in all comparisons!
+#ncomp <- nrow(all_contrasts)
 
-  data$Protein <- as.character(data$Protein) 
-  proteins <- as.character(unique(data$Protein))
-  num.protein <- length(proteins)
-  linear.models <- list() # linear models
 
-  s2.all <- NULL # sigma^2
-  s2_df.all <- NULL # degree freedom of sigma^2
-  pro.all <- NULL # testable proteins
-  coeff.all <- list() # coefficients
+# fit a linear model for each protein
+# this loops to fit models for all proteins given the experimental design
+# automatically determined from the formatting of the MSstatsTMT input
+#fitted.models <- .linear.model.fitting(data)
+# fixme: what happens if lm case is passed to lmer?
+# otherwise its as simlple as:
 
-  sub_data <- data %>% dplyr::filter(Protein == prot) ## data for swip
+fm <- lmerTest::lmer(fx, data)
 
-    ## Record the annotation information
-    sub_annot <- unique(sub_data[, c(
-      "Run", "Channel", "BioReplicate",
-      "Condition", "Mixture", "TechRepMixture"
-    )])
 
-    ## check the experimental design
-    sub_singleSubject <- .checkSingleSubject(sub_annot)
-    sub_TechReplicate <- .checkTechReplicate(sub_annot)
-    sub_bioMixture <- .checkMulBioMixture(sub_annot)
-    sub_singleRun <- .checkSingleRun(sub_annot)
+# fitted.models is a list that contains the fm and things calculated from fm
+# for every protein
 
-    # apply appropriate model:
-    # lmer(A ~ 1 + (1|R) + C)
-    fit <- fit_reduced_model_mulrun(sub_data) 
-    # equivalent to :
-    #fm = formula(Abundance ~ 1 + (1|Run) + Condition)
-    #fx = lmerTest::lmer(fm,sub_data)
 
-    ## estimate variance and df from linear models
-    # pass
+## .linear.model.fitting ------------------------------------------------------
 
-    ## Estimate the coeff from lmerTest model
-    rho <- list() 
-    rho <- .rhoInit(rho, fit, TRUE)  # can all be easily calculated from fm
+#.linear.model.fitting <- function(data) {
 
-    ## asymptotic variance-covariance matrix for theta and sigma
-    rho$A <- .calcApvar(rho)  # tricky because .updateModel
+#proteins <- unique(as.character(data$Protein))
+#num.protein <- length(proteins)
 
-   #.calcApvar <- function(rho=list(fm,thopt,sigma)) {
-    fit = rho$model
-    thopt = rho$thopt
-    sigma = rho$sigma
+# objects to store the output from loop:
+#s2.all <- NULL # sigma^2
+#s2_df.all <- NULL # degree freedom of sigma^2
+#pro.all <- NULL # testable proteins
+#coeff.all <- list() # coefficients
+#linear.models <- list() 
 
-    dd <- .devfunTheta(fit)
+#sub_data <- data %>% dplyr::filter(Protein == prot) ## data for swip
 
-    h <- .myhess(dd, c(thopt, sigma))
-    ch <- try(chol(h), silent = TRUE)
-    
-    A <- 2 * chol2inv(ch)
+## Record the annotation information
+#sub_annot <- unique(sub_data[, c(
+#"Run", "Channel", "BioReplicate",
+#"Condition", "Mixture", "TechRepMixture"
+#)])
 
-    eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
+## check the experimental design
+#sub_singleSubject <- .checkSingleSubject(sub_annot)
+#sub_TechReplicate <- .checkTechReplicate(sub_annot)
+#sub_bioMixture <- .checkMulBioMixture(sub_annot)
+#sub_singleRun <- .checkSingleRun(sub_annot)
 
-  if (min(eigval) < sqrt(.Machine$double.eps)) { # tolerance
-    warning("Asymptotic covariance matrix A is not positive!")
-  }
+# apply appropriate model:
+# lmer(A ~ 1 + (1|R) + C)
+# FIXME: why not just pass a formula?
+# and fit the model?
+#fit <- fit_reduced_model_mulrun(sub_data) 
+# equivalent to :
+#fm = formula(Abundance ~ 1 + (1|Run) + Condition)
+#fx = lmerTest::lmer(fm,sub_data)
 
-    av <- anova(rho$model)
-    #av <- anova(fx)
-    coeff <- lme4::fixef(rho$model)
-    s2_df <- av$DenDF
-    s2 <- av$"Mean Sq" / av$"F value"
+## estimate variance and df from linear models
+# pass
 
-# picking up in ______________ .proposed.model?
+# rho <- function() {
 
-  ## perform empirical bayes moderation
+# populate list rho with (fixEffs (coeff), sigma, and thopt(theta))
+# these things can be done with simple calls to lme4
+rho <- get_rho(fm)
+
+# moderation
+
+# calc posterior s2
+
+cm = .make.contrast
+
+
+          cm <- .make.contrast.single(fit$model, contrast.matrix.single, sub_data)
+
+          ## logFC
+          FC <- (cm %*% coeff)[, 1]
+
+          ## variance and df
+          if (inherits(fit$model, "lm")) {
+            variance <- diag(t(cm) %*% summary(fit$model)$cov.unscaled %*% cm) * s2.post
+            df.post <- s2_df + df.prior
+          } else {
+            vss <- .vcovLThetaL(fit$model)
+            varcor <- vss(t(cm), c(fit$thopt, fit$sigma)) ## for the theta and sigma parameters
+            vcov <- varcor$unscaled.varcor * s2
+            se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
+
+            ## calculate variance
+            vcov.post <- varcor$unscaled.varcor * s2.post
+            variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm)
+
+            ## calculate df
+            g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(fit$thopt, fit$sigma))
+            denom <- try(t(g) %*% fit$A %*% g, silent = TRUE)
+            if (inherits(denom, "try-error")) {
+              df.post <- s2_df + df.prior
+            } else {
+              df.post <- 2 * (se2)^2 / denom + df.prior
+            }
+          }
+
+          ## calculate the t statistic
+          t <- FC / sqrt(variance)
+
+          ## calculate p-value
+          p <- 2 * pt(-abs(t), df = df.post)
+
+
+########################
+# FIXME: unmask what rho does
+#rho <- .rhoInit(rho, fit, TRUE)  # can all be easily calculated from fm
+
+## asymptotic variance-covariance matrix for theta and sigma
+#rho$A <- .calcApvar(rho)  # tricky because .updateModel
+# FIXME: replace with a function that takes fm
+# can replace all with single function instead of two
+# given fit, get: A, sigma, coeff, theta
+
+# add to step above:
+av <- anova(fit)
+#av <- anova(fx)
+#coeff <- lme4::fixef(rho$model) # done in step above
+s2_df <- av$DenDF
+s2 <- av$"Mean Sq" / av$"F value"
+
+##-----------------------------------------------------------------------------
+## perform empirical bayes moderation
   #if (moderated) { ## moderated t statistic
+    ## NOTE: this step takes into acount all fits with nobs > 1!
     ## Estimate the prior variance and degree freedom
-    #eb_input_s2 <- fitted.models$s2[fitted.models$s2_df != 0]
-    #eb_input_df <- fitted.models$s2_df[fitted.models$s2_df != 0]
-    #eb_fit <- limma::squeezeVar(eb_input_s2, eb_input_df)
-    #if (is.infinite(eb_fit$df.prior)) {
-    #  df.prior <- 0
-    #  s2.prior <- 0
-    #} else {
-    #  df.prior <- eb_fit$df.prior
-    #  s2.prior <- eb_fit$var.prior
-    #}
+    # vector of s2 for all fits with > 1 obs
+    # vector of dof (npeptides) for all fits with > 1 obs
+    if (moderated) {
+    eb_input_s2 <- fitted.models$s2[fitted.models$s2_df != 0]
+    eb_input_df <- fitted.models$s2_df[fitted.models$s2_df != 0]
+    eb_fit <- limma::squeezeVar(eb_input_s2, eb_input_df)
+    if (is.infinite(eb_fit$df.prior)) {
+	    df.prior <- 0
+	    s2.prior <- 0
+    }
+	    df.prior <- eb_fit$df.prior
+	    s2.prior <- eb_fit$var.prior
+    }
   
-    ## ordinary t statistic
-    s2.prior <- 0
-    df.prior <- 0
+## else ordinary t statistic
+s2.prior <- 0
+df.prior <- 0
 
-    ## get the data for protein i
-    sub_data <- data %>% dplyr::filter(Protein == prot) 
+# now go back to protein level stuff: assessing contrasts between groups
 
-    ## record the contrast matrix for each protein
-    sub.contrast.matrix <- contrast.matrix
+## get the data for protein i
+sub_data <- data %>% dplyr::filter(Protein == prot) 
 
-    ## get the linear model for proteins[i]
-    #fit
-    #s2 <- s2.all[proteins[i]]
-    #s2_df <- s2_df.all[proteins[i]]
-    #coeff 
+# create constrast matrix for pairwise comparisons between conditions
+## all of this is done to 
+conditions <- as.character(unique(data$Condition))
 
-      s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
+all_contrasts <- .makeContrast(conditions)
 
-      ## Compare one specific contrast
-    j = 1
-    count = 0
+# fixme: we are not really interested in all comparisons!
+ncomp <- nrow(all_contrasts)
+
+## record the contrast matrix for each protein
+sub.contrast.matrix <- contrast.matrix
+
+# can we subset here?
+all_contrasts
+
+## get the linear model for proteins[i]
+#fit
+#s2 <- s2.all[proteins[i]]
+#s2_df <- s2_df.all[proteins[i]]
+#coeff 
+
+# calculate posterior:
+s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
+
+## example: one contrast
+j = 1
+count = 0
+
+# i.e. for a given contrast or row of the contrast.matrix
 
 # groups with positive coefficients
 positive.groups <- colnames(sub.contrast.matrix)[sub.contrast.matrix[j, ] > 0]
@@ -237,9 +296,21 @@ names(contrast.matrix.single) <- colnames(sub.contrast.matrix)
 
 cm <- .make.contrast.single(fit, contrast.matrix.single, sub_data)
 
+# munge to reverse
+cm[cm == -1] <- 0
+cm[names(cm) == "ConditionControl.F4"] <- -1
+
+# negative index all else 0
+#
+# why do we need fit here?
+# used to get names of coeff
+
+## return contrast matrix
+
 # logFC
 FC <- (cm %*% coeff)[, 1]
 
+# alot simpler:
 a = coeff["ConditionControl.F10"] # 1
 b = coeff["ConditionControl.F4"] # -1
 # FC = a - b
@@ -249,7 +320,12 @@ b = coeff["ConditionControl.F4"] # -1
 #variance <- diag(t(cm) %*% summary(fit$model)$cov.unscaled %*% cm) * s2.post
 #df.post <- s2_df + df.prior
 
-## for the theta and sigma parameters
+## for the mixed effects case:
+thopt = rho$thopt
+sigma = rho$sigma
+
+# do something with theta and sigma parameters
+fit = rho$model
 vss <- .vcovLThetaL(fit) # returns a function, includes call to .updateModel
 varcor <- vss(t(cm), c(thopt, sigma)) 
 
@@ -291,6 +367,8 @@ p <- 2 * pt(-abs(t), df = df.post)
 #DF = df.post
 # if (s2_df == 0) "SingleMeasurePerCondition"
 
+# p 
+# [1,] 2.400825e-06 
 
 ###############################################################################
 ###############################################################################
