@@ -1,22 +1,21 @@
 #!/usr/bin/env Rscript
 
-.myhess <- function(fun, x, fx = NULL, delta = 1e-4, ...) {
-#############################################
-## calculate hessian matrix
-#############################################
 #' @keywords internal
-# from lmertest::myhess in deriv.R
+
+.myhess <- function(fun, x, fx = NULL, delta = 1e-4, ...) {
+  # calculate hessian matrix
+  # from lmertest::myhess in deriv.R
   nx <- length(x)
   fx <- if (!is.null(fx)) fx else fun(x, ...)
   H <- array(NA, dim = c(nx, nx))
   for (j in 1:nx) {
-    ## Diagonal elements:
+    # Diagonal elements:
     xadd <- xsub <- x
     xadd[j] <- x[j] + delta
     xsub[j] <- x[j] - delta
     H[j, j] <- (fun(xadd, ...) - 2 * fx +
       fun(xsub, ...)) / delta^2
-    ## Upper triangular (off diagonal) elements:
+    # Upper triangular (off diagonal) elements:
     for (i in 1:nx) {
       if (i >= j) break
       xaa <- xas <- xsa <- xss <- x
@@ -32,5 +31,5 @@
   ## Fill in lower triangle:
   H[lower.tri(H)] <- t(H)[lower.tri(H)]
 
-  H
+  return(H)
 }

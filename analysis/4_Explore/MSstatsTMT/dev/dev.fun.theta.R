@@ -1,23 +1,27 @@
 #!/usr/bin/env Rscript
 
-.devfunTheta <- function(fm) {
-#############################################
-## devfun function as a function of optimal parameters
-#############################################
 #' @importFrom lme4 isGLMM isLMM getME
 #' @importFrom methods is
 #' @keywords internal
-  # NOTE: appears to be pretty much verbatim from devfun5 in lmertest
+
+.devfunTheta <- function(fm) {
+  # devfun function as a function of optimal parameters
+  # NOTE: mostly from devfun5 in lmertest, substitute .updateModel
+  # NOTE: try removing .updateModel dependency
+
   stopifnot(is(fm, "merMod"))
 
   np <- length(fm@pp$theta)
-  nf <- length(fixef(fm))
+  nf <- length(lme4::fixef(fm))
   if (!lme4::isGLMM(fm)) {
     np <- np + 1L
   }
   n <- nrow(fm@pp$V)
 
-  ff <- .updateModel(fm, devFunOnly = TRUE)
+  # here devFunOnly is passed as sneaky arg to .updateModel
+  # seems like cutting out updateModel with update doesn't affect things
+  #ff <- .updateModel(fm, devFunOnly = TRUE) # does this substituion matter?
+  ff <- update(fm, devFunOnly=TRUE)
   reml <- lme4::getME(fm, "is_REML")
 
   envff <- environment(ff)
@@ -26,14 +30,12 @@
     ans <- function(thpars) {
       stopifnot(is.numeric(thpars), length(thpars) == np)
 
-      message("What is thpars?")
-      print(class(thpars))
-      print(thpars)
-
       ff(thpars[-np])
 
       sigsq <- thpars[np]^2
+
       dev <- envff$pp$ldL2() + (envff$resp$wrss() + envff$pp$sqrL(1)) / sigsq + n * log(2 * pi * sigsq)
+
       if (reml) {
         p <- ncol(envff$pp$RX())
         dev <- dev + 2 * determinant(envff$pp$RX())$modulus - p * log(2 * pi * sigsq)

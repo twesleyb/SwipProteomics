@@ -46,55 +46,68 @@
   # [8] s2_df = degrees of freedom
   # [9] coeff = coefficients = same as fm$coeff
 
+  ##################################################################### 
+  ### rm before running function
+
+  ## these steps reproduce the objects contained within the list 
+  ## returned by .linear.model.fitting(data) with alot less munge
+  ## fitted.models <- .linear.model.fitting(data)
+  #message("whoops, remove junk!")
+
+  ## [1] Protein Accession
+  #prot = data$Protein
+
+  ## [2] Linear model (lmer)
+  #fm = fitted.models$model[[1]]$model
+
+  ## [3] Fixed effects (e.g. Condition)
+  #fixed_effects = lme4::fixef(fm)
+  #stopifnot(all(fixed_effects == fitted.models$model[[1]]$fixEffs))
+
+  ## [4] Sigma - residual standard deviation
+  #sigma_ <- stats::sigma(fm)
+  #stopifnot(sigma_ == fitted.models$model[[1]]$sigma)
+
+  ## [5] thopt -  extract theta the random-effects parameter estimates
+  ## parameterized as the relative Cholesky factors of each random effect
+  #thopt = lme4::getME(fm, "theta") 
+
+  ## [6] A - .calcApvar(rho) 
+  #calcApvar <- function(fm,thopt,sigma_) {
+  #        # alternative: to .calcApvar
+  #        # requires .devfunTheta 
+  #        # requires .myhess
+  #        dd <- .devfunTheta(fm) # generate a deviance function = devfun 
+  #        h = .myhess(dd, c(thopt, sigma_)) # hessian given devfun and params
+  #        ch = try(chol(h)) # cholesky
+  #        A = 2 * chol2inv(ch)
+  #        # check
+  #        eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
+  #        if (min(eigval) < sqrt(.Machine$double.eps)) {
+  #      	  warning("Asymptotic covariance matrix A is not positive!")
+  #        }
+  #        return(A)
+  #}
+
+  #A = calcApvar(fm,thopt,sigma_)
+  #stopifnot(A == fitted.models$model[[1]]$A) 
+
+  ## [7] s2 = sigma^2
+  #av = anova(fm)
+  #s2 = av$"Mean Sq"/av$"F value"
+  #stopifnot(s2 == fitted.models$s2)
+
+  ## [8] s2_df = degrees of freedom
+  #s2_df == av$DenDF
+  #stopifnot(s2_df == fitted.models$s2_df)
+
+  ## [9] coeff = coefficients = same as fm$coeff
+  #coeff = lme4::fixef(fm)
+  #stopifnot(all(coeff == fitted.models$coeff[[1]]))
   #################################################################### 
-  ## rm before running function
-  message("whoops, remove junk!")
+  ## WORK
 
-  # [1] Protein Accession
-  prot = data$Protein
-
-  # [2] Linear model (lmer)
-  fm = fitted.models$model[[1]]$model
-
-  # [3] Fixed effects (e.g. Condition)
-  fixed_effects = lme4::fixef(fm)
-  stopifnot(all(fixed_effects == fitted.models$model[[1]]$fixEffs))
-
-  # [4] Sigma - residual standard deviation
-  sigma_ <- stats::sigma(fm)
-  stopifnot(sigma_ == fitted.models$model[[1]]$sigma)
-
-  # [5] thopt -  extract theta the random-effects parameter estimates
-  # parameterized as the relative Cholesky factors of each random effect
-  thopt = lme4::getME(fm, "theta") 
-
-  # [6] A - .calcApvar(rho)
-
-  calcApvar <- function(fm) {
-	  # alternative:
-	  dd <- .devfunTheta(fm)
-	  h = .myhess(dd, c(thopt, sigma_)) # hessian
-	  ch = try(chol(h)) # cholesky
-	  A = 2 * chol2inv(ch)
-	  # check
-	  eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
-	  if (min(eigval) < sqrt(.Machine$double.eps)) {
-		  warning("Asymptotic covariance matrix A is not positive!")
-	  }
-	  return(A)
-  }
-  A = calcA(fm)
-  stopifnot(A == fitted.models$model[[1]]$A) 
-  #FIXME: prob dont need devfunTheta if we can call whatever func it is directly
-
-
-
-  # [7] s2 = sigma^2
-
-
-  #################################################################### 
-
-  ## perform empirical bayes moderation
+  # perform empirical bayes moderation
   if (moderated) { ## moderated t statistic
     ## Estimate the prior variance and degree freedom
 
@@ -123,20 +136,24 @@
   coeff.all <- fitted.models$coeff # coefficients
 
   num.protein <- length(proteins)
-  res <- as.data.frame(matrix(rep(NA, 7 * num.protein * ncomp), ncol = 7)) ## store the inference results
-  colnames(res) <- c("Protein", "Comparison", "log2FC", "pvalue", "SE", "DF", "issue")
+
+  ## store the inference results
+  res <- as.data.frame(matrix(rep(NA, 7 * num.protein * ncomp), ncol = 7)) 
+  colnames(res) <- c("Protein", "Comparison", "log2FC", 
+		     "pvalue", "SE", "DF", "issue")
   data$Condition <- as.factor(data$Condition) # make sure group is factor
   data$Run <- as.factor(data$Run)
-  nrun <- length(unique(data$Run)) # check the number of MS runs in the data
+
+  # check the number of MS runs in the data
+  nrun <- length(unique(data$Run)) 
   count <- 0
   for (i in seq_along(proteins)) {
-    #message(paste("Testing for Protein :", proteins[i], "(", i, " of ", num.protein, ")"))
 
     ## get the data for protein i
-    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) ## data for protein i
+    sub_data <- data %>% dplyr::filter(Protein == proteins[i]) 
+
     ## record the contrast matrix for each protein
     sub.contrast.matrix <- contrast.matrix
-
     sub_groups <- as.character(unique(sub_data[, c("Condition")]))
     sub_groups <- sort(sub_groups) # sort the groups based on alphabetic order
 

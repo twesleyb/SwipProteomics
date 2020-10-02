@@ -1,23 +1,26 @@
 #!/usr/bin/env Rscript
 
-.updateModel <- function(object, mf.final = NULL, ..., change.contr = FALSE) {
-#############################################
-## devfun function as a function of optimal parameters
-#############################################
 #' @importFrom stats formula getCall terms update.formula
 #' @keywords internal
+
+.updateModel <- function(object, mf.final = NULL, ..., change.contr = FALSE) {
+
+  # devfun function as a function of optimal parameters
   if (is.null(call <- getCall(object))) {
     stop("object should contain a 'call' component")
   }
-  # This is where devfun is happening... sneaky arg devFunOnly
+
+  # devFunOnly passed here?
   extras <- match.call(expand.dots = FALSE)$...
   if (!is.null(mf.final)) {
     call$formula <- update.formula(formula(object), mf.final)
   }
+
   if (any(grepl("sample", call))) {
     call <- as.list(call)[-which(names(as.list(call)) %in% c("data", "subset"))]
     call[["data"]] <- quote(model.frame(object))
   }
+
   if (length(extras) > 0) {
     existing <- !is.na(match(names(extras), names(call)))
     for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
@@ -25,6 +28,7 @@
       call <- c(as.list(call), extras[!existing])
     }
   }
+
   if (change.contr) {
     mm <- model.matrix(object)
     contr <- attr(mm, "contrasts")
@@ -36,10 +40,13 @@
       names(l.lmerTest.private.contrast) <- names(contr)
       call[["contrasts"]] <- l.lmerTest.private.contrast
     }
+
     else if (!is.null(contr)) {
-      call[["contrasts"]] <- contr[names(contr) %in% attr(terms(call$formula), "term.labels")]
+      idx <- names(contr) %in% attr(terms(call$formula), "term.labels")
+      call[["contrasts"]] <- contr[idx]
     }
   }
+
   call <- as.call(call)
   ff <- environment(formula(object))
   pf <- parent.frame() ## save parent frame in case we need it
@@ -59,4 +66,3 @@
     }
   )
 }
-
