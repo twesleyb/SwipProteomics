@@ -33,89 +33,13 @@
   ## fit the linear model for each protein
   fitted.models <- .linear.model.fitting(data)
 
-  # 'fitted.models' contains: 
-  # NOTE: Outline for lmer case only!
-  # [1] protein name = UniProt Accession
-  # [*] model = list():
-  #     [2] fm = fitted lm or lmer object
-  #     [3] fixEffs --| lme4::fixef(fm) -----------|
-  #     [4] sigma ----| stats::sigma(fm) ----------| All from .rhoInit
-  #     [5] thopt ----| lme4::getME(fm, "theta") --|
-  #     [6] A -- rho$A = calcApvar(rho)
-  # [7] s2 = sigma^2
-  # [8] s2_df = degrees of freedom
-  # [9] coeff = coefficients = same as fm$coeff
-
-  ##################################################################### 
-  ### rm before running function
-
-  ## these steps reproduce the objects contained within the list 
-  ## returned by .linear.model.fitting(data) with alot less munge
-  ## fitted.models <- .linear.model.fitting(data)
-  #message("whoops, remove junk!")
-
-  ## [1] Protein Accession
-  #prot = data$Protein
-
-  ## [2] Linear model (lmer)
-  #fm = fitted.models$model[[1]]$model
-
-  ## [3] Fixed effects (e.g. Condition)
-  #fixed_effects = lme4::fixef(fm)
-  #stopifnot(all(fixed_effects == fitted.models$model[[1]]$fixEffs))
-
-  ## [4] Sigma - residual standard deviation
-  #sigma_ <- stats::sigma(fm)
-  #stopifnot(sigma_ == fitted.models$model[[1]]$sigma)
-
-  ## [5] thopt -  extract theta the random-effects parameter estimates
-  ## parameterized as the relative Cholesky factors of each random effect
-  #thopt = lme4::getME(fm, "theta") 
-
-  ## [6] A - .calcApvar(rho) 
-  #calcApvar <- function(fm,thopt,sigma_) {
-  #        # alternative: to .calcApvar
-  #        # requires .devfunTheta 
-  #        # requires .myhess
-  #        dd <- .devfunTheta(fm) # generate a deviance function = devfun 
-  #        h = .myhess(dd, c(thopt, sigma_)) # hessian given devfun and params
-  #        ch = try(chol(h)) # cholesky
-  #        A = 2 * chol2inv(ch)
-  #        # check
-  #        eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
-  #        if (min(eigval) < sqrt(.Machine$double.eps)) {
-  #      	  warning("Asymptotic covariance matrix A is not positive!")
-  #        }
-  #        return(A)
-  #}
-
-  #A = calcApvar(fm,thopt,sigma_)
-  #stopifnot(A == fitted.models$model[[1]]$A) 
-
-  ## [7] s2 = sigma^2
-  #av = anova(fm)
-  #s2 = av$"Mean Sq"/av$"F value"
-  #stopifnot(s2 == fitted.models$s2)
-
-  ## [8] s2_df = degrees of freedom
-  #s2_df == av$DenDF
-  #stopifnot(s2_df == fitted.models$s2_df)
-
-  ## [9] coeff = coefficients = same as fm$coeff
-  #coeff = lme4::fixef(fm)
-  #stopifnot(all(coeff == fitted.models$coeff[[1]]))
-  #################################################################### 
-  ## WORK
-
-  # perform empirical bayes moderation
-  if (moderated) { ## moderated t statistic
-    ## Estimate the prior variance and degree freedom
-
+  ## estimate the prior variance and degree freedom
+  # moderated t-statistic 
+  if (moderated) { 
     eb_input_s2 <- fitted.models$s2[fitted.models$s2_df != 0]
     eb_input_df <- fitted.models$s2_df[fitted.models$s2_df != 0]
-
+    # perform empirical bayes moderation
     eb_fit <- limma::squeezeVar(eb_input_s2, eb_input_df)
-
     if (is.infinite(eb_fit$df.prior)) {
       df.prior <- 0
       s2.prior <- 0
@@ -123,7 +47,8 @@
       df.prior <- eb_fit$df.prior
       s2.prior <- eb_fit$var.prior
     }
-  } else { ## ordinary t statistic
+  # ordinary t-statistic
+  } else { 
     s2.prior <- 0
     df.prior <- 0
   }

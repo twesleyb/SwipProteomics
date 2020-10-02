@@ -95,18 +95,18 @@ sub_groups <- as.character(unique(sub_data[, c("Condition")]))
 # sort the groups based on alphabetic order
 sub_groups <- sort(sub_groups) 
 
-library(lmerTest)
+#library(lmerTest)
 
 ## get protein's linear model
-fit <- lms[[prot]] # just the lmer
+model_list <- lms[[prot]] 
 
 # actual model:
-fm <- fit$model
+fm <- model_list$model
 av <- anova(fm)
 s2 <- av$"Mean Sq"/av$"F value"
 s2_df <- av$DenDF
 coeff <- lme4::fixef(fm) 
-# if not moderated s2.prior <- df.prior = 0
+# if not moderated, s2.prior <- df.prior = 0
 s2.prior = df.prior = 0
 s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
 # s2.post == s2 [1] TRUE # is this correct?

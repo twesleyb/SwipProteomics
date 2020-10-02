@@ -34,26 +34,30 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all() })
 
-## load the data ---
+## load the data --------------------------------------------------------------
 
 # load msstats preprocessed protein data
 load(file.path(rdatdir,"msstats_prot.rda"))
-#data_prot <- msstats_prot
 data <- msstats_prot
 
 # load msstats_gene_map
 load(file.path(rdatdir,"msstats_gene_map.rda"))
-# gene_map
+# == gene_map
 
 # load fitted.models
 load(file.path(rdatdir,"fitted.models.rda"))
+# == fitted.models
 
 # load contrast.matrix 
 load(file.path(rdatdir,"contrast.matrix.rda"))
+# == contrast.matrix
 
 # load dev functions
-dev_fun <- list.files("./dev",pattern="*.R", full.names=TRUE)
-invisible(sapply(dev_fun,source))
+load_fun <- function() {
+	dev_fun <- list.files("./dev",pattern="*.R", full.names=TRUE)
+	invisible(sapply(dev_fun,source))
+}
+load_fun()
 
 
 ## do stats --------------------------------------------------------------------
@@ -100,8 +104,9 @@ sub_groups <- sort(sub_groups)
 ## get protein's linear model
 fit <- fitted.models$model[[prot]]
 
-# actual model:
+# actual model == fm
 fm <- fit$model
+
 av <- anova(fm)
 s2 <- av$"Mean Sq"/av$"F value"
 s2_df <- av$DenDF
@@ -131,7 +136,7 @@ sub_groups <- as.character(unique(sub_data[, c("Condition")]))
 sub_groups <- sort(sub_groups)
 
 # groups with positive coefficients
-j = 1; # j contrasts
+j = 1 # of j contrasts (ncol(contrast.matrix))
 idy <- sub.contrast.matrix[j, ] > 0
 positive.groups <- colnames(sub.contrast.matrix)[idy]
 
