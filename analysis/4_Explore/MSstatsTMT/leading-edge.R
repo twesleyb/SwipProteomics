@@ -5,13 +5,16 @@
 
 # input:
 # * preprocessed protein-level data from PDtoMSstatsTMTFormat()
+contrast = "pairwise"
+moderated = TRUE 
+padj_method = "BH"
 
 ## key statistics:
 # [*] protein name - UniProt Accession
 # [*] fm - fitted lm or lmer object
 # [*] sigma
 # [*] theta (thopt)
-# [*] A (Apvar)
+# [*] A (Apvar) - asymptotic variance-covariance matrix
 # [*] s2 - sigma^2
 # [*] s2_df - degrees of freedom
 # [*] coeff - coefficients 
@@ -32,46 +35,31 @@ suppressPackageStartupMessages({
 
 # function to source MSstatsTMT's internal functions in dev
 # consider moving MSstatsTMT to source or something
-load_fun <- function() {
-	# NOTE: ./dev is assumed to be in cwd
+load_fun <- function(funcdir="~/projects/SwipProteomics/src/MSstatsTMT") {
 	# these are core MSstats functions utilized by groupComparisons()
-	fun <- list.files("./dev",pattern="*.R$",full.names=TRUE)
-	invisible(sapply(fun,source))
-}
+	fun <- list.files(funcdir, pattern="*.R$", full.names=TRUE)
+	n <- length(fun)
+	if (n==0) { 
+		warning("No R files in 'funcdir'.") 
+	} else {
+		invisible(sapply(fun,source))
+	}
+} #EOF
 
 
-## main -----------------------------------------------------------------------
+## load the data ---------------------------------------------------------------
 
 # load MSstatsTMT's guts
 load_fun()
 
-# load the MSstats preprocessed protein-level data [INPUT]
+# load msstats preprocessed protein data
 myfile <- file.path(root,"rdata","msstats_prot.rda")
 load(myfile)
-
-# load msstats preprocessed protein data
-load(file.path(root,"rdata","msstats_prot.rda"))
+# msstats_prot
 data_prot <- msstats_prot
 
-## ----------------------------------------------------------------------------
-## Input: 
 
-# tidy protein level data 
-# contrast type
-# protein
-
-# Let's analyze SWIP
-
-# Subset the data
-data = data_prot[data_prot$Protein == protein,]
-
-## INPUTS
-# * data from MSstatsTMT::summarizeProtein()
-contrast.matrix = "pairwise"
-moderated = FALSE 
-adj.method = "BH"
-protein <- "Q3UMB9"
-
+## begin protein-level modeling -------------------------------------------------
 
 # remove rows with NA intensities
 if (any(is.na(data))) { 
@@ -79,13 +67,337 @@ if (any(is.na(data))) {
 	warning("Missing values were removed from input 'data'.")
 }
 
-## fit protein-level models
-
 # for intra-fraction comparisons MSstatsTMT fits the model:
-# >>> Abundance ~ 1 + (1|Run) + Condition
+#    >>>    lmerTest::lmer(Abundance ~ 1 + (1|Run) + Condition, data)
+
+
+#function <- fits model, calculates rho,
+#df.prior and s2.prior are 0
+# should call subsequent moderation function to estimate df.post and s2.post ==
+# requires all fits
 
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
 
+#protein = sample(proteins,1)
+protein = "Q3UMB9"
+
+# fixme: how to catch warnings?
+fm <- lmerTest::lmer(fx, data = msstats_prot %>% filter(Protein == protein))
+
+# compute fit model statistics
+rho <- getRho(fm) 
+
+#names(rho)
+# "coeff" "sigma" "thopt" "df"    "s2"    "model" "A"
+
+# generate all potential pairwise contrasts
+pairwise_contrasts <- .makeContrast(levels(data$Condition))
+
+# the comparisons we are interested in are:
+# "Mutant.F4-Control.F4"
+# "Mutant.F5-Control.F5"
+# ...
+
+# pairwise contrasts sorted the levels aphabetically, so the contrasts above are
+# now of the form:
+# "Control.F4-Mutant.F4"
+# "Control.F5-Mutant.F5"
+
+# make inverse
+new_rows <- sapply(strsplit(rownames(pairwise_contrasts),"-"), function(x) {
+		   paste(x[2],x[1],sep="-") })
+new_contrasts <- -1*pairwise_contrasts
+rownames(new_contrasts) <- new_rows
+
+comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
+      paste("Control",paste0("F",seq(4,10)),sep="."),
+      sep="-")
+
+#head(comp)
+#[1] "Mutant.F4-Control.F4" "Mutant.F5-Control.F5" "Mutant.F6-Control.F6"
+#[4] "Mutant.F7-Control.F7" "Mutant.F8-Control.F8" "Mutant.F9-Control.F9"
+
+# subset contrast_matrix, keeping the comparisons we are interested in
+contrast_matrix <- new_contrasts[comp,]
+
+n <- dim(contrast_matrix)[1] # == 7, the total number of Biological Fractions
+
+stopifnot(n==7)
+
+# each row of the contrast matrix is what MSstatsTMT calls a
+# contrast.matrix.single
+# coerce these to the form MSstatsTMT wants using a loop
+subdat <- data %>% filter(Protein == protein)
+
+contrast_list <- lapply(seq(nrow(contrast_matrix)), function(x) {
+				cm <- .make.contrast.single(fm, 
+							    contrast_matrix[x,],
+							    subdat)
+	  return(cm)
+      })
+
+# set names 
+names(contrast_list) <- rownames(contrast_matrix)
+
+# lets add contrasts_list to rho
+rho$contrasts <- contrast_list
+
+#head(contrast_list[[1]],4)
+#(Intercept) ConditionControl.F4 ConditionControl.F5 ConditionControl.F6
+#          0                  -1                   0                   0
+# NOTE: ConditionMutant.F4 == 1
+
+# for each of these contrasts, compute the fold change using
+# the coefficients from the fit model
+# basically, this is a fancy way of doing coeff(+1) - coeff(-1)
+rho$FC <- lapply(contrast_list, function(cm) {
+			      FC <- (cm %*% rho$coeff)[, 1]
+			      return(FC)
+})
+
+#head(fc_list,1)
+#$`Mutant.F4-Control.F4`
+#[1] -1.306407
+
+## The above can be done for every protein ------------------------------------
+
+# inputs:
+data <- msstats_prot
+proteins <- unique(data$Protein)
+# * contrasts_list
+# NOTE: contrasts_list is used to generate the comparisons tested for each 
+# protein. Its the format MSstatsTMT expects
+# the model function to fit:
+fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
+
+# there should be no missing values
+# remove rows with NA intensities
+if (any(is.na(data))) { 
+	data <- data[!is.na(data$Abundance), ]
+	warning("Missing values were removed from input 'data'.")
+}
+
+# empty list for output of loop
+protein_fits <- list()
+
+for (protein in proteins) {
+
+# fit the model to the proteins data
+subdat <- data %>% filter(Protein == protein)
+fm <- lmerTest::lmer(fx, data = msstats_prot %>% filter(Protein == protein))
+# compute model statistics
+rho <- getRho(fm) 
+
+
+# A function to compute unmoderated posterior s2.post
+cp <- function(s2.prior=0,df.prior=0,s2,s2_df) {
+	s2.post <- (s2.prior*df.prior + s2 * s2_df) / (df.prior + s2_df)
+	return(s2.post)
+}
+
+# the statistics for all contrasts are stored as a list 'stats' in rho
+
+rho$stats <- list()
+for (comp in names(contrast_list)){
+	# the formatted contrast
+	message("Tested contrast: ",comp)
+	cm <- contrast_list[[comp]]
+	# we store the proteins statistics in a list
+	stats_list <- list()
+	stats_list$Comparison <- comp
+	stats_list$Protein <- protein
+	# compute stuff (from MSstatsTMT)
+	s2.post <- cp(s2=rho$s2,s2_df=rho$s2_df)
+	vss <- .vcovLThetaL(fm)
+	varcor <- vss(t(cm),c(rho$thopt, rho$sigma))
+	vcov <- varcor$unscaled.varcor * rho$s2
+	se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
+	# calculate variance
+        vcov.post <- varcor$unscaled.varcor * s2.post
+        variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm) 
+	# calculate degrees of freedom
+	g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(rho$thopt, rho$sigma))
+	denom <- t(g) %*% rho$A %*% g
+	df.post <- 2 * (se2)^2 / denom + df.prior
+	# compute fold change and the t-statistic
+	FC <- (cm %*% rho$coeff)[, 1]
+	t <- FC / sqrt(variance)
+	# compute the p-value
+	p <- 2 * pt(-abs(t), df = df.post)
+	# put it all together:
+	stats_list$"Log2 Fold Change" <- FC
+	stats_list$"P-value" <- p
+	stats_list$"SE" <- as.numeric(sqrt(variance))
+	stats_list$"DF" = as.numeric(df.post)
+	# add to rho
+	rho$stats[[comp]] <- stats_list
+ } #EOL for each contrast
+
+#length(rho$stats)
+#[1] 7
+
+# take a look at the stats for WASH for all intrafraction comparisons:
+bind_rows(rho$stats) %>% knitr::kable()
+
+# a function to do the above:
+testContrasts <- function(rho,contrast_list) {
+	rho$stats <- list()
+	for (comp in names(contrast_list)){
+	  # the formatted contrast
+	  cm <- contrast_list[[comp]]
+	  # we store the proteins statistics in a list
+	  stats_list <- list()
+	  stats_list$Comparison <- comp
+	  stats_list$Protein <- protein
+	  # compute stuff (from MSstatsTMT)
+	  s2.post <- cp(s2=rho$s2,s2_df=rho$s2_df)
+	  vss <- .vcovLThetaL(fm)
+	  varcor <- vss(t(cm),c(rho$thopt, rho$sigma))
+	  vcov <- varcor$unscaled.varcor * rho$s2
+	  se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
+	  # calculate variance
+          vcov.post <- varcor$unscaled.varcor * s2.post
+          variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm) 
+	  # calculate degrees of freedom
+	  g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(rho$thopt, rho$sigma))
+	  denom <- t(g) %*% rho$A %*% g
+	  df.post <- 2 * (se2)^2 / denom + df.prior
+	  # compute fold change and the t-statistic
+	  FC <- (cm %*% rho$coeff)[, 1]
+	  t <- FC / sqrt(variance)
+	  # compute the p-value
+	  p <- 2 * pt(-abs(t), df = df.post)
+	  # put it all together:
+	  stats_list$"Log2 Fold Change" <- FC
+	  stats_list$"P-value" <- p
+	  stats_list$"SE" <- as.numeric(sqrt(variance))
+	  stats_list$"DF" = as.numeric(df.post)
+	  # add to rho
+	  rho$stats[[comp]] <- stats_list
+	} #EOL for each contrast
+	# return rho updated with protein stats
+	return(rho)
+}
+
+rho <- testContrasts(rho,contrast_list)
+
+# now we have:
+# do all of the the unmoderated work for a single protein:
+# just need contrast_list the data and a function
+# FIXME: how to capture boundary fit message?
+# FIXME: need to parallelize for speed
+
+
+silence <- function(x,...){
+sink(tempfile())
+on.exit(sink())
+invisible(force(x))
+}
+
+protein_fits <- list()
+for (protein in proteins) {
+	subdat <- data %>% filter(Protein == protein)
+
+	fm <- tryCatch(
+		       lmerTest::lmer(fx, data = subdat)
+		       warning = function(w) {
+		       }
+
+	rho <- getRho(fm) 
+	rho <- testContrasts(rho,contrast_list)
+	protein_fits[[protein]] <- rho
+}
+
+
+
+## moderation -----------------------------------------------------------------
+
+## NOTE: for moderated t-statistic, all models must be fit.
+
+
+# calc posterior s2
+# function: generate contrsats: given data generate contrasts to be tested for
+# all proteins
+
+getContrasts <- function(data, fit_proteins){
+	# do once
+	pairwise_contrasts <- .makeContrast(levels(data$Condition))
+	# make inverse
+	#new_rows <- sapply(strsplit(rownames(pairwise_contrasts),"-"), function(x) {
+	#		   paste(x[2],x[1],sep="-") })
+	#new_contrasts <- -1*pairwise_contrasts
+	#rownames(new_contrasts) <- new_rows
+	#all_contrasts <- rbind(pairwise_contrasts,new_contrasts)
+	all_contrasts <- pairwise_contrasts
+	# generate contrasts to be tested
+	# test all possible pairwise comparisons:
+	# NOTE: order of levels determines sign of fold change: default is
+	# alphabetically sorted
+
+	contrast_list <- list()
+	for (contrast in rownames(pairwise_contrasts)){
+		contrast.matrix.single <- pairwise_contrasts[contrast,]
+		# should not depend upon fm! names of coeff for each protein is
+		# the same bc each protein is fit with the same model!
+	  	contrast_list[[contrast]] <- .make.contrast.single(fm, contrast.matrix.single, data)
+	} else if (contrast %in% rownames(all_contrasts)) {
+		contrast_list[[contrast]] <- .make.contrast.single(fm,all_contrasts[contrast,],data)
+	} else {
+		stop("Input 'contrast' not valid.")
+	} #EIS
+
+# given all fits and contrasts, for every fit.contrast do:
+# fold change
+# variance
+# t
+# p
+
+# now we can compute fold change
+cm <- contrast_list[[1]]
+fold_change <- lapply(contrast_list, function(cm) {
+			      FC <- (cm %*% rho$coeff)[, 1]
+			      return(FC)
+})
+
+
+#if (inherits(fit$model, "lm")) {
+#  variance <- diag(t(cm) %*% summary(fit$model)$cov.unscaled %*% cm) * s2.post
+#  df.post <- s2_df + df.prior
+#} else {
+
+# for lmer:
+vss <- .vcovLThetaL(fm)
+varcor <- vss(t(cm), c(rho$thopt, rho$sigma)) ## for the theta and sigma parameters
+vcov <- varcor$unscaled.varcor * rho$s2
+se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
+# what should be added to rho?
+#varcor
+
+## calculate df
+g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(rho$thopt, rho$sigma))
+
+rho$s2.prior = 0
+rho$df.prior = 0
+
+rho$s2.post <- (rho$s2.prior * rho$df.prior + rho$s2 * s2_df) / (df.prior + s2_df)
+
+denom <- try(t(g) %*% rho$A %*% g, silent = TRUE)
+
+if (inherits(denom, "try-error")) {
+	df.post <- s2_df + df.prior
+} else {
+	df.post <- 2 * (se2)^2 / denom + df.prior
+}
+
+  ## calculate the t statistic
+  t <- FC / sqrt(variance)
+
+  ## calculate p-value
+  p <- 2 * pt(-abs(t), df = df.post)
+
+
+
+## NOTES about fx - formula
 # Where 'Abundance' is the response, 'Run' is a mixed-effect, and 'Condition'
 # is a fixed-effect. The model is fit by a call to lmerTest::lmer().
 # lmerTest is a package that wraps 'lme4'.
@@ -113,7 +425,6 @@ fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
 # fixme: what happens if lm case is passed to lmer?
 # otherwise its as simlple as:
 
-fm <- lmerTest::lmer(fx, data)
 
 
 # fitted.models is a list that contains the fm and things calculated from fm
@@ -164,50 +475,6 @@ fm <- lmerTest::lmer(fx, data)
 
 # populate list rho with (fixEffs (coeff), sigma, and thopt(theta))
 # these things can be done with simple calls to lme4
-rho <- get_rho(fm)
-
-# moderation
-
-# calc posterior s2
-
-cm = .make.contrast
-
-
-          cm <- .make.contrast.single(fit$model, contrast.matrix.single, sub_data)
-
-          ## logFC
-          FC <- (cm %*% coeff)[, 1]
-
-          ## variance and df
-          if (inherits(fit$model, "lm")) {
-            variance <- diag(t(cm) %*% summary(fit$model)$cov.unscaled %*% cm) * s2.post
-            df.post <- s2_df + df.prior
-          } else {
-            vss <- .vcovLThetaL(fit$model)
-            varcor <- vss(t(cm), c(fit$thopt, fit$sigma)) ## for the theta and sigma parameters
-            vcov <- varcor$unscaled.varcor * s2
-            se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
-
-            ## calculate variance
-            vcov.post <- varcor$unscaled.varcor * s2.post
-            variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm)
-
-            ## calculate df
-            g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(fit$thopt, fit$sigma))
-            denom <- try(t(g) %*% fit$A %*% g, silent = TRUE)
-            if (inherits(denom, "try-error")) {
-              df.post <- s2_df + df.prior
-            } else {
-              df.post <- 2 * (se2)^2 / denom + df.prior
-            }
-          }
-
-          ## calculate the t statistic
-          t <- FC / sqrt(variance)
-
-          ## calculate p-value
-          p <- 2 * pt(-abs(t), df = df.post)
-
 
 ########################
 # FIXME: unmask what rho does
