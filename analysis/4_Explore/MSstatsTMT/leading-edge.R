@@ -79,14 +79,5 @@ fit_list <- testContrasts(fit_list, contrast_matrix, moderated = TRUE)
 # compute padjust
 results_list <- adjustPvalues(fit_list)
 
-adjustPvalues <- function(fit_list,adj_method="BH") {
-	df <- bind_rows(sapply(fit_list,"[","stats"))
-	results_list <- df %>% group_by(Comparison) %>% group_split()
-	results_list <- lapply(results_list, function(df) {
-		          qval <- p.adjust(x$"P-value", method=adj_method)
-	                  df <- tibble::add_column(x, "P-adjust" = qval, 
-						   .after="P-value")
-			  return(df) })
-	# return results in a nice format updated with p.adjust
-	return(results_list)
-}
+
+## test contrasts -------------------------------------------------------------
