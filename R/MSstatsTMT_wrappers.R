@@ -2,12 +2,15 @@
 
 #' @importFrom lme4 fixef getME
 #' @importFrom stats sigma
-#' @keywords internal
-
+#' @importFrom  dplyr filter
+#' @importFrom lmerTest lmer
 #' @export
 
+# -----------------------------------------------------------------------------
+
 getRho <- function(fm) {
-  # utilized by fitLMER to calculate some statistics from the fit model
+  #' getRho 
+  #' utilized by fitLMER to calculate some statistics from the fit model
   rho <- list()
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
@@ -26,8 +29,9 @@ getRho <- function(fm) {
 
 # -----------------------------------------------------------------------------
 
-
 fitLMER <- function(fx, msstats_prot, protein = NULL) {
+  #' fitLMER 
+  #' fit protein-wise linear mixed effect models specified by the formula fx
   # If protein == NULL then all proteins will be fit
   if (!is.null(protein)) {
     check <- is.character(protein) &
@@ -42,13 +46,13 @@ fitLMER <- function(fx, msstats_prot, protein = NULL) {
   if (any(is.na(msstats_prot %>% filter(Protein %in% proteins)))) {
     # FIXME: report the number or rows
     # FIXME: shouldn't missing values have been imputed by MSstats prev?
+    to_drop <- unique(msstats_prot$Protein[is.na(msstats_prot$Abundance)])
     msstats_prot <- msstats_prot[!is.na(msstats_prot$Abundance), ]
     warning("Missing values were removed from input 'data'.")
+    warning(length(to_drop)," proteins were removed.")
   }
-  # FIXME: need to remove untestable proteins
   # empty list for output of loop for every protein
   fit_models <- list()
-  # FIXME: helper and parallelize!
   for (protein in proteins) {
     subdat <- msstats_prot %>% filter(Protein == protein)
     suppressMessages({
@@ -67,12 +71,14 @@ fitLMER <- function(fx, msstats_prot, protein = NULL) {
   return(fit_models)
 } # EOF
 
-
 # -----------------------------------------------------------------------------
 
 getContrasts <- function(comp, groups) {
-  # generate all potential pairwise contrasts
-  # matrix with rows = contrasts, columns = levels(Condition)
+  # generate contrast matrix used by MSstatsTMT
+  # pass comp to specify a contrast in the form:
+  # 'ConditionA-ConditionB'
+  # contrast matrix is a matrix with rows = contrasts, 
+  # columns = levels(Condition)
   # for a given contrast (row) indices of positive coeff = 1
   # for a given contrast (row) indices of negative coeff = -1
   # for a given contrast (row) else = 0
@@ -90,8 +96,10 @@ getContrasts <- function(comp, groups) {
   return(contrast_matrix)
 }
 
+# -----------------------------------------------------------------------------
+
 calcPosterior <- function(s2, s2_df, s2.prior = 0, df.prior = 0) {
-  # A function to compute unmoderated posterior s2.post
+  # A function to compute s2 posterior
   s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
   return(s2.post)
 }
@@ -100,8 +108,12 @@ calcPosterior <- function(s2, s2_df, s2.prior = 0, df.prior = 0) {
 # -----------------------------------------------------------------------------
 
 testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
+  # perform tests between conditions defined in contrast_matrix for the fits 
+  # in fit_list
+
   # tests for each protein:
   proteins <- names(fit_list)
+
   # compute prior df and s2
   if (!moderated) {
     # the unmoderated t-statistic:
@@ -120,6 +132,7 @@ testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
       s2.prior <- eb_fit$var.prior
     }
   } # EIE done compution of prior df and s2
+
   # Loop to perform tests for every protein
   for (protein in proteins) {
     # get protein model and its data from the list of protein fits
@@ -188,13 +201,18 @@ testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
 # -----------------------------------------------------------------------------
 
 adjustPvalues <- function(fit_list,adj_method="BH") {
+	# given the fit_list with stats from testContrasts, return a list
+	# with data.frame for each comparison and p-values adjusted using the
+	# method specified by adj_method
 	df <- bind_rows(sapply(fit_list,"[","stats"))
 	results_list <- df %>% group_by(Comparison) %>% group_split()
+	namen <- sapply(results_list,function(x) unique(x$Comparison))
 	results_list <- lapply(results_list, function(df) {
-		          qval <- p.adjust(x$"P-value", method=adj_method)
-	                  df <- tibble::add_column(x, "P-adjust" = qval, 
+		          qval <- p.adjust(df$"P-value", method=adj_method)
+	                  df <- tibble::add_column(df, "P-adjust" = qval, 
 						   .after="P-value")
 			  return(df) })
 	# return results in a nice format updated with p.adjust
+	names(results_list) <- namen
 	return(results_list)
 }
