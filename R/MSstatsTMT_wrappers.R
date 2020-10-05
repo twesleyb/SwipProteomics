@@ -273,11 +273,13 @@ testContrasts <- function(fit_list, contrast_matrix,
 
 # -----------------------------------------------------------------------------
 
-adjustPvalues <- function(fit_list,adj_method="BH") {
+getResults <- function(fit_list,adj_method="BH") {
 	# given the fit_list with stats from testContrasts, return a list
 	# with data.frame for each comparison and p-values adjusted using the
 	# method specified by adj_method
+
 	df <- bind_rows(sapply(fit_list,"[","stats"))
+
 	results_list <- df %>% group_by(Comparison) %>% group_split()
 	namen <- sapply(results_list,function(x) unique(x$Comparison))
 	results_list <- lapply(results_list, function(df) {

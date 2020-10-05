@@ -26,6 +26,7 @@ save_rda = TRUE # save key R objects?
 
 
 ## Functions -----------------------------------------------------------------
+# functions utilized herein
 
 squote <- function(string) { 
 	# wrap a string in singular quotation marks (')
@@ -112,6 +113,23 @@ suppressPackageStartupMessages({
 suppressPackageStartupMessages({ devtools::load_all(quiet=TRUE) })
 
 
+## read PSM data from excel ------------------------------------------------
+
+# read PSM-level data exported from PD as an excel worksheet
+# NOTE: this takes several minutes!
+
+# load the data from root/rdata
+myfile <- file.path(downdir,input_psm)
+raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+
+# clean-up
+unlink(myfile) # rm input_psm
+unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
+
+# re-format PSM data for MSstatsTMT
+raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
+
+
 ## load sample data in root/rdata --------------------------------------
 # recieved this excel spreadsheet from GW exported from PD
 
@@ -125,20 +143,6 @@ samples <- readxl::read_excel(myfile,col_names=col_names)
 
 # clean-up
 unlink(myfile)
-
-
-## read PSM data from excel ------------------------------------------------
-
-# read PSM-level data exported from PD as an excel worksheet
-# NOTE: this takes several minutes!
-# Because this is slow, experiment with a tryCatch clause
-
-# try to load the data from root/rdata
-myfile <- file.path(downdir,input_psm)
-raw_pd <- readxl::read_excel(myfile,progress=FALSE)
-# clean-up
-unlink(myfile) # rm input_psm
-unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
 
 ## re-format sample metadata annotations for MSstats ---------------------------
@@ -171,11 +175,6 @@ samples$BioReplicate <- paste(samples$Condition,
 			      munge3(samples$Experiment),sep=".")
 
 
-## re-format PSM data for MSstatsTMT ---------------------------------------------
-
-raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
-
-
 ## drop contaminant proteins ---------------------------------------------------
 
 # drop PSM that are mapped to multiple proteins
@@ -200,12 +199,14 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
 # collect all uniprot accession ids
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
-#load(file.path(root,"rdata","msstats_gene_map.rda"))
-
+## ----------------------------------------------------------------------------
 # create gene map by mapping uniprot to entrez
 # NOTE: this may take several minutes
+
+# all entrez gene ids
 entrez <- suppressWarnings({ mgi_batch_query(uniprot,quiet=TRUE) })
 names(entrez) <- uniprot
+
 # Map any remaining missing IDs by hand.
 missing <- entrez[is.na(entrez)]
 mapped_by_hand <- c(P05214=22144, 
@@ -213,12 +214,15 @@ mapped_by_hand <- c(P05214=22144,
 	    P84244=15078,
 	    P05214=22144) #tub3a
 entrez[names(mapped_by_hand)] <- mapped_by_hand
+
 # Check: Have we successfully mapped all Uniprot IDs to Entrez?
 check <- sum(is.na(entrez)) == 0
 if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
+
 # Map entrez ids to gene symbols using twesleyb/getPPIs.
 symbols <- getPPIs::getIDs(entrez,from="entrez",
 		     to="symbol",species="mouse")
+
 # check there should be no missing gene symbols
 if (any(is.na(symbols))) { 
   stop("Unable to map all Entrez to gene Symbols.") }
@@ -227,7 +231,6 @@ gene_map <- data.table(uniprot = names(entrez),
 		   entrez = entrez,
 	       symbol = symbols)
 gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
-
 
 
 ## map Spectrum.Files to MS.Channels ------------------------------------------
@@ -305,10 +308,13 @@ comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
 
 # create a contrast matrix for given comparisons
 conditions <- unique(annotation_dt$Condition)
+conditions <- conditions[conditions != "Norm"] # should not include 'Norm'
+
+# utilize internal function made available by my fork
 msstats_contrasts <- MSstatsTMT::getContrasts(comp, groups=conditions)
 
 
-## Save output to file ---------------------------------------------------------
+## Save outputs to file ---------------------------------------------------------
 
 # save to file
 if (save_rda) {

@@ -41,7 +41,7 @@ suppressPackageStartupMessages({
 myfile <- file.path(root,"rdata","msstats_prot.rda")
 load(myfile) # == msstats_prot
 
-# munge for Control vs Mutant comparison
+# munge groups for Control vs Mutant comparison
 msstats_prot$BioReplicate <- gsub("\\.R[1,2,3]","",
 				  as.character(msstats_prot$BioReplicate))
 msstats_prot$BioReplicate <- as.factor(msstats_prot$BioReplicate)
@@ -49,15 +49,17 @@ msstats_prot$Condition <- gsub("\\.F[0-9]{1,2}$","",
 			       as.character(msstats_prot$Condition))
 msstats_prot$Condition <- as.factor(msstats_prot$Condition)
 
-
-# annotate samples with biofraction
-#fraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-#condition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-#msstats_prot$BioFraction <- fraction
-#msstats_prot$Condition <- condition
-
+# Time-course models fit by MSstats:
 # 1. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT)
 # 2. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT)
+
+# annotate samples with biofraction?
+fraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+condition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+msstats_prot$BioFraction <- factor(fraction,levels=c("F4","F5","F6","F7","F8","F9","F10"))
+msstats_prot$Condition <- factor(condition,levels="Mutant","Control")
+
+
 ## build a contrast_matrix ----------------------------------------------------
 
 # pepare a contrast matrix
@@ -65,17 +67,27 @@ contrast_matrix <- matrix(c(-1,1),nrow=1,ncol=2)
 colnames(contrast_matrix) <- c("Control","Mutant")
 rownames(contrast_matrix) <- "Mutant-Control"
 
+msstats_prot$BioReplicate <- msstats_prot$Run
 
 ## begin protein-level modeling -------------------------------------------------
 
 # for time-course aka repeated measures designs MSstatsTMT fits the model:
-# FIXME: change run to batch or experiment... BATCH
-fx <- formula("Abundance ~ 1 + (1|BioReplicate) + Condition")
-message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
+#fx0 <- formula("Abundance ~ 1 + (1|BioFraction) + (1|BioFraction:BioReplicate) + Condition")
+#fx1 <- formula("Abundance ~ Condition + (1|BioReplicate)") # these are equivalant
+#$fx2 <- formula("Abundance ~ Condition + (1|BioReplicate) + (1|Condition:BioReplicate)")
+#message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
 
-# FIXME: timit! parallize!
-prots <- c("Q3UMB9", sample(unique(as.character(msstats_prot$Protein)),9))
-fit_list <- MSstatsTMT::fitLMER(fx,msstats_prot,protein=prots)
+prot <- "Q3UMB9"
+#fm0 <- MSstatsTMT::fitLMER(fx0, msstats_prot, prot) # groups BioReplicate = 14?
+#fm0[[1]]$model
+#fm1[[1]]$model
+#fm2 <- fitLMER(fx2, msstats_prot, prot)
+fx0 <- formula("Abundance ~ 1 + (1|BioFraction:BioReplicate) + Condition")
+fit_list <- fitLMER(fx0, msstats_prot, prot)
+
+fit_list <- testContrasts(fit_list, contrast_matrix)
+
+results <- getResults(fit_list)
 
 # FIXME: how to catch warnings from 
 #In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  : 
@@ -90,9 +102,8 @@ fit_list <- MSstatsTMT::fitLMER(fx,msstats_prot,protein=prots)
 # Error in contrast.single[contrast.single > 0] <- temp :
 # NAs are not allowed in subscripted assignments 
 # FIXME: contrast.single problem when changing design
-fit_list <- MSstatsTMT::testContrasts(fit_list, contrast_matrix, moderated = TRUE)
 
 # get results list -- df for each comparison and compute padjust
-results_list <- adjustPvalues(fit_list)
+results_list <- getResults(fit_list)
 
 knitr::kable(bind_rows(results_list))
