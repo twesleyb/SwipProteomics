@@ -2,12 +2,13 @@
 
 #' @importFrom lme4 fixef getME
 #' @importFrom stats sigma
-#' @importFrom  dplyr filter
+#' @importFrom dplyr filter
 #' @importFrom lmerTest lmer
 #' @importFrom lme4 isGLMM isLMM getME
 #' @importFrom methods is
 #' @importFrom lme4 isGLMM isLMM getME
 #' @importFrom methods is
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #' @export
 
 
@@ -36,13 +37,15 @@ getRho <- function(fm) {
 
 # -----------------------------------------------------------------------------
 
-fitLMER <- function(fx, msstats_prot, protein = NULL) {
+fitLMER <- function(fx, msstats_prot, protein = NULL, progress=FALSE) {
   #' fitLMER 
   #' fit protein-wise linear mixed effects models as specified by the formula fx
- suppressPackageStartupMessages({
-  library(doParallel) # for parallel processing
-  library(dplyr)
- })
+
+  # imports
+   suppressPackageStartupMessages({
+     library(dplyr)
+    })
+
   # If protein == NULL then all proteins will be fit
   if (!is.null(protein)) {
     check <- is.character(protein) &
@@ -52,10 +55,11 @@ fitLMER <- function(fx, msstats_prot, protein = NULL) {
     proteins <- protein
   } else if (is.null(protein)) {
     # all proteins in msstats_prot will be fit
-    proteins <- unique(as.character(mssatats_prot$Protein))
+    proteins <- unique(as.character(msstats_prot$Protein))
   } else {
 	  stop("problem parsing input 'protein'")
   } #EIS
+
   ## the data cannot contain missing values
   if (any(is.na(msstats_prot %>% filter(Protein %in% proteins)))) {
     # FIXME: shouldn't missing values have been imputed by MSstats prev?
@@ -64,16 +68,16 @@ fitLMER <- function(fx, msstats_prot, protein = NULL) {
     warning("Missing values are not tolerated in input 'data'.",
 	    "\n",length(to_drop)," proteins were removed.")
   }
-  ## loop through proteins, fitting lmers
-  # empty list for output of loop for every protein
-  #fit_models <- list()
-  #if (is.numeric(ncores)) {
-  #  workers <- parallel::makeCluster(ncores)
-  #  doParallel::registerDoParallel(workers)
-  #} 
-  # NO parallellize fitting, but because of the complexity of functions
-  # contained within getRho parallezation is not trivial.
+
+  ## empty list for output of loop for every protein
   fit_models <- list()
+
+  ## init progress bar
+  if (progress) {
+    pbar <- utils::txtProgressBar(max=length(proteins),style=3)
+  }
+
+  ## loop through proteins, fitting lmers
   for (protein in proteins) {
     subdat <- msstats_prot %>% filter(Protein == protein)
     suppressMessages({
@@ -91,7 +95,15 @@ fitLMER <- function(fx, msstats_prot, protein = NULL) {
     } else {
 	    fit_models[[protein]] <- NULL
     }
+
+    # update pbar
+    if (progress) {
+	    utils::setTxtProgressBar(pbar, value = match(protein,proteins))
+    }
   } # EOL
+
+  close(pbar)
+
   return(fit_models)
 } # EOF
 
@@ -131,7 +143,8 @@ calcPosterior <- function(s2, s2_df, s2.prior = 0, df.prior = 0) {
 
 # -----------------------------------------------------------------------------
 
-testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
+testContrasts <- function(fit_list, contrast_matrix, 
+			  moderated = FALSE, progress = FALSE) {
   # perform tests between conditions defined in contrast_matrix for the fits 
   # in fit_list
 
@@ -166,8 +179,12 @@ testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
     }
   } # EIS fin calc of prior df and s2
 
+  # init pbar
+  if (progress) {
+    pbar <- utils::txtProgressBar(length(proteins),style=3)
+  }
+
   # Loop to perform tests for every protein
-  #FIXME: parallelize this loop
   for (protein in proteins) {
 
     # get protein model and its data from the list of protein fits
@@ -227,7 +244,13 @@ testContrasts <- function(fit_list, contrast_matrix, moderated = FALSE) {
     rho$stats <- df
     # update fit_list with rho
     fit_list[[protein]] <- rho # updated with stats df
+
+    # update pbar
+    if (progress) {
+      utils::setTxtProgressBar(pbar, value = match(protein,proteins))
+    }
   } # #EOL for each protein
+  close(pbar)
 
   # fit_list now contains rho$stats a df with protein-wise statistical results
    return(fit_list)

@@ -1,4 +1,4 @@
- #!/usr/bin/env Rscript 
+#!/usr/bin/env Rscript 
 
 # description: Working through MSstatsTMT protein-level models and 
 # statistical comparisons
@@ -33,6 +33,14 @@ suppressPackageStartupMessages({
 })
 
 
+# NOTE: attempts to parallelize fit and other functsion failed due to
+# dependencies and OR fit. NOTE: even if all dependencies successfully passed
+# to parallel processsing, then failure bc steps that perform statistics on fit
+# needs to be done in same env that fit was created. This is due to the
+# complexity of the underlying MSstatsTMT internal functions that do the 
+# the statiscal operations on protein fits (calls to .updateModel).
+
+
 ## load the data ---------------------------------------------------------------
 
 # load msstats preprocessed protein data saved in root/rdata
@@ -46,16 +54,12 @@ load(myfile) # == msstats_prot
 comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
 	      paste("Control",paste0("F",seq(4,10)), sep="."), sep="-")
 
-message("Intrafraction Comparisons:")
-knitr::kable(comp)
-
 # create a contrast matrix for given comparisons
 conditions <- levels(msstats_prot$Condition)
 contrast_matrix <- MSstatsTMT::getContrasts(comp, groups=conditions)
 
-#dim(contrast_matrix)
-#rownames(contrast_matrix)[1]
-#knitr::kable(contrast_matrix[1,])
+message("Contrast: ", rownames(contrast_matrix)[1])
+knitr::kable(contrast_matrix[1,])
 
 
 ## begin protein-level modeling -------------------------------------------------
@@ -65,10 +69,10 @@ contrast_matrix <- MSstatsTMT::getContrasts(comp, groups=conditions)
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
 message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
 
-# fit model for 9x + Swip
-# FIXME: timit! parallize!
+# Fit for Swip
 prot <- "Q3UMB9"
 fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, protein=prot)
+
 
 ## test contrasts -------------------------------------------------------------
 
@@ -80,32 +84,16 @@ results_list <- adjustPvalues(fit_list)
 
 knitr::kable(bind_rows(results_list))
 
+
 ## loop to fit multiple proteins  -----------------------------------------------
 # FIXME: implement pbar and error catching in fitLMER func
 
 message("Fitting protein-wise mixed-effect linear models.")
 
-fit_list <- list()
-proteins <- unique(as.character(msstats_prot$Protein))
-pbar <- txtProgressBar(max=length(proteins),style=3)
-
-for (protein in proteins){
-	fit <- try(MSstatsTMT::fitLMER(fx,msstats_prot,protein)[[1]],silent=TRUE)
-	if (inherits(fit,"try-error")){
-		msg <- attr(fit,"condition")
-		warning(msg)
-		fit <- NULL
-	}
-	fit_list[[protein]] <- fit
-	setTxtProgressBar(pbar,match(protein,proteins))
-}
-close(pbar)
-
-
-# STOP
-proteins <- sample(unique(as.character(msstats_prot$Protein)),100)
-
-fit <- fitLMER(fx,msstats_prot,proteins)
-
 #TODO: compile stats and compare to MSstats output
-#MSstatsTMT::testContrasts(fit_list[1], contrast_matrix, moderated = TRUE)
+fit_list <- fitLMER(fx, msstats_prot, progress = TRUE)
+# no applicable method for 'fixef' applied to an object of class "try-error"
+
+fit_list <- testContrasts(fit_list, contrast_matrix, moderated = TRUE)
+results_list <- adjustPvalues(fit_list)
+knitr::kable(bind_rows(results_list))

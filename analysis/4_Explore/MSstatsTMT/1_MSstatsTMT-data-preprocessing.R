@@ -20,7 +20,6 @@ input_psm = "PSM/5359_PSM_Report.xlsx"
 input_samples = "PSM/5359_Sample_Report.xlsx"
 
 ## Options --------------------------------------------------------------------
-load_rda = FALSE # load saved objects to speed things up
 save_rda = FALSE # save key R objects?
 
 ## Output ---------------------------------------------------------------------
@@ -138,16 +137,12 @@ unlink(myfile)
 # Because this is slow, experiment with a tryCatch clause
 
 # try to load the data from root/rdata
-if (load_rda) {
-	load(file.path(root,"rdata","raw_pd.rda"))
-} else {
-    myfile <- file.path(downdir,input_psm)
-    raw_pd <- readxl::read_excel(myfile,progress=FALSE)
-    message(paste("\nLoaded PSM data."))
-    # clean-up
-    unlink(myfile) # rm input_psm
-    unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
-}
+myfile <- file.path(downdir,input_psm)
+raw_pd <- readxl::read_excel(myfile,progress=FALSE)
+message(paste("\nLoaded PSM data."))
+# clean-up
+unlink(myfile) # rm input_psm
+unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
 # save 
 if (save_rda){
@@ -217,35 +212,33 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
 # collect all uniprot accession ids
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
-if (load_rda) {
-	  load(file.path(root,"rdata","msstats_gene_map.rda"))
-} else {
-	  # create gene map by mapping uniprot to entrez
-	  # NOTE: this may take several minutes
-	  entrez <- mgi_batch_query(uniprot,quiet=TRUE)
-	  names(entrez) <- uniprot
-	  # Map any remaining missing IDs by hand.
-	  missing <- entrez[is.na(entrez)]
-	  mapped_by_hand <- c(P05214=22144, 
-			    P0CG14=214987, 
-			    P84244=15078,
-			    P05214=22144) #tub3a
-	  entrez[names(mapped_by_hand)] <- mapped_by_hand
-	  # Check: Have we successfully mapped all Uniprot IDs to Entrez?
-	  check <- sum(is.na(entrez)) == 0
-	  if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
-	  # Map entrez ids to gene symbols using twesleyb/getPPIs.
-	  symbols <- getPPIs::getIDs(entrez,from="entrez",
-				     to="symbol",species="mouse")
-          # check there should be no missing gene symbols
-	  if (any(is.na(symbols))) { 
-		  stop("Unable to map all Entrez to gene Symbols.") }
-	  # Create gene identifier mapping data.table.
-	  gene_map <- data.table(uniprot = names(entrez),
-				   entrez = entrez,
-			       symbol = symbols)
-	  gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
-}
+#load(file.path(root,"rdata","msstats_gene_map.rda"))
+
+# create gene map by mapping uniprot to entrez
+# NOTE: this may take several minutes
+entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+names(entrez) <- uniprot
+# Map any remaining missing IDs by hand.
+missing <- entrez[is.na(entrez)]
+mapped_by_hand <- c(P05214=22144, 
+	    P0CG14=214987, 
+	    P84244=15078,
+	    P05214=22144) #tub3a
+entrez[names(mapped_by_hand)] <- mapped_by_hand
+# Check: Have we successfully mapped all Uniprot IDs to Entrez?
+check <- sum(is.na(entrez)) == 0
+if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
+# Map entrez ids to gene symbols using twesleyb/getPPIs.
+symbols <- getPPIs::getIDs(entrez,from="entrez",
+		     to="symbol",species="mouse")
+# check there should be no missing gene symbols
+if (any(is.na(symbols))) { 
+  stop("Unable to map all Entrez to gene Symbols.") }
+# Create gene identifier mapping data.table.
+gene_map <- data.table(uniprot = names(entrez),
+		   entrez = entrez,
+	       symbol = symbols)
+gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 
 # save the gene map
 if (save_rda) {
@@ -340,15 +333,13 @@ if (save_rda) {
 
 ## combine annotation_dt and raw_pd to coerce data to MSstats format -----------
 
-if (load_rda) {
-	load(file.path(rdatdir,"data_pd.rda"))
-	message("Loaded 'data_pd'")
-} else {
-	# NOTE: this takes a considerable amount of time
-	data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
-					rmProtein_with1Feature = TRUE)
-	message("\nConverted input PSM data from PD to MSstatsTMT format.")
-}
+load(file.path(rdatdir,"data_pd.rda"))
+message("Loaded 'data_pd'")
+
+# NOTE: this takes a considerable amount of time
+data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
+				rmProtein_with1Feature = TRUE)
+message("\nConverted input PSM data from PD to MSstatsTMT format.")
 
 if (save_rda) {
 	# save to file
