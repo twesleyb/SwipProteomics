@@ -6,7 +6,6 @@
 
 # input:
 
-
 # options:
 n = 100
 save_rda = FALSE
@@ -55,7 +54,7 @@ load(file.path(root,"rdata","msstats_contrasts.rda"))
 
 # for intra-fraction comparisons MSstatsTMT fits the model:
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
-message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
+message("lmer: ",fx)
 
 # | Run cooresponds to a TMT multiplex experiment aka a Batch or Experiment.
 
@@ -84,10 +83,11 @@ fit_list <- MSstatsTMT::testContrasts(fit_list, msstats_contrasts, moderated = T
 
 # get results list -- df for each comparison and compute padjust
 results_list <- MSstatsTMT::getResults(fit_list)
-t1 = Sys.time()
 
-message(difftime(t1-t0,"seconds"))
+t1 = Sys.time() # stop timer
 
+message("Time to perform group comparisons for ",
+	n," proteins: ", difftime(t1,t0,units="s")," seconds.")
 
 quit()
 
