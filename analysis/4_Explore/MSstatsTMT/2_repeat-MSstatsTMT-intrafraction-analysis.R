@@ -7,15 +7,15 @@
 # input:
 
 # options:
-n = 100
-save_rda = FALSE
+save_rda = FALSE 
+n = 100 # number of proteins
 
 
 ## prepare environment --------------------------------------------------------
 
 # project root dir and dir containing MSstatsTMT/R source code
 root ="~/projects/SwipProteomics"
-funcdir = "~/projects/SwipProteomics/src/MSstatsTMT"
+#funcdir = "~/projects/SwipProteomics/src/MSstatsTMT"
 #^ these are core MSstats internal functions used by MSstatsTMT_wrapper functions
 
 # load renv
@@ -26,11 +26,13 @@ renv::load(root)
 devtools::load_all()
 
 # load MSstatsTMT's guts
-load_fun(funcdir)
+#load_fun(funcdir)
 
 # other imports
 suppressPackageStartupMessages({
-	library(dplyr) # all other calls should be in the form pac::fun
+	library(dplyr) 
+	library(MSstats)
+	library(MSstatsTMT)
 #	library(doParallel) # for parallel processing
 })
 
@@ -48,6 +50,7 @@ suppressPackageStartupMessages({
 load(file.path(root,"rdata","msstats_prot.rda"))
 load(file.path(root,"rdata","msstats_contrasts.rda"))
 
+# NOTE: we start with the protein-level data from MSstatsTMT::proteinSummarization()
 
 ## begin protein-level modeling -------------------------------------------------
 # FIXME: change run to batch or experiment... BATCH
@@ -76,9 +79,14 @@ t0 = Sys.time()
 # fit the protein-wise models
 fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, protein=prots)
 
+## TODO: examine fit_list -----------------------------------------------------
+
 ## test contrasts -------------------------------------------------------------
+# FIXME: code should be made to be more robust somehow. Currently, if the
+# code is run twice, then things break.
 
 # for each protein compare conditions declared in contrast_matrix
+# NOTE: RUN ONCE!
 fit_list <- MSstatsTMT::testContrasts(fit_list, msstats_contrasts, moderated = TRUE)
 
 # get results list -- df for each comparison and compute padjust
@@ -89,9 +97,14 @@ t1 = Sys.time() # stop timer
 message("Time to perform group comparisons for ",
 	n," proteins: ", difftime(t1,t0,units="s")," seconds.")
 
+
+# print randomly selected rows
+df = bind_rows(results_list)
+idx <- sample(seq(nrow(df)),5)
+knitr::kable(df[idx,])
+
+
 quit()
-
-
 
 ## loop to fit multiple proteins  -----------------------------------------------
 #TODO: compile stats and compare to MSstats output
