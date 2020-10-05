@@ -77,24 +77,30 @@ warning("Missing values are not tolerated in input 'data'.",
 }
 
 # subset the data
+protein <- sample(unique(as.character(msstats_prot$Protein)),1)
 subdat <- msstats_prot %>% filter(Protein == protein)
-
 # Munge sample annotations
 subdat$Genotype <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",1))
 subdat$BioFraction <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",2))
 
+# msstats fits the model:
+# ABUNDANCE ~ GROUP + (1|SUBJECT) | Group is ~Condition and SUBJECT ~ Fraction
+
 # fit the model
-fx <- formula("Abundance ~ + (1|BioFraction:Genotype) + Genotype")
+# SOMETHING SEEMS WRONG ABOUT THIS MODEL. 
+fx <- formula("Abundance ~ + (1|BioFraction) + Genotype")
+message("lmer: ",fx)
 fm <- lmerTest::lmer(fx, data=subdat)
+
+fm
+
 rho <- getRho(fm)
 rho$data <- subdat
 rho[["isSingular"]] <- lme4::isSingular(fm)
-
 # contrast matrix for comparison to control
 cm <- rho$coeff
 cm[1] <- -1
 cm[2] <- 1
-
 # compute prior df and s2
 if (!moderated) {
   # the unmoderated t-statistic:
@@ -113,36 +119,28 @@ if (!moderated) {
       s2.prior <- eb_fit$var.prior
   }
 } # EIS fin calc of prior df and s2
-
 # we store the proteins statistics in a list
 stats_list <- list()
 stats_list$Protein <- protein
-
 # compute s2 posterior
 s2.post <- calcPosterior(s2 = rho$s2, s2_df = rho$s2_df)
-
 # compuate variance-covariance matrix
 vss <- .vcovLThetaL(fm)
 varcor <- vss(t(cm), c(rho$thopt, rho$sigma))
 vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
 se2 <- as.matrix(t(cm) %*% as.matrix(vcov) %*% cm)
-
 # calculate variance
 vcov.post <- varcor$unscaled.varcor * s2.post
 variance <- as.matrix(t(cm) %*% as.matrix(vcov.post) %*% cm)
-
 # calculate degrees of freedom
 g <- .mygrad(function(x) vss(t(cm), x)$varcor, c(rho$thopt, rho$sigma))
 denom <- t(g) %*% rho$A %*% g
 df.post <- 2 * (se2)^2 / denom + df.prior
-
 # compute fold change and the t-statistic
 FC <- (cm %*% rho$coeff)[, 1]
 t <- FC / sqrt(variance)
-
 # compute the p-value
 p <- 2 * pt(-abs(t), df = df.post)
-
 df <- data.frame("Protein"=protein,
 		 "P-value"=as.numeric(p),
 		 "Log2 FC" = as.numeric(FC),

@@ -1,12 +1,16 @@
-Loading SwipProteomics
-
+>Loading SwipProteomics
+`lmer: ~Abundance+(1 | BioFraction:Genotype) + Genotype`
 
 |Protein | P.value|   Log2.FC| t.statistic|  variance|
 |:-------|-------:|---------:|-----------:|---------:|
 |Q3UMB9  |       0| -8.649613|   -44.00426| 0.0386371|
-Linear mixed model fit by REML. t-tests use Satterthwaite's method [
-lmerModLmerTest]
-Formula: fx
+> is log2FC overestimated?
+
+```
+Linear mixed model fit by REML. t-tests use Satterthwaite's method 
+[lmerModLmerTest]
+
+Formula: Abundance+(1 | BioFraction:Genotype) + Genotype
    Data: subdat
 
 REML criterion at convergence: 10.4
@@ -31,3 +35,4 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Correlation of Fixed Effects:
             (Intr)
 GenotypMtnt -0.707
+```

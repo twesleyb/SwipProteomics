@@ -1,5 +1,6 @@
-Loading SwipProteomics
+> Loading SwipProteomics
 
+`lmer: ~Abundance1 + (1 | Run) + Condition`
 
 |Comparison             |Protein | Log2 Fold Change| P-value| P-adjust|        SE|       DF|
 |:----------------------|:-------|----------------:|-------:|--------:|---------:|--------:|
@@ -10,9 +11,11 @@ Loading SwipProteomics
 |Mutant.F7-Control.F7   |Q3UMB9  |        -1.688940|       0|        0| 0.1513823| 26.00002|
 |Mutant.F8-Control.F8   |Q3UMB9  |        -1.637331|       0|        0| 0.1513823| 26.00002|
 |Mutant.F9-Control.F9   |Q3UMB9  |        -1.173553|       0|        0| 0.1513823| 26.00002|
-Linear mixed model fit by REML. t-tests use Satterthwaite's method [
-lmerModLmerTest]
-Formula: fx
+
+```
+Linear mixed model fit by REML. t-tests use Satterthwaite's method 
+[lmerModLmerTest]
+Formula: Abundance1 + (1 | Run) + Condition
    Data: msstats_prot %>% filter(Protein == prot)
 
 REML criterion at convergence: 3.7
@@ -47,6 +50,4 @@ ConditionMutant.F9   -1.8394     0.1514 26.0000 -12.150 3.18e-12 ***
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 Correlation matrix not shown by default, as p = 14 > 12.
-Use print(summary(fit), correlation=TRUE)  or
-    vcov(summary(fit))        if you need it
-
+```
