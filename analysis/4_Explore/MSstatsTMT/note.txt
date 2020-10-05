@@ -1,0 +1,10 @@
+# we need to use a different way of doing the stats bc the env stuff
+# seems to mess everything up.
+
+# given Rho, calculate Apvar | rho is fit, sigma, theta, coeff
+
+# compute priors 
+
+# compute variance covariance matrix given params theta and sigma
+
+
