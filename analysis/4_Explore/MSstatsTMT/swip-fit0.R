@@ -43,7 +43,7 @@ cm0 <- msstats_contrasts # intrafraction contrasts
 
 prot <- "Q3UMB9" # Swip
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
-fit <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == prot))
+fit <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein == prot))
 
 fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, prot)
 
