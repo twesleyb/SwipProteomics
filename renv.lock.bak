@@ -195,8 +195,8 @@
       "RemoteUsername": "twesleyb",
       "RemoteRepo": "MSstats",
       "RemoteRef": "master",
-      "RemoteSha": "9bdd9a8c5408b8a8cd903e3938507b95bcbaaa8c",
-      "Hash": "8bffde4bd7d91fffb85039b0f5d47909"
+      "RemoteSha": "d6b9f32ded6482fbf0ff63660cbe096820b362c4",
+      "Hash": "8a0e63b19634bb303e3df1f1c470b4c3"
     },
     "MSstatsTMT": {
       "Package": "MSstatsTMT",
@@ -207,8 +207,8 @@
       "RemoteUsername": "twesleyb",
       "RemoteRepo": "MSstatsTMT",
       "RemoteRef": "master",
-      "RemoteSha": "0540cc734c865e54cf5b1e062f08f956f0f96119",
-      "Hash": "0713c258981585bbc5a07a116adf4add"
+      "RemoteSha": "b7e73871fb1e7f3f588be7d956247ba6bf1c7843",
+      "Hash": "ba25a8ab03040ca5efc0328cb7ad0b70"
     },
     "Matrix": {
       "Package": "Matrix",

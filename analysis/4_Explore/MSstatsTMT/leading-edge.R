@@ -11,8 +11,10 @@
 
 ## prepare environment --------------------------------------------------------
 
-# project root dir and dir containing MSstatsTMT/R source code
+# project root dir:
 root ="~/projects/SwipProteomics"
+
+# MSstats source directory:
 funcdir = "~/projects/SwipProteomics/src/MSstatsTMT"
 #^ these are core MSstats internal functions used by MSstatsTMT_wrapper functions
 
@@ -29,7 +31,7 @@ load_fun(funcdir)
 # other imports
 suppressPackageStartupMessages({
 	library(dplyr) # all other calls should be in the form pac::fun
-	library(doParallel) # for parallel processing
+	#library(doParallel) # for parallel processing
 })
 
 
@@ -39,63 +41,57 @@ suppressPackageStartupMessages({
 myfile <- file.path(root,"rdata","msstats_prot.rda")
 load(myfile) # == msstats_prot
 
+# munge for Control vs Mutant comparison
+msstats_prot$BioReplicate <- gsub("\\.R[1,2,3]","",
+				  as.character(msstats_prot$BioReplicate))
+msstats_prot$BioReplicate <- as.factor(msstats_prot$BioReplicate)
+msstats_prot$Condition <- gsub("\\.F[0-9]{1,2}$","",
+			       as.character(msstats_prot$Condition))
+msstats_prot$Condition <- as.factor(msstats_prot$Condition)
+
+
+# annotate samples with biofraction
+#fraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+#condition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+#msstats_prot$BioFraction <- fraction
+#msstats_prot$Condition <- condition
+
 
 ## build a contrast_matrix ----------------------------------------------------
 
-# define all intrafraction comparisons:
-comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
-	      paste("Control",paste0("F",seq(4,10)), sep="."), sep="-")
-
-message("Intrafraction Comparisons:")
-knitr::kable(comp)
-
-# create a contrast matrix for given comparisons
-contrast_matrix <- getContrasts(comp, groups=levels(msstats_prot$Condition))
-
-dim(contrast_matrix)
-rownames(contrast_matrix)[1]
-knitr::kable(contrast_matrix[1,])
+# pepare a contrast matrix
+contrast_matrix <- matrix(c(-1,1),nrow=1,ncol=2)
+colnames(contrast_matrix) <- c("Control","Mutant")
+rownames(contrast_matrix) <- "Mutant-Control"
 
 
 ## begin protein-level modeling -------------------------------------------------
 
-# for intra-fraction comparisons MSstatsTMT fits the model:
+# for time-course aka repeated measures designs MSstatsTMT fits the model:
 # FIXME: change run to batch or experiment... BATCH
-fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
+fx <- formula("Abundance ~ 1 + (1|BioReplicate) + Condition")
 message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
 
-# fit model for 9x + Swip
 # FIXME: timit! parallize!
-#prots <- c("Q3UMB9", sample(unique(as.character(msstats_prot$Protein)),9))
-proteins <- unique(as.character(msstats_prot$Protein))
-proteins <- sample(proteins,100)
+prots <- c("Q3UMB9", sample(unique(as.character(msstats_prot$Protein)),9))
+fit_list <- MSstatsTMT::fitLMER(fx,msstats_prot,protein=prots)
 
-#fit_list <- fitLMER(fx,msstats_prot,protein=prots)
-
-# Register some nodes to do work.
-nThreads <- parallel::detectCores() - 1
-workers <- parallel::makeCluster(nThreads, type = "SOCK")
-doParallel::registerDoParallel(workers)
-message("Utilizing ",nThreads," parallel processors.")
-
-
-# Parallel execution with %dopar%:
-results <- foreach(i = seq(1, length(proteins))) %dopar% {
-	fitLMER(fx,msstats_prot,protein=proteins[i])
-}
-
-# Close parallel connections.
-suppressWarnings(stopCluster(workers))
+# FIXME: how to catch warnings from 
+#In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  : 
+#Model failed to converge with max|grad| = 0.00223701 (tol = 0.002, component 1)
+#fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, protein=prot)
 
 
 ## test contrasts -------------------------------------------------------------
 
 # for each protein compare conditions declared in contrast_matrix
 # FIXME: if run twice then errors
-fit_list <- testContrasts(fit_list, contrast_matrix, moderated = TRUE)
+# Error in contrast.single[contrast.single > 0] <- temp :
+# NAs are not allowed in subscripted assignments 
+# FIXME: contrast.single problem when changing design
+fit_list <- MSstatsTMT::testContrasts(fit_list, contrast_matrix, moderated = TRUE)
 
 # get results list -- df for each comparison and compute padjust
 results_list <- adjustPvalues(fit_list)
 
-
-
+knitr::kable(bind_rows(results_list))
