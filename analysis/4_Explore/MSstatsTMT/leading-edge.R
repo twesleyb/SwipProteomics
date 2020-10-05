@@ -56,7 +56,8 @@ msstats_prot$Condition <- as.factor(msstats_prot$Condition)
 #msstats_prot$BioFraction <- fraction
 #msstats_prot$Condition <- condition
 
-
+# 1. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT)
+# 2. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT)
 ## build a contrast_matrix ----------------------------------------------------
 
 # pepare a contrast matrix

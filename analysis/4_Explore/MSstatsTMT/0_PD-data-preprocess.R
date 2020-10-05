@@ -5,9 +5,6 @@
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 
-# FIXME: catch/suppress warnings about singular fit?
-# FIXME: exchange pbar for messages
-
 ## Input ----------------------------------------------------------------------
 # specify the projects root directory:
 root = "~/projects/SwipProteomics"
@@ -20,7 +17,7 @@ input_psm = "PSM/5359_PSM_Report.xlsx"
 input_samples = "PSM/5359_Sample_Report.xlsx"
 
 ## Options --------------------------------------------------------------------
-save_rda = FALSE # save key R objects?
+save_rda = TRUE # save key R objects?
 
 ## Output ---------------------------------------------------------------------
 # * several intermediate datasets in root/rdata
@@ -112,7 +109,7 @@ suppressPackageStartupMessages({
 })
 
 # load functions in root/R
-suppressPackageStartupMessages({ devtools::load_all() })
+suppressPackageStartupMessages({ devtools::load_all(quiet=TRUE) })
 
 
 ## load sample data in root/rdata --------------------------------------
@@ -139,18 +136,9 @@ unlink(myfile)
 # try to load the data from root/rdata
 myfile <- file.path(downdir,input_psm)
 raw_pd <- readxl::read_excel(myfile,progress=FALSE)
-message(paste("\nLoaded PSM data."))
 # clean-up
 unlink(myfile) # rm input_psm
 unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
-
-# save 
-if (save_rda){
-	myfile <- file.path(root,"rdata","raw_pd.rda")
-	save(raw_pd,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
-}
 
 
 ## re-format sample metadata annotations for MSstats ---------------------------
@@ -216,7 +204,7 @@ uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
 # create gene map by mapping uniprot to entrez
 # NOTE: this may take several minutes
-entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+entrez <- suppressWarnings({ mgi_batch_query(uniprot,quiet=TRUE) })
 names(entrez) <- uniprot
 # Map any remaining missing IDs by hand.
 missing <- entrez[is.na(entrez)]
@@ -240,13 +228,6 @@ gene_map <- data.table(uniprot = names(entrez),
 	       symbol = symbols)
 gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 
-# save the gene map
-if (save_rda) {
-	myfile <- file.path(root,"rdata","msstats_gene_map.rda")
-	save(gene_map,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
-}
 
 
 ## map Spectrum.Files to MS.Channels ------------------------------------------
@@ -282,14 +263,6 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
 	             "MS.Channel" = unlist(exp_channels))
 
-# save samples
-if (save_rda) {
-	myfile <- file.path(root,"rdata","msstats_samples.rda")
-	save(samples,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
-}
-
 
 ## build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
@@ -322,23 +295,6 @@ annotation_dt$BioReplicate[grepl("Norm",annotation_dt$BioReplicate)] <- "Norm"
 # Remove un-needed cols
 annotation_dt$"MS.Channel" <- NULL
 
-# save to file
-if (save_rda) {
-	msstats_annotation <- annotation_dt
-	myfile <- file.path(rdatdir,"msstats_annotation.rda")
-	save(annotation_dt,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
-}
-
-# save to file
-if (save_rda) {
-	msstats_input <- filt_pd
-	myfile <- file.path(rdatdir,"msstats_input.rda")
-	save(annotation_dt,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
-}
 
 ## build contrast_matrix ----------------------------------------------------
 # create contrasts for intrafraction comparisons
@@ -351,10 +307,37 @@ comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
 conditions <- unique(annotation_dt$Condition)
 msstats_contrasts <- MSstatsTMT::getContrasts(comp, groups=conditions)
 
+
+## Save output to file ---------------------------------------------------------
+
 # save to file
 if (save_rda) {
+
+	# gene_map for all proteins
+	myfile <- file.path(root,"rdata","msstats_gene_map.rda")
+	save(gene_map,file=myfile,version=2)
+	message(paste("\nSaved",squote(basename(myfile)),"in",
+		      squote(dirname(myfile))))
+
+        # msstats_annotation data
+	msstats_annotation <- annotation_dt
+	myfile <- file.path(rdatdir,"msstats_annotation.rda")
+	save(msstats_annotation,file=myfile,version=2)
+	message(paste("\nSaved",squote(basename(myfile)),"in",
+		      squote(dirname(myfile))))
+
+	# msstats_input PSM data
+	msstats_input <- filt_pd
+	myfile <- file.path(rdatdir,"msstats_input.rda")
+	save(msstats_input,file=myfile,version=2)
+	message(paste("\nSaved",squote(basename(myfile)),"in",
+		      squote(dirname(myfile))))
+
+	# msstats_contrasts to be tested
 	myfile <- file.path(rdatdir,"msstats_contrasts.rda")
 	save(msstats_contrasts,file=myfile,version=2)
-	message(paste("\nsaved",squote(basename(myfile)),"in",
+	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 }
+
+message("\nPreprocessing of PD PSM-level data completed.")

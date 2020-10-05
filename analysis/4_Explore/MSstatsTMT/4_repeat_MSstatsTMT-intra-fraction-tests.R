@@ -1,12 +1,11 @@
 #!/usr/bin/env Rscript 
 
-# description: Working through MSstatsTMT protein-level models and 
-# statistical comparisons
+# title:
+# author: twab
+# description: Working through MSstatsTMT protein-level statistics
 
 # input:
 # * preprocessed protein-level data from PDtoMSstatsTMTFormat()
-# comp - all intrafraction comparisons in the form "Mutant.F4-Control.F4"
-# myfile <- file.path(root,"rdata","msstats_prot.rda")
 
 
 ## prepare environment --------------------------------------------------------
@@ -95,14 +94,28 @@ message("Fitting protein-wise mixed-effect linear models.")
 #Model failed to converge with max|grad| = 0.00223701 (tol = 0.002, component 1) 
 fit_list <- fitLMER(fx, msstats_prot, progress = TRUE)
 
+fit_list <- testContrasts(fit_list, contrast_matrix, 
+			  moderated = TRUE, progress = TRUE)
+
 # test contrasts
 #69%Error in Lc %*% as.matrix(vcov_out) : non-conformable arguments 
-foo <- list()
+# no error when looping like this???:
+# no errors this time...
 for (i in c(1:length(fit_list))) {
-foo[[i]] <- testContrasts(fit_list[i], contrast_matrix, 
+	print(i)
+fits[[i]] <- testContrasts(fit_list[i], contrast_matrix, 
 			  moderated = TRUE, progress = FALSE)
 }
+
+fit_list <- unlist(fits, recursive=FALSE)
 
 # compile results
 results_list <- adjustPvalues(fit_list)
 
+# summary of significant proteins:
+sapply(results_list,function(x) sum(x$"P-adjust" < 0.05,na.rm=TRUE))
+
+## ----------------------------------------------------------------------------
+# save
+myfile <- file.path(root,"rdata","msstats_intrafraction_results.rda")
+save(results_list,file=myfile,version=2)
