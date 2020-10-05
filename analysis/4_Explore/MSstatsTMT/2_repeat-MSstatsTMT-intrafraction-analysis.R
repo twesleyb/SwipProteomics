@@ -5,7 +5,11 @@
 # description: Working through MSstatsTMT protein-level statistics
 
 # input:
-# * preprocessed protein-level data from PDtoMSstatsTMTFormat()
+
+
+# options:
+n = 100
+save_rda = FALSE
 
 
 ## prepare environment --------------------------------------------------------
@@ -31,7 +35,6 @@ suppressPackageStartupMessages({
 #	library(doParallel) # for parallel processing
 })
 
-
 # NOTE: attempts to parallelize fit and other functsion failed due to
 # dependencies and OR fit. NOTE: even if all dependencies successfully passed
 # to parallel processsing, then failure bc steps that perform statistics on fit
@@ -43,45 +46,51 @@ suppressPackageStartupMessages({
 ## load the data ---------------------------------------------------------------
 
 # load msstats preprocessed protein data saved in root/rdata
-myfile <- file.path(root,"rdata","msstats_prot.rda")
-load(myfile) # == msstats_prot
-
-
-## build a contrast_matrix ----------------------------------------------------
-
-# define all intrafraction comparisons:
-comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
-	      paste("Control",paste0("F",seq(4,10)), sep="."), sep="-")
-
-# create a contrast matrix for given comparisons
-conditions <- levels(msstats_prot$Condition)
-contrast_matrix <- MSstatsTMT::getContrasts(comp, groups=conditions)
-
-message("Contrast: ", rownames(contrast_matrix)[1])
-knitr::kable(contrast_matrix[1,])
+load(file.path(root,"rdata","msstats_prot.rda"))
+load(file.path(root,"rdata","msstats_contrasts.rda"))
 
 
 ## begin protein-level modeling -------------------------------------------------
+# FIXME: change run to batch or experiment... BATCH
 
 # for intra-fraction comparisons MSstatsTMT fits the model:
-# FIXME: change run to batch or experiment... BATCH
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
 message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
 
-# Fit for Swip
-prot <- "Q3UMB9"
-fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, protein=prot)
+# | Run cooresponds to a TMT multiplex experiment aka a Batch or Experiment.
 
+# subset the data
+proteins <- unique(as.character(msstats_prot$Protein))
+if (n > length(proteins) | n == 'all' ) {
+	# no subset
+	message("No subset.")
+	prots = proteins
+	message("Analyzing all (N=",length(proteins),") proteins.")
+} else {
+	prots = sample(proteins,n)
+	message("Analyzing subset of proteins (n=",n,").")
+}
+
+# start timer here:
+t0 = Sys.time()
+
+# fit the protein-wise models
+fit_list <- MSstatsTMT::fitLMER(fx, msstats_prot, protein=prots)
 
 ## test contrasts -------------------------------------------------------------
 
 # for each protein compare conditions declared in contrast_matrix
-fit_list <- MSstatsTMT::testContrasts(fit_list, contrast_matrix, moderated = TRUE)
+fit_list <- MSstatsTMT::testContrasts(fit_list, msstats_contrasts, moderated = TRUE)
 
 # get results list -- df for each comparison and compute padjust
-results_list <- adjustPvalues(fit_list)
+results_list <- MSstatsTMT::getResults(fit_list)
+t1 = Sys.time()
 
-knitr::kable(bind_rows(results_list))
+message(difftime(t1-t0,"seconds"))
+
+
+quit()
+
 
 
 ## loop to fit multiple proteins  -----------------------------------------------
