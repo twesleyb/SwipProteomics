@@ -199,8 +199,7 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
 # collect all uniprot accession ids
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
-## ----------------------------------------------------------------------------
-# create gene map by mapping uniprot to entrez
+## create gene map by mapping uniprot to entrez -------------------------------
 # NOTE: this may take several minutes
 
 # all entrez gene ids
@@ -325,17 +324,17 @@ if (save_rda) {
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-        # msstats_annotation data
-	msstats_annotation <- annotation_dt
-	myfile <- file.path(rdatdir,"msstats_annotation.rda")
-	save(msstats_annotation,file=myfile,version=2)
+        # PD_annotation data
+	PD_annotation <- annotation_dt
+	myfile <- file.path(rdatdir,"PD_annotation.rda")
+	save(PD_annotation,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-	# msstats_input PSM data
-	msstats_input <- filt_pd
-	myfile <- file.path(rdatdir,"msstats_input.rda")
-	save(msstats_input,file=myfile,version=2)
+	# PD_input PSM data
+	PD_input <- filt_pd
+	myfile <- file.path(rdatdir,"PD_input.rda")
+	save(PD_input,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 

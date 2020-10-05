@@ -14,24 +14,16 @@
 # project root dir:
 root ="~/projects/SwipProteomics"
 
-# MSstats source directory:
-funcdir = "~/projects/SwipProteomics/src/MSstatsTMT"
-#^ these are core MSstats internal functions used by MSstatsTMT_wrapper functions
-
 # load renv
 renv::load(root)
 
 # load projects functions in root/R
-# includes MSstatsTMT_wrappers.R utilized herein
 devtools::load_all()
-
-# load MSstatsTMT's guts
-load_fun(funcdir)
 
 # other imports
 suppressPackageStartupMessages({
 	library(dplyr) # all other calls should be in the form pac::fun
-	#library(doParallel) # for parallel processing
+	library(MSstatsTMT)
 })
 
 
@@ -41,6 +33,8 @@ suppressPackageStartupMessages({
 myfile <- file.path(root,"rdata","msstats_prot.rda")
 load(myfile) # == msstats_prot
 
+## munge sample to group mapping -----------------------------------------------
+
 # munge groups for Control vs Mutant comparison
 msstats_prot$BioReplicate <- gsub("\\.R[1,2,3]","",
 				  as.character(msstats_prot$BioReplicate))
@@ -49,45 +43,55 @@ msstats_prot$Condition <- gsub("\\.F[0-9]{1,2}$","",
 			       as.character(msstats_prot$Condition))
 msstats_prot$Condition <- as.factor(msstats_prot$Condition)
 
-# Time-course models fit by MSstats:
-# 1. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT)
-# 2. lmer: ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT)
-
 # annotate samples with biofraction?
-fraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-condition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-msstats_prot$BioFraction <- factor(fraction,levels=c("F4","F5","F6","F7","F8","F9","F10"))
-msstats_prot$Condition <- factor(condition,levels="Mutant","Control")
+#fraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+#condition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+#msstats_prot$BioFraction <- factor(fraction,levels=c("F4","F5","F6","F7","F8","F9","F10"))
+#msstats_prot$Condition <- factor(condition,levels="Mutant","Control")
+#msstats_prot$BioReplicate <- msstats_prot$Run
 
 
 ## build a contrast_matrix ----------------------------------------------------
 
-# pepare a contrast matrix
-contrast_matrix <- matrix(c(-1,1),nrow=1,ncol=2)
-colnames(contrast_matrix) <- c("Control","Mutant")
-rownames(contrast_matrix) <- "Mutant-Control"
+# load saved contrast matrix
+load(file.path(root,"rdata","msstats_contrasts.rda"))
+cm0 <- msstats_contrasts # intrafraction contrasts
 
-msstats_prot$BioReplicate <- msstats_prot$Run
+# new contrast matrix for 'WT v Mutant' contrast adjusted for fraction
+# differences
+cm1  <- matrix(c(-1,1),nrow=1,ncol=2)
+colnames(cm1) <- c("Control","Mutant")
+rownames(cm1) <- "Mutant-Control"
 
-## begin protein-level modeling -------------------------------------------------
+proteins <- unique(as.character(msstats_prot$Protein))
+prots <- sample(proteins,100)
+subdat <- msstats_prot %>% filter(Protein %in% prots)
 
-# for time-course aka repeated measures designs MSstatsTMT fits the model:
-#fx0 <- formula("Abundance ~ 1 + (1|BioFraction) + (1|BioFraction:BioReplicate) + Condition")
-#fx1 <- formula("Abundance ~ Condition + (1|BioReplicate)") # these are equivalant
-#$fx2 <- formula("Abundance ~ Condition + (1|BioReplicate) + (1|Condition:BioReplicate)")
-#message("Fitting protein-wise mixed-effects linear model of the form:\n\t",fx)
+mstats_quant <- MSstats::groupComparison(cm1,subdat)
 
-prot <- "Q3UMB9"
-#fm0 <- MSstatsTMT::fitLMER(fx0, msstats_prot, prot) # groups BioReplicate = 14?
-#fm0[[1]]$model
-#fm1[[1]]$model
-#fm2 <- fitLMER(fx2, msstats_prot, prot)
-fx0 <- formula("Abundance ~ 1 + (1|BioFraction:BioReplicate) + Condition")
-fit_list <- fitLMER(fx0, msstats_prot, prot)
+## models -------------------------------------------------
 
-fit_list <- testContrasts(fit_list, contrast_matrix)
+# Model fit by MSstatsTMT for intrafraction comparisons:
+# 0. lmer: Abundance ~ (1|Run) + Condition
+fx0 <- formula("Abundance ~ 1 + (1|Run) + Condition")
 
-results <- getResults(fit_list)
+# Time-course (repeated measures) models fit by MSstats:
+# 1. lmer: Abundance ~ Condition + (1|BioReplicate)
+fx1 <- formula("Abundance ~ Condition + (1|BioReplicate)")
+
+# 2. lmer: Abundance ~ Condition + (1|BioReplicate) + (1|Condition:BioReplicate)
+fx2 <- formula("Abundance ~ Condition + (1|BioReplicate) + (1|Condition:BioReplicate)")
+
+
+## fit models for swip --------------------------------------------------------
+
+prot <- "Q3UMB9" # Swip
+
+fit_list <- MSstatsTMT::fitLMER(fx0, msstats_prot, prot)
+
+fit_list <- MSstatsTMT::testContrasts(fit_list, cm0)
+
+results <- getResults(contrast_list)
 
 # FIXME: how to catch warnings from 
 #In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  : 

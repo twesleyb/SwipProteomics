@@ -5,11 +5,10 @@
 # author: twab
 
 ## Options
-save_rda = FALSE
-n = 100
+n = "all"
+save_rda = TRUE
 
-## ----------------------------------------------------------------------------
-# prepare the working environment
+## prepare the working environment ---------------------------------------------
 
 # load renv
 root <- "~/projects/SwipProteomics"
@@ -23,18 +22,21 @@ suppressPackageStartupMessages({
 })
 
 
-## ----------------------------------------------------------------------------
-# load preprocessed data, annotation file, and contrasts
+## load preprocessed data, annotation file, and contrasts ---------------------
 
-load(file.path(root,"rdata","msstats_input.rda"))
-load(file.path(root,"rdata","msstats_annotation.rda"))
+load(file.path(root,"rdata","PD_input.rda"))
+load(file.path(root,"rdata","PD_annotation.rda"))
 load(file.path(root,"rdata","msstats_contrasts.rda"))
 
-# subset the data
+## subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of
 # (single) Uniprot Identifiers
 # NOTE: Only run once!
-proteins <- unique(as.character(msstats_input$Master.Protein.Accessions))
+
+# all proteins
+proteins <- unique(as.character(PD_input$Master.Protein.Accessions))
+
+# define proteins to be analyzed:
 if (n > length(proteins) | n == "all") {	
 	# using all proteins
 	message("\nAnalyzing 'all' (N=",
@@ -43,61 +45,71 @@ if (n > length(proteins) | n == "all") {
 	# subset the data
 	message("\nAnalyzing a subset of data (n=",n," proteins).")
 	prots <- sample(proteins,n)
-	msstats_input <- msstats_input %>% 
+	PD_input <- PD_input %>% 
 		filter(Master.Protein.Accessions %in% prots)
-}
+} # EIS
 
-## ----------------------------------------------------------------------------
-# convert to msstats format
+
+## [1] convert to msstats format --------------------------------------------------
+# MSstatsTMT key steps: 1-3.
+
+# This step takes about 7 minutes for 8.5 k proteins
 t0 = Sys.time()
-msstats_raw <- PDtoMSstatsTMTFormat(msstats_input, 
-				    msstats_annotation, 
-				    which.proteinid="Master.Protein.Accessions")	
+
+msstats_input <- PDtoMSstatsTMTFormat(PD_input, 
+			    PD_annotation, 
+			    which.proteinid="Master.Protein.Accessions")	
+
 message("Time to preprocess ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
 
 
-## ----------------------------------------------------------------------------
-# summarize protein level data
+## [2] summarize protein level data ----------------------------------------------
+
+# This takes about 45 minutes for 8.5 k proteins
 t0 = Sys.time()
+
 suppressMessages({
-msstats_prot <- proteinSummarization(msstats_raw,	
-                                      method="msstats",	
-                                      global_norm=TRUE,	
-                                      reference_norm=TRUE)
+	msstats_prot <- proteinSummarization(msstats_input,
+					     method="msstats",	
+					     global_norm=TRUE,	
+					     reference_norm=TRUE)
 })
-message("Time to summarize ", n, " proteins: ", 
-	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
 
-## ----------------------------------------------------------------------------
-# perform statistical comparisons
+message("Time to summarize ", n, " proteins: ", 
+  round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
+
+
+## [3] perform statistical comparisons ----------------------------------------
+# This takes about 21 minutes for 8.5 k proteins
 
 t0 = Sys.time()
+
 suppressWarnings({
 	suppressMessages({
   msstats_results <- groupComparisonTMT(msstats_prot, msstats_contrasts)	
 	})
 })
+
 message("Time to perform group comparisons for ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
 
 
-## ----------------------------------------------------------------------------
-# save results
+## save results ---------------------------------------------------------------
 
 if (save_rda) {
-
+  # save output as rda in root/rdata
   myfile <- file.path(root,"rdata","msstats_results.rda")
   save(msstats_results,file=myfile,version=2)
-  message("Saved",basename(myfile),"in",dirname(myfile))
+  message("Saved ",basename(myfile),"in",dirname(myfile))
   
   myfile <- file.path(root,"rdata","msstats_prot.rda")
   save(msstats_prot,file=myfile,version=2)
-  message("Saved",basename(myfile),"in",dirname(myfile))
+  message("Saved ",basename(myfile),"in",dirname(myfile))
   
-  myfile <- file.path(root,"rdata","msstats_raw.rda")
-  save(msstats_raw,file=myfile,version=2)
-  message("Saved",basename(myfile),"in",dirname(myfile))
+  myfile <- file.path(root,"rdata","msstats_input.rda")
+  save(msstats_input,file=myfile,version=2)
+  message("Saved ",basename(myfile),"in",dirname(myfile))
 
 }
 

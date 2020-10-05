@@ -7,26 +7,20 @@
 # input:
 
 # options:
+n = 100 
 save_rda = FALSE 
-n = 100 # number of proteins
 
 
 ## prepare environment --------------------------------------------------------
 
 # project root dir and dir containing MSstatsTMT/R source code
 root ="~/projects/SwipProteomics"
-#funcdir = "~/projects/SwipProteomics/src/MSstatsTMT"
-#^ these are core MSstats internal functions used by MSstatsTMT_wrapper functions
 
 # load renv
 renv::load(root)
 
 # load projects functions in root/R
-# includes MSstatsTMT_wrappers.R utilized herein
-devtools::load_all()
-
-# load MSstatsTMT's guts
-#load_fun(funcdir)
+#devtools::load_all()
 
 # other imports
 suppressPackageStartupMessages({
