@@ -86,14 +86,23 @@ knitr::kable(bind_rows(results_list))
 
 
 ## loop to fit multiple proteins  -----------------------------------------------
-# FIXME: implement pbar and error catching in fitLMER func
+#TODO: compile stats and compare to MSstats output
 
 message("Fitting protein-wise mixed-effect linear models.")
 
-#TODO: compile stats and compare to MSstats output
+# fit models
+# FIXME: how to improve speed?
+#Model failed to converge with max|grad| = 0.00223701 (tol = 0.002, component 1) 
 fit_list <- fitLMER(fx, msstats_prot, progress = TRUE)
-# no applicable method for 'fixef' applied to an object of class "try-error"
 
-fit_list <- testContrasts(fit_list, contrast_matrix, moderated = TRUE)
+# test contrasts
+#69%Error in Lc %*% as.matrix(vcov_out) : non-conformable arguments 
+foo <- list()
+for (i in c(1:length(fit_list))) {
+foo[[i]] <- testContrasts(fit_list[i], contrast_matrix, 
+			  moderated = TRUE, progress = FALSE)
+}
+
+# compile results
 results_list <- adjustPvalues(fit_list)
-knitr::kable(bind_rows(results_list))
+

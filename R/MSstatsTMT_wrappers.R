@@ -79,11 +79,22 @@ fitLMER <- function(fx, msstats_prot, protein = NULL, progress=FALSE) {
 
   ## loop through proteins, fitting lmers
   for (protein in proteins) {
+
+    # subset the data
     subdat <- msstats_prot %>% filter(Protein == protein)
+
+    # fit the model
+    # NOTE: speed greatly enhanced by passing calc.derivs = FALSE
     suppressMessages({
-      fm <- try(lmerTest::lmer(fx, data = subdat),silent=TRUE)
+      fm <- try(lmerTest::lmer(fx, data=subdat), 
+		silent=TRUE)
     })
-    if (!is.null(fm)) {
+
+    # if no error, calculate model stats
+    # NOTE: errors typically seem to arrise when there are missing values
+    # it would be nice to catch these, but we don't really need them.
+    # FIXME: report
+    if (!inherits(fm, "try-error")) { 
       # compute model stats
       rho <- getRho(fm)
       # add the protein-level data
@@ -93,6 +104,7 @@ fitLMER <- function(fx, msstats_prot, protein = NULL, progress=FALSE) {
       # return list of rho for every protein
       fit_models[[protein]] <- rho
     } else {
+	    # return NULL
 	    fit_models[[protein]] <- NULL
     }
 
@@ -102,10 +114,11 @@ fitLMER <- function(fx, msstats_prot, protein = NULL, progress=FALSE) {
     }
   } # EOL
 
-  close(pbar)
+  if (progress) { close(pbar) }
 
   return(fit_models)
 } # EOF
+
 
 # -----------------------------------------------------------------------------
 
@@ -181,7 +194,7 @@ testContrasts <- function(fit_list, contrast_matrix,
 
   # init pbar
   if (progress) {
-    pbar <- utils::txtProgressBar(length(proteins),style=3)
+    pbar <- utils::txtProgressBar(max=length(proteins),style=3)
   }
 
   # Loop to perform tests for every protein
@@ -250,7 +263,7 @@ testContrasts <- function(fit_list, contrast_matrix,
       utils::setTxtProgressBar(pbar, value = match(protein,proteins))
     }
   } # #EOL for each protein
-  close(pbar)
+  if (progress) { close(pbar) }
 
   # fit_list now contains rho$stats a df with protein-wise statistical results
    return(fit_list)

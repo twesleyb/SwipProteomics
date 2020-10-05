@@ -324,27 +324,37 @@ annotation_dt$"MS.Channel" <- NULL
 
 # save to file
 if (save_rda) {
-	myfile <- file.path(rdatdir,"annotation_dt.rda")
+	msstats_annotation <- annotation_dt
+	myfile <- file.path(rdatdir,"msstats_annotation.rda")
 	save(annotation_dt,file=myfile,version=2)
 	message(paste("\nsaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 }
 
-
-## combine annotation_dt and raw_pd to coerce data to MSstats format -----------
-
-load(file.path(rdatdir,"data_pd.rda"))
-message("Loaded 'data_pd'")
-
-# NOTE: this takes a considerable amount of time
-data_pd <- PDtoMSstatsTMTFormat(filt_pd, annotation_dt, 
-				rmProtein_with1Feature = TRUE)
-message("\nConverted input PSM data from PD to MSstatsTMT format.")
-
+# save to file
 if (save_rda) {
-	# save to file
-	myfile <- file.path(rdatdir,"data_pd.rda")
-	save(data_pd,file=myfile,version=2)
+	msstats_input <- filt_pd
+	myfile <- file.path(rdatdir,"msstats_input.rda")
+	save(annotation_dt,file=myfile,version=2)
+	message(paste("\nsaved",squote(basename(myfile)),"in",
+		      squote(dirname(myfile))))
+}
+
+## build contrast_matrix ----------------------------------------------------
+# create contrasts for intrafraction comparisons
+
+# define all intrafraction comparisons:
+comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
+	      paste("Control",paste0("F",seq(4,10)), sep="."), sep="-")
+
+# create a contrast matrix for given comparisons
+conditions <- unique(annotation_dt$Condition)
+msstats_contrasts <- MSstatsTMT::getContrasts(comp, groups=conditions)
+
+# save to file
+if (save_rda) {
+	myfile <- file.path(rdatdir,"msstats_contrasts.rda")
+	save(msstats_contrasts,file=myfile,version=2)
 	message(paste("\nsaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 }

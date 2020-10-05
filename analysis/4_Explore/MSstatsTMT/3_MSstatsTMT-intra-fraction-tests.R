@@ -9,8 +9,7 @@
 # * data_prot.rda
 
 ## Options --------------------------------------------------------------------
-# total number of proteins to analyze (wash complex(5) + random_prots = nsubset)
-nsubset = 10
+nsubset=10
 
 ## Prepare the working environment --------------------------------------------
 
