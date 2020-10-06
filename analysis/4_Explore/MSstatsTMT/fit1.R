@@ -4,6 +4,11 @@
 # author: twab
 # description: 
 
+# parse input
+args = commandArgs(trailingOnly=TRUE)
+stopifnot(length(args)==1)
+i <- as.numeric(args)
+
 # input:
 # * msstats_prot.rda
 
@@ -235,136 +240,6 @@ mygradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-## load the data --------------------------------------------------------------
-
-# load msstats preprocessed protein data from SwipProteomics in root/data
-devtools::load_all()
-data(msstats_prot) 
-data(msstats_contrasts)
-
-# Munge sample annotations
-genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-msstats_prot$Genotype <- as.factor(genotype)
-msstats_prot$BioFraction <- biofraction
-
-
-## Analysis of Washc4/Swip -----------------------------------------------------
-
-# Swip/Washc4
-swip = protein = "Q3UMB9"
-#protein = sample(unique(as.character(msstats_prot$Protein)),1)
-
-# NOTE: the moderated analysis requires all models be fit. Here we demonstrate
-# fitting just a single protein.
-# moderated = FALSE
-
-# subset the data for a given protein [START]
-subdat <- msstats_prot %>% filter(Protein == protein)
-
-# The linear mixed effects model to be fit:
-fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype")
-message("fit: ", fx1)
-
-# fit the model:
-fm1 <- lmerTest::lmer(fx1, data=subdat)
-
-# examine the fit:
-print(summary(fm1))
-
-# compute some model statistics, store in list rho
-rho <- list()
-rho$protein <- protein
-rho$formula <- fx1
-rho$model <- fm1
-rho$data <- subdat
-
-# here we compute the unmoderated statistics
-rho$df.prior <- 0
-rho$s2.prior <- 0
-
-# check if singular (boundary) fit
-rho$isSingular <- lme4::isSingular(fm1)
-
-# calculate coeff, sigma, and theta:
-rho$coeff <- lme4::fixef(fm1)
-rho$sigma <- stats::sigma(fm1)
-rho$thopt <- lme4::getME(fm1, "theta")
-
-# calculate degrees of freedom and sigma^2:
-av <- anova(fm1)
-rho$s2_df <- av$DenDF
-rho$s2 <- av$"Mean Sq" / av$"F value"
-
-# calcuate symtoptic var-covar matrix
-# NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
-rho$A <- calcApvarcovar(fx1,subdat,rho$thopt,rho$sigma) 
-
-# define contrast matrix for comparison to control
-cm1 <- rho$coeff
-cm1[1] <- -1
-cm1[2] <- 1
-rho$contrasts <- cm1
-
-# we store the proteins statistics in a list
-stats_list <- list()
-
-# calculate posterior s2
-s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
-
-# compuate variance-covariance matrix
-# NOTE: uses vcovLThetaLM
-vss <- vcovLThetaLM(fx1,subdat)
-varcor <- vss(t(cm1), c(rho$thopt, rho$sigma))
-vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
-se2 <- as.numeric(t(cm1) %*% as.matrix(vcov) %*% cm1)
-
-# calculate variance
-vcov.post <- varcor$unscaled.varcor * s2.post
-variance <- as.numeric(t(cm1) %*% as.matrix(vcov.post) %*% cm1)
-
-# calculate degrees of freedom
-# given params theta and sigma from lmer and the Acovar
-# NOTE: uses mygradient
-g <- mygradient(function(x) vss(t(cm1), x)$varcor, c(rho$thopt, rho$sigma))
-denom <- t(g) %*% rho$A %*% g
-
-# compute df.posterior
-df.post <- 2 * (se2)^2 / denom + rho$df.prior
-
-# compute fold change and the t-statistic
-FC <- (cm1 %*% rho$coeff)[, 1]
-t <- FC / sqrt(variance)
-
-# compute the p-value
-p <- 2 * pt(-abs(t), df = df.post)
-
-# munge comparison
-comparison <- gsub("Genotype","",paste(rev(names(cm1)),collapse="-"))
-
-# compile results
-df <- data.frame(protein=protein,
-		 contrast=comparison,
-		 log2FC=FC,
-		 percentControl=2^FC,
-		 Pvalue=p,
-		 Tstatistic=t,
-		 SE=sqrt(variance),
-		 DF=df.post,
-		 isSingular=rho$isSingular)
-
-# check the result
-knitr::kable(df)
-
-
-## Declare a function that does all the work of above -------------------------
-
-# * msstats_prot
-# * protein
-# * fx: a lmer formula
-# * contrast_matrix: contrast matrix in which +/- coeffs are indicates, 
-# see msstats_contrasts
-
 lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # perfrom the lmer-based testing of conditioned means for a given protein
   # subset the data for a given protein
@@ -434,28 +309,24 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   return(df)
 } #EOF
 
-#------------------------------------------------------------------------------
-## tests
 
-# check:
-# * cm1 declared above
-# FIXME: only works for case 1
-fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
-result1 <- lmerTestProtein(msstats_prot,swip,fx1,cm1)
+## load the data --------------------------------------------------------------
 
-knitr::kable(result1)
+# load msstats preprocessed protein data from SwipProteomics in root/data
+devtools::load_all(quiet=TRUE)
+data(msstats_prot) 
+data(msstats_contrasts)
 
+# Munge sample annotations
+genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+msstats_prot$Genotype <- as.factor(genotype)
+msstats_prot$BioFraction <- biofraction
 
-# Loop through all proteins
-results_list <- list()
+# input
+cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
 proteins <- unique(as.character(msstats_prot$Protein))
-message("\nAnalyzing all proteins.")
-pbar <- txtProgressBar(max=length(proteins),style=3)
+fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
 
-# ERROR:
-for (i in c(1:length(proteins))) {
-  results_list[[i]] <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
-  setTxtProgressBar(pbar,value=match(protein,proteins))
-}
-close(pbar)
-# SwipProteomics
+result <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
+#writeLines(result)
