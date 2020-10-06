@@ -24,6 +24,7 @@ suppressPackageStartupMessages({
 ## load the data ---------------------------------------------------------------
 
 # load msstats preprocessed protein data saved in root/rdata
+devtools::load_all() 
 data(msstats_prot)
 
 # munge - clarify covariate names
@@ -43,13 +44,6 @@ knitr::kable(cm0[1,])
 
 
 ## fit model for swip --------------------------------------------------------
-#fx <- formula("Abundance ~ 1 + (1|Mixture) + Condition * BioFraction")
-#fx <- formula("Abundance ~ 1 + (1|Mixture) + Condition.BioFraction")
-# NOTE: declaring the interaction of Condition.Biofraction like : doesnt work!
-#fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
-# NOTE: changed Run annotation to make more sense
-# Avoid changing Condition as downstream functions seem to depened upon
-# formatting of stuff
 
 prot <- "Q3UMB9"
 
@@ -68,3 +62,15 @@ df <- bind_rows(results)
 knitr::kable(df)
 
 print(summary(fit))
+
+names(fit_list[[1]])
+
+fit_list[[1]]$coeff
+
+fit_list[[1]]$sigma
+
+fit_list[[1]]$s2_df
+
+fit_list[[1]]$s2
+
+fit_list[[1]]$A

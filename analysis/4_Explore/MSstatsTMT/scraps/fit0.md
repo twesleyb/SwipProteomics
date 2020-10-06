@@ -1,8 +1,5 @@
-Loading SwipProteomics
-
-Example row of contrast matrix defining intrafraction contrast between `Control.F4` and
-`Mutant.F4`.
-
+Contrast:
+| Group      |  x|
 |:-----------|--:|
 |Control.F4  | -1|
 |Mutant.F4   |  1|
@@ -19,11 +16,22 @@ Example row of contrast matrix defining intrafraction contrast between `Control.
 |Control.F10 |  0|
 |Mutant.F10  |  0|
 
+Results:
+
+|Comparison             |Protein | Log2 Fold Change| P-value| P-adjust|        SE|       DF|
+|:----------------------|:-------|----------------:|-------:|--------:|---------:|--------:|
+|Mutant.F10-Control.F10 |Q3UMB9  |        -1.835485|       0|        0| 0.1513823| 26.00002|
+|Mutant.F4-Control.F4   |Q3UMB9  |        -1.307498|       0|        0| 0.1513823| 26.00002|
+|Mutant.F5-Control.F5   |Q3UMB9  |        -1.377369|       0|        0| 0.1513823| 26.00002|
+|Mutant.F6-Control.F6   |Q3UMB9  |        -1.598311|       0|        0| 0.1513823| 26.00002|
+|Mutant.F7-Control.F7   |Q3UMB9  |        -1.688940|       0|        0| 0.1513823| 26.00002|
+|Mutant.F8-Control.F8   |Q3UMB9  |        -1.637331|       0|        0| 0.1513823| 26.00002|
+|Mutant.F9-Control.F9   |Q3UMB9  |        -1.173553|       0|        0| 0.1513823| 26.00002|
 
 ```
-Linear mixed model fit by REML. t-tests use Satterthwaite's method
+Linear mixed model fit by REML. t-tests use Satterthwaite's method 
 [lmerModLmerTest]
-Formula: fx
+Formula: Abundance ~ 1 + (1|Mixture) + Condition
    Data: msstats_prot %>% filter(Protein == prot)
 
 REML criterion at convergence: 3.7
@@ -60,15 +68,4 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Correlation matrix not shown by default, as p = 14 > 12.
 Use print(summary(fit), correlation=TRUE)  or
     vcov(summary(fit))        if you need it
-
 ```
-
-|Comparison             |Protein | Log2 Fold Change| P-value| P-adjust|        SE|       DF|
-|:----------------------|:-------|----------------:|-------:|--------:|---------:|--------:|
-|Mutant.F10-Control.F10 |Q3UMB9  |        -1.835485|       0|        0| 0.1513823| 26.00002|
-|Mutant.F4-Control.F4   |Q3UMB9  |        -1.307498|       0|        0| 0.1513823| 26.00002|
-|Mutant.F5-Control.F5   |Q3UMB9  |        -1.377369|       0|        0| 0.1513823| 26.00002|
-|Mutant.F6-Control.F6   |Q3UMB9  |        -1.598311|       0|        0| 0.1513823| 26.00002|
-|Mutant.F7-Control.F7   |Q3UMB9  |        -1.688940|       0|        0| 0.1513823| 26.00002|
-|Mutant.F8-Control.F8   |Q3UMB9  |        -1.637331|       0|        0| 0.1513823| 26.00002|
-|Mutant.F9-Control.F9   |Q3UMB9  |        -1.173553|       0|        0| 0.1513823| 26.00002|
