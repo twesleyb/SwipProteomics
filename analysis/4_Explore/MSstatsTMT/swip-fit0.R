@@ -20,7 +20,7 @@ renv::load(root)
 
 # other imports
 suppressPackageStartupMessages({
-	library(dplyr) # all other calls should be in the form pac::fun
+	library(dplyr) 
 	library(MSstatsTMT) # my fork
 })
 
@@ -31,8 +31,6 @@ suppressPackageStartupMessages({
 #myfile <- file.path(root,"rdata","msstats_prot.rda")
 #load(myfile) # == msstats_prot
 data(msstats_prot)
-
-
 
 # munge - clarify covariate names
 #conditition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
@@ -46,7 +44,8 @@ msstats_prot$Mixture <- mixture
 ## build a contrast_matrix ----------------------------------------------------
 
 # load saved contrast matrix
-load(file.path(root,"rdata","msstats_contrasts.rda"))
+#load(file.path(root,"rdata","msstats_contrasts.rda"))
+data(msstats_contrasts.rda)
 cm0 <- msstats_contrasts # intrafraction contrasts
 
 knitr::kable(cm0[1,])
