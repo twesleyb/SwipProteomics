@@ -10,7 +10,8 @@ suppressPackageStartupMessages({
   library(MSstatsTMT)
 })
 
-devtools::load_all() # and internal funcs
+# load project specific functions
+devtools::load_all()
 # FIXME: what internals are required?
 
 # load msstats preprocessed protein data saved in root/rdata
@@ -47,41 +48,44 @@ calcPosterior <- function(s2, s2_df, s2.prior = 0, df.prior = 0) {
   return(s2.post)
 }
 
+munge1 <- function(x,col) {
+	as.factor(sapply(strsplit(as.character(x),"\\."),"[",col))
+}
+
 
 ## START ----------------------------------------------------------------------
 
 #protein = "Q3UMB9"
 proteins <- unique(as.character(msstats_prot$Protein))
+proteins <- sample(proteins,100)
 moderated = FALSE
 
 results_list <- list()
-
+pbar <- utils::txtProgressBar(max=length(proteins),style=3)
 for (protein in proteins) {
-  message("Analyzing: ",protein)
+  #message("Analyzing: ",protein)
   ## the data cannot contain missing values
   if (any(is.na(msstats_prot %>% filter(Protein == protein)))) {
-	  results_list[[protein]] <- list(error="The data cannot contain missing values.")
+	  msg <- "The data cannot contain missing values."
+	  results_list[[protein]] <- list(error=msg)
 	  next
   }
-
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
-
   # Munge sample annotations
-  subdat$Genotype <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",1))
-  subdat$BioFraction <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",2))
-
+  subdat$Genotype <- munge1(subdat$Condition,1)
+  subdat$BioFraction <- munge1(subdat$Condition,2)
   # fit the model
-  fx <- formula("Abundance ~ + (1|BioFraction:Genotype) + Genotype")
-
-  fm <- try(lmerTest::lmer(fx, data=subdat),silent=TRUE)
-
+  fx <- formula("Abundance ~ (1|BioFraction:Genotype) + Genotype")
+  fm <- suppressMessages({
+	  try(lmerTest::lmer(fx, data=subdat),silent=TRUE)
+  })
   # check for errors
   if (inherits(fm,"try-error")) {
 	  results_list[[protein]] <- list(error=attr(fm,"condition"))
 	  next
   }
-  message("lmer: ",fx)
+  #message("lmer: ",fx)
     rho <- getRho(fm)
     rho$data <- subdat
     rho[["isSingular"]] <- lme4::isSingular(fm)
@@ -136,5 +140,15 @@ for (protein in proteins) {
 		 "variance"=as.numeric(variance))
     #knitr::kable(df)
     #print(summary(fm))
+    setTxtProgressBar(pbar,match(protein,proteins))
   results_list[[protein]] <- df
 }
+close(pbar)
+
+x = results_list[[1]]
+class(x)
+
+idx <- which(sapply(results_list,is.data.frame))
+df <- bind_rows(results_list[idx])
+
+hist(df$P.value)

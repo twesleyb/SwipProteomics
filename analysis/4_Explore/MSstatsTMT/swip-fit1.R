@@ -51,6 +51,7 @@ calcPosterior <- function(s2, s2_df, s2.prior = 0, df.prior = 0) {
 ## START ----------------------------------------------------------------------
 
 protein = "Q3UMB9"
+protein = sample(unique(as.character(msstats_prot$Protein)),1)
 moderated = FALSE
 
 # If protein == NULL then all proteins will be fit
@@ -77,7 +78,7 @@ warning("Missing values are not tolerated in input 'data'.",
 }
 
 # subset the data
-protein <- sample(unique(as.character(msstats_prot$Protein)),1)
+#protein <- sample(unique(as.character(msstats_prot$Protein)),1)
 subdat <- msstats_prot %>% filter(Protein == protein)
 # Munge sample annotations
 subdat$Genotype <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",1))
@@ -88,11 +89,12 @@ subdat$BioFraction <- as.factor(sapply(strsplit(as.character(subdat$Condition),"
 
 # fit the model
 # SOMETHING SEEMS WRONG ABOUT THIS MODEL. 
-fx <- formula("Abundance ~ + (1|BioFraction) + Genotype")
+#fx <- formula("Abundance ~ (1|Condition) + Genotype") # equivalent
+#fx <- formula("Abundance ~ (1|Genotype:BioFraction) + Genotype")
+fx <- formula("Abundance ~ (1|Condition) + Genotype")
+
 message("lmer: ",fx)
 fm <- lmerTest::lmer(fx, data=subdat)
-
-fm
 
 rho <- getRho(fm)
 rho$data <- subdat
