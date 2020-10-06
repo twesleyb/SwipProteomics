@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # title: SwipProteomics
-# description: analysis of Swip TMT spatial proteomics data with MSstatsTMT
+# description: prepare the PD PSM level data for analysis by MSstatsTMT
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 

@@ -305,7 +305,7 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # compile results
   df <- data.frame(protein=protein,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(variance), DF=df.post)
+  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
   return(df)
 } #EOF
 
