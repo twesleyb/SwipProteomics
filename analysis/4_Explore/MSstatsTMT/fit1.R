@@ -328,5 +328,6 @@ cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
 proteins <- unique(as.character(msstats_prot$Protein))
 fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
 
+# output
 result <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
-#writeLines(result)
+data.table::fwrite(result,"results.csv",append=TRUE)
