@@ -329,5 +329,10 @@ proteins <- unique(as.character(msstats_prot$Protein))
 fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
 
 # output
-result <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
-data.table::fwrite(result,"results.csv",append=TRUE)
+result <- try(lmerTestProtein(msstats_prot,proteins[i],fx1,cm1),silent=TRUE)
+if (!inherits(result,"try-error")) {
+	data.table::fwrite(result,"results.csv",append=TRUE)
+} else {
+	# arise if data contain missing values
+	message("try-error")
+}
