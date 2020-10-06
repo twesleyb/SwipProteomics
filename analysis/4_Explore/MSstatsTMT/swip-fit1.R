@@ -1,7 +1,11 @@
 #!/usr/bin/env Rscript
 
+# title: SwipProteomics
+# author: twab
+# description: 
+
 # load renv
-root = "~/projects/SwipProteomics"
+root <- "~/projects/SwipProteomics"
 renv::load(root)
 
 # import
@@ -10,22 +14,21 @@ suppressPackageStartupMessages({
   library(MSstatsTMT) # my fork
 })
 
-#devtools::load_all() # and internal funcs
-# FIXME: what internals are required?
-
 # load msstats preprocessed protein data saved in root/rdata
-myfile <- file.path(root,"rdata","msstats_prot.rda")
-load(myfile) # == msstats_prot
+data(msstats_prot)
 
 
-## START ----------------------------------------------------------------------
+## Analysis of Washc4/Swip -----------------------------------------------------
+#fx <- formula("Abundance ~ (1|Condition) + Genotype") # equivalent
+#fx <- formula("Abundance ~ (1|Genotype:BioFraction) + Genotype")
+#fx <- formula("Abundance ~ (1|Condition) + Genotype")
+#protein = sample(unique(as.character(msstats_prot$Protein)),1)
 
 protein = "Q3UMB9"
-#protein = sample(unique(as.character(msstats_prot$Protein)),1)
-moderated = FALSE
+#moderated = FALSE
 
 ## the data cannot contain missing values
-if (any(is.na(msstats_prot %>% filter(Protein %in% proteins)))) {
+if (any(is.na(msstats_prot %>% filter(Protein %in% protein)))) {
 # FIXME: shouldn't missing values have been imputed by MSstats prev?
 to_drop <- unique(msstats_prot$Protein[is.na(msstats_prot$Abundance)])
 msstats_prot <- msstats_prot[!is.na(msstats_prot$Abundance), ]
@@ -41,31 +44,27 @@ subdat$Genotype <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\.
 subdat$BioFraction <- as.factor(sapply(strsplit(as.character(subdat$Condition),"\\."),"[",2))
 
 # msstats fits the model:
-# ABUNDANCE ~ GROUP + (1|SUBJECT) | Group is ~Condition and SUBJECT ~ Fraction
-#
+# ABUNDANCE ~ GROUP + (1|SUBJECT) 
+# Group is ~Condition and SUBJECT ~Fraction (?)
+# Fraction is fixed or mixed effect? catagorical, but really cfg speed?
+fx <- formula("Abundance ~ (1|BioFraction) + Genotype")
 
-# fit the model
-# SOMETHING SEEMS WRONG ABOUT THIS MODEL. 
-#fx <- formula("Abundance ~ (1|Condition) + Genotype") # equivalent
-#fx <- formula("Abundance ~ (1|Genotype:BioFraction) + Genotype")
-fx <- formula("Abundance ~ (1|Condition) + Genotype")
-
-message("lmer: ",fx)
 fm <- lmerTest::lmer(fx, data=subdat)
 
 # compute some model statistics
-#rho <- getRho(fm)
 rho <- list()
 # calculate coeff, sigma, and theta:
 rho$coeff <- lme4::fixef(fm)
 rho$sigma <- stats::sigma(fm)
 rho$thopt <- lme4::getME(fm, "theta")
+
 # calculate degrees of freedom and sigma^2:
 av <- anova(fm)
 rho$s2_df <- av$DenDF
 rho$s2 <- av$"Mean Sq" / av$"F value"
+
 # calcuate symtoptic var-covar matrix
-# NOTE: utlilizes MSstatsTMT internal function to do calculation
+# NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
 rho$model <- fm
 rho$A <- .calcApvar(rho) 
 rho$data <- subdat

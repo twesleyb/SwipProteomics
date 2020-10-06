@@ -14,10 +14,6 @@ root <- "~/projects/SwipProteomics"
 # load renv
 renv::load(root)
 
-# load projects functions in root/R
-# FIXME: whats required?
-#devtools::load_all()
-
 # other imports
 suppressPackageStartupMessages({
 	library(dplyr) 
@@ -28,26 +24,21 @@ suppressPackageStartupMessages({
 ## load the data ---------------------------------------------------------------
 
 # load msstats preprocessed protein data saved in root/rdata
-#myfile <- file.path(root,"rdata","msstats_prot.rda")
-#load(myfile) # == msstats_prot
 data(msstats_prot)
 
 # munge - clarify covariate names
-#conditition <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-#biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
 mixture <- gsub("_1","",as.character(msstats_prot$Run))
-#msstats_prot$Condition <- conditition
-#msstats_prot$BioFraction <- biofraction
 msstats_prot$Mixture <- mixture
 
 
 ## build a contrast_matrix ----------------------------------------------------
 
 # load saved contrast matrix
-#load(file.path(root,"rdata","msstats_contrasts.rda"))
-data(msstats_contrasts.rda)
-cm0 <- msstats_contrasts # intrafraction contrasts
+data(msstats_contrasts)
+cm0 <- msstats_contrasts 
 
+# all intrafraction contrasts in the format MSstatsTMT expects
+# example, a single row/contrast:
 knitr::kable(cm0[1,])
 
 
@@ -60,8 +51,9 @@ knitr::kable(cm0[1,])
 # Avoid changing Condition as downstream functions seem to depened upon
 # formatting of stuff
 
-prot <- "Q3UMB9" # Swip
-fx <- formula("Abundance ~ 1 + (1|Mixture) + Condition") # | condition is interaction(BioF,Cond)
+prot <- "Q3UMB9"
+
+fx <- formula("Abundance ~ 1 + (1|Mixture) + Condition")
 
 fit <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein == prot))
 
