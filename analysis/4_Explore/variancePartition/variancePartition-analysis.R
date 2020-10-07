@@ -68,39 +68,6 @@ if (gene_map$uniprot[idx] == "Q80WG5") {
 
 ## Mixed Effects Linear Models ------------------------------------------------
 
-# How should we design the formula?
-
-# These models are used by MSstatsTMT:
-
-# model 1
-#lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group + (1|Subject:Group:Mixture), data = data)
-
-# model 2
-#lmer(Abundance ~ 1 + (1|Run) + Group + (1|Subject:Group), data)
-
-# model 3
-#lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group, data = data)
-
-# model 4: random effect of TMT run? e.g. Exp1.126 v Exp1.126N
-#lmer(Abundance ~ 1 + (1|Run) + Group, data = data)
-
-# model 5: simple comparison
-#lm(Abundance ~ 1 + Group, data = data)
-
-
-## dream analysis -------------------------------------------------------------
-# 1. voomWithDreamWeights() replaces `voom()` to estimate precision weights 
-# 2. dream() replaces lmFit() to estimate regression coefficients.  
-# Otherwise dream uses the same workflow as limma with topTable(), since any
-# statistical differences are handled behind the scenes.
-
-# cast tidy data into a data.table
-prot_dm <- swip_tmt %>% as.data.table() %>% 
-	dcast(Accession ~ Sample,value.var = "Intensity") %>%  as.data.table() %>%
-	as.matrix(rownames="Accession") %>% # coerce to matrix 
-	log2() # log2 transform
-
-
 # The variable to be tested must be a fixed effect.
 # NOTE, this contrasts from the model from above: 
 # model.matrix( ~ Disease, metadata)

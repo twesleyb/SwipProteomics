@@ -71,9 +71,11 @@ design <- model.matrix(~ Fraction + Genotype, data=dge$samples)
 # 'Common' or 'Trended' dispersion. Here we explicitly estimate 'Trended' 
 # dispersion to account for Mean - Variance relationship in protein
 # quantification.
-dge <- estimateGLMTrendedDisp(dge, design, method="auto")
+#dge <- estimateGLMTrendedDisp(dge, design, method="auto")
 
-#dge <- estimateDisp(dge,design,method="auto")
+# estimate all dispersion using all methods 
+dge <- estimateDisp(dge,design,method="auto")
+
 #dge <- estimateGLMCommonDisp(dge,design,method="CoxReid")
 
 # NOTE: edgeR also implements a glmFit and glmLRT test. The glmQLFit and
