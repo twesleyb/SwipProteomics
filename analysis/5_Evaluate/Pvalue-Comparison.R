@@ -156,3 +156,15 @@ message(paste("\nSaved",myfile))
 if (file.exists("Rplots.pdf")) { unlink("Rplots.pdf") }
 
 # DONE!
+
+# We have:
+
+# EdgeR lvl 0
+# DEP lvl 0
+# MSstats lvl 0
+
+# EdgeR lvl 1
+# MSstats lvl 1
+
+# EdgeR modules
+# MSstats modules
