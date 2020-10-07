@@ -22,6 +22,7 @@ myfile <- file.path(root,"rdata","msstats_gene_map.rda")
 load(myfile)
 
 # load results from loop 
+data(loop-results)
 results <- data.table::fread("results.csv")
 
 # compute FDR and Padjust
@@ -107,3 +108,10 @@ knitr::kable(overlap)
 final_results = c(results_list[c("F4","F5","F6","F7","F8","F9","F10")],"Control-Mutant"=list(results))
 myfile <- file.path(root,"tables","SWIP_MSstatsTMT_Results.xlsx")
 write_excel(final_results,myfile)
+
+## Compare this to our previous results ----------------------------------------
+
+
+data(swip_tmt)
+colnames(swip_tmt)
+
