@@ -88,6 +88,8 @@ stats_df <- fix_colname(stats_df,"p.val","DEP")
 rho <- cor(x=stats_df$EdgeR, y=stats_df$DEP, method="spearman")
 knitr::kable(as.data.table(setNames(list(rho),nm="Spearman R")))
 
+# FIXME: what about foldchange?
+
 ## ----------------------------------------------------------------------------
 
 # generate a plot examining coorelation between edgeR and DEP pvalues

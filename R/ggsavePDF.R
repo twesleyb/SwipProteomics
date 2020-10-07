@@ -32,5 +32,5 @@ ggsavePDF <- function(plots, file) {
       print(as.ggplot(plot))
     }
   }
-  silent(dev.off())
+  invisible(dev.off())
 }

@@ -50,7 +50,7 @@ if (n > length(proteins) | n == "all") {
 } # EIS
 
 
-## [1] convert to msstats format --------------------------------------------------
+## [1] convert to msstats format -----------------------------------------------
 # MSstatsTMT key steps: 1-3.
 
 # This step takes about 7 minutes for 8.5 k proteins
