@@ -109,6 +109,7 @@ invisible(dev.off())
 myfile <- file.path(root,"figs","edgeR","gof.pdf")
 pdf(file=myfile)
 edgeR_gof <- edgeR::gof(fit,plot=TRUE)
+save(fit,file="fit.rda",version=2)
 
 # clean-up
 invisible(dev.off())
