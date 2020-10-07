@@ -2,7 +2,8 @@
 
 # title: SwipProteomics
 # author: twab
-# description: 
+# description: fit model for comparisons between Control and Mutant mice
+# adjusted for fraction differences
 
 # parse input
 args = commandArgs(trailingOnly=TRUE)
@@ -242,66 +243,83 @@ mygradient <- function(fun, x, delta = 1e-4,
 
 lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # perfrom the lmer-based testing of conditioned means for a given protein
-  # subset the data for a given protein
+
   subdat <- msstats_prot %>% filter(Protein == protein)
   # the data cannot contain missing values
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)
   }
+
   # fit the model:
   fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
   # FIXME: catch errors/warnings!
+
   # compute some model statistics, store in list rho
+  message("fit: ",protein)
+  print(summary(fm))
   rho <- list()
   rho$protein <- protein
   rho$formula <- fx
   rho$model <- fm
   rho$data <- subdat
+
   # here we compute the unmoderated statistics
   rho$df.prior <- 0
   rho$s2.prior <- 0
+
   # check if singular (boundary) fit
   rho$isSingular <- lme4::isSingular(fm)
+
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
   rho$sigma <- stats::sigma(fm)
   rho$thopt <- lme4::getME(fm, "theta")
+
   # calculate degrees of freedom and sigma^2:
   av <- anova(fm)
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
+
   # calcuate symtoptic var-covar matrix
   # NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
   rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # 
+
   # we store the proteins statistics in a list
   stats_list <- list()
+
   # calculate posterior s2
   s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
+
   # compuate variance-covariance matrix
   vss <- vcovLThetaLM(fx,subdat)
-  # FIXME: if matrix, then loop
-  # FIXME: I think this is where MSstatsTMT coerces matrix to something else
   varcor <- vss(t(contrast_matrix), c(rho$thopt, rho$sigma))
   vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
   se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
+
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
   variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
+
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
   g <- mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
   denom <- t(g) %*% rho$A %*% g
+
   # compute df.posterior
-  df.post <- 2 * (se2)^2 / denom + rho$df.prior
+  df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
+
   # compute fold change and the t-statistic
-  FC <- (contrast_matrix %*% rho$coeff)[, 1]
-  t <- FC / sqrt(variance)
+  FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
+  t <- FC / sqrt(variance) # the Fold change and the variance
+
   # compute the p-value
-  p <- 2 * pt(-abs(t), df = df.post)
+  p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
+
   # munge comparison
   comparison <- gsub("Genotype","",paste(rev(names(contrast_matrix)),collapse="-"))
+
   # compile results
   df <- data.frame(protein=protein,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
@@ -332,6 +350,7 @@ fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
 result <- try(lmerTestProtein(msstats_prot,proteins[i],fx1,cm1),silent=TRUE)
 if (!inherits(result,"try-error")) {
 	data.table::fwrite(result,"results.csv",append=TRUE)
+	knitr::kable(result)
 } else {
 	# arise if data contain missing values
 	message("try-error")

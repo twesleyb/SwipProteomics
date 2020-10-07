@@ -35,4 +35,4 @@ entrez <- gene_map$entrez[idx]
 results_df <- tibble::add_column(results_df, symbol, .after="protein")
 results_df <- tibble::add_column(results_df, entrez, .after="symbol")
 
-results_df %>% filter(Padjust < 0.05) %>% arrange(Pvalue) %>% knitr::kable()
+results_df %>% filter(Padjust < 0.05) %>% arrange(Pvalue) %>% head(50) %>% knitr::kable()
