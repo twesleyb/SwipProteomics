@@ -1,4 +1,4 @@
-#' gof
+#' edgeR::gof
 
 gof <- function (glmfit, pcutoff = 0.1, adjust = "holm", plot = FALSE, 
     main = "qq-plot of residual deviances", ...) 

@@ -9,8 +9,10 @@
 # specify project's root directory
 ROOT <- "~/projects/SwipProteomics"
 
+
 ## OPTIONS --------------------------------------------------------------------
 FDR_alpha <- 0.05 # BH significance threshold for protein DA
+
 
 ## FUNCTIONS -----------------------------------------------------------------
 
@@ -58,12 +60,16 @@ data(swip_tmt)
 data(samples)
 data(gene_map)
 
+# set Fraction levels:
 levels(samples$Fraction) <- c("F4","F5","F6","F7","F8","F9","F10")
+
+# pretty print:
 samples %>% select(Sample,Experiment,Channel,Treatment,Fraction) %>% 
 	arrange(Experiment,Treatment) %>% knitr::kable()
 
 
 ## fix gene_map ---------------------------------------------------------------
+# there is a spurious un-mapped Uniprot ID.
 
 # fix missing gene name in gene_map
 idx <- which(is.na(gene_map$symbol))
@@ -219,24 +225,24 @@ dep_df <- tibble::add_column(dep_df,Entrez=gene_map$entrez[idx],.after="Symbol")
 # Save DEP results as excel workbook
 myfile <- file.path(tabsdir,"DEP_results.xlsx")
 write_excel(data_results,myfile)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved ",basename(myfile)," in ",dirname(myfile),"."))
 
 # save DEP results as tidy df
 myfile <- file.path(datadir,"swip_dep.rda")
 swip_dep <- dep_df
 save(swip_dep,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved ",basename(myfile)," in ",dirname(myfile),"."))
 
 # save se objects
 myfile <- file.path(datadir,"se_list.rda")
 se_list <- dep_results 
 save(se_list,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved ",basename(myfile)," in ",dirname(myfile),"."))
 
 # save fixed gene_map
 myfile <- file.path(datadir,"fixed_gene_map.rda")
 fixed_gene_map <- gene_map 
 save(fixed_gene_map,file=myfile,version=2)
-message(paste("\nSaved",myfile))
+message(paste("\nSaved ",basename(myfile)," in ",dirname(myfile),"."))
 
 # DONE!
