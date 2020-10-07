@@ -45,11 +45,13 @@ data.table::setnames(results, "Pvalue", "PValue")
 data.table::setnames(results, "contrast", "Contrast")
 
 # summarize sig prots
+message("Summary of significant proteins (Control-Mutant):")
 df <- data.table::data.table("N sig (FDR<0.05)" = sum(results$FDR < 0.05),
 		 "N sig (PAdj<0.05)" = sum(results$PAdjust < 0.05))
 knitr::kable(df)
 
 # top sig proteins
+message("Top 5 significant proteins:")
 results %>% arrange(PValue) %>% select(Symbol,log2FC,PValue,PAdjust,Tstatistic,SE,DF) %>% head(5) %>% knitr::kable()
 
 
@@ -80,7 +82,28 @@ results_list <- msstats_results %>% group_by(Contrast) %>% group_split()
 names(results_list) <- sapply(results_list,function(x) unique(x$Contrast))
 names(results_list) <- gsub("Mutant.F[0-9]{1,2}-Control.","",names(results_list))
 
+
+# drop NA
+results_list <- lapply(results_list,function(x) x[!is.na(x$PValue),])
+
+# summary
+message("Summary of significant proteins (Control.F#-Mutant.F#):")
+knitr::kable(t(sapply(results_list,function(x) sum(x$PAdjust < 0.05))))
+
+# list of sig prots
+sig_prots <- lapply(results_list, function(x) x %>% filter(PAdjust < 0.05) %>% select(Protein) %>% unlist() %>% as.character())
+
+all_prots <- Reduce(union,sig_prots)
+message("Total number of unique sig prots: ", length(all_prots))
+
+# total
+overlap <- Reduce(intersect,sig_prots)
+names(overlap) <- gene_map$symbol[match(overlap,gene_map$uniprot)]
+
+message("Commonly significant sig prots: ")
+knitr::kable(overlap)
+
 # save
-final_results <- list("Control-Mutant"=list(results),results_list[c("F4","F5","F6","F7","F8","F9","F10")])
+final_results = c(results_list[c("F4","F5","F6","F7","F8","F9","F10")],"Control-Mutant"=list(results))
 myfile <- file.path(root,"tables","SWIP_MSstatsTMT_Results.xlsx")
 write_excel(final_results,myfile)
