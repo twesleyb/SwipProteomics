@@ -51,7 +51,7 @@ load(file.path(root,"rdata","msstats_contrasts.rda"))
 
 # for intra-fraction comparisons MSstatsTMT fits the model:
 fx <- formula("Abundance ~ 1 + (1|Run) + Condition")
-message("lmer: ",fx)
+message("protein-wise lmer fit by MSstatsTMT: ",fx)
 
 # | Run cooresponds to a TMT multiplex experiment aka a Batch or Experiment.
 
@@ -98,8 +98,6 @@ idx <- sample(seq(nrow(df)),5)
 knitr::kable(df[idx,])
 
 
-quit()
-
 ## loop to fit multiple proteins  -----------------------------------------------
 #TODO: compile stats and compare to MSstats output
 
@@ -114,9 +112,6 @@ fit_list <- testContrasts(fit_list, contrast_matrix,
 			  moderated = TRUE, progress = TRUE)
 
 # test contrasts
-#69%Error in Lc %*% as.matrix(vcov_out) : non-conformable arguments 
-# no error when looping like this???:
-# no errors this time...
 for (i in c(1:length(fit_list))) {
 	print(i)
 fits[[i]] <- testContrasts(fit_list[i], contrast_matrix, 
@@ -131,7 +126,8 @@ results_list <- adjustPvalues(fit_list)
 # summary of significant proteins:
 sapply(results_list,function(x) sum(x$"P-adjust" < 0.05,na.rm=TRUE))
 
-## ----------------------------------------------------------------------------
-# save
+
+## save results ---------------------------------------------------------------
+
 myfile <- file.path(root,"rdata","msstats_intrafraction_results.rda")
 save(results_list,file=myfile,version=2)

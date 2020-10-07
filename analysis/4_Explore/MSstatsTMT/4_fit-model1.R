@@ -4,6 +4,8 @@
 # author: twab
 # description: 
 
+# NOTE: indpendent of MSstatsTMT
+
 # input:
 # * msstats_prot.rda
 
@@ -297,7 +299,6 @@ rho$s2_df <- av$DenDF
 rho$s2 <- av$"Mean Sq" / av$"F value"
 
 # calcuate symtoptic var-covar matrix
-# NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
 rho$A <- calcApvarcovar(fx1,subdat,rho$thopt,rho$sigma) 
 
 # define contrast matrix for comparison to control
@@ -397,7 +398,6 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
   # calcuate symtoptic var-covar matrix
-  # NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
   rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # 
   # we store the proteins statistics in a list
   stats_list <- list()
@@ -405,8 +405,6 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
   # compuate variance-covariance matrix
   vss <- vcovLThetaLM(fx,subdat)
-  # FIXME: if matrix, then loop
-  # FIXME: I think this is where MSstatsTMT coerces matrix to something else
   varcor <- vss(t(contrast_matrix), c(rho$thopt, rho$sigma))
   vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
   se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
@@ -440,22 +438,21 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
 # check:
 # * cm1 declared above
 # FIXME: only works for case 1
-fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
-result1 <- lmerTestProtein(msstats_prot,swip,fx1,cm1)
+#fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
+#result1 <- lmerTestProtein(msstats_prot,swip,fx1,cm1)
 
-knitr::kable(result1)
-
+#knitr::kable(result1)
+# ^ Same as the above.
 
 # Loop through all proteins
-results_list <- list()
-proteins <- unique(as.character(msstats_prot$Protein))
-message("\nAnalyzing all proteins.")
-pbar <- txtProgressBar(max=length(proteins),style=3)
-
-# ERROR:
-for (i in c(1:length(proteins))) {
-  results_list[[i]] <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
-  setTxtProgressBar(pbar,value=match(protein,proteins))
-}
-close(pbar)
-# SwipProteomics
+#results_list <- list()
+#proteins <- unique(as.character(msstats_prot$Protein))
+#message("\nAnalyzing all proteins.")
+#pbar <- txtProgressBar(max=length(proteins),style=3)
+#
+## ERROR:
+#for (i in c(1:length(proteins))) {
+#  results_list[[i]] <- lmerTestProtein(msstats_prot,proteins[i],fx1,cm1)
+#  setTxtProgressBar(pbar,value=match(protein,proteins))
+#}
+#close(pbar)

@@ -20,7 +20,13 @@ suppressPackageStartupMessages({
 myfile <- file.path(root,"rdata","msstats_gene_map.rda")
 load(myfile)
 
-# load statistical results
+# load msstats level 0 results
+load(file.path(root,"rdata","msstats_results.rda"))
+
+# load my own level 0 results 
+load(file.path(root,"rdata","msstats_intrafraction_results.rda"))
+
+# load level 2 statistical results
 results_df <- data.table::fread("results.csv")
 
 # Padjust

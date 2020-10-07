@@ -4,9 +4,11 @@
 # description: analysis of intrafraction comparisons with MSstats
 # author: twab
 
+# FIXME: currently this script only works when run interactively!
+
 ## Options
-n = "all"
-save_rda = TRUE
+n = 5 #"all"
+save_rda = FALSE
 
 ## prepare the working environment ---------------------------------------------
 
@@ -20,13 +22,22 @@ suppressPackageStartupMessages({
   library(MSstats) # twesleyb/MSstats
   library(MSstatsTMT) # twesleyb/MSstats
 })
+## NOTE: my forks suppress much of MSstats verbosity
 
 
 ## load preprocessed data, annotation file, and contrasts ---------------------
 
+devtools::load_all()
+
+# contrasts
+data(msstats_contrasts)
+# NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
+# BioFraction.Control and BioFraction.Mutant
+
+# other data in root/rdata
 load(file.path(root,"rdata","PD_input.rda"))
 load(file.path(root,"rdata","PD_annotation.rda"))
-load(file.path(root,"rdata","msstats_contrasts.rda"))
+
 
 ## subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of
@@ -90,6 +101,9 @@ suppressWarnings({
   msstats_results <- groupComparisonTMT(msstats_prot, msstats_contrasts)	
 	})
 })
+
+# NOTE: for the pairwise contrasts, MSstats fits the lmer model:
+#
 
 message("Time to perform group comparisons for ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
