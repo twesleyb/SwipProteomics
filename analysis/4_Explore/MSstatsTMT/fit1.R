@@ -5,23 +5,22 @@
 # description: fit model for comparisons between Control and Mutant mice
 # adjusted for fraction differences
 
-# parse input
-args = commandArgs(trailingOnly=TRUE)
-stopifnot(length(args)==1)
-i <- as.numeric(args)
-
-i = 1
-
 # input:
 # * msstats_prot.rda
 
+# options:
+nThreads = 23
+nprot = "all"
+
 # load renv
 root <- "~/projects/SwipProteomics"
-renv::load(root)
+renv::load(root,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
   library(dplyr)
+  library(parallel)
+  library(doParallel)
 })
 
 
@@ -254,6 +253,10 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # fit the model:
   fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
   # FIXME: catch errors/warnings!
+  if (inherits(fm,"try-error")) { 
+	  warning("try-error")
+	  return(NULL)
+  }
   # compute some model statistics, store in list rho
   rho <- list()
   rho$protein <- protein
@@ -323,21 +326,49 @@ biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2
 msstats_prot$Genotype <- as.factor(genotype)
 msstats_prot$BioFraction <- biofraction
 
-# input
+# contrast matrix for Contrl-Mutant comparison:
 cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
-proteins <- unique(as.character(msstats_prot$Protein))
+
+# lmer formula:
 fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
 
-# output
-results=list()
-pbar <- txtProgressBar(max=length(proteins),style=3)
-for (protein in proteins){
+# register some nodes to do work
+workers <- parallel::makeCluster(c(rep("localhost", nThreads)), type = "SOCK")
+doParallel::registerDoParallel(workers)
+message("\nEmploying ", nThreads," parallel processors.")
+
+# loop for every protein
+results <- list()
+proteins <- unique(as.character(msstats_prot$Protein))
+
+if (nprot == "all") {
+	#proteins
+} else {
+	proteins <- sample(proteins,nprot)
+}
+
+# start timer
+start_time <- Sys.time()
+
+# Parallel execution with %dopar%
+results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
 	suppressMessages({
 		results[[protein]] <- try(lmerTestProtein(msstats_prot,protein,fx1,cm1),silent=TRUE)
 	})
-	setTxtProgressBar(pbar, value=match(protein,proteins))
 }
 
-# This is working now??
+stop_time <- Sys.time()
 
-# goodness of fit
+# status
+message("\nElapsed time to analyze ",nprot," proteins: ", 
+	round(difftime(stop_time,start_time,units="sec"),3)," (seconds).")
+
+# save the data
+# NOTE: the data is too big to save.
+message("\nSaving the data, this will take several minutes.")
+save(results,file=file.path(root,"rdata","fit1_results.rda"),version=2)
+
+# close parallel connections
+invisible(stopCluster(workers))
+
+# TODO: goodness of fit
