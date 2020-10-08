@@ -8,6 +8,10 @@
 ## INPUTs ----------------------------------------------------------------------
 root = "~/projects/SwipProteomics"
 
+# * msstats_prot
+# * msstats_gene_map
+# * musInteractome from twesleyb/getPPIs
+# * 
 
 ## OPTIONs ---------------------------------------------------------------------
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
@@ -15,11 +19,11 @@ os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
 ## Prepare the workspace ------------------------------------------------------
 
-# Load renv.
+# Load renv
 root <- getrd()
 renv::load(root,quiet=TRUE)
 
-# Imports.
+# Imports
 suppressPackageStartupMessages({
 	library(dplyr) # for manipulating data
 	library(WGCNA) # for bicor function
@@ -28,17 +32,19 @@ suppressPackageStartupMessages({
 	library(data.table) # for working with tables
 })
 
-# Project imports.
+# Project imports
 devtools::load_all()
 
-# Load the proteomics data.
-data(samples)
+# Load the proteomics data
 data(msstats_prot)
+data(msstats_gene_map)
+data(musInteractome)
 
 
-## Create protein covariation network.
+## Create protein covariation network -----------------------------------------
 
-# Cast to a data.matrix.
+# Cast protein data into a data.matrix. No need to log2 transform.
+# MSstats has done this already. Rownames are unique for each Sample.
 dm <- msstats_prot %>% as.data.table() %>%
 	dcast(interaction(Mixture,BioFraction,Genotype) ~ Protein, value.var="Abundance") %>%
 	as.matrix(rownames=TRUE)
@@ -47,26 +53,25 @@ dm <- msstats_prot %>% as.data.table() %>%
 # NOTE: the data was transposed for bicor
 out <- apply(dm,2,function(x) any(is.na(x)))
 subdm <- dm[,!out]
-warning(formatC(sum(out),big.mark=",")," rows with any missing values were removed.")
+warning(formatC(sum(out),big.mark=",")," proteins with any missing values were removed.")
 
-# Create correlation (adjacency) matrix.
+# Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
 adjm <- WGCNA::bicor(subdm)
 
-# Enhanced network.
+# Enhanced network
+# NOTE: this can take a couple minutes
 message("\nPerforming network enhancement.")
 ne_adjm <- neten::neten(adjm)
 
 
 ## Create PPI network ---------------------------------------------------------
-
-# Load mouse PPIs.
 message("\nCreating protein-protein interaction network.")
-data(musInteractome)
 
 # Collect all entrez cooresponding to proteins in our network.
 proteins <- colnames(adjm)
-entrez <- tmt_protein$Entrez[match(proteins,tmt_protein$Accession)]
+idx <- match(proteins,gene_map$uniprot)
+entrez <- gene_map$entrez[idx]
 names(proteins) <- entrez
 
 # Collect PPIs among all proteins.
@@ -93,6 +98,9 @@ g <- simplify(g)
 ppi_adjm <- as.matrix(as_adjacency_matrix(g))
 
 # Fill matrix.
+# If a protein was unconnected it gets dropped by igraph. Add it back so that
+# all the matrices look the same.
+
 all_proteins <- colnames(adjm)
 missing <- all_proteins[all_proteins %notin% colnames(ppi_adjm)]
 x <- matrix(nrow=dim(ppi_adjm)[1],ncol=length(missing))
@@ -119,15 +127,7 @@ data.table("Edges" = formatC(n_edges, format = "d", big.mark=","),
 
 
 ## Save the data --------------------------------------------------------------
-
-#message("\nSaving the data.")
-
-# Save adjacency matrices as rda objects.
-# To reduce the file size of a large matrix saved as a csv file, 
-# the matrix is saved as an edge list, after removing the diagonal and 
-# lower half of the matrix are removed. 
-# This dataframe is saved as an rda object. It can be cast
-# back into a N x N matrix with the convert_to_adjm function.
+# save data in root/rdata
 
 myfile <- file.path(root,"rdata","adjm.rda")
 save(myfile,file=myfile,version=2)

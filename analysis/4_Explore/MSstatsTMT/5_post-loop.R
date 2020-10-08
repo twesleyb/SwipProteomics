@@ -2,9 +2,12 @@
 
 # title: SwipProteomics
 # author: twab
-# description: 
+# description: collect bash loop results for WTvMutant comparisons
+# combine with intrafraction comparisons and save
 
 # input:
+# * output from loop, saved as data/loop_results.rda
+# * msstats_gene_map
 
 # load renv
 root <- "~/projects/SwipProteomics"
