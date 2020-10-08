@@ -1,10 +1,8 @@
 #!/usr/bin/env Rscript
 
-#' ---
 #' title: Swip TMT Proteomics
 #' description: analysis of modules for enrichment of WASH proteome
 #' authors: Tyler W Bradshaw
-#' ---
 
 ## Optional parameters:
 BF_alpha = 0.10 # Significance threshold.
@@ -68,7 +66,8 @@ data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
 
 # Load the data from root/data.
 data(msstats_gene_map) # gene mapping data
-data(partition) # graph partition
+#data(partition) # graph partition
+data(multi_partition)
 data(msstats_prot) # the proteomics data
 #data(sig_modules) # modules with sig DA.
 
@@ -187,9 +186,9 @@ message(paste("\nNumber of modules with something interesting going on:",
 	      n_mods))
 
 # How many sig modules have been annotated?
-nsig_sig <- sum(sig_modules %in% sig_dt$Module)
-message(paste("\nNumber of significantly DA modules with",
-	      "something interesting going on:", nsig_sig))
+#nsig_sig <- sum(sig_modules %in% sig_dt$Module)
+#message(paste("\nNumber of significantly DA modules with",
+#	      "something interesting going on:", nsig_sig))
 
 # Save the data.
 myfile <- file.path(rdatdir,"Module_GSEA_Results.csv")

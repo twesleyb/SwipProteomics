@@ -1,21 +1,17 @@
 #!/usr/bin/env Rscript
 
-#' ---
 #' title: Swip Proteomics Plotting
 #' description: generate module colors
 #' authors: Tyler W Bradshaw
-#' ---
 
-## OPTIONS:
-swip = "Q3UMB9" # uniprot accession of swip.
-swip_color = "#B86FAD" # color of swip/wash module.
+## OPTIONS --------------------------------------------------------------------
+swip = "Q3UMB9" # uniprot accession of swip 
+swip_color = "#B86FAD" # color of swip/wash module
 
-## OUTPUT:
-# * Updated module color assignemnts.
+## OUTPUT ---------------------------------------------------------------------
+# * color assignments for every module in multi_partition
 
-#---------------------------------------------------------------------
-## Misc functions
-#---------------------------------------------------------------------
+## FUNCTIONS ------------------------------------------------------------------
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
@@ -39,9 +35,7 @@ str_to_vec <- function(response) {
 	return(vec)
 }
 
-#---------------------------------------------------------------------
-## Prepare the workspace.
-#---------------------------------------------------------------------
+## Prepare the workspace ------------------------------------------------------
 
 # Load renv.
 root <- getrd()
@@ -57,8 +51,7 @@ suppressPackageStartupMessages({
 suppressMessages({ devtools::load_all() })
 
 # Load TMT data and partition.
-data(tmt_protein)
-data(partition)
+data(multi_partition)
 
 #---------------------------------------------------------------------
 ## Generate colors.
@@ -96,12 +89,12 @@ module_colors[wash_module] <- swip_color
 idx <- is.na(module_colors)
 module_colors[idx] <- sample(colors,sum(idx))
 
-#--------------------------------------------------------------------
-## Save the data.
-#--------------------------------------------------------------------
+## Save the data --------------------------------------------------------------
 
 message(paste("\nSaving colors."))
 
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
+
+# DONE
