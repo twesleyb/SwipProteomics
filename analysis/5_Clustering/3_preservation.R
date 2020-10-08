@@ -5,6 +5,8 @@
 # authors: Tyler W A Bradshaw
 
 ## INPUT data:
+#part_file = "leidenalg_partition.rda"
+part_file = "multi_leidenalg_partition.rda"
 # If performing self-preservation, then test = NULL.
 #adjm = c(discovery="adjm.csv", test=NULL)
 #netw = c(discovery="ne_adjm.csv", test=NULL)
@@ -295,7 +297,7 @@ netw_list <- lapply(netw_list, function(x) {
 			    return(x) })
 
 # 4. Load network partitions.
-myfile <- file.path(root,"rdata","leidenalg_partition.rda")
+myfile <- file.path(root,"rdata",part_file)
 load(myfile)
 part_list <- list(discovery=partition)
 
