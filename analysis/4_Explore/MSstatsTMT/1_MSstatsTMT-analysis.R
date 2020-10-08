@@ -37,6 +37,7 @@ data(msstats_contrasts)
 # other data in root/rdata
 load(file.path(root,"rdata","PD_input.rda"))
 load(file.path(root,"rdata","PD_annotation.rda"))
+load(file.path(root,"rdata","msstats_gene_map.rda"))
 
 
 ## subset the data ------------------------------------------------------------
@@ -108,6 +109,9 @@ suppressWarnings({
 message("Time to perform group comparisons for ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
 
+## annotate msstats_prot with gene ids ----------------------------------------
+
+#TODO:
 
 ## save results ---------------------------------------------------------------
 

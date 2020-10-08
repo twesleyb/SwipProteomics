@@ -1,0 +1,9 @@
+# workflow
+
+* prepare data for MSstatsTMT --> msstats_input, gene_map
+* MSstatsTMT analysis 1  --> intrafraction results, normalized protein
+* MSstatsTMT analysis 2 --> WT v Mutant results
+* Clustering
+* Module preservation
+* MSstatsTMT analysis 3 --> module changes
+

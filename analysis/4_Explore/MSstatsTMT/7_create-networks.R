@@ -130,13 +130,13 @@ data.table("Edges" = formatC(n_edges, format = "d", big.mark=","),
 # save data in root/rdata
 
 myfile <- file.path(root,"rdata","adjm.rda")
-save(myfile,file=myfile,version=2)
+save(adjm,file=myfile,version=2)
 
 myfile <- file.path(root,"rdata","ne_adjm.rda")
-save(myfile,file=myfile,version=2)
+save(ne_adjm,file=myfile,version=2)
 
 myfile <- file.path(root,"rdata","ppi_adjm.rda")
-save(myfile,file=myfile,version=2)
+save(ppi_adjm,file=myfile,version=2)
 
 # Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
