@@ -5,6 +5,11 @@ description: clustering the protein network with Leidenalg + Surprise
 authors: Tyler W A Bradshaw
 '''
 
+## Inputs ---------------------------------------------------------------------
+
+## Project root:
+root = "~/projects/SwipProteomics"
+
 ## Parameters for multiresolution methods:
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
@@ -29,11 +34,9 @@ adjm_file = 'ne_adjm.csv'
 # [output_name]_partitions.csv
 output_name = 'Swip' # Prefix out output partition, saved as .csv.
 
-#------------------------------------------------------------------------------
-## Prepare the workspace.
-#------------------------------------------------------------------------------
 
-# Imports.
+## Prepare the workspace ------------------------------------------------------
+
 import os
 import sys
 import glob
@@ -49,14 +52,17 @@ from leidenalg import Optimiser, find_partition
 from igraph import Graph
 from pandas import read_csv, DataFrame
 
-# Directories.
-root = "~/projects/SwipProteomics"
+# project Directories:
 rdatdir = os.path.join(root,"rdata")
 funcdir = os.path.join(root,"Py")
 
 # Load user defined functions.
 sys.path.append(root)
-from Py.myfun import *
+from myfun import * # try putting SwipProtomics in bashrc's python path
+#from Py.myfun import *
+
+
+## Leidenalg qualitity metrics ------------------------------------------------
 
 # Leidenalg supports the following optimization methods:
 methods = {
@@ -98,11 +104,10 @@ method = parameters.get('partition_type')
 
 # Status report.
 print("Performing Leidenalg clustering utilizing the {}".format(method),
-        "method to find optimal partition(s)...", file=stderr)
+        "method to find optimal partition(s).", file=stderr)
 
-#---------------------------------------------------------------------
-## Load input adjacency matrix and create an igraph object.
-#---------------------------------------------------------------------
+
+## Load input adjacency matrix and create an igraph object --------------------
 
 # Load graph adjacency matrix.
 myfile = os.path.join(rdatdir,adjm_file)
@@ -121,9 +126,8 @@ else:
     parameters['graph'] = g
 #EIS
 
-#--------------------------------------------------------------------
-## Community detection with the Leiden algorithm.
-#--------------------------------------------------------------------
+
+## Community detection with the Leiden algorithm -----------------------------
 
 # Update partition type parameter.
 # Dynamically load the partition_type class.
@@ -136,17 +140,14 @@ for key in out: del parameters[key]
 
 # Perform Leidenalg module detection.
 if parameters.get('resolution_parameter') is None:
-
     # Single resolution methods + first iteration if recursive.
     profile = list()
     partition = find_partition(**parameters)
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
-
     if not recursive:
         print("... Final partition: " + partition.summary() + ".", file=stderr)
-
     # Recursively split modules that are too big.
     if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
@@ -174,7 +175,6 @@ if parameters.get('resolution_parameter') is None:
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
         #EOL
-
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
@@ -186,12 +186,10 @@ if parameters.get('resolution_parameter') is None:
         profile[0] = partition
         print("... Final partition: " + partition.summary() + ".", file=stderr)
     #else:
-
     #    # Multi-resolution methods:
     #    pbar = ProgressBar()
     #    profile = list()
     #    resolution_range = linspace(**parameters.get('resolution_parameter'))
-
     #    for resolution in pbar(resolution_range):
     #        # Update resolution parameter.
     #        parameters['resolution_parameter'] = resolution
@@ -200,12 +198,10 @@ if parameters.get('resolution_parameter') is None:
     #        diff = optimiser.optimise_partition(partition,n_iterations=-1)
     #        profile.append(partition)
     #    # Ends loop.
-    
 # Ends If/else.
 
-#------------------------------------------------------------------------------
-## Save Leidenalg clustering results.
-#------------------------------------------------------------------------------
+
+## Save Leidenalg clustering results ------------------------------------------
 
 if recursive:
     # Save initial partition.

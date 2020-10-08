@@ -1,20 +1,18 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title: Swip TMT Proteomics
-#' description: generate protein networks
-#' authors: Tyler W A Bradshaw
-#' ---
+# title: Swip TMT Proteomics
+# description: generate protein networks
+# authors: Tyler W A Bradshaw
 
-## INPUT:
-# tmt_protein in root/data
 
-## OPTIONS:
+## INPUTs ----------------------------------------------------------------------
+# * swip_tmt in root/data
+
+
+## OPTIONs ---------------------------------------------------------------------
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
-#---------------------------------------------------------------------
-## Misc function - getrd().
-#---------------------------------------------------------------------
+## Misc functions --------------------------------------------------------------
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
@@ -30,9 +28,8 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-#---------------------------------------------------------------------
-## Prepare the workspace.
-#---------------------------------------------------------------------
+
+## Prepare the workspace ------------------------------------------------------
 
 # Load renv.
 root <- getrd()
@@ -50,12 +47,10 @@ suppressPackageStartupMessages({
 # Project imports.
 devtools::load_all()
 
-#--------------------------------------------------------------------
 ## Create protein covariation network.
-#--------------------------------------------------------------------
 
 # Load the proteomics data.
-data(tmt_protein)
+data(swip_tmt); tmt_protein = swip_tmt
 
 # Cast to a data.matrix.
 dm <- tmt_protein %>% as.data.table() %>%
@@ -63,16 +58,15 @@ dm <- tmt_protein %>% as.data.table() %>%
 	as.matrix(rownames=TRUE) %>% log2()
 
 # Create correlation (adjacency) matrix.
-message("\nGenerating protein co-variation matrix using bicor().")
+message("\nGenerating protein co-variation network.")
 adjm <- WGCNA::bicor(dm)
 
 # Enhanced network.
-message("\nPerforming network enhancement with to denoise network.")
+message("\nPerforming network enhancement.")
 ne_adjm <- neten::neten(adjm)
 
-#--------------------------------------------------------------------
-## Create PPI network.
-#--------------------------------------------------------------------
+
+## Create PPI network ---------------------------------------------------------
 
 # Load mouse PPIs.
 message("\nCreating protein-protein interaction network.")
@@ -127,9 +121,8 @@ if (!(c1 & c2)){ stop() }
 n_edges <- sum(ppi_adjm[upper.tri(ppi_adjm)])
 n_nodes <- ncol(ppi_adjm)
 
-#--------------------------------------------------------------------
-## Save the data.
-#--------------------------------------------------------------------
+
+## Save the data --------------------------------------------------------------
 
 message("\nSaving the data.")
 
