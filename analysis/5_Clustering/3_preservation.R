@@ -14,7 +14,7 @@ part_file = "multi_leidenalg_partition.rda"
 #data = c(discovery="norm_protein.rda", test=NULL)
 
 ## OPTIONS:
-stats = c(1,6,7) # Statistics by which module preservation is enforced. 
+stats = c(1,2,6,7) # Statistics by which module preservation is enforced. 
 strength = "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges = "zero" # How will negative edges be replacedR? Abs val or zero.
 replace_zero_index = TRUE # If min(module index)==0, +1 such that all indices >0.
@@ -39,6 +39,8 @@ alternative = "greater" # Greater or less, for preservation use 'greater'.
 # Partition of the network with preservation enforced. 
 # NOTE: Indices of modules that are not preserved are set to 0.
 save_as = "rda" # Output format for partition: can be RData or csv
+#output_file = "multi_"
+output_file=""
 
 #---------------------------------------------------------------------
 ## Description of NetRep Permutation Statistics:
@@ -50,10 +52,12 @@ save_as = "rda" # Output format for partition: can be RData or csv
 #    explained by a modules summary vector.
 # 3. cor.cor (concordance of correlation structure) - Calculated from
 #    correlation matrix. Sensitive to small changes in correlation coefficients.
-#    DONT USE -- sensitve to small changes in edge weight--results in false positives.
+#    DONT USE--sensitve to small changes in edge weight- may result in false
+#    positives. 
 # 4. cor.degree (concordance of weighted degree) - Calculated from network.
 #    Assumes edge weights are positive. Sensitive to small changes in
-#    weighted degree. DONT USE. Sensitive to small changes--results in false positives.
+#    weighted degree. DONT USE. Sensitive to small changes- may result in flase
+#    positives. 
 # 5. cor.contrib (concordance of node contribution) - Calculated from the data.
 #    Sensitve to small changes in node contribution. DONT USE! Same as 3,4.
 # 6. avg.cor (density of correlation structure) - Calculated from correlation
@@ -432,7 +436,7 @@ if (save_as == "rdata") {
 	       file.path(rdatdir,output_name), row.names=TRUE)
 } else if (save_as == "rda") {
 	# Save as rda.
-	myfile <- file.path(datadir,"partition.rda")
+	myfile <- file.path(datadir,paste0(output_file,"partition.rda"))
 	save(partition,file=myfile,version=2)
 } else {
 	stop("ut oh")
