@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
-#' title: Swip Proteomics Plotting
-#' description: generate module colors
-#' authors: Tyler W Bradshaw
+# title: Swip Proteomics Plotting
+# description: generate module colors
+# authors: Tyler W Bradshaw
 
 ## OPTIONS --------------------------------------------------------------------
 swip = "Q3UMB9" # uniprot accession of swip 
@@ -13,7 +13,7 @@ swip_color = "#B86FAD" # color of swip/wash module
 
 ## FUNCTIONS ------------------------------------------------------------------
 
-# Get the repository's root directory.
+# get the repository's root directory
 getrd <- function(here=getwd(), dpat= ".git") {
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 

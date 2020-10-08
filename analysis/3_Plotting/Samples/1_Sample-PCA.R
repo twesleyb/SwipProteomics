@@ -4,8 +4,8 @@
 fig_width = 5
 fig_height = 5
 
-## OUTPUT:
-# * pdf of module protein pca plot.
+## OUTPUT ---------------------------------------------------------------------
+# * pdf of module protein pca plot in figs/Modules
 
 ## Misc functions -------------------------------------------------------------
 
@@ -50,15 +50,18 @@ if (!dir.exists(figsdir)) {
 ## Prepare the data for ploting -----------------------------------------------
 
 # load the proteomics data
-data(swip_tmt)
+data(msstats_prot)
 
 # cast into a matrix
-dm <- tmt_protein %>%  
-	reshape2::dcast(Accession ~ Sample, value.var= "Intensity") %>%
-		as.data.table() %>% as.matrix(rownames="Accession")
+dm <- msstats_prot %>%
+	reshape2::dcast(Protein ~ interaction(Mixture, BioFraction, Genotype), 
+			value.var= "Abundance") %>%
+		as.data.table() %>% as.matrix(rownames="Protein")
+to_drop <- apply(dm,1,function(x) any(is.na(x)))
+subdm <- dm[!to_drop,]
 
 # PCA
-pca <- prcomp(log2(t(dm))) # log2
+pca <- prcomp(t(subdm)) # log2
 pca_summary <- as.data.frame(t(summary(pca)$importance))
 idx <- order(pca_summary[["Proportion of Variance"]],decreasing=TRUE)
 pca_summary <- pca_summary[idx,]
@@ -76,8 +79,9 @@ df <- as.data.frame(pca$x[,names(top2_pc)])
 colnames(df) <- c("x","y")
 
 # annotate with group info
-idx <- match(rownames(df),tmt_protein$Sample)
-df$group <- interaction(tmt_protein$Genotype[idx],tmt_protein$Fraction[idx])
+geno <- sapply(strsplit(rownames(df),"\\."),"[",3)
+frac <- sapply(strsplit(rownames(df),"\\."),"[",2)
+df$group <- interaction(geno,frac)
 
 # generate the plot
 plot <- ggplot(df, aes(x,y,color=group)) + geom_point()
