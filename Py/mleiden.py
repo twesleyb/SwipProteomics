@@ -245,10 +245,12 @@ check_methods(args,methods) # user specified methods should match methods.keys()
 # clustering parameters for a given graph that will be passed to leidenalg
 params = get_clustering_parameters(args,methods)
 
+
 ## load all adjacency matrices from file --------------------------------------
 # NOTE: expect a csv with both a header row and an index column
 
 adjms = [ pandas.read_csv(adjm,header=0,index_col=0) for adjm in args['adjms'] ]
+
 
 ## insure input adjms match ---------------------------------------------------
 # if there are multiple graphs, only the union of their nodes will be analyzed,
@@ -317,6 +319,44 @@ for i in range(len(params)):
     print('Quality: {}'.format(partition.quality()))
     parts_list.append(partition)
 #EOL
+
+## WORK: recursive splitting
+    if recursive:
+        print("... Initial partition: " + partition.summary() + ".", file=stderr)
+        # Update optimization method.
+        method = methods.get(recursive_method).get('partition_type')
+        if type(method) is str:
+                parameters['partition_type'] = getattr(import_module('leidenalg'),method)
+        elif type(method) == 'type':
+                parameters['partition_type'] = method
+        # Initial module membership.
+        initial_membership = partition.membership
+        subgraphs = partition.subgraphs()
+        too_big = [subg.vcount() > max_size for subg in subgraphs]
+        n_big = sum(too_big)
+        msg = "\nSplitting {} modules that contain more than {} nodes."
+        print(msg.format(n_big,max_size),file=stderr)
+        while any(too_big):
+            # Perform clustering for any subgraphs that are too big.
+            idx = [i for i, too_big in enumerate(too_big) if too_big]
+            parameters['graph'] = subgraphs.pop(idx[0])
+            part = find_partition(**parameters)
+            optimiser = Optimiser()
+            diff = optimiser.optimise_partition(part,n_iterations=-1)
+            # Add to list.
+            subgraphs.extend(part.subgraphs())
+            too_big = [subg.vcount() > max_size for subg in subgraphs]
+        #EOL
+        # Collect subgraph membership as a single partition.
+        nodes = [subg.vs['name'] for subg in subgraphs]
+        parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
+        new_part = {k: v for d in parts for k, v in d.items()}
+        # Set membership of initial graph.
+        membership = [new_part.get(node) for node in partition.graph.vs['name']]
+        partition.set_membership(membership)
+        # Replace partition in profile list.
+        profile[0] = partition
+        #print("... Final partition: " + partition.summary() + ".", file=stderr)
 
 
 ## Optimize Multiplex partition ------------------------------------------------

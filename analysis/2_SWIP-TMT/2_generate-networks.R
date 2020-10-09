@@ -133,8 +133,16 @@ data.table("Edges" = formatC(n_edges, format = "d", big.mark=","),
 	   "Nodes" = formatC(n_nodes, format = "d", big.mark=",")) %>% knitr::kable()
 
 
+## cast data into a matrix for permutation testing -----------------------------------
+
+# load the data and save as norm protein for permutation testing
+norm_prot <- msstats_prot %>% as.data.table() %>%
+	dcast(Protein ~ interaction(Mixture,Channel,Genotype),value.var="Abundance") %>%
+	na.omit() %>% as.matrix(rownames="Protein")
+
+
 ## Save the data --------------------------------------------------------------
-# save data in root/rdata
+# all data is saved in root/rdata
 
 myfile <- file.path(root,"rdata","adjm.rda")
 save(adjm,file=myfile,version=2)
@@ -145,14 +153,14 @@ save(ne_adjm,file=myfile,version=2)
 myfile <- file.path(root,"rdata","ppi_adjm.rda")
 save(ppi_adjm,file=myfile,version=2)
 
-# Save adjm as csv.
 adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","adjm.csv"))
 
-# Save enhanced adjm as csv.
 ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ne_adjm.csv"))
 
-# Save ppi network as csv.
 ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
+
+myfile <- file.path(root,"rdata","msstats_norm_prot.rda")
+save(norm_prot,file=myfile,version=2)

@@ -2,19 +2,21 @@
 
 # title: SwipProteomics
 # author: twab
-# description: fit model for comparisons between Control and Mutant mice
-# adjusted for fraction differences
+# description: fit lmer model for comparisons between Control and Mutant mice
+# adjusted for differences in subcellular fraction.
 
 # input:
-# * msstats_prot.rda
+root <- "~/projects/SwipProteomics"
+input_prot <- file.path(root,"data","msstats_prot.rda")
+input_contrasts <- file.path(root,"data","msstats_contrasts.rda")
 
 # options:
-nThreads = 23
-nprot = "all"
+nprot = 1 # number of randomly sampled proteins to analyze
+nThreads = 8 # number of cores for parallel processing
+save_rda = FALSE # save results_list as rda?
 
 # load renv
-root <- "~/projects/SwipProteomics"
-renv::load(root,quiet=TRUE)
+if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
 
 # imports
 suppressPackageStartupMessages({
@@ -24,7 +26,8 @@ suppressPackageStartupMessages({
 })
 
 
-## MSstatsTMT internal functions ----------------------------------------------
+## Functions ------------------------------------------------------------------
+# Modified from internal MSstats functions.
 
 calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
   # a function to compute s2 posterior
@@ -95,8 +98,7 @@ updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
 
 calcApvarcovar <- function(fx,data,thopt,sigma) {
   ## PROBLEMATIC bc calls devFun
-  # calc asymptotic variance covariance matrix of variance parameters sigma 
-  # and theta
+  # calc asymptotic variance covariance matrix given params sigma and theta
   fm <- lmerTest::lmer(fx,data)
   dd <- devFun(fx,data)
   h <- myhessian(dd, c(thopt, sigma = sigma))
@@ -244,8 +246,9 @@ mygradient <- function(fun, x, delta = 1e-4,
 
 lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # perfrom the lmer-based testing of conditioned means for a given protein
-  subdat <- msstats_prot %>% filter(Protein == protein)
+  # utilizes all of the functions above
   # the data cannot contain missing values
+  subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)
@@ -316,9 +319,9 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
 ## load the data --------------------------------------------------------------
 
 # load msstats preprocessed protein data from SwipProteomics in root/data
-devtools::load_all(quiet=TRUE)
-data(msstats_prot) 
-data(msstats_contrasts)
+#devtools::load_all(quiet=TRUE)
+load(file=input_prot)
+load(file=input_contrasts)
 
 # Munge sample annotations
 genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
@@ -331,6 +334,9 @@ cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
 
 # lmer formula:
 fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
+
+# the model to be fit
+message("\nFitting lmer: ",fx1)
 
 # register some nodes to do work
 workers <- parallel::makeCluster(c(rep("localhost", nThreads)), type = "SOCK")
@@ -360,13 +366,14 @@ results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
 stop_time <- Sys.time()
 
 # status
-message("\nElapsed time to analyze ",nprot," proteins: ", 
+message("\nElapsed time to analyze ",nprot," protein(s): ", 
 	round(difftime(stop_time,start_time,units="sec"),3)," (seconds).")
 
-# save the data
-# NOTE: the data is too big to save.
-message("\nSaving the data, this will take several minutes.")
-save(results,file=file.path(root,"rdata","fit1_results.rda"),version=2)
+if (save_rda) {
+  # save the data
+  message("\nSaving the data, this will take several minutes.")
+  save(results,file=file.path(root,"rdata","fit1_results.rda"),version=2)
+}
 
 # close parallel connections
 invisible(stopCluster(workers))

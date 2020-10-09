@@ -4,11 +4,9 @@
 # description: analysis of intrafraction comparisons with MSstats
 # author: twab
 
-# FIXME: currently this script only works when run interactively!
-
 ## Options
-n = 5 #"all"
-save_rda = FALSE
+n = "all" # proteins to be analyzed
+save_rda = TRUE
 
 ## prepare the working environment ---------------------------------------------
 
@@ -31,13 +29,13 @@ devtools::load_all()
 
 # contrasts
 data(msstats_contrasts)
+data(msstats_gene_map)
 # NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
 # BioFraction.Control and BioFraction.Mutant
 
 # other data in root/rdata
 load(file.path(root,"rdata","PD_input.rda"))
 load(file.path(root,"rdata","PD_annotation.rda"))
-load(file.path(root,"rdata","msstats_gene_map.rda"))
 
 
 ## subset the data ------------------------------------------------------------
@@ -64,13 +62,15 @@ if (n > length(proteins) | n == "all") {
 
 ## [1] convert to msstats format -----------------------------------------------
 # MSstatsTMT key steps: 1-3.
+# Proteins with a single feature are removed.
 
 # This step takes about 7 minutes for 8.5 k proteins
 t0 = Sys.time()
 
 msstats_input <- PDtoMSstatsTMTFormat(PD_input, 
-			    PD_annotation, 
-			    which.proteinid="Master.Protein.Accessions")	
+				      PD_annotation, 
+				      which.proteinid="Master.Protein.Accessions",
+				      rmProtein_with1Feature = TRUE)
 
 message("Time to preprocess ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
@@ -104,19 +104,26 @@ suppressWarnings({
 })
 
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
-#
+# Abundance ~ (1|Mixture) + Condition
 
 message("Time to perform group comparisons for ", n, " proteins: ", 
 	round(difftime(Sys.time(),t0,units="s"),3)," seconds.")
 
+
 ## annotate msstats_prot with gene ids ----------------------------------------
 
-#TODO:
+idx <- match(msstats_prot$Protein,gene_map$uniprot)
+Symbol <- gene_map$symbol[idx]
+Entrez <- gene_map$entrez[idx]
+msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
+msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
+
 
 ## save results ---------------------------------------------------------------
 
 if (save_rda) {
   # save output as rda in root/rdata
+
   myfile <- file.path(root,"rdata","msstats_results.rda")
   save(msstats_results,file=myfile,version=2)
   message("Saved ",basename(myfile),"in",dirname(myfile))

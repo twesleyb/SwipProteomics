@@ -199,6 +199,7 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2,]
 # collect all uniprot accession ids
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
+
 ## create gene map by mapping uniprot to entrez -------------------------------
 # NOTE: this may take several minutes
 
@@ -338,7 +339,7 @@ if (save_rda) {
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-	# msstats_contrasts to be tested
+	# msstats_contrasts pairwise to be tested
 	myfile <- file.path(rdatdir,"msstats_contrasts.rda")
 	save(msstats_contrasts,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
