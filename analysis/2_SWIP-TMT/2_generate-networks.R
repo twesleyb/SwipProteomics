@@ -11,11 +11,18 @@ root = "~/projects/SwipProteomics"
 # * msstats_prot
 # * msstats_gene_map
 # * musInteractome from twesleyb/getPPIs
-# * 
 
 ## OPTIONs ---------------------------------------------------------------------
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
+## OUTPUTs:
+# * adjm.csv
+# * ne_adjm.csv --> leidenalg clustering
+# * ppi_adjm.csv --> leidenalg clustering
+
+# * adjm.rda
+# * ne_adjm.rda
+# * ppi_adjm.rda
 
 ## Prepare the workspace ------------------------------------------------------
 
