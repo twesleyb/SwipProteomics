@@ -1,26 +1,23 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title: Swip Proteomics
-#' description:
-#' authors: Tyler W Bradshaw
-#' ---
+# title: Swip Proteomics
+# description:
+# authors: Tyler W Bradshaw
 
-## INPUTS:
+## INPUTs:
 #* tmt_data
 
 ## OPTIONS:
 fig_width = 5
 fig_height =  5
-colors = c(WT="#47b2a4",MUT="#B86FAD") # Colors for WT and mutant groups.
+colors = c(Control="#47b2a4",Mutant="#B86FAD") # Colors for WT and mutant groups.
 
 ## OUTPUTS:
 # Boxplots of protein abundance adjusted for baseline differences in
 # fraction.
 
-#--------------------------------------------------------------------
-## Misc function - getrd
-#--------------------------------------------------------------------
+
+## Misc functions -------------------------------------------------------------
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
@@ -36,9 +33,8 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-#---------------------------------------------------------------------
-## Prepare the workspace.
-#---------------------------------------------------------------------
+
+## Prepare the workspace ------------------------------------------------------
 # Prepare the R workspace for the analysis. 
 
 # Load renv -- use renv::load NOT activate!
@@ -64,12 +60,11 @@ suppdir <- file.path(rootdir,"manuscript","files")
 ggtheme(); set_font("Arial", font_path = fontdir)
 
 # Load the data.
-data(gene_map)
-data(tmt_protein)
+data(msstats_prot)
+data(msstats_gene_map)
 
-#---------------------------------------------------------------------
-## Plots for select proteins.
-#---------------------------------------------------------------------
+
+## Plots for select proteins --------------------------------------------------
 
 # Wash proteins + control.
 prots <- c("Washc4","Washc1","Washc2","Washc5","Tubb4a")
@@ -77,71 +72,66 @@ idx <- match(prots,gene_map$symbol)
 names(prots) <- gene_map$uniprot[idx]
 
 # Subset the data.
-df <- tmt_protein %>% filter(Accession %in% names(prots))
+df <- msstats_prot %>% filter(Protein %in% names(prots))
 
 # Labels will simply be WT and Mutant.
 xlabels <- rep(c("WT","MUT"),times=length(prots))
 
 # Order of the factors.
-df$Group <- df$Treatment
-df$Group <- gsub("Control","WT",df$Group)
-df$Group <- gsub("Mutant","MUT",df$Group)
-factor_order <- paste(rep(names(prots),each=2), c("WT","MUT"),sep=".")
-df$Accession.Group <- as.character(interaction(df$Accession,df$Group))
-df$Accession.Group <- factor(df$Accession.Group,levels=factor_order)
+df$Group <- factor(df$Genotype,levels=c("Control","Mutant"))
+df$Accession.Group <- as.character(interaction(df$Protein,df$Group))
+#df$Accession.Group <- factor(df$Accession.Group,levels=factor_order)
 
 # Generate a plot.
-plot <- ggplot(df, aes(x=Accession.Group, y=log2(Adjusted.Intensity),
-		       fill=Group)) + 
-	geom_boxplot() + geom_point(aes(fill=Group,shape=Group)) +
-	theme(axis.text.x=element_text(angle=45))
+plot <- ggplot(df, aes(x=Accession.Group, y=Abundance, fill=Group))
+plot <- plot + geom_boxplot()
+plot <- plot + geom_point(aes(fill=Group,shape=Group)) 
+plot <- plot + theme(axis.text.x=element_text(angle=45))
 plot <- plot + scale_fill_manual(name="Genotype",values=colors)
 plot <- plot + theme(legend.position="none")
 plot <- plot + theme(panel.background = element_blank())
 plot <- plot + theme(panel.border=element_rect(colour="black",fill="NA",size=1))
 plot <- plot + theme(axis.title.x = element_blank())
 plot <- plot + scale_x_discrete(labels=xlabels)
-plot <- plot + ylab("log2(AdjustedT Intensity)")
-t
+plot <- plot + ylab("Normalized Protein Intensity")
 
 # Add some lines to break up the data.
 plot <- plot + geom_vline(xintercept=seq(2.5,length(prots)*2,by=2),
 			  linetype="dotted",size=0.5)
 
 # Pretty print select protein stats:
-message("\nSelect Protein GLM stats:")
-stats <- df %>% filter(Genotype == "MUT") %>%
-	select(Accession, Symbol, Adjusted.logFC, Adjusted.PercentWT, 
-	       Adjusted.F, Adjusted.FDR) %>% unique()
-knitr::kable(stats)
+#message("\nSelect Protein GLM stats:")
+#stats <- df %>% filter(Genotype == "Mutant") %>%
+#	select(Protein, Symbol, Adjusted.logFC, Adjusted.PercentWT, 
+#	       Adjusted.F, Adjusted.FDR) %>% unique()
+#knitr::kable(stats)
 
 # Significance stars:
-stats$symbol <- "ns"
-stats$symbol[stats$Adjusted.FDR < 0.05] <- "*"
-stats$symbol[stats$Adjusted.FDR < 0.005] <- "**"
-stats$symbol[stats$Adjusted.FDR < 0.0005] <- "***"
-stats$xpos <- seq(1.5,by=2,length.out=5)
-yrange <- range(log2(df$Adjusted.Intensity))
-stats$ypos <- max(yrange) + 0.05 * diff(yrange)
+#stats$symbol <- "ns"
+#stats$symbol[stats$Adjusted.FDR < 0.05] <- "*"
+#stats$symbol[stats$Adjusted.FDR < 0.005] <- "**"
+#stats$symbol[stats$Adjusted.FDR < 0.0005] <- "***"
+#stats$xpos <- seq(1.5,by=2,length.out=5)
+#yrange <- range(log2(df$Adjusted.Intensity))
+#stats$ypos <- max(yrange) + 0.05 * diff(yrange)
 
 # Add significance stars.
-plot <- plot + 
-	annotate("text",x=stats$xpos,y=stats$ypos,label=stats$symbol,size=4)
-
+#plot <- plot + 
+#	annotate("text",x=stats$xpos,y=stats$ypos,label=stats$symbol,size=4)
+#
 # Annotate with protein names.
-symbols <- prots 
-build <- ggplot_build(plot)
-ymax <- build$layout$panel_params[[1]][["y.range"]][2]
-plot <- plot + annotate("text",x=seq(1.5,length(prots)*2,by=2),
-			y=ymax,label=symbols,size=5)
+#symbols <- prots 
+#build <- ggplot_build(plot)
+#ymax <- build$layout$panel_params[[1]][["y.range"]][2]
+#plot <- plot + annotate("text",x=seq(1.5,length(prots)*2,by=2),
+#			y=ymax,label=symbols,size=5)
 
 # Save as pdf.
 myfile <- file.path(figsdir,"WASH_Complex_Protein_BoxPlots.pdf")
 ggsave(myfile,plot, height = fig_height, width = fig_width)
 
-#----------------------------------------------------------------------
-## Plot all sig proteins.
-#----------------------------------------------------------------------
+
+## Plot all sig proteins ------------------------------------------------------
 
 # Any protein with FDR < 0.1
 data(sig_proteins)
