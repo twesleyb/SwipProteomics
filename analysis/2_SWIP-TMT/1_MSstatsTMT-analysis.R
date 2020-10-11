@@ -23,20 +23,18 @@ suppressPackageStartupMessages({
 ## NOTE: my forks suppress much of MSstats verbosity
 
 
-## load preprocessed data, annotation file, and contrasts ---------------------
+## load data ------------------------------------------------------------------
 
+# load functions in root/R and make data in root/data accessible
 devtools::load_all()
 
-# contrasts
+# load data in root/data
+data(gene_map)
+data(PD_input) # 46 mb
+data(PD_annotation)
 data(msstats_contrasts)
-data(msstats_gene_map)
 # NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
 # BioFraction.Control and BioFraction.Mutant
-
-# other data in root/rdata
-load(file.path(root,"rdata","PD_input.rda"))
-load(file.path(root,"rdata","PD_annotation.rda"))
-
 
 ## subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of

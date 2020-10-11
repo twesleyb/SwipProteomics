@@ -13,16 +13,16 @@ root = "~/projects/SwipProteomics"
 input_dir = "data/PSM.zip"
 
 # PSM.zip contains:
-input_psm = "PSM/5359_PSM_Report.xlsx"
-input_samples = "PSM/5359_Sample_Report.xlsx"
+input_psm = "PSM/5359_PSM_Report.xlsx" # the data exported from PD
+input_samples = "PSM/5359_Sample_Report.xlsx" # also exported from PD?
+
 
 ## Options --------------------------------------------------------------------
 save_rda = TRUE # save key R objects?
 
+
 ## Output ---------------------------------------------------------------------
 # * several intermediate datasets in root/rdata
-# * the MSstatsTMT statistical results for intrafraction comparisons saved as
-#   an excel workbook in root/tables
 
 
 ## Functions -----------------------------------------------------------------
@@ -112,28 +112,29 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all(quiet=TRUE) })
 
+## unzip the data in root/data ------------------------------------------------
 
-## read PSM data from excel ------------------------------------------------
+# unzip data into downloads
+unzip(file.path(root,input_dir),exdir=downdir) 
+
+message("\nUnzipped ", squote(input_dir), " into ", squote(downdir),".")
+
+
+## read PSM data from excel ---------------------------------------------------
 
 # read PSM-level data exported from PD as an excel worksheet
 # NOTE: this takes several minutes!
 
-# load the data from root/rdata
+# load the data
 myfile <- file.path(downdir,input_psm)
 raw_pd <- readxl::read_excel(myfile,progress=FALSE)
-
-# clean-up
-unlink(myfile) # rm input_psm
-unlink(tools::file_path_sans_ext(basename(input_dir))) # rmdir ./PSM
 
 # re-format PSM data for MSstatsTMT
 raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
 
 
-## load sample data in root/rdata --------------------------------------
-# recieved this excel spreadsheet from GW exported from PD
-
-unzip(file.path(root,input_dir),exdir=downdir) # unzip into downloads
+## load sample data in root/rdata ---------------------------------------------
+# recieved this excel spreadsheet from GW--I think he exported from PD
 
 # pass meaningful colnames to read_excel
 col_names <- c("Sample","Mixture","MS.Channel","drop",
@@ -142,7 +143,9 @@ myfile <- file.path(downdir,input_samples)
 samples <- readxl::read_excel(myfile,col_names=col_names)
 
 # clean-up
-unlink(myfile)
+mydir <- file.path(downdir, tools::file_path_sans_ext(basename(input_dir)))
+unlink(mydir,recursive=TRUE)
+message("\nRemoved ", squote(mydir),".")
 
 
 ## re-format sample metadata annotations for MSstats ---------------------------
@@ -270,16 +273,17 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 ## build annotation file for MSstats -------------------------------------------
 # the annotation data.frame passed to MSstats requires the following columns:
 # * Run - indicates which channel within a Spectrum.File; this should match
-#     Spectrum.File in raw_pd
+#     Spectrum.File in raw_pd.
 # * Fraction - a TMT mixture may be fractionated into multiple fractions to
 #     increase analytical depth; column 'Fraction' indicates the MS fraction,
-#     it may be all 1
+#     it may be all 1.
 # * TechRepMixture - was a TMT mixture analyzed in technical replicate? 
-#     all 1 indicates no replicates of a mixture
-# * Mixture - concatenation of TMT labeled samples - an MS experiment
-# * Channel - the TMT lables/channels used e.g. 126N, 134N
+#     all 1 indicates no replicates of a mixture.
+# * Mixture - concatenation of multiple TMT labeled samples - an MS experiment.
+# * Channel - the TMT labels/channels used e.g. 126N, 134N
 # * BioReplicate - indicates an individual Biological subject
 # * Condition - indicates the treatment condition e.g. WT, MUT or SPQC (Norm)
+# NOTE: MSstats expects the Norm(alization) condition to be 'Norm'.
 
 # create annotation_dt from Spectrum.Files and MS.Runs
 # add additional freatures from samples
@@ -300,7 +304,7 @@ annotation_dt$"MS.Channel" <- NULL
 
 
 ## build contrast_matrix ----------------------------------------------------
-# create contrasts for intrafraction comparisons
+# create MSstatsTMT contrasts for intrafraction comparisons
 
 # define all intrafraction comparisons:
 comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
@@ -310,8 +314,9 @@ comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
 conditions <- unique(annotation_dt$Condition)
 conditions <- conditions[conditions != "Norm"] # should not include 'Norm'
 
-# utilize internal function made available by my fork
-msstats_contrasts <- MSstatsTMT::getContrasts(comp, groups=conditions)
+# utilizes internal function made available by my fork to generate a contrast
+# matrix for all pairwise comparisions defined by comp
+msstats_contrasts <- MSstatsTMT::makeContrasts(comp, groups=conditions)
 
 
 ## Save outputs to file ---------------------------------------------------------
@@ -320,30 +325,30 @@ msstats_contrasts <- MSstatsTMT::getContrasts(comp, groups=conditions)
 if (save_rda) {
 
 	# gene_map for all proteins
-	myfile <- file.path(root,"rdata","msstats_gene_map.rda")
+	myfile <- file.path(root,"data","gene_map.rda")
 	save(gene_map,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-        # PD_annotation data
+        # PD_annotation data - input annotations for MSstatsTMT
 	PD_annotation <- annotation_dt
-	myfile <- file.path(rdatdir,"PD_annotation.rda")
+	myfile <- file.path(datadir,"PD_annotation.rda")
 	save(PD_annotation,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-	# PD_input PSM data
-	PD_input <- filt_pd
-	myfile <- file.path(rdatdir,"PD_input.rda")
-	save(PD_input,file=myfile,version=2)
+	# PD_raw - the raw PSM data--input for MSstatsTMT
+	# NOTE: the data is too large
+	PD_raw <- filt_pd
+	myfile <- file.path(datadir,"PD_raw.rda")
+	save(PD_raw,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
-	# msstats_contrasts pairwise to be tested
-	myfile <- file.path(rdatdir,"msstats_contrasts.rda")
+	# msstats_contrasts - all pairwise intrafraction comparisons
+	myfile <- file.path(datadir,"msstats_contrasts.rda")
 	save(msstats_contrasts,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
-}
-
-message("\nPreprocessing of PD PSM-level data completed.")
+} #EIS
+# EOF
