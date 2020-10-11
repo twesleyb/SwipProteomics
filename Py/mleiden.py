@@ -233,11 +233,14 @@ methods = {
 
 
 ## parse input, get clustering params -----------------------------------------
-#save args: pickle_args(args)
-#interactive: args=load_args()
+
+#args = parse_args()
+#pickle_args(args)
+#sys.exit()
 
 # parse input
 args = parse_args()
+#args = load_args()
 
 # perform some checks on the input
 check_input(args) # user should specify an optimization method for each graph
@@ -291,13 +294,12 @@ for i in range(len(adjms)):
 
 ## perform clustering of the individual graphs --------------------------------
 
-parts_list = list() # add partition for each graph to parts_list
-for i in range(len(params)):
+parts_list = list() # add partition for each graph in params to parts_list
 
+for g in range(len(params)):
     msg = "\nUsing {} to find an optimal partition in graph {}."
     print(msg.format(args['methods'][i],i+1),file=sys.stderr)
-    p = params[i].copy()
-
+    p = params[g].copy()
     if p.pop('multi_resolution') is True:
         # multiresolutiion methods:
         # NOTE: currently only supports analyzing a single resolution
@@ -320,16 +322,16 @@ for i in range(len(params)):
     parts_list.append(partition)
     # recursive split?
     if args['recursive'] is True:
-        max_size = 50
+        max_size = 100
         initial_membership = partition.membership
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
         n_big = sum(too_big)
         msg = "\nSplitting {} modules that contain more than {} nodes."
-        print(msg.format(n_big,max_size),file=stderr)
+        print(msg.format(n_big,max_size),file=sys.stderr)
         while any(too_big):
             # Perform clustering for any subgraphs that are too big.
-            idx = [i for i, too_big in enumerate(too_big) if too_big]
+            idx = [m for m, too_big in enumerate(too_big) if too_big]
             p['graph'] = subgraphs.pop(idx[0])
             part = leidenalg.find_partition(**p)
             optimiser = leidenalg.Optimiser()
@@ -346,10 +348,10 @@ for i in range(len(params)):
         membership = [new_part.get(node) for node in partition.graph.vs['name']]
         partition.set_membership(membership)
         # Replace partition in profile list.
-        parts_list.append(partition)
+        parts_list[g] = partition
         # status report
-        print(msg.format(partition.summary()),file=sys.stderr)
-        print('Modularity: {}'.format(partition.modularity))
+        print(partition.summary(),file=sys.stderr)
+        print('Modularity: {}'.format(partition.modularity)) # fixme: modularity is not updated
         print('Quality: {}'.format(partition.quality()))
     #EIS
 #EOL
