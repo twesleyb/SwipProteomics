@@ -332,8 +332,16 @@ msstats_contrasts <- MSstatsTMT::makeContrasts(comp, groups=conditions)
 
 ## Save outputs to file ---------------------------------------------------------
 
+
 # save to file
 if (save_rda) {
+
+        # save Washc4's uniprot 
+        swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
+	myfile <- file.path(root,"data","swip.rda")
+        save(swip,file=myfile,version=2)
+	message(paste("\nSaved",squote(basename(myfile)),"in",
+		      squote(dirname(myfile))))
 
 	# gene_map for all proteins
 	myfile <- file.path(root,"data","gene_map.rda")

@@ -5,8 +5,9 @@
 # authors: Tyler W A Bradshaw
 
 ## INPUT data:
-#part_file = "leidenalg_partition.rda"
-part_file = "multi_leidenalg_partition.rda"
+# specify the partition to be used:
+part_file = "leidenalg_partition.rda"
+#part_file = "multi_leidenalg_partition.rda"
 # If performing self-preservation, then test = NULL.
 #adjm = c(discovery="adjm.csv", test=NULL)
 #netw = c(discovery="ne_adjm.csv", test=NULL)
@@ -39,8 +40,8 @@ alternative = "greater" # Greater or less, for preservation use 'greater'.
 # Partition of the network with preservation enforced. 
 # NOTE: Indices of modules that are not preserved are set to 0.
 save_as = "rda" # Output format for partition: can be RData or csv
-#output_file = "multi_"
-output_file=""
+output_prefix="" # partition.rda in root/data
+
 
 #---------------------------------------------------------------------
 ## Description of NetRep Permutation Statistics:
@@ -117,14 +118,6 @@ reset_index <- function(partition) {
   return(y)
 }
 
-
-# Function to add source directory to file path.
-append_paths <- function(source_dir,input_file){
-	# Like file.path, but using sapply to keep names.
-	output_file <- sapply(input_file,function(x) {
-				       file.path(source_dir,x) })
-	return(output_file)
-}
 
 # Function to coerce partition matrix into named vector.
 part_matrix_to_vec <- function(part_matrix,reset=TRUE){
@@ -281,7 +274,7 @@ nThreads <- parallel::detectCores() - 1
 # All data should be in datadir/.
 
 # 1. Load expression data.
-myfile <- file.path(root,"rdata","msstats_norm_prot.rda")
+myfile <- file.path(root,"data","norm_prot.rda")
 load(myfile)
 data_list <- list(discovery=t(norm_prot))
 
@@ -301,7 +294,7 @@ netw_list <- lapply(netw_list, function(x) {
 			    return(x) })
 
 # 4. Load network partitions.
-myfile <- file.path(root,"rdata",part_file)
+myfile <- file.path(root,"data",part_file)
 load(myfile)
 part_list <- list(discovery=partition)
 
@@ -436,7 +429,7 @@ if (save_as == "rdata") {
 	       file.path(rdatdir,output_name), row.names=TRUE)
 } else if (save_as == "rda") {
 	# Save as rda.
-	myfile <- file.path(datadir,paste0(output_file,"partition.rda"))
+	myfile <- file.path(datadir,paste0(output_prefix,"partition.rda"))
 	save(partition,file=myfile,version=2)
 } else {
 	stop("ut oh")

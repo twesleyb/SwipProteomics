@@ -316,10 +316,9 @@ lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
 ## load the data --------------------------------------------------------------
 
 # load the data and graph partition
-data(swip)
 data(msstats_prot) # msstats_prot
-data(multi_partition)
-#data(partition)
+data(partition)
+data(swip)
 
 # annotate data with module membership
 membership <- partition[msstats_prot$Protein]
@@ -333,11 +332,10 @@ filt_prot <- msstats_prot %>%
 	filter(!is.na(Module)) %>% 
 	filter(Module %notin% to_drop)
 
-# the lmer formula:
+# the lmer formula to each module-level subset of the data:
 fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype
 
 #fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + (1|Module) + Genotype
-
 
 # contrast matrix for Contrl-Mutant comparison:
 cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
@@ -376,7 +374,3 @@ message("Number of sig modules (PAdjust<0.05): ", sum(results_df$PAdjust < 0.05)
 results_df %>% filter(PAdjust < 0.05) %>% arrange(Pvalue) %>% head(5)
 
 message("Wash4c Module: ", paste0("M",partition[swip]))
-
-#deviance <- sapply(results_list,function(x) -2*stats::logLik(x$model)[1])
-#qqnorm(resid(fit))
-#qqline(resid(fit))

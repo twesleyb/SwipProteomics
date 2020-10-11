@@ -373,10 +373,12 @@ if len(parts_list) > 1:
     print("Final multiplex partition: {}".format(partition.summary()))
     print('Modularity: {}'.format(partition.modularity))
     print('Quality: {}'.format(partition.quality()))
-    # Save final partition.
-    membership = partition.membership
-    df = pandas.DataFrame([membership])
-    g0 = params[0]['graph']
-    df.columns = g0.vs['name']
-    df.to_csv(args['output'])
 #EIS
+
+
+# Save final partition.
+membership = partition.membership
+df = pandas.DataFrame([membership])
+g0 = params[0]['graph']
+df.columns = g0.vs['name']
+df.to_csv(args['output'])
