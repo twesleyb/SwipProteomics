@@ -156,7 +156,7 @@ if (save_rda) {
   message("\nSaved ",basename(myfile),"in",dirname(myfile))
   
   # save the raw data in MSstatsTMT's format
-  myfile <- file.path(root,"data","PD_msstats.rda")
+  myfile <- file.path(root,"rdata","PD_msstats.rda")
   save(PD_msstats,file=myfile,version=2)
   message("\nSaved ",basename(myfile),"in",dirname(myfile))
 
