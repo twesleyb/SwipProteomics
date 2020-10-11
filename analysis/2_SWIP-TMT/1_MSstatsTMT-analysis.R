@@ -96,7 +96,7 @@ suppressMessages({
 				     clusters=23)
 })
 
-# This takes about 30 minutes for 8.5 k proteins
+# This takes about 11 minutes for 8.5 k proteins with 23 cores
 message("\nTime to summarize ", n, " proteins: ", 
   round(difftime(Sys.time(),t0,units="min"),3)," minutes.")
 
@@ -140,6 +140,7 @@ msstats_results$issue <- NULL
 # Annotated results and protein with BioFraction
 msstats_results$BioFraction <- gsub("Mutant\\.F[0-9]{1,2}-Control\\.","",msstats_results$Label)
 msstats_prot$BioFraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+msstats_prot$Genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
 
 
 ## save results ---------------------------------------------------------------

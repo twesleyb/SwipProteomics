@@ -2,7 +2,7 @@
 
 # title: SwipProteomics
 # author: twab
-# description:
+# description: clean-up partitions from running leidenalg
 
 ## input:
 

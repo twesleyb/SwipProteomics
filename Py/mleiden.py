@@ -24,6 +24,7 @@ output:
     * [output_name]_partition.csv
 options:
     * n_iterations: int, the number of optimization iterations
+    * recursive: split modules recursively?
 '''
 
 
@@ -109,6 +110,8 @@ def parse_args():
     #        parameter for multiresolution methods''')
     ap.add_argument('-o', '--output', type=str,
             default='partition.csv', help =  'output filename')
+    ap.add_argument('-r', '--recursive', type=bool,
+            default = False, help = "Cluster graph recursively?")
     # collect and return arg dictionary
     args=vars(ap.parse_args())
     return args
@@ -303,14 +306,11 @@ for i in range(len(params)):
         optimiser = leidenalg.Optimiser()
         diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
     else:
-
         # single resolution methods:
         partition = leidenalg.find_partition(**p)
         optimiser = leidenalg.Optimiser()
         diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
-
         partition.summary()
-
     #EIS
     # status report:
     msg = 'Initial partition: {}'
@@ -318,18 +318,9 @@ for i in range(len(params)):
     print('Modularity: {}'.format(partition.modularity))
     print('Quality: {}'.format(partition.quality()))
     parts_list.append(partition)
-#EOL
-
-## WORK: recursive splitting
-    if recursive:
-        print("... Initial partition: " + partition.summary() + ".", file=stderr)
-        # Update optimization method.
-        method = methods.get(recursive_method).get('partition_type')
-        if type(method) is str:
-                parameters['partition_type'] = getattr(import_module('leidenalg'),method)
-        elif type(method) == 'type':
-                parameters['partition_type'] = method
-        # Initial module membership.
+    # recursive split?
+    if args['recursive'] is True:
+        max_size = 50
         initial_membership = partition.membership
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
@@ -339,14 +330,14 @@ for i in range(len(params)):
         while any(too_big):
             # Perform clustering for any subgraphs that are too big.
             idx = [i for i, too_big in enumerate(too_big) if too_big]
-            parameters['graph'] = subgraphs.pop(idx[0])
-            part = find_partition(**parameters)
-            optimiser = Optimiser()
-            diff = optimiser.optimise_partition(part,n_iterations=-1)
+            p['graph'] = subgraphs.pop(idx[0])
+            part = leidenalg.find_partition(**p)
+            optimiser = leidenalg.Optimiser()
+            diff = optimiser.optimise_partition(part,n_iterations=args['niter'])
             # Add to list.
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
-        #EOL
+        #EOW
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
@@ -355,8 +346,13 @@ for i in range(len(params)):
         membership = [new_part.get(node) for node in partition.graph.vs['name']]
         partition.set_membership(membership)
         # Replace partition in profile list.
-        profile[0] = partition
-        #print("... Final partition: " + partition.summary() + ".", file=stderr)
+        parts_list.append(partition)
+        # status report
+        print(msg.format(partition.summary()),file=sys.stderr)
+        print('Modularity: {}'.format(partition.modularity))
+        print('Quality: {}'.format(partition.quality()))
+    #EIS
+#EOL
 
 
 ## Optimize Multiplex partition ------------------------------------------------

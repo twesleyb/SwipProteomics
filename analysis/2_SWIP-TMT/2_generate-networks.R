@@ -8,14 +8,15 @@
 ## INPUTs ----------------------------------------------------------------------
 root = "~/projects/SwipProteomics"
 
-# * msstats_prot
-# * msstats_gene_map
-# * musInteractome from twesleyb/getPPIs
+# * data(msstats_prot)
+# * data(gene_map)
+# * data(musInteractome) from twesleyb/getPPIs
 
 ## OPTIONs ---------------------------------------------------------------------
 os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 
-## OUTPUTs:
+## OUTPUTs in root/rdata:
+
 # * adjm.csv
 # * ne_adjm.csv --> leidenalg clustering
 # * ppi_adjm.csv --> leidenalg clustering
@@ -24,10 +25,27 @@ os_keep = as.character(c(9606,10116,1090)) # keep ppis from human, rat, and mus.
 # * ne_adjm.rda
 # * ppi_adjm.rda
 
+# * norm_prot in root/data
+
+## functions ------------------------------------------------------------------
+
+mkdir <- function(...,warn=TRUE,report=FALSE) {
+	# create a new directory
+	newdir <- file.path(...)
+	if (warn & dir.exists(newdir)) {
+		warning("dir exists")
+	} else if (!dir.exists(newdir)) { 
+		dir.create(newdir)
+		if (report) {
+		message(paste("created",newdir))
+		}
+	}
+}
+
+
 ## Prepare the workspace ------------------------------------------------------
 
 # Load renv
-root <- getrd()
 renv::load(root,quiet=TRUE)
 
 # Imports
@@ -43,9 +61,15 @@ suppressPackageStartupMessages({
 devtools::load_all()
 
 # Load the proteomics data
+data(gene_map)
+
 data(msstats_prot)
-data(msstats_gene_map)
+
 data(musInteractome)
+
+# data for output tables
+tabsdir <- file.path(root,"tables")
+if (!dir.exists(tabsdir)) { mkdir(tabsdir) }
 
 
 ## Create protein covariation network -----------------------------------------
@@ -144,23 +168,37 @@ norm_prot <- msstats_prot %>% as.data.table() %>%
 ## Save the data --------------------------------------------------------------
 # all data is saved in root/rdata
 
+# adjm
 myfile <- file.path(root,"rdata","adjm.rda")
 save(adjm,file=myfile,version=2)
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
+# ne_adjm
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 save(ne_adjm,file=myfile,version=2)
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
+# ppi_adjm
 myfile <- file.path(root,"rdata","ppi_adjm.rda")
 save(ppi_adjm,file=myfile,version=2)
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
+# adjm
 adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","adjm.csv"))
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
+# ne_adjm
 ne_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ne_adjm.csv"))
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
+# ppi_adjm
 ppi_adjm %>% as.data.table(keep.rownames="Accession") %>%
 	fwrite(file.path(root,"rdata","ppi_adjm.csv"))
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
 
-myfile <- file.path(root,"rdata","msstats_norm_prot.rda")
+# norm_prot
+myfile <- file.path(root,"data","norm_prot.rda")
 save(norm_prot,file=myfile,version=2)
+message("\nSaved ", basename(myfile)," in ", dirname(myfile))
