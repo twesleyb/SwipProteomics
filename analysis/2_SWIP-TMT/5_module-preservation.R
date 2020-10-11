@@ -15,7 +15,8 @@ part_file = "leidenalg_partition.rda"
 #data = c(discovery="norm_protein.rda", test=NULL)
 
 ## OPTIONS:
-stats = c(1,2,6,7) # Statistics by which module preservation is enforced. 
+stats = c(1,6,7) # Statistics by which module preservation is enforced. 
+# NOTE: recommended to use 1,6, and 7
 strength = "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges = "zero" # How will negative edges be replacedR? Abs val or zero.
 replace_zero_index = TRUE # If min(module index)==0, +1 such that all indices >0.

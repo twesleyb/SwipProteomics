@@ -65,11 +65,9 @@ data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
 #data(list="synGO") # Koopmans et al., SynGO database.
 
 # Load the data from root/data.
-data(msstats_gene_map) # gene mapping data
-#data(partition) # graph partition
-data(multi_partition)
+data(gene_map) # gene mapping data
+data(partition)
 data(msstats_prot) # the proteomics data
-#data(sig_modules) # modules with sig DA.
 
 #--------------------------------------------------------------------
 ## Do work.

@@ -110,8 +110,8 @@ def parse_args():
     #        parameter for multiresolution methods''')
     ap.add_argument('-o', '--output', type=str,
             default='partition.csv', help =  'output filename')
-    ap.add_argument('-r', '--recursive', type=bool,
-            default = False, help = "Cluster graph recursively?")
+    #ap.add_argument('-r', '--recursive', type=bool,
+    #       default = False, help = "Cluster graph recursively?")
     # collect and return arg dictionary
     args=vars(ap.parse_args())
     return args
@@ -321,38 +321,38 @@ for g in range(len(params)):
     print('Quality: {}'.format(partition.quality()))
     parts_list.append(partition)
     # recursive split?
-    if args['recursive'] is True:
-        max_size = 100
-        initial_membership = partition.membership
-        subgraphs = partition.subgraphs()
-        too_big = [subg.vcount() > max_size for subg in subgraphs]
-        n_big = sum(too_big)
-        msg = "\nSplitting {} modules that contain more than {} nodes."
-        print(msg.format(n_big,max_size),file=sys.stderr)
-        while any(too_big):
-            # Perform clustering for any subgraphs that are too big.
-            idx = [m for m, too_big in enumerate(too_big) if too_big]
-            p['graph'] = subgraphs.pop(idx[0])
-            part = leidenalg.find_partition(**p)
-            optimiser = leidenalg.Optimiser()
-            diff = optimiser.optimise_partition(part,n_iterations=args['niter'])
-            # Add to list.
-            subgraphs.extend(part.subgraphs())
-            too_big = [subg.vcount() > max_size for subg in subgraphs]
-        #EOW
-        # Collect subgraph membership as a single partition.
-        nodes = [subg.vs['name'] for subg in subgraphs]
-        parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
-        new_part = {k: v for d in parts for k, v in d.items()}
-        # Set membership of initial graph.
-        membership = [new_part.get(node) for node in partition.graph.vs['name']]
-        partition.set_membership(membership)
-        # Replace partition in profile list.
-        parts_list[g] = partition
-        # status report
-        print(partition.summary(),file=sys.stderr)
-        print('Modularity: {}'.format(partition.modularity)) # fixme: modularity is not updated
-        print('Quality: {}'.format(partition.quality()))
+    #if args['recursive'] is True:
+    #    max_size = 100
+    #    initial_membership = partition.membership
+    #    subgraphs = partition.subgraphs()
+    #    too_big = [subg.vcount() > max_size for subg in subgraphs]
+    #    n_big = sum(too_big)
+    #    msg = "\nSplitting {} modules that contain more than {} nodes."
+    #    print(msg.format(n_big,max_size),file=sys.stderr)
+    #    while any(too_big):
+    #        # Perform clustering for any subgraphs that are too big.
+    #        idx = [m for m, too_big in enumerate(too_big) if too_big]
+    #        p['graph'] = subgraphs.pop(idx[0])
+    #        part = leidenalg.find_partition(**p)
+    #        optimiser = leidenalg.Optimiser()
+    #        diff = optimiser.optimise_partition(part,n_iterations=args['niter'])
+    #        # Add to list.
+    #        subgraphs.extend(part.subgraphs())
+    #        too_big = [subg.vcount() > max_size for subg in subgraphs]
+    #    #EOW
+    #    # Collect subgraph membership as a single partition.
+    #    nodes = [subg.vs['name'] for subg in subgraphs]
+    #    parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
+    #    new_part = {k: v for d in parts for k, v in d.items()}
+    #    # Set membership of initial graph.
+    #    membership = [new_part.get(node) for node in partition.graph.vs['name']]
+    #    partition.set_membership(membership)
+    #    # Replace partition in profile list.
+    #    parts_list[g] = partition
+    #    # status report
+    #    print(partition.summary(),file=sys.stderr)
+    #    print('Modularity: {}'.format(partition.modularity)) # fixme: modularity is not updated
+    #    print('Quality: {}'.format(partition.quality()))
     #EIS
 #EOL
 

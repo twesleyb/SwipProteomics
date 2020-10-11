@@ -31,7 +31,9 @@ OUT0="$root/rdata/leidenalg_partition.csv" # network partition
 OUT1="$root/rdata/multi_leidenalg_partition.csv" 
 
 # [1] analyze the co-variation network with surprise + recursive
-$root/Py/mleiden.py "$ADJM0" -m $METHOD -o $OUT0 --recursive True
+# FIXME: Modularity statistic needs to be updated
+$root/Py/mleiden.py "$ADJM0" -m $METHOD -o $OUT0
 
 # [2] optimize the multiplex partition of the covariation and PPI graphs
-$root/Py/mleiden.py "$ADJM0" "$ADJM1" -m $METHOD $METHOD -o $OUT1
+# FIXME: I don't think multiplex is working after addition of recursive option
+#$root/Py/mleiden.py "$ADJM0" "$ADJM1" -m $METHOD $METHOD -o $OUT1
