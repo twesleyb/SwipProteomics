@@ -9,8 +9,9 @@
 # specify the projects root directory:
 root = "~/projects/SwipProteomics"
 
-# the PSM data is in root/data:
-input_dir = "data/PSM.zip"
+# the PSM data is in root/rdata:
+# NOTE: the raw data is 75 mb and is too large to be managed by git.
+input_dir = "rdata/PSM.zip"
 
 # PSM.zip contains:
 input_psm = "PSM/5359_PSM_Report.xlsx" # the data exported from PD
@@ -22,7 +23,17 @@ save_rda = TRUE # save key R objects?
 
 
 ## Output ---------------------------------------------------------------------
-# * several intermediate datasets in root/rdata
+# saved in root/data
+
+# * gene_map - data.table mapping UniProt Accession to Entrez IDs and gene
+#       Symbols.
+# * PD_raw - PSM data from Proteome Discoverer reformatted for MSstatsTMT.
+#       This file is just less than 50 mb.
+# * PD_annotation - the annotation object for PDtoMSstatsTMTformat().
+#       This maps individual MS runs to Spectrum.File and other sample
+#       information
+# * msstats_contrasts - a matrix specifying all pairwise intrafraction contrasts
+#       between Control and Mutant mice.    
 
 
 ## Functions -----------------------------------------------------------------
