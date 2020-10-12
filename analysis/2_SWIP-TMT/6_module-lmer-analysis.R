@@ -365,6 +365,7 @@ results_df$PAdjust <- p.adjust(results_df$Pvalue,method="bonferroni")
 m <- as.character(results_df$module)
 module_size <- sapply(split(partition,partition),length)[m]
 results_df <- tibble::add_column(results_df,size=module_size,.after="module")
+fwrite(results_df,file.path(root,"rdata","Module_Results.csv"))
 
 # examine top results
 message("Total number of modules: ", length(modules))
