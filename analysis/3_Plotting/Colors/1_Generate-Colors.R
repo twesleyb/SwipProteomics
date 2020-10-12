@@ -97,5 +97,3 @@ message(paste("\nSaving colors."))
 # Save updated module colors.
 myfile <- file.path(root,"data","module_colors.rda")
 save(module_colors,file=myfile,version=2)
-
-# DONE

@@ -51,7 +51,7 @@ figsdir <- file.path(root,"figs","Proteins")
 ## Prepare the data for ploting ------------------------------------------------
 
 # load partition
-data(multi_partition)
+data(partition)
 
 # load the data
 data(msstats_prot)
