@@ -8,8 +8,10 @@
 swip = "Q3UMB9" # uniprot accession of swip 
 swip_color = "#B86FAD" # color of swip/wash module
 
+
 ## OUTPUT ---------------------------------------------------------------------
-# * color assignments for every module in multi_partition
+# * color assignments for every module in graph partition
+
 
 ## FUNCTIONS ------------------------------------------------------------------
 
@@ -35,6 +37,7 @@ str_to_vec <- function(response) {
 	return(vec)
 }
 
+
 ## Prepare the workspace ------------------------------------------------------
 
 # Load renv.
@@ -51,11 +54,9 @@ suppressPackageStartupMessages({
 suppressMessages({ devtools::load_all() })
 
 # Load TMT data and partition.
-data(multi_partition)
+data(partition)
 
-#---------------------------------------------------------------------
-## Generate colors.
-#---------------------------------------------------------------------
+## Generate Module colors ------------------------------------------------------
 
 # The number of colors we need.
 modules <- split(names(partition),partition)

@@ -186,3 +186,8 @@ message(sum(sig_modules %in% sig_dt$Module)," of ", length(sig_modules),
 # Save the data.
 myfile <- file.path(rdatdir,"Module_GSEA_Results.csv")
 fwrite(sig_dt,myfile)
+
+# save as rda
+module_gsea <- dt
+myfile <- file.path(root,"data","module_gsea.rda")
+save(module_gsea,file=myfile,version=2)
