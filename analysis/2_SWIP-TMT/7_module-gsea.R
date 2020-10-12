@@ -62,8 +62,8 @@ data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
-data(partition)
-data(sig_modules)
+data(partition) # the graph partition
+data(sig_modules) # module with sig change in abundance
 data(msstats_prot) # the proteomics data
 
 

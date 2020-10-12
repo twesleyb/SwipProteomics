@@ -407,6 +407,11 @@ results_df$Proteins <- module_prots[results_df$module]
 # save module results
 fwrite(results_df,file.path(root,"rdata","Module_Results.csv"))
 
+# save module results
+module_stats <- results_df
+myfile = file.path(root,"data","module_stats.rda")
+save(module_stats, file=myfile,version=2)
+
 # save sig modules
 sig_modules <- results_df$module[results_df$PAdjust < BF_alpha]
 myfile <- file.path(root,"data","sig_modules.rda")

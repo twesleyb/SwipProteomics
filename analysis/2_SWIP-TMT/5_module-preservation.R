@@ -6,8 +6,7 @@
 
 ## INPUT data:
 # specify the partition to be used:
-part_file = "leidenalg_partition.rda"
-#part_file = "multiplex_partition.rda"
+part_file = "leidenalg_partition.rda" # in root/data
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:
