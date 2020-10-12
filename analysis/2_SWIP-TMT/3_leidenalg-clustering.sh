@@ -22,18 +22,18 @@ quality of both graphs.
 
 ## INPUTs:
 root="$HOME/projects/SwipProteomics" # project root
-METHOD="Surprise" # optimization method
+QUALITY="Surprise" # optimization method
 
 ADJM0="$root/rdata/ne_adjm.csv" # enhanced adjacency matrix
 ADJM1="$root/rdata/ppi_adjm.csv" # ppi adjacency matrix
 
 OUT0="$root/rdata/leidenalg_partition.csv" # network partition
-OUT1="$root/rdata/multi_leidenalg_partition.csv" 
+OUT1="$root/rdata/multiplex_partition.csv" 
 
 # [1] analyze the co-variation network with surprise + recursive
 # FIXME: Modularity statistic needs to be updated
-$root/Py/mleiden.py "$ADJM0" -m $METHOD -o $OUT0 --recursive 1
+#$root/Py/mleiden.py "$ADJM0" -m $METHOD -o $OUT0 --recursive 1
 
 # [2] optimize the multiplex partition of the covariation and PPI graphs
 # FIXME: I don't think multiplex is working after addition of recursive option
-#$root/Py/mleiden.py "$ADJM0" "$ADJM1" -m $METHOD $METHOD -o $OUT1
+$root/Py/mleiden.py "$ADJM0" "$ADJM1" -q $QUALITY $QUALITY -o $OUT1 --multiplex 1

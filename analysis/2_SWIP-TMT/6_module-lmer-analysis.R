@@ -2,13 +2,17 @@
 
 # title: SwipProteomics
 # author: twab
-# description:
+# description: module-level analysis
 
-# input:
+# inputs ----------------------------------------------------------------------
 # * msstats_prot.rda
 
-# options:
 
+# options ---------------------------------------------------------------------
+BF_alpha = 0.05
+
+
+# prepare the environment -----------------------------------------------------
 # load renv
 root <- "~/projects/SwipProteomics"
 renv::load(root,quiet=TRUE)
@@ -108,7 +112,7 @@ calcApvarcovar <- function(fx,data,thopt,sigma) {
   A <- 2 * chol2inv(ch)
   eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
   isposA <- TRUE
-  if (min(eigval) < sqrt(.Machine$double.eps)) { ## tol ~ sqrt(.Machine$double.eps)
+  if (min(eigval) < sqrt(.Machine$double.eps)) { # tol ~sqrt(.Machine$double.eps)
     isposA <- FALSE
   }
   if (!isposA) {
@@ -143,7 +147,9 @@ devFun <- function(fx,data) {
       dev <- envff$pp$ldL2() + (envff$resp$wrss() + envff$pp$sqrL(1)) / sigsq + n * log(2 * pi * sigsq)
       if (reml) {
         p <- ncol(envff$pp$RX())
-        dev <- dev + 2 * determinant(envff$pp$RX())$modulus - p * log(2 * pi * sigsq)
+        dev <- dev + 
+		2 * determinant(envff$pp$RX())$modulus - 
+		p * log(2 * pi * sigsq)
       }
       return(dev)
     }
@@ -304,11 +310,13 @@ lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
   # compute the p-value
   p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
   # munge comparison
-  comparison <- gsub("Genotype","",paste(rev(names(contrast_matrix)),collapse="-"))
+  comparison <- gsub("Genotype","",
+		     paste(rev(names(contrast_matrix)),collapse="-"))
   # compile results
   rho$stats <- data.frame(module=module,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-    		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
+    		 Tstatistic=t, SE=sqrt(variance), DF=df.post, 
+		 isSingular=rho$isSingular)
   return(rho)
 } #EOF
 
@@ -316,9 +324,10 @@ lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
 ## load the data --------------------------------------------------------------
 
 # load the data and graph partition
-data(msstats_prot) # msstats_prot
-data(partition)
 data(swip)
+data(gene_map)
+data(partition)
+data(msstats_prot) # msstats_prot
 
 # annotate data with module membership
 membership <- partition[msstats_prot$Protein]
@@ -338,12 +347,15 @@ fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype
 #fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + (1|Module) + Genotype
 
 # contrast matrix for Contrl-Mutant comparison:
-cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
+cm1 <- setNames(c(-1,1), nm=c("GenotypeControl","GenotypeMutant"))
 
-# loop for all modules
+# all modules
 modules <- unique(filt_prot$Module)
 modules <- modules[modules!=0]
 
+message("\nTotal number of modules: ",length(modules))
+
+# loop to peform analysis for all modules
 results_list <- list()
 pbar <- txtProgressBar(max=length(modules),style=3)
 for (module in modules){
@@ -357,21 +369,44 @@ close(pbar)
 names(results_list) <- paste0("M",modules)
 
 # pvalue correction
-results_df = bind_rows(lapply(results_list,function(x) x$stats))
+results_df <- bind_rows(lapply(results_list,function(x) x$stats))
 results_df$FDR <- p.adjust(results_df$Pvalue,method="BH")
 results_df$PAdjust <- p.adjust(results_df$Pvalue,method="bonferroni")
 
 # annotate modules with module size
 m <- as.character(results_df$module)
 module_size <- sapply(split(partition,partition),length)[m]
-results_df <- tibble::add_column(results_df,size=module_size,.after="module")
-fwrite(results_df,file.path(root,"rdata","Module_Results.csv"))
+results_df <- tibble::add_column(results_df,size=module_size,.after="module") %>%
+	filter(!isSingular)
 
-# examine top results
-message("Total number of modules: ", length(modules))
-message("Number of sig modules (PAdjust<0.05): ", sum(results_df$PAdjust < 0.05))
+# drop singular column
+results_df$isSingular <- NULL
+
+# module is M#
+results_df$module <- paste0("M",results_df$module)
 
 # examine top results:
-results_df %>% filter(PAdjust < 0.05) %>% arrange(Pvalue) %>% head(5)
-
+results_df %>% filter(PAdjust < BF_alpha) %>% arrange(Pvalue) %>% head(5)
 message("Wash4c Module: ", paste0("M",partition[swip]))
+
+# examine top results
+message("Number of sig modules (PAdjust<0.05): ", 
+	sum(results_df$PAdjust < BF_alpha))
+
+# annotate results with module proteins
+module_list <- split(names(partition),partition)[-1] # drop M0
+fx <- function(x) { # x = module_list[[1]]
+	idx <- match(x,gene_map$uniprot)
+	return(paste(gene_map$id[idx],collapse="; "))
+}
+module_prots <- sapply(module_list,fx)
+names(module_prots) <- paste0("M",names(module_prots))
+results_df$Proteins <- module_prots[results_df$module]
+
+# save module results
+fwrite(results_df,file.path(root,"rdata","Module_Results.csv"))
+
+# save sig modules
+sig_modules <- results_df$module[results_df$PAdjust < BF_alpha]
+myfile <- file.path(root,"data","sig_modules.rda")
+save(sig_modules,file=myfile,version=2)

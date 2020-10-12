@@ -5,11 +5,9 @@
 #' authors: Tyler W Bradshaw
 
 ## Optional parameters:
-BF_alpha = 0.10 # Significance threshold.
+BF_alpha = 0.05 # Significance threshold.
 
-#---------------------------------------------------------------------
-## Misc function - getrd().
-#---------------------------------------------------------------------
+## Misc function - getrd() ----------------------------------------------------
 
 # Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
@@ -25,9 +23,7 @@ getrd <- function(here=getwd(), dpat= ".git") {
 	return(root)
 }
 
-#--------------------------------------------------------------------
-## Set-up the workspace.
-#--------------------------------------------------------------------
+## Set-up the workspace -------------------------------------------------------
 
 # Load renv.
 root <- getrd()
@@ -67,11 +63,11 @@ data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
 # Load the data from root/data.
 data(gene_map) # gene mapping data
 data(partition)
+data(sig_modules)
 data(msstats_prot) # the proteomics data
 
-#--------------------------------------------------------------------
-## Do work.
-#--------------------------------------------------------------------
+
+## Do work --------------------------------------------------------------------
 
 # Add retriever complexes.
 names(retriever) <- gene_map$entrez[match(retriever,gene_map$symbol)]
@@ -111,8 +107,8 @@ names(ePSD) <- paste("Uezu et al., 2016:", names(ePSD))
 # Collect list of entrez ids for pathways of interest.
 gene_lists <- c(list("WASH-iBioID"=wash_genes), # 1
 		corum, # 2
-		lopitDCpredictions, # 3
-		list("McNally et al., 2017: Retriever Complex"=names(retriever)), # 4
+		lopitDCpredictions, # 3 and 4_
+		list("McNally et al., 2017: Retriever Complex"=names(retriever)),
 		takamori2006SV, # 5
 		iPSD, # 6
 		ePSD # 7
@@ -176,6 +172,7 @@ close(pbar)
 
 # Collect the results in a single data.table.
 dt <- bind_rows(results)
+
 sig_dt <- dt %>% filter(P.adjust < BF_alpha)
 
 # Status:
@@ -183,10 +180,8 @@ n_mods <- length(unique(sig_dt$Module))
 message(paste("\nNumber of modules with something interesting going on:",
 	      n_mods))
 
-# How many sig modules have been annotated?
-#nsig_sig <- sum(sig_modules %in% sig_dt$Module)
-#message(paste("\nNumber of significantly DA modules with",
-#	      "something interesting going on:", nsig_sig))
+message(sum(sig_modules %in% sig_dt$Module)," of ", length(sig_modules),
+	" significant modules exhibit GSEA enrichment.")
 
 # Save the data.
 myfile <- file.path(rdatdir,"Module_GSEA_Results.csv")

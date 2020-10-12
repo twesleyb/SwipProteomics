@@ -6,13 +6,9 @@
 
 ## INPUT data:
 # specify the partition to be used:
-part_file = "leidenalg_partition.rda"
-#part_file = "multi_leidenalg_partition.rda"
-# If performing self-preservation, then test = NULL.
-#adjm = c(discovery="adjm.csv", test=NULL)
-#netw = c(discovery="ne_adjm.csv", test=NULL)
-#part = c(discovery="leidenalg_partition.rda", test=NULL)
-#data = c(discovery="norm_protein.rda", test=NULL)
+#part_file = "leidenalg_partition.rda"
+part_file = "multiplex_partition.rda"
+# NOTE: other inputs are defined below.
 
 ## OPTIONS:
 stats = c(1,6,7) # Statistics by which module preservation is enforced. 

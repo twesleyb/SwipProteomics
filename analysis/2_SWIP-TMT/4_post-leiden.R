@@ -10,13 +10,13 @@ root <- "~/projects/SwipProteomics"
 
 # input partitions in root/rdata
 part_file1 <- file.path(root,"rdata","leidenalg_partition.csv")
-part_file2 <- file.path(root,"rdata","multi_leidenalg_partition.csv")
+part_file2 <- file.path(root,"rdata","multiplex_partition.csv")
 
 ## output:
 
 # partition R objects saved in root/data
 part_out1 <- file.path(root,"data","leidenalg_partition.rda")
-part_out2 <- file.path(root,"data","multi_leidenalg_partition.rda")
+part_out2 <- file.path(root,"data","multiplex_partition.rda")
 
 
 ## prepare env
