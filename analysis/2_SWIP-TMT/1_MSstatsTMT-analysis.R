@@ -138,9 +138,48 @@ if (drop_isSingle) {
 msstats_results$issue <- NULL
 
 # Annotated results and protein with BioFraction
-msstats_results$BioFraction <- gsub("Mutant\\.F[0-9]{1,2}-Control\\.","",msstats_results$Label)
-msstats_prot$BioFraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-msstats_prot$Genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+msstats_results$BioFraction <- gsub("Mutant\\.F[0-9]{1,2}-Control\\.","",
+				    msstats_results$Label)
+condition <- as.character(msstats_prot$Condition)
+msstats_prot$BioFraction <- sapply(strsplit(condition,"\\."),"[",2)
+msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
+
+## Calculate Protein abundance adjusted for fraction differences --------------
+
+# NOTE: these adjusted values are not used for modeling, only 
+# plotting purposes.
+
+## WORK
+
+# Calculate protein abundance, adjusted for fraction differences.
+# FIXME: Is CPM step needed? Log is necessary, but CPM norm?
+logCPM <- edgeR::cpm(glm_results$dge, log=TRUE)
+
+# Remove effect of fraction.
+dm <- limma::removeBatchEffect(logCPM,
+			       batch=dge$samples$fraction,
+			       design=model.matrix(~treatment,data=dge$samples))
+
+# Collect results.
+dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+		reshape2::melt(id.var="Accession",
+			       variable.name="Sample",
+			       value.name="Adjusted.Intensity")
+dt$Sample <- as.character(dt$Sample)
+
+# Combine Adjusted protein with additional sample meta data.
+tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
+	as.data.table()
+adjusted_prot <- left_join(tmp_prot,dt,
+			   by=intersect(colnames(tmp_prot),colnames(dt)))
+
+# Add stats to adjusted protein data.
+adjusted_prot <- left_join(adjusted_prot,alt_results,
+			   by=intersect(colnames(adjusted_prot),
+					colnames(alt_results)))
+
+# Unlog the data.
+adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
 
 ## save results ---------------------------------------------------------------

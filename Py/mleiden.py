@@ -129,7 +129,7 @@ def parse_args():
             'size' of a module. Modules larger than 'max_size' will
             be split recursively.
             """)
-    ap.add_argument('-m', '--multiplex', type=bool, default=0,
+    ap.add_argument('-m', '--multiplex', type=bool, default=False,
             help = "optimize multiplex partition of given graphs?")
     # collect and return arg dictionary
     args=vars(ap.parse_args())
@@ -318,10 +318,11 @@ for i in range(len(adjms)):
 ## perform clustering of the individual graphs --------------------------------
 
 parts_list = list() # add partition for each graph in params to parts_list
+i=0
 
 for i in range(len(adjms)):
 
-    p = params[i].copy()
+    p = params[i].copy() 
 
     if p.pop('multi_resolution') is True:
         # multiresolutiion methods:
@@ -382,6 +383,12 @@ for i in range(len(adjms)):
     # add partition to list
     parts_list.append(partition)
 #EOL for each graph in params
+
+# Save initial partition
+df = pandas.DataFrame([partition.membership])
+g0 = params[0]['graph']
+df.columns = g0.vs['name']
+df.to_csv(args['output'])
 
 
 ## Optimize Multiplex partition ------------------------------------------------

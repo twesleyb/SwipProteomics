@@ -386,8 +386,9 @@ results_df$isSingular <- NULL
 results_df$module <- paste0("M",results_df$module)
 
 # examine top results:
-results_df %>% filter(PAdjust < BF_alpha) %>% arrange(Pvalue) %>% head(5)
-message("Wash4c Module: ", paste0("M",partition[swip]))
+message("\nWash4c Module: ", paste0("M",partition[swip]))
+results_df %>% filter(PAdjust < BF_alpha) %>% arrange(Pvalue) %>% 
+	head(5) %>% knitr::kable()
 
 # examine top results
 message("Number of sig modules (PAdjust<0.05): ", 
