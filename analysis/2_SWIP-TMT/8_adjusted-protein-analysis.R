@@ -5,13 +5,15 @@
 # description: fit lmer model for comparisons between Control and Mutant mice
 # adjusted for differences in subcellular fraction.
 
+stop("This script is not working when run as an executable?")
+
 # input:
 root <- "~/projects/SwipProteomics"
 # * data(msstats_prot)
 # * data(msstats_contrasts)
 
 # options:
-nprot = "all" # number of randomly sampled proteins to analyze
+nprot = 100#"all" # number of randomly sampled proteins to analyze
 nThreads = 23 # number of cores for parallel processing
 save_rda = TRUE # save results_list as rda?
 
@@ -36,6 +38,9 @@ data(partition)
 data(msstats_prot)
 data(msstats_contrasts)
 
+# We need to pass the functions in lmerTestProtein to foreach, load them now:
+source(file.path(root,"R","lmerTestProtein.R"))
+
 # contrast matrix for Contrl-Mutant comparison:
 cm1 <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
 
@@ -50,10 +55,8 @@ workers <- parallel::makeCluster(c(rep("localhost", nThreads)), type = "SOCK")
 doParallel::registerDoParallel(workers)
 message("\nEmploying ", nThreads," parallel processors.")
 
-# loop for every protein
-results <- list()
+# define the proteins to be analyzed
 all_proteins <- unique(as.character(msstats_prot$Protein))
-
 if (nprot == "all") {
 	proteins <- all_proteins
 } else {
@@ -61,13 +64,10 @@ if (nprot == "all") {
 }
 message("Analyzing ",length(proteins)," protein(s).")
 
-# start timer
-start_time <- Sys.time()
-
-# We need to pass these functions to foreach, explicitly load them now:
-source(file.path(root,"R","lmerTestProtein.R"))
-
+# loop for every protein
 # Parallel execution with %dopar%
+start_time <- Sys.time()
+results <- list()
 results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
 	suppressPackageStartupMessages({
 	  suppressMessages({
@@ -75,24 +75,32 @@ results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
 	  })
 	})
 }
+names(results) <- proteins
 stop_time <- Sys.time()
 
-names(results) <- proteins
+# status
+message("\nElapsed time to analyze ",nprot," protein(s): ", 
+	round(difftime(stop_time,start_time,units="min"),3)," (min).")
+
+# close parallel connections
+invisible(stopCluster(workers))
+
+# remove any NULL results
+drop <- which(sapply(results,is.null))
+
+if (length(drop) > 0) {
+	message("Removing ", length(drop), " NULL results.")
+	results <- results[-drop]
+}
 
 # goodness of fit
 r2 <- lapply(results,function(x) as.data.table(r.squaredGLMM.merMod(x$model)))
 r2_df <- bind_rows(r2,.id="protein")
 
-# status
-message("\nElapsed time to analyze ",nprot," protein(s): ", 
-	round(difftime(stop_time,start_time,units="sec"),3)," (seconds).")
-
-# close parallel connections
-invisible(stopCluster(workers))
 
 # Collect stats
 results_df <- bind_rows(sapply(results,"[","stats")) %>% 
-	left_join(r2_df,by="protein") %>% 
+	left_join(r2_df, by = "protein") %>%
 	filter(!isSingular) %>%
 	arrange(Pvalue) %>% mutate(FDR = p.adjust(Pvalue,method="BH"))
 results_df$isSingular <- NULL # drop col
@@ -104,8 +112,5 @@ Entrez <- gene_map$entrez[idx]
 results_df <- tibble::add_column(results_df,Symbol,.after="protein")
 results_df <- tibble::add_column(results_df,Entrez,.after="Symbol")
 
-if (save_rda) {
-  # save the data
-  message("\nSaving the data, this will take several minutes.")
-  save(results_df, file=file.path(root,"rdata","results_df.rda"),version=2)
-}
+# save the data
+save(results_df, file=file.path(root,"rdata","results_df.rda"),version=2)
