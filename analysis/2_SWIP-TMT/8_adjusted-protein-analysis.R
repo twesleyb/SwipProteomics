@@ -11,9 +11,9 @@ root <- "~/projects/SwipProteomics"
 # * data(msstats_contrasts)
 
 # options:
-nprot = 1 # number of randomly sampled proteins to analyze
+nprot = 10 # number of randomly sampled proteins to analyze
 nThreads = 8 # number of cores for parallel processing
-save_rda = FALSE # save results_list as rda?
+save_rda = TRUE # save results_list as rda?
 
 # load renv
 if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
@@ -29,8 +29,10 @@ suppressPackageStartupMessages({
 ## load the data --------------------------------------------------------------
 
 # load msstats preprocessed protein data from SwipProteomics in root/data
-devtools::load_all(quiet=TRUE)
+suppressWarnings({ devtools::load_all(quiet=TRUE) })
 
+data(gene_map)
+data(partition)
 data(msstats_prot)
 data(msstats_contrasts)
 
@@ -62,24 +64,48 @@ message("Analyzing ",length(proteins)," protein(s).")
 # start timer
 start_time <- Sys.time()
 
+# We need to pass these functions to foreach, explicitly load them now:
+source(file.path(root,"R","lmerTestProtein.R"))
+
 # Parallel execution with %dopar%
-results <- foreach(protein = proteins, .packages=c("dplyr","SwipProteomics")) %dopar% {
-	suppressMessages({
-		rho <- try(lmerTestProtein(msstats_prot,protein,fx1,cm1),silent=TRUE)
+results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
+	suppressPackageStartupMessages({
+	  suppressMessages({
+		results[[protein]] <- try(lmerTestProtein(msstats_prot,protein,fx1,cm1),silent=TRUE)
+	  })
 	})
-	#rho$R2 <- setNames(rev(r.squaredGLMM.merMod(rho$model)),nm=c("R2c","R2fixef"))
 }
 stop_time <- Sys.time()
+
+names(results) <- proteins
+
+# goodness of fit
+r2 <- lapply(results,function(x) as.data.table(r.squaredGLMM.merMod(x$model)))
+r2_df <- bind_rows(r2,.id="protein")
 
 # status
 message("\nElapsed time to analyze ",nprot," protein(s): ", 
 	round(difftime(stop_time,start_time,units="sec"),3)," (seconds).")
 
+# close parallel connections
+invisible(stopCluster(workers))
+
+# Collect stats
+results_df <- bind_rows(sapply(results,"[","stats")) %>% 
+	left_join(r2_df,by="protein") %>% 
+	filter(!isSingular) %>%
+	arrange(Pvalue) %>% mutate(FDR = p.adjust(Pvalue,method="BH"))
+results_df$isSingular <- NULL # drop col
+
+# annotate with gene ids
+idx <- match(results_df$protein, gene_map$uniprot)
+Symbol <- gene_map$symbol[idx]
+Entrez <- gene_map$entrez[idx]
+results_df <- tibble::add_column(results_df,Symbol,.after="protein")
+results_df <- tibble::add_column(results_df,Entrez,.after="Symbol")
+
 if (save_rda) {
   # save the data
   message("\nSaving the data, this will take several minutes.")
-  save(results,file=file.path(root,"rdata","fit1_results.rda"),version=2)
+  save(results_df, file=file.path(root,"rdata","results_df.rda"),version=2)
 }
-
-# close parallel connections
-invisible(stopCluster(workers))

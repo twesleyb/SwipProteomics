@@ -5,6 +5,14 @@
 #' @import data.table
 #' @export lmerTestProtein
 
+
+calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
+  # a function to compute s2 posterior
+  s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
+  return(s2.post)
+}
+
+
 updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
   ## PROBLEMATIC
   object <- lmerTest::lmer(fx,data)
