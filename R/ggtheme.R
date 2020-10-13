@@ -12,6 +12,8 @@
 #'
 #' @keywords none
 #'
+#' @export ggtheme
+#'
 #' @examples
 #' ggtheme()
 ggtheme <- function() {

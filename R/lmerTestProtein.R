@@ -3,7 +3,7 @@
 #' lmerTestProtein
 #' @import dplyr
 #' @import data.table
-#' @export lmerTestModule
+#' @export lmerTestProtein
 
 updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
   ## PROBLEMATIC

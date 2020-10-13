@@ -1,4 +1,8 @@
-## from MuMin package utils-misc.R utils-models and r.squaredGLMM.R
+#!/usr/bin/env Rscript
+
+#' @export r.squaredGLMM.merMod
+
+# NOTE: from MuMin package utils-misc.R utils-models and r.squaredGLMM.R
 
 .MuMInEnv <- new.env(parent = baseenv())
 

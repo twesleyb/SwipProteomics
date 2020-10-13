@@ -10,6 +10,8 @@
 #'
 #' @keywords none
 #'
+#' @export ggsavePDF
+#'
 #' @examples
 #' ggsavePDF(plots, file)
 ggsavePDF <- function(plots, file) {

@@ -1,9 +1,12 @@
-# Summarize to protein level.
+#' @export summarize_prot
+#' @import data.table dplyr
+
 summarize_prot <- function(tp){
+        # Summarize to protein level.
 	# Imports.
 	suppressPackageStartupMessages({
-		library(data.table)
-		library(dplyr)
+		require(dplyr,quietly=TRUE)
+		require(data.table,quietly=TRUE)
 	})
 	# Sum to protein level.
 	tp$Intensity[is.na(tp$Intensity)] <- 0

@@ -10,4 +10,5 @@
 #'
 #' @keywords none
 #'
+#' @export
 `%notin%` <- Negate(`%in%`)
