@@ -48,17 +48,15 @@ if (dir.exists(file.path(root,"renv"))) { renv::load(root) }
 # load project
 devtools::load_all(quiet=TRUE)
 
-
+# imports
 suppressPackageStartupMessages({
 	library(dplyr)
 	library(ggplot2)
 	library(data.table)
 })
 
-suppressWarnings({ devtools::load_all() })
-
 # dir for output
-figsdir <- file.path(root,"figs","FOOBAR")
+figsdir <- file.path(root,"figs","Modules", "Groups")
 if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
 
 # set font and ggplot theme
@@ -140,7 +138,7 @@ names(modules) <- paste0("M",names(modules))
 
 for (module in names(modules)) {
   # Get the modules color
-  wt_color = "#47b2a4"
+  wt_color <- "#47b2a4" # teal
   mut_color <- module_colors[module]
   # 1. Generate all the protein plots for a given module using 
   #    plot_protein_summary
@@ -165,6 +163,8 @@ for (module in names(modules)) {
   df <- bind_rows(sapply(plots,"[", "data"))
   fx <- "norm_Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype"
   fm <- lmerTest::lmer(fx,df)
+  # goodness of fit
+  #rho = r.squaredGLMM.merMod(fm) # R2marginal (fixef) and R2conditional (total)
   # 3. get fitted values for all proteins, and then
   # collect medians at each time point --> this will be plot as a summary
   # of the module
@@ -175,29 +175,33 @@ for (module in names(modules)) {
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
   plot <- plot + aes(y = norm_Abundance)
-  plot <- plot + aes(group = interaction(Protein,Genotype), colour = Genotype, 
-		     shape=Genotype, fill=Genotype,shade=Genotype)
+  plot <- plot + aes(group = interaction(Protein,Genotype))
+  plot <- plot + aes(colour = Genotype)
+  plot <- plot + aes(fill=Genotype, shade=Genotype)
   plot <- plot + aes(ymin=norm_Abundance - CV)
   plot <- plot + aes(ymax=norm_Abundance + CV)
-  plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
-  plot <- plot + geom_line(aes(y=best_fit))
-  # plot <- plot + geom_point(size=2)
+  plot <- plot + geom_ribbon(alpha=0.09, linetype="blank")
+  plot <- plot + geom_line(aes(y=best_fit),size=1.0,linetype="solid")
   plot <- plot + ggtitle(paste0(module," (n = ",length(proteins),")"))
   plot <- plot + ylab("Normalized Protein Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-  plot <- plot + theme(axis.text.x = element_text(color="black", size=11, 
-						  angle = 0, hjust = 1, 
-						  family = "Arial"))
-  plot <- plot + theme(axis.text.y = element_text(color="black",size=11, 
-						  angle = 0, hjust = 1, 
-						  family = "Arial"))
+  plot <- plot + theme(axis.text.x = element_text(color="black"))
+  plot <- plot + theme(axis.text.x = element_text(size=11))
+  plot <- plot + theme(axis.text.x = element_text(angle=0))
+  plot <- plot + theme(axis.text.x = element_text(hjust=0))
+  plot <- plot + theme(axis.text.x = element_text(family="Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black"))
+  plot <- plot + theme(axis.text.y = element_text(size=11))
+  plot <- plot + theme(axis.text.y = element_text(angle=0))
+  plot <- plot + theme(axis.text.y = element_text(hjust=0))
+  plot <- plot + theme(axis.text.y = element_text(family="Arial"))
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + scale_x_discrete(expand = c(0,0))
+  plot <- plot + scale_x_discrete(expand = c(0.05,0))
   # save
   myfile = file.path(figsdir, paste0(module,"_all_Protein_Summary.pdf"))
   ggsavePDF(plot,file=myfile)
