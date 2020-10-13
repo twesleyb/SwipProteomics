@@ -11,8 +11,8 @@ root <- "~/projects/SwipProteomics"
 # * data(msstats_contrasts)
 
 # options:
-nprot = 10 # number of randomly sampled proteins to analyze
-nThreads = 8 # number of cores for parallel processing
+nprot = "all" # number of randomly sampled proteins to analyze
+nThreads = 23 # number of cores for parallel processing
 save_rda = TRUE # save results_list as rda?
 
 # load renv
