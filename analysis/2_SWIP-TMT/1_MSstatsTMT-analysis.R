@@ -103,7 +103,7 @@ message("\nTime to summarize ", n, " proteins: ",
 
 ## [3] perform statistical comparisons ----------------------------------------
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
-# Abundance ~ (1|Mixture) + Condition
+# lmerTest::lmer(formula(Abundance ~ (1|Mixture) + Condition))
 
 t0 = Sys.time()
 
