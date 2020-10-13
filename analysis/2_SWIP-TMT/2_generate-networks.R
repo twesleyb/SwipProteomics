@@ -62,9 +62,7 @@ devtools::load_all()
 
 # Load the proteomics data
 data(gene_map)
-
 data(msstats_prot)
-
 data(musInteractome)
 
 # data for output tables
@@ -80,10 +78,13 @@ dm <- msstats_prot %>% as.data.table() %>%
 	dcast(interaction(Mixture,BioFraction,Genotype) ~ Protein, value.var="Abundance") %>%
 	as.matrix(rownames=TRUE)
 
+# normalize such that sum is 1? normalize each protein to its max!
+norm_dm = apply(dm,2,function(x) x/max(x,na.rm=TRUE))
+
 # drop rows with any missing values
 # NOTE: the data was transposed for bicor
-out <- apply(dm,2,function(x) any(is.na(x)))
-subdm <- dm[,!out]
+out <- apply(norm_dm,2,function(x) any(is.na(x)))
+subdm <- norm_dm[,!out]
 warning(formatC(sum(out),big.mark=",")," proteins with any missing values were removed.")
 
 # Create correlation (adjacency) matrix
@@ -94,6 +95,12 @@ adjm <- WGCNA::bicor(subdm)
 # NOTE: this can take a couple minutes
 message("\nPerforming network enhancement.")
 ne_adjm <- neten::neten(adjm)
+
+#foo = reshape2::melt(adjm)
+#colnames(foo) <- c("ProtA","ProtB","bicor")
+#foo = foo %>% arrange(desc(bicor))
+#data(swip)
+#foo %>% filter(ProtA == swip) %>% head()
 
 
 ## Create PPI network ---------------------------------------------------------

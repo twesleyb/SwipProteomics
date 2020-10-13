@@ -327,7 +327,7 @@ lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
 data(swip)
 data(gene_map)
 data(partition)
-data(msstats_prot) # msstats_prot
+data(msstats_prot)
 
 # annotate data with module membership
 membership <- partition[msstats_prot$Protein]
@@ -344,8 +344,6 @@ filt_prot <- msstats_prot %>%
 # the lmer formula to each module-level subset of the data:
 fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype
 
-#fx <- Abundance ~ 0 + (1|BioFraction) + (1|Protein) + (1|Module) + Genotype
-
 # contrast matrix for Contrl-Mutant comparison:
 cm1 <- setNames(c(-1,1), nm=c("GenotypeControl","GenotypeMutant"))
 
@@ -357,10 +355,14 @@ message("\nTotal number of modules: ",length(modules))
 
 # loop to peform analysis for all modules
 results_list <- list()
+
 pbar <- txtProgressBar(max=length(modules),style=3)
+
 for (module in modules){
+
   results_list[[module]] <- lmerTestModule(msstats_prot, module,
 					   contrast_matrix=cm1)
+
   setTxtProgressBar(pbar,match(module,modules))
 } #EOL
 close(pbar)
