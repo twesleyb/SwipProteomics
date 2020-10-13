@@ -79,7 +79,8 @@ dm <- msstats_prot %>% as.data.table() %>%
 	as.matrix(rownames=TRUE)
 
 # normalize such that sum is 1? normalize each protein to its max!
-norm_dm = apply(dm,2,function(x) x/max(x,na.rm=TRUE))
+norm_dm = dm
+#norm_dm = apply(dm,2,function(x) x/max(x,na.rm=TRUE))
 
 # drop rows with any missing values
 # NOTE: the data was transposed for bicor
@@ -95,12 +96,6 @@ adjm <- WGCNA::bicor(subdm)
 # NOTE: this can take a couple minutes
 message("\nPerforming network enhancement.")
 ne_adjm <- neten::neten(adjm)
-
-#foo = reshape2::melt(adjm)
-#colnames(foo) <- c("ProtA","ProtB","bicor")
-#foo = foo %>% arrange(desc(bicor))
-#data(swip)
-#foo %>% filter(ProtA == swip) %>% head()
 
 
 ## Create PPI network ---------------------------------------------------------
