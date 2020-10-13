@@ -7,8 +7,6 @@
 ## Inputs --------------------------------------------------------------------
 
 # options:
-wt_color = "#47b2a4"
-mut_color <- c("R"=148,"G"=33,"B"=146)
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
@@ -33,7 +31,7 @@ suppressPackageStartupMessages({
 suppressWarnings({ devtools::load_all() })
 
 fontdir <- file.path(root, "fonts")
-figsdir <- file.path(root, "figs", "Proteins")
+figsdir <- file.path(root, "figs", "Modules","Proteins")
 
 if (! dir.exists(figsdir)) {
 	dir.create(figsdir,recursive=TRUE)
@@ -42,6 +40,7 @@ if (! dir.exists(figsdir)) {
 ggtheme(); set_font("Arial",font_path=fontdir)
 
 # load the data
+data(swip)
 data(gene_map)
 data(partition)
 data(sig_modules)
@@ -51,10 +50,15 @@ data(msstats_results)
 
 ## plot protein summary --------------------------------------------------------
 
-plot_protein_summary <- function(protein, wt_color, mut_color) {
+plot_protein_summary <- function(protein) {
   # a function to generate a proteins summary plot
+  # requires SwipProteomics for col2hex and data
   require(dplyr,quietly=TRUE)
   require(ggplot2,quietly=TRUE)
+  # defaults
+  wt_color = "#47b2a4"
+  mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
+  # prepare the data
   msstats_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
   msstats_df$Module <- paste0("M",partition[msstats_df$Protein])
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
@@ -103,6 +107,8 @@ plot_protein_summary <- function(protein, wt_color, mut_color) {
 
 ## ----------------------------------------------------------------------------
 
+#plot_protein_summary(swip)
+
 # Loop to do work.
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
@@ -125,10 +131,7 @@ for (module in names(modules)) {
   } # EOL for proteins
   close(pbar)
   # save
-  myfile = file.path(figsdir,"Modules",paste0(module,"_Protein_summary.pdf"))
+  myfile = file.path(figsdir,paste0(module,"_Protein_summary.pdf"))
   ggsavePDF(plots,file=myfile)
   message("\nSaved: ", module)
 } # EOL for modules
-
-#fx = "Abundance ~ 0 + (1|BioFraction) + Genotype"
-#fm = lmerTest::lmer(fx, msstats_prot %>% filter(Protein == swip))
