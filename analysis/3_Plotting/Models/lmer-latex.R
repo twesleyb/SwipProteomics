@@ -39,50 +39,51 @@ submod <- function(module,required=c("msstats_prot")) {
 	return(msstats_prot %>% dplyr::filter(Module == module))
 } #EOF
 
-generate_report <- function(protein,gene_map,partition,msstats_prot,figsdir) {
-  # generate a latex report for a given protein
-  # latex tables showing R2 of marginal and conditional types
-  # * marginal represents variance explained by fixed effects, e.g. Genotype
-  # * conditional represents the variance explained by the entire model 
-  #   including both (fixef and mixef).
-  # imports
-  # requires SwipProteomics -- needs R2 functions 
-  require(dplyr, quietly=TRUE)
-  require(stargazer, quietly=TRUE)
-  # annotate msstats with module membership
-  msstats_prot$Module <- paste0("M",partition[msstats_prot$Protein])
-  # get protein's module and gene name
-  module <- paste0("M",partition[protein])
-  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
-  # fit models
-  fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
-  fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
-  fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
-  # if lmerTest was used, then coerce class to something stargazer can work with
-  class(fm0) <- "lmerMod"; class(fm1) <- "lmerMod"; class(fm2) <- "lmerMod"
-  # NOTE: ^fixes error about $ and S4 class (https://stackoverflow.com/questions/31319030)
-  # init latex document
-  output_file <- file.path(figsdir,paste(protein,gene,"report.tex",sep="_"))
-  if (file.exists(output_file)) { unlink(output_file); warning("rm ",output_file) }
-  latex_file <- file(output_file, open="a")
-  writeLines("\\documentclass[11pt]{report}",latex_file)
-  writeLines("\\begin{document}",latex_file)
-  # title
-  writeLines(paste0("\\title{",gene,"|",protein,"}"),latex_file)
-  writeLines("\\author{Tyler W. A. Bradshaw}",latex_file)
-  writeLines("\\maketitle",latex_file)
-  # latex tables of model summaries
-  writeLines(stargazer(fm0,title=as.character(attr(fm0,"call"))[2]),latex_file) # fm0
-  writeLines(stargazer(fm1,title=as.character(attr(fm1,"call"))[2]),latex_file) # fm1
-  writeLines(stargazer(fm2,title=as.character(attr(fm2,"call"))[2]),latex_file) # fm2
-  writeLines("marginal (fixed effects) and conditional (total variance) R2:")
-  writeLines(knitr::kable(r.squaredGLMM.merMod(fm0),format="latex"),latex_file)
-  writeLines(knitr::kable(r.squaredGLMM.merMod(fm1),format="latex"),latex_file)
-  writeLines(knitr::kable(r.squaredGLMM.merMod(fm2),format="latex"),latex_file)
-  # end
-  writeLines("\\end{document}",latex_file)
-  close(latex_file)
-} #EOF
+# NOTE: this doesn't work for some reason... see note below.
+#generate_report <- function(protein,gene_map,partition,msstats_prot,figsdir) {
+#  # generate a latex report for a given protein
+#  # latex tables showing R2 of marginal and conditional types
+#  # * marginal represents variance explained by fixed effects, e.g. Genotype
+#  # * conditional represents the variance explained by the entire model 
+#  #   including both (fixef and mixef).
+#  # imports
+#  # requires SwipProteomics -- needs R2 functions 
+#  require(dplyr, quietly=TRUE)
+#  require(stargazer, quietly=TRUE)
+#  # annotate msstats with module membership
+#  msstats_prot$Module <- paste0("M",partition[msstats_prot$Protein])
+#  # get protein's module and gene name
+#  module <- paste0("M",partition[protein])
+#  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
+#  # fit models
+#  fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
+#  fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
+#  fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
+#  # if lmerTest was used, then coerce class to something stargazer can work with
+#  class(fm0) <- "lmerMod"; class(fm1) <- "lmerMod"; class(fm2) <- "lmerMod"
+#  # NOTE: ^fixes error about $ and S4 class (https://stackoverflow.com/questions/31319030)
+#  # init latex document
+#  output_file <- file.path(figsdir,paste(protein,gene,"report.tex",sep="_"))
+#  if (file.exists(output_file)) { unlink(output_file); warning("rm ",output_file) }
+#  latex_file <- file(output_file, open="a")
+#  writeLines("\\documentclass[11pt]{report}",latex_file)
+#  writeLines("\\begin{document}",latex_file)
+#  # title
+#  writeLines(paste0("\\title{",gene,"|",protein,"}"),latex_file)
+#  writeLines("\\author{Tyler W. A. Bradshaw}",latex_file)
+#  writeLines("\\maketitle",latex_file)
+#  # latex tables of model summaries
+#  writeLines(stargazer(fm0,title=as.character(attr(fm0,"call"))[2]),latex_file) # fm0
+#  writeLines(stargazer(fm1,title=as.character(attr(fm1,"call"))[2]),latex_file) # fm1
+#  writeLines(stargazer(fm2,title=as.character(attr(fm2,"call"))[2]),latex_file) # fm2
+#  writeLines("marginal (fixed effects) and conditional (total variance) R2:")
+#  writeLines(knitr::kable(r.squaredGLMM.merMod(fm0),format="latex"),latex_file)
+#  writeLines(knitr::kable(r.squaredGLMM.merMod(fm1),format="latex"),latex_file)
+#  writeLines(knitr::kable(r.squaredGLMM.merMod(fm2),format="latex"),latex_file)
+#  # end
+#  writeLines("\\end{document}",latex_file)
+#  close(latex_file)
+#} #EOF
 
 ## main ----------------------------------------------------------------------------
 
@@ -129,9 +130,13 @@ for (protein in proteins) {
   module <- paste0("M",partition[protein])
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   # fit models
+
+  ## FIXME: if any error pass
   fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
   fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
   fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
+  ## breaks if error
+
   # if lmerTest was used, then coerce class to something stargazer can work with
   class(fm0) <- "lmerMod"; class(fm1) <- "lmerMod"; class(fm2) <- "lmerMod"
   # NOTE: ^fixes error about $ and S4 class (https://stackoverflow.com/questions/31319030)

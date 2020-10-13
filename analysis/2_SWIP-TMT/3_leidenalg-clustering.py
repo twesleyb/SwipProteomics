@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+
 '''
-title: Leidenalg Clustering
-description: clustering the protein network with Leidenalg + Surprise
+title: SwipProteomics
+description: Leidenalg Clustering of the Enhanced Protein Covariation Network
 authors: Tyler W A Bradshaw
 '''
 

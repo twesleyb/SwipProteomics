@@ -40,53 +40,14 @@ submod <- function(module,required=c("msstats_prot")) {
 } #EOF
 
 
-## main ----------------------------------------------------------------------------
+## Prepare environment --------------------------------------------------------
 
 # load renv
 if (dir.exists(file.path(root,"renv"))) { renv::load(root) }
 
-# imports
-suppressPackageStartupMessages({
-	library(dplyr)
-	library(stargazer)
-})
-
 # load project
 devtools::load_all(quiet=TRUE)
 
-# dir for output
-figsdir <- file.path(root,"figs","Models")
-if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
-
-# load the required data
-data(swip)
-data(gene_map)
-data(partition)
-data(msstats_prot)
-
-# NOTE: function doesnt work, environment error, use of NULL env is defunct
-# generate_report(swip,gene_map,partition,msstats_prot,figsdir)
-proteins = unique(as.character(msstats_prot$Protein))
-
-pbar <- txtProgressBar(max=length(proteins),style=3)
-for (protein in proteins) {
-
-  # annotate msstats with module membership
-  msstats_prot$Module <- paste0("M",partition[msstats_prot$Protein])
-
-  # get protein's module and gene name
-  module <- paste0("M",partition[protein])
-  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
-
-  # fit models
-  fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
-  fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
-  fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
-
-
-## Prepare environment --------------------------------------------------------
-
-renv::load(root,quiet=TRUE)
 
 suppressPackageStartupMessages({
 	library(dplyr)
@@ -96,13 +57,12 @@ suppressPackageStartupMessages({
 
 suppressWarnings({ devtools::load_all() })
 
+# dir for output
+figsdir <- file.path(root,"figs","FOOBAR")
+if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
+
+# set font and ggplot theme
 fontdir <- file.path(root, "fonts")
-figsdir <- file.path(root, "figs", "Modules","Groups")
-
-if (! dir.exists(figsdir)) {
-	dir.create(figsdir,recursive=TRUE)
-}
-
 ggtheme(); set_font("Arial",font_path=fontdir)
 
 # load the data
@@ -113,6 +73,7 @@ data(sig_modules)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
+
 
 ## plot protein summary --------------------------------------------------------
 
@@ -176,11 +137,13 @@ plot_protein_summary <- function(protein) {
 # Loop to do work.
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
+
 for (module in names(modules)) {
   # Get the modules color
   wt_color = "#47b2a4"
   mut_color <- module_colors[module]
-  # 1. Generate all the plots for a given module using plot_protein_summary
+  # 1. Generate all the protein plots for a given module using 
+  #    plot_protein_summary
   plots <- list()
   message("\nWorking on: ", module)
   proteins <- modules[[module]]
@@ -197,10 +160,18 @@ for (module in names(modules)) {
     setTxtProgressBar(pbar,value=match(protein,proteins))
   } # EOL for proteins
   close(pbar)
-  # combine the data containing the normalized data 
+  # 2. combine the data containing the normalized data  for all proteins
   # (each protein scaled to maximum within a plot) into a single df
-  df = bind_rows(sapply(plots,"[", "data"))
-  # 2. Generate combined plot.
+  df <- bind_rows(sapply(plots,"[", "data"))
+  fx <- "norm_Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype"
+  fm <- lmerTest::lmer(fx,df)
+  # 3. get fitted values for all proteins, and then
+  # collect medians at each time point --> this will be plot as a summary
+  # of the module
+  df$fit_Abundance <- fitted(fm)
+  df <- df %>% group_by(Condition,BioFraction) %>% 
+	  mutate(best_fit=median(fit_Abundance))
+  # 4. Generate combined plot with 'best fit' line
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
   plot <- plot + aes(y = norm_Abundance)
@@ -208,9 +179,9 @@ for (module in names(modules)) {
 		     shape=Genotype, fill=Genotype,shade=Genotype)
   plot <- plot + aes(ymin=norm_Abundance - CV)
   plot <- plot + aes(ymax=norm_Abundance + CV)
-  plot <- plot + geom_line()
   plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
-  plot <- plot + geom_point(size=2)
+  plot <- plot + geom_line(aes(y=best_fit))
+  # plot <- plot + geom_point(size=2)
   plot <- plot + ggtitle(paste0(module," (n = ",length(proteins),")"))
   plot <- plot + ylab("Normalized Protein Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
@@ -226,8 +197,9 @@ for (module in names(modules)) {
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
   plot <- plot + theme(legend.position = "none")
+  plot <- plot + scale_x_discrete(expand = c(0,0))
   # save
-  myfile = file.path(figsdir, paste0(module,"_all_Proteins.pdf"))
+  myfile = file.path(figsdir, paste0(module,"_all_Protein_Summary.pdf"))
   ggsavePDF(plot,file=myfile)
   message("\nSaved: ", module)
 } # EOL for modules
