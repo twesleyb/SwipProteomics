@@ -107,7 +107,7 @@ plot_protein_summary <- function(protein, wt_color, mut_color) {
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-for module in names(modules) {
+for (module in names(modules)) {
   plots <- list()
   message("\nWorking on: ", module)
   proteins <- modules[[module]]
@@ -122,13 +122,13 @@ for module in names(modules) {
     plot <- plot + annotate(geom="label",x=7, y=ypos, label=plot_label)
     plots[[protein]] <- plot
     setTxtProgressBar(pbar,value=match(protein,proteins))
-  } # EOL
+  } # EOL for proteins
   close(pbar)
   # save
-  myfile = file.path(figsdir,paste0(module,"_Protein_summary.pdf"))
+  myfile = file.path(figsdir,"Modules",paste0(module,"_Protein_summary.pdf"))
   ggsavePDF(plots,file=myfile)
   message("\nSaved: ", module)
-}
+} # EOL for modules
 
 #fx = "Abundance ~ 0 + (1|BioFraction) + Genotype"
 #fm = lmerTest::lmer(fx, msstats_prot %>% filter(Protein == swip))
