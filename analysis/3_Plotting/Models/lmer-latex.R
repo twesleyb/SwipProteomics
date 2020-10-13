@@ -108,9 +108,9 @@ data(gene_map)
 data(partition)
 data(msstats_prot)
 
-# function doesnt work, environment error, use of NULL env is defunct
+# NOTE: function doesnt work, environment error, use of NULL env is defunct
 # generate_report(swip,gene_map,partition,msstats_prot,figsdir)
-proteins = sample(unique(as.character(msstats_prot$Protein)),10)
+proteins = unique(as.character(msstats_prot$Protein))
 
 pbar <- txtProgressBar(max=length(proteins),style=3)
 for (protein in proteins) {
