@@ -21,8 +21,8 @@ datafile = "BioID_raw_protein.csv"
 
 ## Functions ------------------------------------------------------------------
 
-# Get the repository's root directory.
 getrd <- function(here=getwd(), dpat= ".git") {
+	# get a git repository's root directory
 	in_root <- function(h=here, dir=dpat) { 
 		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
 		return(check)
@@ -127,26 +127,28 @@ suppressWarnings({
   suppressMessages({ devtools::load_all() })
 })
 
-# Project directories.
+# project directories:
 datadir <- file.path(root,"data") # key datasets
 rdatdir <- file.path(root,"rdata") # temp data files
 tabsdir <- file.path(root,"tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
 # Create dirs if they dont exist.
-if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
+if (!dir.exists(datadir)){ dir.create(datadir) }
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
+if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }
 
 
 ## Load the raw proteomics data -----------------------------------------------
 
 # Extract the raw data from zipped file
-myfile <- file.path(datadir,zipfile)
+myfile <- file.path(datadir, zipfile)
 unzip(myfile) # unzip 
 
 # Read into R with data.table::fread
-myfile <- file.path(getwd(),tools::file_path_sans_ext(zipfile),datafile)
+here <- getwd()
+myfile <- file.path(here, tools::file_path_sans_ext(zipfile), datafile)
 raw_prot <- fread(myfile)
 
 # Clean-up
@@ -156,6 +158,7 @@ unlink("./BioID", recursive=TRUE)
 
 # Tidy the data
 message("\nLoading raw Swip BioID protein data.")
+
 tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
 		      id.vars=c("Accession","Description","Peptides"))
 
@@ -163,28 +166,24 @@ tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
 idx <- grepl("Keratin|keratin",tidy_prot$Description)
 keratins <- tidy_prot %>% dplyr::filter(idx) %>% dplyr::select(Accession) %>% 
 	unlist() %>% unique()
+
 warning(paste(length(keratins),
 	      "Keratin proteins remain, and  will be removed."))
 tidy_prot <- tidy_prot %>% dplyr::filter(Accession %notin% keratins)
 
 # Load mitochondrial protein list from twesleyb/geneLists
-mito_list <- geneLists("mitocarta2")
-if (length(mito_list)==0) { 
-	stop("Problem loading mitochrondrial contaiminants.")
-}
-data(list=mito_list)
+data(mitocarta2)
+
+# map entrez to uniprot
 mito_entrez <- unlist(mitocarta2,use.names=FALSE)
 mito_prot <- getIDs(mito_entrez,from="entrez",to="uniprot",species="mouse")
 
-# Status
 nMito <- sum(mito_prot %in% tidy_prot$Accession)
 warning(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
 
-# Remove mitochondrial proteins as contaminants.
 tidy_prot <- tidy_prot %>% dplyr::filter(Accession %notin% mito_prot)
-
-# Summary:
 nProt <- length(unique(tidy_prot$Accession))
+
 message(paste0("\nTotal number of proteins quantified: ",
 	      formatC(nProt,big.mark=","),"."))
 
@@ -298,13 +297,14 @@ knitr::kable(check_group_CV(imp_prot))
 
 ## Statistical testing with DEP::limma ----------------------------------------
 
+
 # coerce data into dep se object
 dep_se <- reformatDEP(imp_prot,gene_map)
 
 # normalize the data
 message("\nPerforming VSN normalization.")
 
-# suppress meanSdPlot message
+# suppress meanSdPlot message: we will perform plotting in an adjacent script
 suppressMessages({ vsn_se <- DEP::normalize_vsn(dep_se) })
 
 # analysis of protein-level differential abundance based on linear models and
@@ -317,7 +317,9 @@ dep_results <- DEP::add_rejections(dep_results, alpha = FDR_alpha)
 # generate a results table
 results_df <- DEP::get_results(dep_results)
 
+
 ## Clean-up results
+
 results_df$significant <- NULL
 idy <- apply(results_df,2,function(x) all(is.na(x)))
 colnames(results_df) <- gsub("WASH_vs_Control_","",colnames(results_df))
@@ -327,7 +329,7 @@ colnames(results_df)[colnames(results_df) == "p.adj"] <- "FDR"
 colnames(results_df)[colnames(results_df) == "ratio"] <- "logFC"
 colnames(results_df)[colnames(results_df) == "name"] <- "Symbol"
 colnames(results_df)[colnames(results_df) == "ID"] <- "Accession"
-results_df <- results_df %>% arrange(PValue,logFC)
+results_df <- results_df %>% arrange(PValue,desc(logFC))
 results_df$significant <- NULL
 
 # convert logFC column to percent control
@@ -338,6 +340,10 @@ results_df <- tibble::add_column(results_df,`Percent Control (%)`=pc,
 # Summary:
 sig <- results_df$FDR < FDR_alpha
 up <- results_df$logFC > enrichment_threshold
+
+results_df$up <- up
+results_df$significant <- sig & up
+
 nsig <- sum(sig & up)
 message(paste0("\nNumber of significantly enriched proteins ",
 	      "(log2FC > ",round(enrichment_threshold,2),
@@ -349,11 +355,24 @@ results_df <- tibble::add_column(results_df,
 				  "Entrez"=gene_map$entrez[idx],
 			          .after="Accession")
 
+# final sort
+results_df <- results_df %>% arrange(desc(logFC),PValue,significant)
+
 
 ## Save the data --------------------------------------------------------------
 
+# add normalized proteind data to results_df
+norm_prot <- cbind(SummarizedExperiment::rowData(vsn_se),
+		   SummarizedExperiment::assays(vsn_se)[[1]])
+colnames(norm_prot)[which(colnames(norm_prot) == "ID")] <- "Accession"
+norm_prot$name <- NULL
+
+norm_prot <- as.data.table(norm_prot)
+
+full_results <- left_join(results_df,norm_prot, by = "Accession")
+
 # Create list of results:
-results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = results_df)
+results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = full_results)
 
 # Add the mitochondrial proteins that were removed.
 df <- raw_prot %>% dplyr::filter(Accession %in% mito_prot) %>% 
@@ -374,3 +393,21 @@ saveRDS(dep_results,myfile)
 wash_interactome <- unique(results_df$Accession[sig & up])
 myfile <- file.path(datadir, "wash_interactome.rda")
 save(wash_interactome,file=myfile,version=2)
+
+# save the data:
+# tidy_prot 
+# SL_prot
+# SPN_prot
+# dep_se
+# dep_vsn
+
+# coerce BioID data into DEP se objects
+bioid_prot <- list("raw" = tidy_prot, "sl" = SL_prot, "spn" = SPN_prot)
+se_list <- lapply(bioid_prot, reformatDEP, gene_map)
+
+# combine with final input dep and vsn normalized dep se objects
+bioid_se <- c(se_list,"dep" =  list(dep_se), "vsn"= list(vsn_se))
+
+# save
+myfile <- file.path(datadir,"bioid_se.rda")
+save(bioid_se,file=myfile,version=2)
