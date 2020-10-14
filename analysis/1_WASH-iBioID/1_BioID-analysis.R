@@ -58,7 +58,7 @@ check_group_CV <- function(tidy_prot) {
 
 
 # reformat the data for DEP
-reformatDEP <- function(tidy_prot,gene_map) {
+reformatDEP <- function(prot_df, gene_map) {
   # NOTE: this function only works with expected input
   # returns a summarized experiment object formated for DEP
   # NOTE: you can access the data contained in a sumamrized experiment object with 
@@ -68,11 +68,11 @@ reformatDEP <- function(tidy_prot,gene_map) {
   # assay(se)
   # cast data into wide format, the data.frame should contain 
   # unique protein IDs in 'ID' column
-  dep_prot <- tidy_prot %>% 
-  	dplyr::filter(!grepl("QC",Sample)) %>% # drop QC
+  dep_prot <- prot_df %>% 
   	dcast(Accession ~ Sample, value.var = "Intensity") %>%
   		as.matrix(rownames="Accession") %>% 
   		as.data.table(keep.rownames="ID")
+  # IDs should not be duplicate or missing
   stopifnot(!any(duplicated(dep_prot$ID)))
   stopifnot(!any(is.na(dep_prot$ID)))
   # protein data.frame should contain unique protein names in 'name' column
@@ -90,7 +90,7 @@ reformatDEP <- function(tidy_prot,gene_map) {
   # NOTE: 'condition' is important, it must be the contrast of interest
   # NOTE: DEP currently does not support more complicated experimental designs.
   # create exp design
-  samples <- unique(tidy_prot$Sample)
+  samples <- unique(prot_df$Sample)
   condition <- sapply(strsplit(samples," "),"[",2)
   replicate <- sapply(strsplit(samples," "),"[",3)
   exp_design <- data.frame(label = samples, condition, replicate) %>%
@@ -114,7 +114,6 @@ renv::load(root)
 # imports
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating the data
-	#library(edgeR) # For statitical comparisons
 	suppressWarnings({
 	  library(getPPIs) # For mapping gene identifiers
 	})
@@ -142,21 +141,21 @@ if (!dir.exists(downdir)){ dir.create(downdir) }
 
 ## Load the raw proteomics data -----------------------------------------------
 
-# Extract the raw data from zipped file
+# extract the raw data from zipped file
 myfile <- file.path(datadir, zipfile)
 unzip(myfile) # unzip 
 
-# Read into R with data.table::fread
+# read into R with data.table::fread
 here <- getwd()
 myfile <- file.path(here, tools::file_path_sans_ext(zipfile), datafile)
 raw_prot <- fread(myfile)
 
-# Clean-up
+# clean-up
 myfile <- file.path(downdir,tools::file_path_sans_ext(zipfile))
 unlink(myfile,recursive=TRUE)
 unlink("./BioID", recursive=TRUE)
 
-# Tidy the data
+# tidy-up the data
 message("\nLoading raw Swip BioID protein data.")
 
 tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
@@ -187,7 +186,8 @@ nProt <- length(unique(tidy_prot$Accession))
 message(paste0("\nTotal number of proteins quantified: ",
 	      formatC(nProt,big.mark=","),"."))
 
-# Cast tidy prot into a matrix.
+# cast the tidy raw protein data into a matrix -- we will save this as part of
+# an excel workbook with the results
 tidy_dm <- tidy_prot %>% as.data.table() %>%
 	dcast(Accession + Description + Peptides ~ Sample, 
 	      value.var = "Intensity")
@@ -304,8 +304,8 @@ dep_se <- reformatDEP(imp_prot,gene_map)
 # normalize the data
 message("\nPerforming VSN normalization.")
 
-# suppress meanSdPlot message: we will perform plotting in an adjacent script
-suppressMessages({ vsn_se <- DEP::normalize_vsn(dep_se) })
+# NOTE: we will perform plotting in an adjacent script
+vsn_se <- DEP::normalize_vsn(dep_se)
 
 # analysis of protein-level differential abundance based on linear models and
 # empirical Bayes statistics with DEP (wrapped around limma)
@@ -317,9 +317,7 @@ dep_results <- DEP::add_rejections(dep_results, alpha = FDR_alpha)
 # generate a results table
 results_df <- DEP::get_results(dep_results)
 
-
 ## Clean-up results
-
 results_df$significant <- NULL
 idy <- apply(results_df,2,function(x) all(is.na(x)))
 colnames(results_df) <- gsub("WASH_vs_Control_","",colnames(results_df))
@@ -331,8 +329,6 @@ colnames(results_df)[colnames(results_df) == "name"] <- "Symbol"
 colnames(results_df)[colnames(results_df) == "ID"] <- "Accession"
 results_df <- results_df %>% arrange(PValue,desc(logFC))
 results_df$significant <- NULL
-
-# convert logFC column to percent control
 pc <- 100*(2^results_df$logFC)
 results_df <- tibble::add_column(results_df,`Percent Control (%)`=pc,
 				  .after="logFC")
@@ -340,10 +336,8 @@ results_df <- tibble::add_column(results_df,`Percent Control (%)`=pc,
 # Summary:
 sig <- results_df$FDR < FDR_alpha
 up <- results_df$logFC > enrichment_threshold
-
 results_df$up <- up
 results_df$significant <- sig & up
-
 nsig <- sum(sig & up)
 message(paste0("\nNumber of significantly enriched proteins ",
 	      "(log2FC > ",round(enrichment_threshold,2),
@@ -356,7 +350,7 @@ results_df <- tibble::add_column(results_df,
 			          .after="Accession")
 
 # final sort
-results_df <- results_df %>% arrange(desc(logFC),PValue,significant)
+results_df <- results_df %>% arrange(desc(significant),desc(up),PValue,desc(logFC))
 
 
 ## Save the data --------------------------------------------------------------
@@ -384,12 +378,7 @@ message("\nSaving results.")
 myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
 write_excel(results_list,myfile)
 
-# Save results as rdata for downstream analysis.
-dep_results <- results_df
-myfile <- file.path(rdatdir,"WASH_BioID_Results.RData")
-saveRDS(dep_results,myfile)
-
-# Save final results for R package in root/data.
+# Save significantly enriched proteins as the wash interactome in root/data
 wash_interactome <- unique(results_df$Accession[sig & up])
 myfile <- file.path(datadir, "wash_interactome.rda")
 save(wash_interactome,file=myfile,version=2)
@@ -400,13 +389,17 @@ save(wash_interactome,file=myfile,version=2)
 # SPN_prot
 # dep_se
 # dep_vsn
+# dep_results
 
 # coerce BioID data into DEP se objects
 bioid_prot <- list("raw" = tidy_prot, "sl" = SL_prot, "spn" = SPN_prot)
 se_list <- lapply(bioid_prot, reformatDEP, gene_map)
 
 # combine with final input dep and vsn normalized dep se objects
-bioid_se <- c(se_list,"dep" =  list(dep_se), "vsn"= list(vsn_se))
+bioid_se <- c(se_list,
+	      "dep" =  list(dep_se), 
+	      "vsn"= list(vsn_se), 
+	      "results" = list(dep_results))
 
 # save
 myfile <- file.path(datadir,"bioid_se.rda")
