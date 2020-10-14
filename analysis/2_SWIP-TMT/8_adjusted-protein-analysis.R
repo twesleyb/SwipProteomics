@@ -13,7 +13,7 @@ root <- "~/projects/SwipProteomics"
 # * data(msstats_contrasts)
 
 # options:
-nprot = 100#"all" # number of randomly sampled proteins to analyze
+nprot = "all" # number of randomly sampled proteins to analyze
 nThreads = 23 # number of cores for parallel processing
 save_rda = TRUE # save results_list as rda?
 
@@ -87,16 +87,15 @@ invisible(stopCluster(workers))
 
 # remove any NULL results
 drop <- which(sapply(results,is.null))
-
 if (length(drop) > 0) {
 	message("Removing ", length(drop), " NULL results.")
 	results <- results[-drop]
 }
 
 # goodness of fit
+# this takes a couple seconds...
 r2 <- lapply(results,function(x) as.data.table(r.squaredGLMM.merMod(x$model)))
 r2_df <- bind_rows(r2,.id="protein")
-
 
 # Collect stats
 results_df <- bind_rows(sapply(results,"[","stats")) %>% 
