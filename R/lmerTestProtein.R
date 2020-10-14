@@ -225,29 +225,44 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   # perfrom the lmer-based testing of conditioned means for a given protein
   # utilizes all of the functions above
   # the data cannot contain missing values
+
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)
   }
+
   # fit the model:
   fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
   # FIXME: catch errors/warnings!
+
+  if (attr(fm,"condition")[["message"]]==msg) {
+    msg = "No random effects terms specified in formula"
+    # no random effects, try lm
+    fm <- suppressMessages({try(lm(fx, data=subdat),silent=TRUE)})
+    message(msg,", fitting lm (anova) instead.")
+  }
+
   if (inherits(fm,"try-error")) { 
 	  warning("try-error")
 	  return(NULL)
   }
+
   # compute some model statistics, store in list rho
   rho <- list()
   rho$protein <- protein
   rho$formula <- fx
   rho$model <- fm
   rho$data <- subdat
+
   # here we compute the unmoderated statistics
   rho$df.prior <- 0
   rho$s2.prior <- 0
+
   # check if singular (boundary) fit
+  inherits(fm,
   rho$isSingular <- lme4::isSingular(fm)
+
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
   rho$sigma <- stats::sigma(fm)
