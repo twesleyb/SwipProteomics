@@ -67,7 +67,7 @@ renv::load(root)
 # Imports.
 suppressPackageStartupMessages({
 	library(dplyr) # For manipulating the data.
-	library(edgeR) # For statitical comparisons.
+	#library(edgeR) # For statitical comparisons.
 	suppressWarnings({
 	  library(getPPIs) # For mapping gene identifiers.
 	})
@@ -77,18 +77,19 @@ suppressPackageStartupMessages({
 
 # Load any additional project specific functions and data.
 suppressWarnings({
-	suppressMessages({ devtools::load_all() })
+  suppressMessages({ devtools::load_all() })
 })
 
 # Project directories.
 datadir <- file.path(root,"data") # key datasets
 rdatdir <- file.path(root,"rdata") # temp data files
-tabsdir <- file.path(root,"manuscript","tables") # final xlsx tables
+tabsdir <- file.path(root,"tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
 # Create dirs if they dont exist.
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }
+
 
 #-------------------------------------------------------------------------------
 ## Load the raw data.
@@ -151,6 +152,28 @@ tidy_dm <- tidy_prot %>% as.data.table() %>%
 message("\nSummary of group CVs:")
 knitr::kable(check_group_CV(tidy_prot))
 
+
+## create gene map ------------------------------------------------------------
+
+# map uniprot to entrez
+uniprot <- unique(tidy_prot$Accession)
+entrez <- mgi_batch_query(uniprot,quiet=TRUE)
+
+# fix missing
+entrez[is.na(entrez)]
+missing_entrez <- c("P10853" = 319180)
+entrez[names(missing_entrez)] <- missing_entrez
+
+stopifnot(!any(is.na(entrez)))
+
+# map to symbols
+symbol <- getIDs(entrez,from="Entrez",to="Symbol",species="mouse")
+
+stopifnot(!any(is.na(symbol)))
+
+gene_map <- data.table(uniprot, entrez, symbol)
+
+
 #-------------------------------------------------------------------------------
 ## Sample loading normalization. 
 #-------------------------------------------------------------------------------
@@ -165,6 +188,7 @@ df <- SL_prot %>% group_by(Sample) %>%
 	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),.groups="drop")
 knitr::kable(df)
 
+
 #-------------------------------------------------------------------------------
 ## Sample pool normalization.
 #-------------------------------------------------------------------------------
@@ -172,6 +196,7 @@ knitr::kable(df)
 # Perform normalization to QC samples.
 message("\nPerforming sample pool normalization used pooled QC samples.")
 SPN_prot <- normSP(SL_prot,pool="QC")
+
 
 #-------------------------------------------------------------------------------
 ## Protein level filtering.
@@ -213,6 +238,7 @@ n_prot <- length(prots)
 message(paste0("\nFinal number of quantifiable proteins: ",
 	      formatC(n_prot,big.mark=","),"."))
 
+
 #-------------------------------------------------------------------------------
 ## Impute missing values. 
 #-------------------------------------------------------------------------------
@@ -226,19 +252,23 @@ imp_prot <- imputeKNNprot(filt_prot,k=10,rowmax=0.5,colmax=0.8,quiet=FALSE)
 # Status.
 knitr::kable(check_group_CV(imp_prot))
 
+
 #-------------------------------------------------------------------------------
 ## Statistical testing with DEP::limma
 #-------------------------------------------------------------------------------
 
-prot_df %>% imp_prot %>% dcast(Accesion ~ Sample, value.var = "Intensity") %>%
-	as.matrix(rownames="Accession") %>% as.data.table(keep.rownames="ID")
-
+# munge data into format for DEP
+prot_df <- imp_prot %>% 
+	filter(!grepl("QC",Sample)) %>% # drop QC
+	dcast(Accession ~ Sample, value.var = "Intensity") %>%
+	as.matrix(rownames="Accession") %>%  # coerce to table with ID col
+	as.data.table(keep.rownames="ID")
 
 # protein data.frame should contain unique protein IDs in 'ID' column
 # check for duplicates
 stopifnot(!any(duplicated(prot_df$ID))) # there should be no duplicate IDs
 
-# check for NA
+# there should be no NA, check for NA
 stopifnot(!any(is.na(prot_df$ID))) # there should be no NA
 
 # protein data.frame should contain unique protein names in 'name' column
@@ -263,18 +293,14 @@ stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
 # NOTE: 'condition' is important, it must be the contrast of interest
 # NOTE: DEP currently does not support more complicated experimental designs.
 # Formula Model:
-# 	>>> 	~ 0 + condition (Fraction.Genotype)
+# 	>>> 	~ 0 + Genotype
 
-exp_design <- data.frame(
-			 label = samples$Sample,
-			 condition = interaction(samples$Fraction,
-						 samples$Treatment),
-			 replicate = interaction(samples$Treatment,
-						 samples$Experiment),
-			 experiment = samples$Experiment,
-			 fraction = samples$Fraction,
-			 treatment = samples$Treatment
-			 )
+# create exp design
+samples <- unique(tidy_prot$Sample)
+condition <- sapply(strsplit(samples," "),"[",2)
+replicate <- sapply(strsplit(samples," "),"[",3)
+exp_design <- data.frame(label = samples, condition, replicate) %>%
+	filter(condition != "QC")
 
 # check for required columns in input
 stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
@@ -284,7 +310,7 @@ stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
 
 # use DEP helper function to build a SE object
 # specify the column indices containing the numeric data (idy)
-idy <- grep("Abundance",colnames(prot_df))
+idy <- which(colnames(prot_df) %notin% c("ID","name"))
 prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
 
 # NOTE: you can access the data contained in a sumamrized experiment object with 
@@ -300,153 +326,65 @@ prot_se <- DEP::make_se(prot_df,columns=idy,exp_design)
 # Normalize the data
 # suppress meanSdPlot message --> FIXME: generate plots
 message("\nPerforming VSN normalization.")
-suppressMessages({ prot_norm <- normalize_vsn(prot_se) })
+suppressMessages({ prot_norm <- DEP::normalize_vsn(prot_se) })
 
-## Add the GOF plot.
 
 ## Protein-level analysis of differential abundance ----------------------------
 # Differential enrichment analysis  based on linear models and empherical Bayes
 # statistics
 
 # define all contrasts of intrafraction groups
-groups <- sapply(unique(exp_design$fraction),
-		    paste,unique(exp_design$treatment),simplify=FALSE,sep=".")
-all_contrasts <- sapply(groups, paste, collapse="_vs_")
 
 # loop to perform tests for every intra-fraction comparison
-results <- lapply(all_contrasts, function(comparison) {
-			  DEP::test_diff(prot_norm, type = "manual",
-				    test = comparison) })
+results <- DEP::test_diff(prot_norm, type = "manual", test = "WASH_vs_Control")
 
 # Denote significant proteins based on user defined cutoffs
 # FIXME: what is p.adjust method?
 # from limma::topTable() adjust.method = BH 'Benjamini Hochberg'
-dep_results <- lapply(results, DEP::add_rejections, alpha = FDR_alpha)
-
-
-## collect results_table -----------------------------------------------------------
+results <- DEP::add_rejections(results, alpha = FDR_alpha)
 
 # Generate a results table
-data_results <- lapply(dep_results,get_results)
-
-# Summarize Significant proteins
-message(paste0("\nSummary of significant proteins (FDR < ", FDR_alpha,") ",
-	      "for intra-fraction comparisons:"))
-df <- data.frame(fraction = names(data_results),
-		 n_sig =sapply(data_results, function(x) sum(x$significant)),
-		 sig_prots=sapply(data_results,function(x) {
-					  paste(x$name[x$significant],collapse=", ")}))
-knitr::kable(df,row.names=FALSE)
+dep_results <- DEP::get_results(results)
 
 
 # Clean-up results ------------------------------------------------------------
 
-### stop
-quit()
-
-#-------------------------------------------------------------------------------
-## Statistical testing with EdgeR::ExactTest. 
-#-------------------------------------------------------------------------------
-
-# Status.
-message("\nEvaluating statistical enrichment with EdgeR's Exact Test.")
-
-# Cast the data into a matrix to be passed to edgeR.
-dm <- imp_prot %>% dcast(Accession ~ Sample,value.var="Intensity") %>%
-	as.matrix(rownames=TRUE)
-
-# Remove QC data.
-qc_cols <- grepl("QC",colnames(dm))
-dm_filt <- dm[,!qc_cols]
-
-# Create DGEList object with mapping to genotype (group).
-genotype <- factor(c(rep("WASH",3),rep("Control",3)))
-dge <- DGEList(counts = dm_filt, group = genotype)
-
-# Create design matrix.  
-design <- model.matrix(~0+genotype, data=dge$samples)
-colnames(design)[c(1,2)] <- levels(dge$samples$group)
-
-# Perform TMM normalization.
-dge <- calcNormFactors(dge,method="TMM")
-
-# Estimate dispersion.
-dge <- estimateDisp(dge,design,robust=TRUE)
-
-# Extract normalized data.
-norm_prot <- as.data.table(log2(dge$counts),keep.rownames="Accession")
-
-# Add QC data back.
-dt_qc <- as.data.table(log2(dm[,qc_cols]),keep.rownames="Accession")
-norm_prot <- left_join(norm_prot, dt_qc,by="Accession")
-
-# Perform exactTest.
-data_ET <- edgeR::exactTest(dge, pair = c("Control", "WASH"))
-
-# Call topTags to add FDR. Keep the data the same order by sort.by="none".
-data_TT <- topTags(data_ET, n = Inf, sort.by = "none")
-
-# Extract the statistical results from the topTags object. 
-stats <- as.data.table(data_TT$table,keep.rownames="Accession")
-
-# Merge with count normalized protein data.
-results <- left_join(stats,norm_prot,by="Accession")
-
-# Categorize candidates by enrichment and FDR.
-up <- results$logFC > enrichment_threshold
-results$candidate <- "no"
-results$candidate[which(up & results$FDR <= 0.10 & results$FDR > 0.05)] <- "low" 
-results$candidate[which(up & results$FDR <= 0.05 & results$FDR > 0.01)] <- "med"
-results$candidate[which(up & results$FDR <= 0.01)] <- "high"
-results$candidate <- factor(results$candidate, 
-			    levels = c("high", "med", "low", "no"))
-
-# Sort by P-value and logFC.
-results <- results %>% arrange(PValue,logFC)
-results <- results %>% arrange(candidate)
+# clean-up 
+dep_results$significant <- NULL
+idy <- apply(dep_results,2,function(x) all(is.na(x)))
+colnames(dep_results) <- gsub("WASH_vs_Control_","",colnames(dep_results))
+dep_results <- dep_results[,!idy]
+colnames(dep_results)[colnames(dep_results) == "p.val"] <- "PValue"
+colnames(dep_results)[colnames(dep_results) == "p.adj"] <- "FDR"
+colnames(dep_results)[colnames(dep_results) == "ratio"] <- "logFC"
+colnames(dep_results)[colnames(dep_results) == "name"] <- "Symbol"
+colnames(dep_results)[colnames(dep_results) == "ID"] <- "Accession"
+dep_results <- dep_results %>% arrange(PValue,logFC)
+dep_results$significant <- NULL
 
 # Convert logCPM column to percent control.
-results$logCPM <- 100*(2^results$logFC)
-idy <- which(colnames(results)=="logCPM")
-colnames(results)[idy] <- "Percent Control (%)"
+pc <- 100*(2^dep_results$logFC)
+dep_results <- tibble::add_column(dep_results,`Percent Control (%)`=pc,
+				  .after="logFC")
 
 # Summary:
-sig <- results$FDR < FDR_alpha
-up <- results$logFC > enrichment_threshold
+sig <- dep_results$FDR < FDR_alpha
+up <- dep_results$logFC > enrichment_threshold
 nsig <- sum(sig & up)
 message(paste0("\nNumber of significantly enriched proteins ",
 	      "(log2FC > ",round(enrichment_threshold,2),
 	      "; FDR < ",FDR_alpha,"): "), nsig,".")
 
-# Map UniprotIDs to Entrez IDs using online MGI batch query tool.
-# NOTE: this takes several minutes as the function downloads the data from MGI.
-message("\nMapping Uniprot IDs to stable Entrez IDs and gene symbols.")
-entrez <- mgi_batch_query(results$Accession)
-
-# Map any missing ids by hand.
-is_missing <- is.na(entrez)
-n_missing <- sum(is_missing)
-message(paste("Mapping",n_missing,"missing gene identifiers by hand."))
-mapped_by_hand <- c("P10853"=319180,"P62806"=326619,"P02301"=625328)
-entrez[names(mapped_by_hand)] <- mapped_by_hand
-check <- all(!is.na(entrez))
-if (!check) { stop("Unable to map all uniprot to stable entrez ids.") }
-
-# Map entrez to gene symbols.
-symbols <- getIDs(entrez,from="entrez",to="symbol",species="mouse")
-check <- all(!is.na(symbols))
-if (!check) { stop("Unable to map all entrez ids to gene symbols.") }
-
 # Add identifiers to data table.
-results <- tibble::add_column(results,"Entrez"=entrez,.after="Accession")
-results <- tibble::add_column(results,"Gene"=symbols,.after="Entrez")
+idx <- match(dep_results$Accession,gene_map$uniprot)
+dep_results <- tibble::add_column(dep_results,
+				  "Entrez"=gene_map$entrez[idx],
+			          .after="Accession")
 
-# Drop canidate column since its not it the other workbooks.
-tmp_results <- results
-tmp_results$candidate <- NULL
+## Save the data --------------------------------------------------------------
 
 # Create list of results:
-results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = tmp_results)
+results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = dep_results)
 
 # Add the mitochondrial proteins that were removed.
 df <- raw_prot %>% filter(Accession %in% mito_prot) %>% 
