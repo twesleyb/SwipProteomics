@@ -55,21 +55,37 @@ devtools::load_all(root)
 # load the data in root/data
 data(bioid_se) # the DEP processed data as list of se objects
 
+# names(bioid_se):
+# [1] "raw"     "sl"      "spn"     "dep"     "vsn"     "results"
 
 ## plots ----------------------------------------------------------------------
-dep_se <- bioid_se$raw
 
-p1 <- plot_frequency(dep_se)
-p2 <- plot_numbers(dep_se)
-p3 <- plot_coverage(dep_se)
-p4 <- plot_missval(bioid_se[[1]])
-p5 <- plot_detect(bioid_se[[1]])
-p6 <- plot_pca(bioid_se[[1]])
+raw <- bioid_se$raw
+sln <- bioid_se$sl
+spn <- bioid_se$spn
+imp <- bioid_se$dep
+vsn <- bioid_se$vsn
+dep <- bioid_se$results
 
-p7 <- plot_normalization(bioid_se[[1]],bioid_se[[2]])
-p8 <- plot_imputation(bioid_se[[1]], bioid_se[[4]])
+# generate plots
+suppressMessages({
+  suppressWarnings({
 
-# add final dep results (after addrejectsons) to list so we can plot:
-# volcano
-plot_volcano(dep, contrast = "Ubi6_vs_Ctrl", label_size = 2, add_names = TRUE)
-plot_single(dep, proteins = c("USP15", "IKBKG"))
+myfile <- file.path(figsdir,"WASH_BioID_DEP_plots.pdf")
+pdf(file=myfile,onefile=TRUE)
+  print(meanSdPlot(vsn))
+  print(plot_frequency(raw))
+  print(plot_numbers(raw))
+  print(plot_coverage(raw))
+  print(plot_missval(raw))
+  print(plot_detect(raw))
+  print(plot_normalization(raw,vsn))
+  print(plot_pca(vsn))
+  print(plot_imputation(spn, imp))
+  print(plot_volcano(dep, contrast = "WASH_vs_Control", label_size = 2, add_names = TRUE))
+invisible(dev.off())
+
+  })
+})
+
+# NOTE: boxplot function seems be be broken

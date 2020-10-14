@@ -81,7 +81,7 @@ if (gene_map$uniprot[idx] == "Q80WG5") {
 ## prepare data for DEP -------------------------------------------------------
 
 # cast tidy data into a data.table
-# NOTE: do not log transform the data
+# NOTE: do not log transform the data!
 prot_df <- swip_tmt %>% 
 	dcast(Accession ~ Sample,value.var = "Intensity") %>% 
 	as.matrix(rownames="Accession") %>% # coerce to matrix
