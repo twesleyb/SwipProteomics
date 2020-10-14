@@ -260,22 +260,26 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   rho$s2.prior <- 0
 
   # check if singular (boundary) fit
-  inherits(fm,
   rho$isSingular <- lme4::isSingular(fm)
 
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
   rho$sigma <- stats::sigma(fm)
   rho$thopt <- lme4::getME(fm, "theta")
+
   # calculate degrees of freedom and sigma^2:
   av <- anova(fm)
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
+
   # calcuate symtoptic var-covar matrix
   # NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
   rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # 
+
   # we store the proteins statistics in a list
+  # this will be added to rho
   stats_list <- list()
+
   # calculate posterior s2
   s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
   # compuate variance-covariance matrix
@@ -285,24 +289,33 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
   se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
-  variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
+  variance <- as.numeric(t(contrast_matrix) %*% 
+			 as.matrix(vcov.post) %*% contrast_matrix)
+
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
   g <- mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
   denom <- t(g) %*% rho$A %*% g
+
   # compute df.posterior
   df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
+
   # compute fold change and the t-statistic
   FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
   t <- FC / sqrt(variance) # the Fold change and the variance
+
   # compute the p-value
   p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
+
   # munge comparison
-  comparison <- gsub("Genotype","",paste(rev(names(contrast_matrix)),collapse="-"))
+  comparison <- gsub("Genotype","",
+		     paste(rev(names(contrast_matrix)),collapse="-"))
+
   # compile results
   rho$stats <- data.frame(protein=protein,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
+  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, 
+		 isSingular=rho$isSingular)
   return(rho)
 } #EOF
