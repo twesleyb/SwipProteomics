@@ -66,13 +66,11 @@ spn <- bioid_se$spn
 imp <- bioid_se$dep
 vsn <- bioid_se$vsn
 dep <- bioid_se$results
-
-# generate plots
-suppressMessages({
-  suppressWarnings({
+df <- DEP::get_results(dep)
 
 myfile <- file.path(figsdir,"WASH_BioID_DEP_plots.pdf")
 pdf(file=myfile,onefile=TRUE)
+  hist(df$WASH_vs_Control_p.val,breaks=50)
   print(meanSdPlot(vsn))
   print(plot_frequency(raw))
   print(plot_numbers(raw))
@@ -84,8 +82,5 @@ pdf(file=myfile,onefile=TRUE)
   print(plot_imputation(spn, imp))
   print(plot_volcano(dep, contrast = "WASH_vs_Control", label_size = 2, add_names = TRUE))
 invisible(dev.off())
-
-  })
-})
 
 # NOTE: boxplot function seems be be broken

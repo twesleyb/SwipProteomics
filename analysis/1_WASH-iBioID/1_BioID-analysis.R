@@ -5,7 +5,7 @@
 # author: Tyler W A Bradshaw
 
 ## User parameters to change:
-FDR_alpha = 0.05 # FDR significance threshold for protein enrichment.
+FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
 enrichment_threshold = log2(3.0) # enrichment threshold.
 
 ## Input data in root/data/BioID.zip/

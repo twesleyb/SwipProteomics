@@ -1,17 +1,15 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title: WASH iBioID Proteomics Analysis
-#' description: building a PPI network for WASH proteome.
-#' authors: Tyler W A Bradshaw
-#' ---
+# title: WASH iBioID Proteomics Analysis
+# description: building a PPI network for WASH proteome.
+# author: Tyler W A Bradshaw
 
 ## User parameters to change:
 FDR_alpha = 0.1
 enrichment_threshold = log2(3.0)
 
 ## Input data in root/rdata
-data_file = "WASH_BioID_Results.RData"
+# * bioid_se
 
 ## Output in root/manuscript/tables:
 # * WASH_Network_PPIs.xlsx
