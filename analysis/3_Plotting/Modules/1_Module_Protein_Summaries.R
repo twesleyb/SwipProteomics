@@ -120,7 +120,7 @@ for (module in names(modules)) {
   pbar <- txtProgressBar(max=length(proteins),style=3)
   for (protein in proteins) {
     # FIXME: colors do not seem correct
-    plot <- plot_protein_summary(protein,wt_color,col2hex(mut_color))
+    plot <- plot_protein_summary(protein)
     plot_label <- paste("Module:", partition[protein])
     yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
   	    select(norm_Abundance) %>% range()

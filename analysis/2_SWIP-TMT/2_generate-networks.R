@@ -75,7 +75,8 @@ if (!dir.exists(tabsdir)) { mkdir(tabsdir) }
 # Cast protein data into a data.matrix. No need to log2 transform.
 # MSstats has done this already. Rownames are unique for each Sample.
 dm <- msstats_prot %>% as.data.table() %>%
-	dcast(interaction(Mixture,BioFraction,Genotype) ~ Protein, value.var="Abundance") %>%
+	dcast(interaction(Mixture,BioFraction,Genotype) ~ Protein, 
+	      value.var="Abundance") %>%
 	as.matrix(rownames=TRUE)
 
 # normalize such that sum is 1? normalize each protein to its max!

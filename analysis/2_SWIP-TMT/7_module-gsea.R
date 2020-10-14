@@ -183,6 +183,9 @@ message(paste("\nNumber of modules with something interesting going on:",
 message(sum(sig_modules %in% sig_dt$Module)," of ", length(sig_modules),
 	" significant modules exhibit GSEA enrichment.")
 
+sig_dt %>% filter(Module %in% sig_modules) %>% knitr::kable()
+
+
 # Save the data.
 myfile <- file.path(rdatdir,"Module_GSEA_Results.csv")
 fwrite(sig_dt,myfile)

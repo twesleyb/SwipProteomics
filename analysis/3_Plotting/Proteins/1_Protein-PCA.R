@@ -42,11 +42,14 @@ suppressPackageStartupMessages({
 })
 
 # Local Imports
-suppressMessages({ devtools::load_all() })
+suppressWarnings({ 
+	suppressMessages({ devtools::load_all() })
+})
 
 # Project directories:
 figsdir <- file.path(root,"figs","Proteins")
 
+if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ", figsdir) }
 
 ## Prepare the data for ploting ------------------------------------------------
 
