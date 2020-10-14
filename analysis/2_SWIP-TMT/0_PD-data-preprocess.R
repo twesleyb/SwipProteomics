@@ -263,7 +263,7 @@ all_files <- filt_pd$Spectrum.File
 # split 'Spectrum.File' at first "_" to extract experiment identifiers
 exp_files <- lapply(split(all_files, sapply(strsplit(all_files,"_"),"[",1)),
 		    unique)
-files_dt <- data.table("Experiment ID" = rep(names(exp_files),
+files_dt <- data.table("Experiment" = rep(names(exp_files),
 					     times=sapply(exp_files,length)),
 	               "Run" = unlist(exp_files))
 
@@ -276,7 +276,7 @@ all_channels <- samples$MS.Channel
 exp_channels <- split(all_channels, sapply(strsplit(all_channels,"_"),"[",1))
 
 # as a dt
-exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
+exp_dt <- data.table("Experiment" = rep(names(exp_channels),
 					times=sapply(exp_channels,length)),
 	             "MS.Channel" = unlist(exp_channels))
 
@@ -298,7 +298,7 @@ exp_dt <- data.table("Experiment ID" = rep(names(exp_channels),
 
 # create annotation_dt from Spectrum.Files and MS.Runs
 # add additional freatures from samples
-annotation_dt <- left_join(files_dt,exp_dt,by="Experiment ID")
+annotation_dt <- left_join(files_dt,exp_dt,by="Experiment")
 idx <- match(annotation_dt$"MS.Channel", samples$MS.Channel)
 annotation_dt$BioFraction <- samples$BioFraction[idx]
 annotation_dt$TechRepMixture <- rep(1,length(idx))
