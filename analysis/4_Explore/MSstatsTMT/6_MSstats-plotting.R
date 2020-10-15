@@ -21,12 +21,8 @@ devtools::load_all(quiet=TRUE)
 
 data(swip)
 
-myfile<-file.path(root,"rdata","msstats_input.rda")
-data(
-load(myfile) 
-
-myfile<-file.path(root,"data","msstats_prot.rda")
-load(myfile) 
+data(msstats_raw) # raw psm data
+data(msstats_prot) # norm prot data
 
 ## dataProcessPlotsTMT() ------------------------------------------------------	
 # (1) profile plot (specify "ProfilePlot" in option type), to identify the
