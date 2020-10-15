@@ -234,10 +234,10 @@ lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
 
   # fit the model:
   fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
-  # FIXME: catch errors/warnings!
 
+  # FIXME: catch errors/warnings!
+  msg = "No random effects terms specified in formula"
   if (attr(fm,"condition")[["message"]]==msg) {
-    msg = "No random effects terms specified in formula"
     # no random effects, try lm
     fm <- suppressMessages({try(lm(fx, data=subdat),silent=TRUE)})
     message(msg,", fitting lm (anova) instead.")
