@@ -27,7 +27,7 @@ save_rda = TRUE # save key R objects?
 
 # * gene_map - data.table mapping UniProt Accession to Entrez IDs and gene
 #       Symbols.
-# * pd_raw - PSM data from Proteome Discoverer reformatted for MSstatsTMT.
+# * pd_psm - PSM data from Proteome Discoverer reformatted for MSstatsTMT.
 #       This file is just less than 50 mb.
 # * msstats_samples - the annotation object for PDtoMSstatsTMTformat().
 #       This maps individual MS runs to Spectrum.File and other sample
@@ -344,23 +344,23 @@ if (save_rda) {
 		      squote(dirname(myfile))))
 
 	# gene_map for all proteins
-	myfile <- file.path(root,"data","gene_map.rda")
+	myfile <- file.path(datadir,"gene_map.rda")
 	save(gene_map,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
         # PD_annotation data - input annotations for MSstatsTMT
-	PD_annotation <- annotation_dt
-	myfile <- file.path(datadir,"msstats_annotation.rda")
-	save(PD_annotation,file=myfile,version=2)
+	pd_annotation <- annotation_dt
+	myfile <- file.path(datadir,"pd_annotation.rda")
+	save(msstats_annotation,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
 	# PD_raw - the raw PSM data--input for MSstatsTMT
 	# NOTE: the data is too large
-	pd_raw <- filt_pd
-	myfile <- file.path(datadir,"pd_raw.rda")
-	save(PD_raw,file=myfile,version=2)
+	pd_psm <- filt_pd
+	myfile <- file.path(datadir,"pd_psm.rda")
+	save(pd_psm,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 

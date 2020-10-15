@@ -48,6 +48,8 @@ data(msstats_prot)
 data(module_colors)
 data(msstats_results)
 
+washc = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
+
 ## plot protein summary --------------------------------------------------------
 
 plot_protein_summary <- function(protein) {
@@ -108,17 +110,25 @@ plot_protein_summary <- function(protein) {
 ## main ------------------------------------------------------------------------
 
 # Loop to do work.
+#partition <- setNames(rep(1,length(washc)),nm=washc)
+#modules <- split(names(partition),partition)
+
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
+
 for (module in names(modules)) {
   # Get the modules color
+
   wt_color = "#47b2a4"
-  mut_color <- module_colors[module]
+  mut_color <- col2hex("purple")
+  #mut_color <- module_colors[module]
+
   # 1. Generate all the plots for a given module using plot_protein_summary
   plots <- list()
   message("\nWorking on: ", module)
   proteins <- modules[[module]]
   pbar <- txtProgressBar(max=length(proteins),style=3)
+
   for (protein in proteins) {
     # FIXME: colors do not seem correct
     plot <- plot_protein_summary(protein)
@@ -131,6 +141,7 @@ for (module in names(modules)) {
     setTxtProgressBar(pbar,value=match(protein,proteins))
   } # EOL for proteins
   close(pbar)
+
   # combine the data containing the normalized data 
   # (each protein scaled to maximum within a plot) into a single df
   df = bind_rows(sapply(plots,"[", "data"))
@@ -160,6 +171,7 @@ for (module in names(modules)) {
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
   plot <- plot + theme(legend.position = "none")
+
   # save
   myfile = file.path(figsdir, paste0(module,"_all_Proteins.pdf"))
   ggsavePDF(plot,file=myfile)

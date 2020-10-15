@@ -106,12 +106,16 @@ if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
 # load the required data
 data(swip)
 data(gene_map)
-data(partition)
+data(partition) #FIXME: where is partition?
 data(msstats_prot)
+
+washc = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
+partition = setNames(rep(1,length(washc)),nm=washc)
+proteins = names(partition)
 
 # NOTE: function doesnt work, environment error, use of NULL env is defunct
 # generate_report(swip,gene_map,partition,msstats_prot,figsdir)
-proteins = unique(as.character(msstats_prot$Protein))
+#proteins = unique(as.character(msstats_prot$Protein))
 
 pbar <- txtProgressBar(max=length(proteins),style=3)
 for (protein in proteins) {
@@ -130,13 +134,11 @@ for (protein in proteins) {
   module <- paste0("M",partition[protein])
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   # fit models
-
-  ## FIXME: if any error pass
+  ## FIXME: if any error => pass
   fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
   fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
   fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
-  ## breaks if error
-
+  ## FIXME: breaks if error
   # if lmerTest was used, then coerce class to something stargazer can work with
   class(fm0) <- "lmerMod"; class(fm1) <- "lmerMod"; class(fm2) <- "lmerMod"
   # NOTE: ^fixes error about $ and S4 class (https://stackoverflow.com/questions/31319030)

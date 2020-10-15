@@ -8,7 +8,7 @@
 root = "~/projects/SwipProteomics"
 
 ## Options
-n = "all" # the number of proteins to be analyzed or 'all'
+nprot = "all" # the number of proteins to be analyzed or 'all'
 save_rda = TRUE
 drop_isSingle = TRUE # drop proteins with singular fits
 
@@ -36,9 +36,9 @@ suppressPackageStartupMessages({
 devtools::load_all()
 
 # load data in root/data
-data(PD_raw) # 46 mb
+data(pd_psm) # 46 mb
 data(gene_map)
-data(PD_annotation)
+data(pd_annotation)
 data(msstats_contrasts)
 # NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
 # BioFraction.Control and BioFraction.Mutant
@@ -48,19 +48,19 @@ data(msstats_contrasts)
 # (single) Uniprot Identifiers. NOTE: Only run once!
 
 # all proteins
-proteins <- unique(as.character(PD_raw$Master.Protein.Accessions))
+proteins <- unique(as.character(pd_psm$Master.Protein.Accessions))
 
 # define proteins to be analyzed:
-if (n > length(proteins) | n == "all") {	
+if (nprot > length(proteins) | nprot == "all") {	
 	# using all proteins
 	message("\nAnalyzing 'all' (N=",
 		formatC(length(proteins),big.mark=","),") proteins.")
-	msstats_input <- PD_raw
+	msstats_input <- pd_psm
 } else {
 	# subset the data
-	message("\nAnalyzing a subset of data (n=",n," proteins).")
-	prots <- sample(proteins,n)
-	PD_filt <- PD_raw %>% 
+	message("\nAnalyzing a subset of data (n=",nprot," proteins).")
+	prots <- sample(proteins,nprot)
+	PD_filt <- pd_psm %>% 
 		filter(Master.Protein.Accessions %in% prots)
 	msstats_input <- PD_filt
 } # EIS
@@ -73,14 +73,14 @@ if (n > length(proteins) | n == "all") {
 t0 = Sys.time()
 
 suppressMessages({
-PD_msstats <- PDtoMSstatsTMTFormat(msstats_input, 
-				      PD_annotation, 
-				      which.proteinid="Master.Protein.Accessions",
-				      rmProtein_with1Feature = TRUE)
+msstats_psm <- PDtoMSstatsTMTFormat(pd_psm, 
+				    pd_annotation, 
+				    which.proteinid="Master.Protein.Accessions",
+				    rmProtein_with1Feature = TRUE)
 })
 
 # aprox 7 minutes for all proteins
-message("\nTime to pre-process ", n, " proteins: ", 
+message("\nTime to pre-process ", nprot, " proteins: ", 
 	round(difftime(Sys.time(), t0, units="min"),3)," minutes.")
 
 
@@ -144,6 +144,7 @@ condition <- as.character(msstats_prot$Condition)
 msstats_prot$BioFraction <- sapply(strsplit(condition,"\\."),"[",2)
 msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
 
+
 ## Calculate Protein abundance adjusted for fraction differences --------------
 
 # NOTE: these adjusted values are not used for modeling, only 
@@ -153,33 +154,33 @@ msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
 
 # Calculate protein abundance, adjusted for fraction differences.
 # FIXME: Is CPM step needed? Log is necessary, but CPM norm?
-logCPM <- edgeR::cpm(glm_results$dge, log=TRUE)
+#logCPM <- edgeR::cpm(glm_results$dge, log=TRUE)
 
 # Remove effect of fraction.
-dm <- limma::removeBatchEffect(logCPM,
-			       batch=dge$samples$fraction,
-			       design=model.matrix(~treatment,data=dge$samples))
+#dm <- limma::removeBatchEffect(logCPM,
+#			       batch=dge$samples$fraction,
+#			       design=model.matrix(~treatment,data=dge$samples))
 
 # Collect results.
-dt <- as.data.table(dm,keep.rownames="Accession") %>% 
-		reshape2::melt(id.var="Accession",
-			       variable.name="Sample",
-			       value.name="Adjusted.Intensity")
-dt$Sample <- as.character(dt$Sample)
+#dt <- as.data.table(dm,keep.rownames="Accession") %>% 
+#		reshape2::melt(id.var="Accession",
+#			       variable.name="Sample",
+#			       value.name="Adjusted.Intensity")
+#dt$Sample <- as.character(dt$Sample)
 
 # Combine Adjusted protein with additional sample meta data.
-tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
-	as.data.table()
-adjusted_prot <- left_join(tmp_prot,dt,
-			   by=intersect(colnames(tmp_prot),colnames(dt)))
+#tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
+#	as.data.table()
+#adjusted_prot <- left_join(tmp_prot,dt,
+#			   by=intersect(colnames(tmp_prot),colnames(dt)))
 
 # Add stats to adjusted protein data.
-adjusted_prot <- left_join(adjusted_prot,alt_results,
-			   by=intersect(colnames(adjusted_prot),
-					colnames(alt_results)))
+#adjusted_prot <- left_join(adjusted_prot,alt_results,
+#			   by=intersect(colnames(adjusted_prot),
+#					colnames(alt_results)))
 
 # Unlog the data.
-adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
+#adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
 
 ## save results ---------------------------------------------------------------
@@ -196,8 +197,10 @@ if (save_rda) {
   message("\nSaved ",basename(myfile),"in",dirname(myfile))
   
   # save the raw data in MSstatsTMT's format
-  myfile <- file.path(root,"rdata","PD_msstats.rda")
-  save(PD_msstats,file=myfile,version=2)
+  # NOTE: its too large to store in data and track with git.
+  # save in root/rdata
+  myfile <- file.path(root,"rdata","msstats_psm.rda")
+  save(msstats_psm,file=myfile,version=2)
   message("\nSaved ",basename(myfile),"in",dirname(myfile))
 
 }
