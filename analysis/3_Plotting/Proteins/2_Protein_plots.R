@@ -136,6 +136,7 @@ data(module_colors)
 data(msstats_results)
 
 # combine protein data and statistical results
+# we will use stats to annotate plots with stars
 prot_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
 
 # annotate with module membership
@@ -160,18 +161,23 @@ for (protein in sorted_prots) {
 	yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
 		select(Abundance) %>% range()
 	ypos <- yrange[1] - 0.1* diff(yrange)
-	plot <- plot + annotate(geom="label",x=7, y=ypos, label=plot_label)
+	plots[[protein]] <- plot + annotate(geom="label",x=7, y=ypos, label=plot_label)
 	setTxtProgressBar(pbar,value=match(protein,sorted_prots))
 }
 close(pbar)
 
 
-# Generate a legend ------------------------------------------------------------
-
 # Generate a plot with a legend.
 plot <- plot_protein(prot_df,gene_map, swip, legend = TRUE)
 plot_legend <- cowplot::get_legend(plot) 
 
-# save
+
+## save ------------------------------------------------------------
+
+# legend
 myfile <- file.path(figsdir,"Protein_plots_legend.pdf")
 ggsave(plot_legend,file=myfile,width=4.5,height=4.5)
+
+# plot list
+myfile <- file.path(figsdir,"Protein_plots.pdf")
+ggsavePDF(plots,myfile)
