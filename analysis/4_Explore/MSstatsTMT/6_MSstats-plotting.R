@@ -22,6 +22,7 @@ devtools::load_all(quiet=TRUE)
 data(swip)
 
 myfile<-file.path(root,"rdata","msstats_input.rda")
+data(
 load(myfile) 
 
 myfile<-file.path(root,"data","msstats_prot.rda")
