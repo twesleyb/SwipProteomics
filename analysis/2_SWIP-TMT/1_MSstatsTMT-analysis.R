@@ -8,11 +8,8 @@
 root = "~/projects/SwipProteomics"
 
 ## Options
-<<<<<<< HEAD
 nprot = "all" # the number of proteins to be analyzed or 'all'
-=======
-nprot = 100 #"all" # the number of proteins to be analyzed or 'all'
->>>>>>> dev
+#nprot = 100 #"all" # the number of proteins to be analyzed or 'all'
 save_rda = TRUE
 
 
@@ -61,15 +58,9 @@ if (nprot > length(proteins) | nprot == "all") {
 	msstats_input <- pd_psm
 } else {
 	# subset the data
-<<<<<<< HEAD
-	message("\nAnalyzing a subset of data (n=",nprot," proteins).")
-	prots <- sample(proteins,nprot)
-	PD_filt <- pd_psm %>% 
-=======
 	message("\nAnalyzing a subset of data (n=",nprot,") proteins.")
 	prots <- sample(proteins,nprot)
 	pd_filt <- pd_psm %>% 
->>>>>>> dev
 		filter(Master.Protein.Accessions %in% prots)
 	msstats_input <- pd_filt
 } # EIS
@@ -82,17 +73,10 @@ if (nprot > length(proteins) | nprot == "all") {
 t0 = Sys.time()
 
 suppressMessages({
-<<<<<<< HEAD
-msstats_psm <- PDtoMSstatsTMTFormat(pd_psm, 
-				    pd_annotation, 
-				    which.proteinid="Master.Protein.Accessions",
-				    rmProtein_with1Feature = TRUE)
-=======
 msstats_psm <- PDtoMSstatsTMTFormat(msstats_input, 
 				   pd_annotation, 
 				   which.proteinid="Master.Protein.Accessions",
 				   rmProtein_with1Feature = TRUE)
->>>>>>> dev
 })
 
 # aprox 7 minutes for all proteins
@@ -159,47 +143,6 @@ condition <- as.character(msstats_prot$Condition)
 msstats_prot$BioFraction <- sapply(strsplit(condition,"\\."),"[",2)
 msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
 
-<<<<<<< HEAD
-
-## Calculate Protein abundance adjusted for fraction differences --------------
-
-# NOTE: these adjusted values are not used for modeling, only 
-# plotting purposes.
-
-## WORK
-
-# Calculate protein abundance, adjusted for fraction differences.
-# FIXME: Is CPM step needed? Log is necessary, but CPM norm?
-#logCPM <- edgeR::cpm(glm_results$dge, log=TRUE)
-
-# Remove effect of fraction.
-#dm <- limma::removeBatchEffect(logCPM,
-#			       batch=dge$samples$fraction,
-#			       design=model.matrix(~treatment,data=dge$samples))
-
-# Collect results.
-#dt <- as.data.table(dm,keep.rownames="Accession") %>% 
-#		reshape2::melt(id.var="Accession",
-#			       variable.name="Sample",
-#			       value.name="Adjusted.Intensity")
-#dt$Sample <- as.character(dt$Sample)
-
-# Combine Adjusted protein with additional sample meta data.
-#tmp_prot <- tmt_protein %>% filter(Treatment != "SPQC") %>% 
-#	as.data.table()
-#adjusted_prot <- left_join(tmp_prot,dt,
-#			   by=intersect(colnames(tmp_prot),colnames(dt)))
-
-# Add stats to adjusted protein data.
-#adjusted_prot <- left_join(adjusted_prot,alt_results,
-#			   by=intersect(colnames(adjusted_prot),
-#					colnames(alt_results)))
-
-# Unlog the data.
-#adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
-
-=======
->>>>>>> dev
 
 ## save results ---------------------------------------------------------------
 
@@ -215,17 +158,9 @@ if (save_rda) {
   message("\nSaved ",basename(myfile)," in ",dirname(myfile))
   
   # save the raw data in MSstatsTMT's format
-<<<<<<< HEAD
-  # NOTE: its too large to store in data and track with git.
-  # save in root/rdata
-  myfile <- file.path(root,"rdata","msstats_psm.rda")
-  save(msstats_psm,file=myfile,version=2)
-  message("\nSaved ",basename(myfile),"in",dirname(myfile))
-=======
   myfile <- file.path(root,"rdata","msstats_psm.rda")
   save(msstats_psm,file=myfile,version=2)
   message("\nSaved ",basename(myfile)," in ",dirname(myfile))
->>>>>>> dev
 
 }
 
