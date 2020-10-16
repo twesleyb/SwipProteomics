@@ -1,10 +1,8 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title: WASH iBioID Proteomics Analysis
-#' description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
-#' authors: Tyler W A Bradshaw
-#' ---
+# title: WASH iBioID Proteomics Analysis
+# description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
+# authors: Tyler W A Bradshaw
 
 ## User parameters to change:
 FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
@@ -84,7 +82,7 @@ rdatdir <- file.path(root,"rdata") # temp data files
 tabsdir <- file.path(root,"manuscript","tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
-# Create dirs if they dont exist.
+# Create dirs if they don't exist.
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }
 
