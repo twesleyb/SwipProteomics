@@ -358,11 +358,7 @@ if (save_rda) {
         # PD_annotation data - input annotations for MSstatsTMT
 	pd_annotation <- annotation_dt
 	myfile <- file.path(datadir,"pd_annotation.rda")
-<<<<<<< HEAD
-	save(msstats_annotation,file=myfile,version=2)
-=======
 	save(pd_annotation,file=myfile,version=2)
->>>>>>> dev
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 

@@ -2,6 +2,14 @@
 This repository contains the proteomics data and source code for the analysis 
 performed by [Courtland _et al._, 2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
 
+## Data
+Key project datasets are saved as `R` objects in `data/`.
+The raw PSM-leve data from Proteome Discoverer is available as
+[pd_psm](./data/pd_psm.rda) and it associated metadata
+[pd_annotation](./data/pd_annotation.rda). The raw BioID data is
+contained within [BioID.zip](./data/BioID.zip).
+
+
 ## The WASH complex member SWIP: an intellectual disability gene
 __Ropers _et al.___ [[1]](./refs/Ropers_2011.pdf) identified a non-synonymous mutation in the **_WASHC4_** gene of
 seven children with intellectual impairment, learning and social deficits, and delayed motor development. 
@@ -160,8 +168,6 @@ This work is licensed under a [Creative Commons Attribution 4.0 International Li
 
 [cc-by]: http://creativecommons.org/licenses/by/4.0/
 [cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
-=======
-Analysis of SWIP<sup>P1019R</sup> (Washc4) mutant mouse brain spatial proteomics
 
 ## Swip Pro1019Arg Mutation
 
@@ -169,7 +175,3 @@ Analysis of SWIP<sup>P1019R</sup> (Washc4) mutant mouse brain spatial proteomics
   <img src="./models/Swip.gif" height="250" />
 </p>
 <p align="center">The SWIP protein with location of P1019R highlighted in red.<p align="center">
-
-## Background
-The SWIP P1019R point mutation was identified in humans with intellecutual and
-motor impairments. 
