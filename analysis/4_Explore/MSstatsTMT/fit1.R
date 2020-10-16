@@ -7,11 +7,10 @@
 
 # input:
 root <- "~/projects/SwipProteomics"
-input_prot <- file.path(root,"data","msstats_prot.rda")
+# * msstats_prot
 
 # options:
 nprot = 1 # number of randomly sampled proteins to analyze
-nThreads = 8 # number of cores for parallel processing
 save_rda = FALSE # save results_list as rda?
 
 # load renv
@@ -250,7 +249,10 @@ mygradient <- function(fun, x, delta = 1e-4,
 ## load the data --------------------------------------------------------------
 
 # load msstats preprocessed protein data from SwipProteomics in root/data
-load(file=input_prot)
+renv::load(root)
+devtools::load_all()
+load(file.path(root,"data","msstats_prot.rda"))
+load(file.path(root,"data","swip.rda")); protein = swip
 
 # Munge sample annotations:
 # * create Genotype column
@@ -265,25 +267,14 @@ msstats_prot$Subject <- subject
 # contrast matrix for Contrl-Mutant comparison:
 contrast_matrix <- setNames(c(-1,1),nm=c("GenotypeControl","GenotypeMutant"))
 
-# NOTE: this function is incorrect!
-# * BioFraction should be a fixed effect!
-# * Missing: random effect of repeated measures (1|Subject)
-#fx1 <- formula("abundance ~ 1 + (1|biofraction) + genotype") # wt vs mut
-
-data(swip); protein = swip
-
 # lmer formula:
-fx <- formula("Abundance ~ 1 + BioFraction + (1|Subject) + Genotype")
-
-# the model to be fit
-message("\nFitting lmer: ",fx)
-
-#lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
-  # perfrom the lmer-based testing of conditioned means for a given protein
-  # utilizes all of the functions above
+fx <- formula("Abundance ~ BioFraction + (1|Subject) + Genotype")
 
   # the data cannot contain missing values
-  subdat <- msstats_prot %>% filter(Protein == protein)
+data(msstats_prot)
+
+  subdat <- msstats_prot %>% filter(Protein == swip)
+
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)

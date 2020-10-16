@@ -53,7 +53,7 @@ mkdir <- function(...,warn=TRUE,report=FALSE) {
 	} else if (!dir.exists(newdir)) { 
 		dir.create(newdir)
 		if (report) {
-		message(paste("created",newdir))
+		message("\nCreated ",newdir,".")
 		}
 	}
 }
@@ -346,34 +346,34 @@ if (save_rda) {
         swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
 	myfile <- file.path(root,"data","swip.rda")
         save(swip,file=myfile,version=2)
-	message(paste("\nSaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
+	message("\nSaved ",squote(basename(myfile))," in ",
+		      squote(dirname(myfile)),".")
 
 	# gene_map for all proteins
 	myfile <- file.path(datadir,"gene_map.rda")
 	save(gene_map,file=myfile,version=2)
-	message(paste("\nSaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
+	message("\nSaved ",squote(basename(myfile))," in ",
+		squote(dirname(myfile)),".")
 
         # PD_annotation data - input annotations for MSstatsTMT
 	pd_annotation <- annotation_dt
 	myfile <- file.path(datadir,"pd_annotation.rda")
 	save(pd_annotation,file=myfile,version=2)
-	message(paste("\nSaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
+	message("\nSaved ",squote(basename(myfile))," in ",
+		      squote(dirname(myfile)),".")
 
 	# PD_raw - the raw PSM data--input for MSstatsTMT
 	# NOTE: the data is too large
 	pd_psm <- filt_pd
 	myfile <- file.path(datadir,"pd_psm.rda")
 	save(pd_psm,file=myfile,version=2)
-	message(paste("\nSaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
+	message("\nSaved ",squote(basename(myfile))," in ",
+		squote(dirname(myfile)),".")
 
 	# msstats_contrasts - all pairwise intrafraction comparisons
 	myfile <- file.path(datadir,"msstats_contrasts.rda")
 	save(msstats_contrasts,file=myfile,version=2)
-	message(paste("\nSaved",squote(basename(myfile)),"in",
-		      squote(dirname(myfile))))
+	message("\nSaved ",squote(basename(myfile))," in ",
+		squote(dirname(myfile)),".")
 
 } #EIS

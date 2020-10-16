@@ -9,7 +9,6 @@ root = "~/projects/SwipProteomics"
 
 ## Options
 nprot = "all" # the number of proteins to be analyzed or 'all'
-#nprot = 100 #"all" # the number of proteins to be analyzed or 'all'
 save_rda = TRUE
 
 
