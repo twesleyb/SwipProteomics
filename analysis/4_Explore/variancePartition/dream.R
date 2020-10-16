@@ -62,6 +62,7 @@ L = cbind(L1, L2)
 fit = dream(dream_list, fx, metadata, L)
 
 # examine the results
+#metadata is df with sample metadata. experiment specifies column names of countMatrix.
 topTable(fit, coef="L1", number=5) %>% knitr::kable()
 
 # save data
@@ -75,4 +76,4 @@ Lall = cbind(L, data.frame(L3 = L3))
 topTable(fit, coef=c("DiseaseSubtype2", "DiseaseSubtype1"), number=3 )
 
 # small dataset
-fitmmKR = dream(dream_list, fx, metadata, ddf="Kenward-Roger")
+#fitmmKR = dream(dream_list, fx, metadata, ddf="Kenward-Roger")
