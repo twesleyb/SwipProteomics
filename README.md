@@ -1,13 +1,6 @@
 # SwipProteomics
-This repository contains the proteomics data and source code for the analysis 
+This repository contains the proteomics [data](./data) and source [code](./analysis) for the analyses 
 performed by [Courtland _et al._, 2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
-
-## Data
-Key project datasets are saved as `R` objects in `data/`.
-The raw PSM-leve data from Proteome Discoverer is available as
-[pd_psm](./data/pd_psm.rda) and it associated metadata
-[pd_annotation](./data/pd_annotation.rda). The raw BioID data is
-contained within [BioID.zip](./data/BioID.zip).
 
 
 ## The WASH complex member SWIP: an intellectual disability gene
