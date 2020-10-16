@@ -10,24 +10,22 @@ root <- "~/projects/SwipProteomics"
 input_prot <- file.path(root,"data","msstats_prot.rda")
 input_contrasts <- file.path(root,"data","msstats_contrasts.rda")
 
-# options:
-nprot = 1 # number of randomly sampled proteins to analyze
-nThreads = 8 # number of cores for parallel processing
-save_rda = FALSE # save results_list as rda?
-
 # load renv
 if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
 
 # imports
 suppressPackageStartupMessages({
   library(dplyr)
-  library(parallel)
-  library(doParallel)
 })
 
 
 ## Functions ------------------------------------------------------------------
 # Modified from internal MSstatsTMT functions.
+
+subprot <- function(protein) {
+	subdat <- msstats_prot %>% filter(Protein == protein)
+	return(subdat)
+}
 
 calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
   # a function to compute s2 posterior
@@ -244,100 +242,12 @@ gradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-lmerTestProtein <- function(msstats_prot, protein, fx, contrast_matrix) {
-  # perfrom the lmer-based testing of conditioned means for a given protein
-  # utilizes all of the functions above
-
-  # the data cannot contain missing values
-  subdat <- msstats_prot %>% filter(Protein == protein)
-  if (any(is.na(subdat))) {
-  	warning("The data cannot contain missing values.")
-        return(NULL)
-  }
-
-  # fit the model:
-  fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
-
-  fx = formula("Abundance ~ 0 + (1|Mixture) + Condition") 
-  fm <- lmerTest::lmer(fx, data=subdat)
-
-  # Fixme! add r2
-  #r2 <- setNames(r.squaredGLMM.merMod(fm),nm=c("R2.fixef","R2.total"))
-
-  # FIXME: catch errors/warnings!
-  if (inherits(fm,"try-error")) { 
-	  warning("try-error")
-	  return(NULL)
-  }
-
-  # compute some model statistics, store in list rho
-  rho <- list()
-  rho$protein <- protein
-  rho$formula <- fx
-  rho$model <- fm
-  rho$data <- subdat
-
-  # here we compute the unmoderated statistics
-  rho$df.prior <- 0
-  rho$s2.prior <- 0
-
-  # check if singular (boundary) fit
-  rho$isSingular <- lme4::isSingular(fm)
-
-  # calculate coeff, sigma, and theta:
-  rho$coeff <- lme4::fixef(fm)
-  rho$sigma <- stats::sigma(fm)
-  rho$thopt <- lme4::getME(fm, "theta")
-
-  # calculate degrees of freedom and sigma^2:
-  av <- anova(fm)
-  rho$s2_df <- av$DenDF
-  rho$s2 <- av$"Mean Sq" / av$"F value"
-
-  # calcuate symtoptic var-covar matrix
-  # NOTE: utlilizes MSstatsTMT internal function .calcApvar to do calculation
-  rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # 
-
-  # we store the proteins statistics in a list
-  stats_list <- list()
-  # calculate posterior s2
-  s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
-  # compute variance-covariance matrix
-  vss <- vcovLThetaLM(fx,subdat)
-  varcor <- vss(t(contrast_matrix), c(rho$thopt, rho$sigma))
-
-  vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
-  se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
-  # calculate variance
-  vcov.post <- varcor$unscaled.varcor * s2.post
-
-  variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
-  # calculate degrees of freedom
-  # given params theta and sigma from lmer and the Acovar
-  # NOTE: careful formatting can break things
-  g <- gradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
-  denom <- t(g) %*% rho$A %*% g
-  # compute df.posterior
-  df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
-  # compute fold change and the t-statistic
-  FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
-  t <- FC / sqrt(variance) # the Fold change and the variance
-  # compute the p-value
-  p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
-  # munge comparison
-  comparison <- gsub("Genotype","",paste(rev(names(contrast_matrix)),collapse="-"))
-  # compile results
-  rho$stats <- data.frame(protein=protein,contrast=comparison,
-  		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
-  return(rho)
-} #EOF
-
-
 ## load the data --------------------------------------------------------------
 
+data(swip)
+protein = swip
+
 # load msstats preprocessed protein data from SwipProteomics in root/data
-#devtools::load_all(quiet=TRUE)
 load(file=input_prot) # msstats_prot
 load(file=input_contrasts) # msstats_contrasts
 
@@ -349,65 +259,19 @@ msstats_prot$Genotype <- factor(genotype,levels=c("Control","Mutant"))
 msstats_prot$BioFraction <- factor(biofraction,levels=c("F4","F5","F6","F7","F8","F9","F10"))
 msstats_prot$Subject <- as.factor(subject)
 
-# define contrast matrix fof all pairwise comparisons:
-#cm0 <- msstats_contrasts
+fx <- formula("Abundance ~ 1 + (1|Mixture) + BioFraction + Genotype")
+fm <- lmerTest::lmer(fx,data=subprot(swip))
 
-# define contrast matrix for Mutant-Control comparison:
-#cm1 <- setNames(c(1,-1),nm=c("GenotypeMutant","GenotypeControl"))
+library(merDeriv)
 
-# lmer formula:
-#fx1 <- formula("Abundance ~ 0 + (1|BioFraction) + Genotype") # WT vs MUT
-#fx1 <- formula("Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype")
+#s2 = sigma_squared from rho
+av <- anova(fm)
+s2 <- av$"Mean Sq" / av$"F value"
 
-#fx1 <- formula("Abundance ~ 1 + BioFraction + (1|Subject) + Genotype")
+# Beta = estimates(lmer,Condition)
+# variance-covariance matrix of fixed effects (Condition)
+V_hat = merDeriv::vcov.lmerMod(fm,full=FALSE) 
 
-fx0 <- formula("Abundance ~ (1|Mixture) + (1|Subject) + Genotype:BioFraction")
 
-# the model to be fit
-str_vec <- as.character(fx1)
-message("\nFitting lmer: ",
-	paste(str_vec[2],str_vec[1],str_vec[3]))
 
-# register some nodes to do work
-#workers <- parallel::makeCluster(c(rep("localhost", nThreads)), type = "SOCK")
-#doParallel::registerDoParallel(workers)
-#message("\nEmploying ", nThreads," parallel processors.")
 
-# loop for every protein
-#results <- list()
-#proteins <- unique(as.character(msstats_prot$Protein))
-
-#if (nprot == "all") {
-#	#proteins
-#} else {
-#	proteins <- sample(proteins,nprot)
-#}
-
-# start timer
-#start_time <- Sys.time()
-
-# Parallel execution with %dopar%
-#results <- foreach(protein = proteins, .packages=c("dplyr")) %dopar% {
-#	suppressMessages({
-#		results[[protein]] <- try(lmerTestProtein(msstats_prot,protein,fx1,cm1),silent=TRUE)
-#	})
-#}
-
-#results <- try(lmerTestProtein(msstats_prot,protein=swip,fx1,cm1),silent=TRUE)
-#
-##stop_time <- Sys.time()
-#
-## status
-#message("\nElapsed time to analyze ",nprot," protein(s): ", 
-#	round(difftime(stop_time,start_time,units="sec"),3)," (seconds).")
-#
-#if (save_rda) {
-#  # save the data
-#  message("\nSaving the data, this will take several minutes.")
-#  save(results,file=file.path(root,"rdata","fit1_results.rda"),version=2)
-#}
-#
-## close parallel connections
-#invisible(stopCluster(workers))
-#
-## TODO: goodness of fit
