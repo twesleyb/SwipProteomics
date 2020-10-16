@@ -2,7 +2,11 @@
 
 # title: WASH iBioID Proteomics Analysis
 # description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
+<<<<<<< HEAD
 # author: Tyler W A Bradshaw
+=======
+# authors: Tyler W A Bradshaw
+>>>>>>> dev
 
 ## User parameters to change:
 FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
@@ -132,8 +136,12 @@ rdatdir <- file.path(root,"rdata") # temp data files
 tabsdir <- file.path(root,"tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
+<<<<<<< HEAD
 # Create dirs if they dont exist.
 if (!dir.exists(datadir)){ dir.create(datadir) }
+=======
+# Create dirs if they don't exist.
+>>>>>>> dev
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
 if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
 if (!dir.exists(downdir)){ dir.create(downdir) }

@@ -9,8 +9,6 @@ docs/reports/
 #manuscript/
 sessionInfo.txt
 
-# stop tracking figs for a moment
-figs/
 
 ## project specific files to ignore.
 *.sw*

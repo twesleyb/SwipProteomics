@@ -7,7 +7,7 @@
 
 ## INPUT ----------------------------------------------------------------------
 # specify project's root directory
-ROOT <- "~/projects/SwipProteomics"
+root <- "~/projects/SwipProteomics"
 
 
 ## OPTIONS --------------------------------------------------------------------
@@ -36,14 +36,14 @@ mkdir <- function(...) {
 ## Prepare the working environment ----------------------------------------------
 
 # directory for output tables:
-tabsdir <- file.path(ROOT,"tables"); mkdir(tabsdir)
-datadir <- file.path(ROOT,"data"); mkdir(datadir)
+tabsdir <- file.path(root,"tables"); mkdir(tabsdir)
+datadir <- file.path(root,"data"); mkdir(datadir)
 
 
 ## Prepare the R environment --------------------------------------------------
 
 # load renv
-renv::load(ROOT,quiet=TRUE)
+renv::load(root,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
@@ -53,7 +53,7 @@ suppressPackageStartupMessages({
 })
 
 # load functions in root/R
-devtools::load_all(ROOT)
+devtools::load_all(root)
 
 # load the data in root/data
 data(swip_tmt)

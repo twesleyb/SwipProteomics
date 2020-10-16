@@ -8,9 +8,12 @@
 root = "~/projects/SwipProteomics"
 
 ## Options
+<<<<<<< HEAD
 nprot = "all" # the number of proteins to be analyzed or 'all'
+=======
+nprot = 100 #"all" # the number of proteins to be analyzed or 'all'
+>>>>>>> dev
 save_rda = TRUE
-drop_isSingle = TRUE # drop proteins with singular fits
 
 
 ## prepare the working environment ---------------------------------------------
@@ -33,7 +36,7 @@ suppressPackageStartupMessages({
 ## load data ------------------------------------------------------------------
 
 # load functions in root/R and make data in root/data accessible
-devtools::load_all()
+suppressWarnings({ devtools::load_all() })
 
 # load data in root/data
 data(pd_psm) # 46 mb
@@ -58,11 +61,17 @@ if (nprot > length(proteins) | nprot == "all") {
 	msstats_input <- pd_psm
 } else {
 	# subset the data
+<<<<<<< HEAD
 	message("\nAnalyzing a subset of data (n=",nprot," proteins).")
 	prots <- sample(proteins,nprot)
 	PD_filt <- pd_psm %>% 
+=======
+	message("\nAnalyzing a subset of data (n=",nprot,") proteins.")
+	prots <- sample(proteins,nprot)
+	pd_filt <- pd_psm %>% 
+>>>>>>> dev
 		filter(Master.Protein.Accessions %in% prots)
-	msstats_input <- PD_filt
+	msstats_input <- pd_filt
 } # EIS
 
 
@@ -73,10 +82,17 @@ if (nprot > length(proteins) | nprot == "all") {
 t0 = Sys.time()
 
 suppressMessages({
+<<<<<<< HEAD
 msstats_psm <- PDtoMSstatsTMTFormat(pd_psm, 
 				    pd_annotation, 
 				    which.proteinid="Master.Protein.Accessions",
 				    rmProtein_with1Feature = TRUE)
+=======
+msstats_psm <- PDtoMSstatsTMTFormat(msstats_input, 
+				   pd_annotation, 
+				   which.proteinid="Master.Protein.Accessions",
+				   rmProtein_with1Feature = TRUE)
+>>>>>>> dev
 })
 
 # aprox 7 minutes for all proteins
@@ -85,11 +101,11 @@ message("\nTime to pre-process ", nprot, " proteins: ",
 
 
 ## [2] summarize protein level data ----------------------------------------------
-
+# Perform protein summarization for each run.
 t0 = Sys.time()
 
 suppressMessages({
-	msstats_prot <- proteinSummarization(PD_msstats,
+	msstats_prot <- proteinSummarization(msstats_psm,
 				     method="msstats",	
 				     global_norm=TRUE,	
 				     reference_norm=TRUE,
@@ -97,8 +113,9 @@ suppressMessages({
 })
 
 # This takes about 11 minutes for 8.5 k proteins with 23 cores
-message("\nTime to summarize ", n, " proteins: ", 
-  round(difftime(Sys.time(),t0,units="min"),3)," minutes.")
+#FIXME: fix warnings messages about closing clusters
+message("\nTime to summarize ", nprot, " proteins: ", 
+  round(difftime(Sys.time(), t0, units="min"), 3)," minutes.")
 
 
 ## [3] perform statistical comparisons ----------------------------------------
@@ -114,13 +131,13 @@ suppressWarnings({ # about closing clusters FIXME:
 })
 
 # This takes about 21 minutes for 8.5 k proteins
-message("\nTime to perform group comparisons for ", n, " proteins: ", 
-	round(difftime(Sys.time(),t0,units="min"),3)," minutes.")
+message("\nTime to perform group comparisons for ", nprot, " proteins: ", 
+	round(difftime(Sys.time(),t0 ,units="min"),3)," minutes.")
 
 
 ## annotate msstats_prot with gene ids ----------------------------------------
 
-idx <- match(msstats_prot$Protein,gene_map$uniprot)
+idx <- match(msstats_prot$Protein, gene_map$uniprot)
 Symbol <- gene_map$symbol[idx]
 Entrez <- gene_map$entrez[idx]
 msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
@@ -129,10 +146,8 @@ msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
 
 ## combine normalized protein and statistical results -------------------------
 
-if (drop_isSingle) {
-	# if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
-	msstats_results <- msstats_results %>% filter(is.na(issue))
-}
+# if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
+msstats_results <- msstats_results %>% filter(is.na(issue))
 
 # drop issue column
 msstats_results$issue <- NULL
@@ -144,6 +159,7 @@ condition <- as.character(msstats_prot$Condition)
 msstats_prot$BioFraction <- sapply(strsplit(condition,"\\."),"[",2)
 msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
 
+<<<<<<< HEAD
 
 ## Calculate Protein abundance adjusted for fraction differences --------------
 
@@ -182,6 +198,8 @@ msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
 # Unlog the data.
 #adjusted_prot$Adjusted.Intensity <- 2^adjusted_prot$Adjusted.Intensity
 
+=======
+>>>>>>> dev
 
 ## save results ---------------------------------------------------------------
 
@@ -189,19 +207,25 @@ if (save_rda) {
 
   myfile <- file.path(root,"data","msstats_results.rda")
   save(msstats_results,file=myfile,version=2)
-  message("\nSaved ",basename(myfile),"in",dirname(myfile))
+  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
   
   # save normalized protein data in root/data
   myfile <- file.path(root,"data","msstats_prot.rda")
   save(msstats_prot,file=myfile,version=2)
-  message("\nSaved ",basename(myfile),"in",dirname(myfile))
+  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
   
   # save the raw data in MSstatsTMT's format
+<<<<<<< HEAD
   # NOTE: its too large to store in data and track with git.
   # save in root/rdata
   myfile <- file.path(root,"rdata","msstats_psm.rda")
   save(msstats_psm,file=myfile,version=2)
   message("\nSaved ",basename(myfile),"in",dirname(myfile))
+=======
+  myfile <- file.path(root,"rdata","msstats_psm.rda")
+  save(msstats_psm,file=myfile,version=2)
+  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
+>>>>>>> dev
 
 }
 

@@ -123,11 +123,11 @@ suppressPackageStartupMessages({
 # load functions in root/R
 suppressPackageStartupMessages({ devtools::load_all(quiet=TRUE) })
 
+
 ## unzip the data in root/data ------------------------------------------------
 
 # unzip data into downloads
 unzip(file.path(root,input_dir),exdir=downdir) 
-
 message("\nUnzipped ", squote(input_dir), " into ", squote(downdir),".")
 
 
@@ -166,18 +166,18 @@ samples$drop <- NULL
 
 # Munge 'ConditionFraction' column to 'BioFraction' and 'BioCondition'
 # NOTE: BioFraction is the subcellular fraction not MSstats 'Fraction'
-# NOTE: BioCondition is the treatment 'Condition' not MSstats 'Condition'
+# NOTE: BioCondition is the treatment 'Condition'
 samples$BioFraction <- munge1(samples$ConditionFraction)
-samples$BioCondition <- munge2(samples$ConditionFraction)
-
-# this is how MSstatsTMT needs 'Condition' for intra-fraction contrasts:
-# >>> BioCondition.BioFraction %eg% Control.F10
-samples$Condition <- as.character(interaction(samples$BioCondition,
-					      samples$BioFraction)) 
-samples$Condition[grepl("SPQC",samples$Condition)] <- "Norm" 
+samples$Genotype <- munge2(samples$ConditionFraction)
 
 # remove un-needed col
 samples$ConditionFraction <- NULL
+
+# this is how MSstatsTMT needs 'Condition' for intra-fraction contrasts:
+# >>> BioCondition.BioFraction %eg% Control.F10
+condition <- as.character(interaction(samples$Genotype,samples$BioFraction))
+condition[grepl("SPQC",condition)] <-"Norm" 
+samples$Condition <- condition
 
 # clean-up 'Mixture' column by replacing F with M
 samples$Mixture <- gsub("F","M",samples$Mixture)
@@ -185,8 +185,12 @@ samples$Mixture <- gsub("F","M",samples$Mixture)
 # FIXME: how should BioReplicate be defined?
 # for intrafraction contrasts, 'BioReplicate' should be ...
 # add R# to indicate the replicate %eg% Control.F4.R2
-samples$BioReplicate <- paste(samples$Condition,
-			      munge3(samples$Experiment),sep=".")
+biorep <- as.character(interaction(samples$Experiment,samples$Condition))
+biorep[grep("Norm",biorep)] <- "Norm"
+samples$BioReplicate <- biorep
+
+# Subject
+samples$Subject <- samples$BioReplicate
 
 
 ## drop contaminant proteins ---------------------------------------------------
@@ -306,7 +310,7 @@ annotation_dt$Mixture <- samples$Mixture[idx]
 annotation_dt$Condition <- samples$Condition[idx]
 annotation_dt$Channel <- samples$Channel[idx]
 annotation_dt$BioReplicate <- samples$BioReplicate[idx]
-annotation_dt$BioReplicate[grepl("Norm",annotation_dt$BioReplicate)] <- "Norm"
+
 # FIXME: how to pass additional covariates to MSstats?
 # FIXME: how to handle repeated measures design? 
 
@@ -323,6 +327,8 @@ comp <- paste(paste("Mutant",paste0("F",seq(4,10)),sep="."),
 
 # create a contrast matrix for given comparisons
 conditions <- unique(annotation_dt$Condition)
+conditions <- conditions[!conditions == "Norm"]
+
 conditions <- conditions[conditions != "Norm"] # should not include 'Norm'
 
 # utilizes internal function made available by my fork to generate a contrast
@@ -352,7 +358,11 @@ if (save_rda) {
         # PD_annotation data - input annotations for MSstatsTMT
 	pd_annotation <- annotation_dt
 	myfile <- file.path(datadir,"pd_annotation.rda")
+<<<<<<< HEAD
 	save(msstats_annotation,file=myfile,version=2)
+=======
+	save(pd_annotation,file=myfile,version=2)
+>>>>>>> dev
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
 
@@ -369,5 +379,5 @@ if (save_rda) {
 	save(msstats_contrasts,file=myfile,version=2)
 	message(paste("\nSaved",squote(basename(myfile)),"in",
 		      squote(dirname(myfile))))
+
 } #EIS
-# EOF
