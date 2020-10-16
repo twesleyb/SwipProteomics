@@ -114,8 +114,8 @@ suppressWarnings({ # about closing clusters FIXME:
 })
 
 # This takes about 21 minutes for 8.5 k proteins
-message("\nTime to perform group comparisons for ", n, " proteins: ", 
-	round(difftime(Sys.time(),t0,units="min"),3)," minutes.")
+message("\nTime to perform group comparisons for ", nprot, " proteins: ", 
+	round(difftime(Sys.time(),t0 ,units="min"),3)," minutes.")
 
 
 ## annotate msstats_prot with gene ids ----------------------------------------
