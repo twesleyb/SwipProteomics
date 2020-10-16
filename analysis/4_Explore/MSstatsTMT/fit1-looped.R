@@ -261,14 +261,11 @@ msstats_prot$Subject <- subject
 
   #############################################################################
   ## Q1. Which model is the correct model?
-  
   ## We are interested in differences between levels of Genotype
   ## adjusted for 'BioFraction'.
-  
   ## [1] all covariates
   # boundary fit -- problem with combination of mixture and subject
   fx1 <- formula("Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype") 
-  
   ## [2] Only mixed effect of Subject:
   fx2 <- formula("Abundance ~ BioFraction + (1|Subject) + Genotype")
   #r.squaredGLMM.merMod(fm)
@@ -277,7 +274,6 @@ msstats_prot$Subject <- subject
   # R2c is total variance explained
   # R2m is the variance explained by fixed effects
   # remaineder = ~0.05 is the variance explained by mixed effects.
-  
   ## [3] Only mixed effect of Mixture:
   fx3 <- formula("Abundance ~ BioFraction + (1|Mixture) + Genotype")
   #r.squaredGLMM.merMod(fm)
@@ -285,67 +281,63 @@ msstats_prot$Subject <- subject
   #[1,] 0.9222618 0.9355818  <-- R2c = total variance explained 
   #############################################################################
 
-  # the data cannot contain missing values
-  protein = sample(proteins,1)
+  fx = fx2
+  protein = sample(unique(as.character(msstats_prot$Protein)),1)
 
+#results_list <- list()
+#pbar <- txtProgressBar(max=length(proteins),style=3)
+#for (protein in proteins){
+
+  # subset the data
+  # NOTE: the data cannot contain missing values
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)
   }
 
-  fm <- lmerTest::lmer(fx2, data=subdat)
+  fm <- lmerTest::lmer(fx, data=subdat)
 
   #############################################################################
   ## Q3. please help me better understand output of:
   #summary(fm)
   #############################################################################
-
   #############################################################################
   ## Q4. Goodness of fit. How to asses?
-  qqnorm(resid(fm))
-  qqline(resid(fm))
-
+  #qqnorm(resid(fm))
+  #qqline(resid(fm))
   #############################################################################
-
   # compute some model statistics, store in list rho
   rho <- list()
   rho$protein <- protein
   rho$formula <- fx
   rho$model <- fm
   rho$data <- subdat
-
   # here we compute the unmoderated statistics
   rho$df.prior <- 0
   rho$s2.prior <- 0
-
   # check if singular (boundary) fit
   rho$isSingular <- lme4::isSingular(fm)
-
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
   rho$sigma <- stats::sigma(fm)
   rho$thopt <- lme4::getME(fm, "theta")
-
   # calculate degrees of freedom and sigma^2:
   av <- anova(fm)
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
-
   # calcuate symtoptic var-covar matrix
   rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) 
-
   # we store the proteins statistics in a list
   stats_list <- list()
-
   # calculate posterior s2
   s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
-
   # compute variance-covariance matrix
   vss <- vcovLThetaLM(fx,subdat)
 
   #############################################################################
   ## Q5. How to define contrast matrix?
+  ## NOTE: THIS IS NOT CORRECT.
   vec = rho$coeff
   vec[] <- 0
   vec[1] <- -1
@@ -356,33 +348,49 @@ msstats_prot$Subject <- subject
   varcor <- vss(t(contrast_matrix), thpars=c(rho$thopt, rho$sigma))
   vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
   se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
-
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
   variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
-
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
   g <- mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
   denom <- t(g) %*% rho$A %*% g
-
   # compute df.posterior
   df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
-
   ## Q5. FC seems inflated?
   # compute fold change and the t-statistic
   FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
   t <- FC / sqrt(variance) # the Fold change and the variance
-
   # compute the p-value
   p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
-
   # munge comparison
-
   # compile results
   rho$stats <- data.frame(protein=protein,contrast="Mutant-Control",
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
   		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
+  # store in list
+  results_list[[protein]] <- rho
+  setTxtProgressBar(pbar,match(protein,proteins))
+} #EOL
 
-  #return(rho)
+
+# collect output from the loop
+results_df <- bind_rows(sapply(results_list,"[","stats"))
+
+# map uniprot to gene symbols
+idx <- match(results_df$protein,gene_map$uniprot)
+symbol <- gene_map$symbol[idx]
+results_df <- tibble::add_column(results_df,symbol,.after="protein")
+
+# p adjust
+Padjust <- p.adjust(results_df$Pvalue,method="BH")
+results_df <- tibble::add_column(results_df,Padjust,.after="Pvalue")
+
+# sort
+results_df <- results_df %>% arrange(Pvalue)
+
+# status
+FDR_alpha = 0.05
+message("Number of differentially abundant proteins: ", sum(results_df$Padjust < FDR_alpha))
+results_df %>% head() %>% knitr::kable()

@@ -9,6 +9,7 @@ root = "~/projects/SwipProteomics"
 
 ## Options
 nprot = "all" # the number of proteins to be analyzed or 'all'
+FDR_alpha = 0.05 # FDR threshold for significance
 save_rda = TRUE
 
 
@@ -24,9 +25,11 @@ suppressPackageStartupMessages({
   library(MSstatsTMT) # twesleyb/MSstats
 })
 
-## NOTE: my forks attempt to suppress much of MSstats verbosity as well as includes
+## NOTE: my fork attempts to suppress much of MSstats verbosity as well as includes
 ## variants of the internal functions used by MSstatsTMT to fit protein-wise
 ## models and perform statistical comparisons between groups.
+## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass
+## arguments for parallel processing to underlying MSstats functions.
 
 
 ## load data ------------------------------------------------------------------
@@ -135,12 +138,20 @@ msstats_results <- msstats_results %>% filter(is.na(issue))
 # drop issue column
 msstats_results$issue <- NULL
 
-# Annotated results and protein with BioFraction
-msstats_results$BioFraction <- gsub("Mutant\\.F[0-9]{1,2}-Control\\.","",
-				    msstats_results$Label)
-condition <- as.character(msstats_prot$Condition)
-msstats_prot$BioFraction <- sapply(strsplit(condition,"\\."),"[",2)
-msstats_prot$Genotype <- sapply(strsplit(condition,"\\."),"[",1)
+# annotate results with gene symbols
+idx <- match(msstats_results$Protein,gene_map$uniprot)
+Symbol <- gene_map$symbol[idx]
+msstats_results <- tibble::add_column(msstats_results,Symbol,.after="Protein")
+
+# summary
+message("\nSummary of signifcant (FDR<",
+	FDR_alpha,") proteins for intrafraction comparisons:")
+df = msstats_results %>% 
+	group_by(Label) %>% arrange(adj.pvalue) %>% 
+	summarize(`n Sig` = sum(adj.pvalue < FDR_alpha),
+		  `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),collapse=", "),.groups="drop")
+colnames(df)[1] <- "Contrast"
+knitr::kable(df)
 
 
 ## save results ---------------------------------------------------------------
@@ -164,3 +175,4 @@ if (save_rda) {
 }
 
 message("\nCompleted MSstatsTMT intrafraction statistical analysis.")
+
