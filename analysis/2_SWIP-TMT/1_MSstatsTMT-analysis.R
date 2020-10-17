@@ -131,6 +131,10 @@ suppressWarnings({ # about closing clusters FIXME:
   })
 })
 
+cm %*% t(coeff) 
+vss <- .vcovLThetaL(fm)
+varcor <- vss(t(cm), c(fit$thopt,fit$sigma))
+
 # This takes about 21 minutes for 8.5 k proteins
 message("\nTime to perform group comparisons for ", nprot, " proteins: ", 
 	round(difftime(Sys.time(),t0 ,units="min"),3)," minutes.")
