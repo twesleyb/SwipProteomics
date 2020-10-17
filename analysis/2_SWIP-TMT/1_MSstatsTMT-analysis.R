@@ -25,11 +25,17 @@ suppressPackageStartupMessages({
   library(MSstatsTMT) # twesleyb/MSstats
 })
 
-## NOTE: my fork attempts to suppress much of MSstats verbosity as well as includes
-## variants of the internal functions used by MSstatsTMT to fit protein-wise
-## models and perform statistical comparisons between groups.
+# MSstatsTMT key steps: 1-4.
+# [1]
+# [2]
+# [3]
+# [4] 
+
+## NOTE: my fork attempts to suppress much of MSstats's verbosity as well as 
+## includes access to the internal functions used by MSstatsTMT to fit 
+## protein-wise models and perform statistical comparisons between groups.
 ## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass
-## arguments for parallel processing to underlying MSstats functions.
+## arguments for parallel processing to proteinSummarization to speed things up.
 
 
 ## load data ------------------------------------------------------------------
@@ -69,16 +75,16 @@ if (nprot > length(proteins) | nprot == "all") {
 
 
 ## [1] convert to msstats format -----------------------------------------------
-# MSstatsTMT key steps: 1-3.
 # Proteins with a single feature are removed.
 
 t0 = Sys.time()
 
-suppressMessages({
-msstats_psm <- PDtoMSstatsTMTFormat(msstats_input, 
-				   pd_annotation, 
-				   which.proteinid="Master.Protein.Accessions",
-				   rmProtein_with1Feature = TRUE)
+suppressMessages({ # verbosity
+
+  msstats_psm <- PDtoMSstatsTMTFormat(msstats_input, 
+				      pd_annotation, 
+				      which.proteinid="Master.Protein.Accessions",
+				      rmProtein_with1Feature = TRUE)
 })
 
 # aprox 7 minutes for all proteins
@@ -90,30 +96,38 @@ message("\nTime to pre-process ", nprot, " proteins: ",
 # Perform protein summarization for each run.
 t0 = Sys.time()
 
-suppressMessages({
-	msstats_prot <- proteinSummarization(msstats_psm,
-				     method="msstats",	
-				     global_norm=TRUE,	
-				     MBimpute=TRUE,
-				     reference_norm=TRUE,
-				     clusters=23)
+suppressMessages({ # verbosity
+
+  msstats_prot <- proteinSummarization(msstats_psm,
+				       method="msstats",	
+				       global_norm=TRUE,	
+				       MBimpute=TRUE,
+				       reference_norm=TRUE,
+				       clusters=23)
+
 })
 
 # This takes about 11 minutes for 8.5 k proteins with 23 cores
-#FIXME: fix warnings messages about closing clusters
+# FIXME: fix warnings messages about closing clusters.
 message("\nTime to summarize ", nprot, " proteins: ", 
   round(difftime(Sys.time(), t0, units="min"), 3)," minutes.")
 
 
 ## [3] perform statistical comparisons ----------------------------------------
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
-# lmerTest::lmer(formula(Abundance ~ (1|Mixture) + Condition))
+# lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)
+# We specify Condition as Genotype.BioFraction for all intra-fraction
+# comparisons. T-statistics are moderated using ebayes methods in limma.
 
 t0 = Sys.time()
 
 suppressWarnings({ # about closing clusters FIXME:
-  suppressMessages({
-	msstats_results <- groupComparisonTMT(msstats_prot, msstats_contrasts)	
+  suppressMessages({ # verbosity
+
+    msstats_results <- groupComparisonTMT(msstats_prot, 
+					  msstats_contrasts, 
+					  moderated = TRUE)
+
   })
 })
 
@@ -131,7 +145,7 @@ msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
 msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
 
 
-## combine normalized protein and statistical results -------------------------
+## clean-up msstats_results ---------------------------------------------------
 
 # if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
 msstats_results <- msstats_results %>% filter(is.na(issue))
@@ -150,7 +164,8 @@ message("\nSummary of signifcant (FDR<",
 df = msstats_results %>% 
 	group_by(Label) %>% arrange(adj.pvalue) %>% 
 	summarize(`n Sig` = sum(adj.pvalue < FDR_alpha),
-		  `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),collapse=", "),.groups="drop")
+		  `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
+					    collapse=", "), .groups="drop")
 colnames(df)[1] <- "Contrast"
 knitr::kable(df)
 
@@ -159,16 +174,17 @@ knitr::kable(df)
 
 if (save_rda) {
 
+  # save msstats_results -- MSstatsTMT statistical results
   myfile <- file.path(root,"data","msstats_results.rda")
   save(msstats_results,file=myfile,version=2)
   message("\nSaved ",basename(myfile)," in ",dirname(myfile))
   
-  # save normalized protein data in root/data
+  # save msstats_prot -- the normalized protein
   myfile <- file.path(root,"data","msstats_prot.rda")
   save(msstats_prot,file=myfile,version=2)
   message("\nSaved ",basename(myfile)," in ",dirname(myfile))
   
-  # save the raw data in MSstatsTMT's format
+  # save msstats_psm -- the psm level data reformatted for MSstats
   myfile <- file.path(root,"rdata","msstats_psm.rda")
   save(msstats_psm,file=myfile,version=2)
   message("\nSaved ",basename(myfile)," in ",dirname(myfile))
@@ -176,4 +192,3 @@ if (save_rda) {
 }
 
 message("\nCompleted MSstatsTMT intrafraction statistical analysis.")
-
