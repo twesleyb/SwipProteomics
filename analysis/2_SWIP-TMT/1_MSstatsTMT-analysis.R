@@ -94,6 +94,7 @@ suppressMessages({
 	msstats_prot <- proteinSummarization(msstats_psm,
 				     method="msstats",	
 				     global_norm=TRUE,	
+				     MBimpute=TRUE,
 				     reference_norm=TRUE,
 				     clusters=23)
 })
