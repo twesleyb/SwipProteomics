@@ -1,12 +1,14 @@
 #!/usr/bin/env Rscript
 
+# prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
-
 devtools::load_all()
 
 data(swip)
 data(msstats_prot)
+data(pd_annotation)
+data(leidenalg_partition)
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -14,10 +16,9 @@ suppressPackageStartupMessages({
   library(variancePartition)
 })
 
-data(samples)
-data(msstats_prot)
 
 # munge to split Condition (Geno.BioFrac) into geno annotation
+samples <- pd_annotation
 samples$Genotype <- sapply(strsplit(samples$Condition,"\\."),"[",1)
 
 # munge to create mouse Subject identifier
@@ -37,10 +38,26 @@ info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
 colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
 # Create a formula specifying all covariates as mixed effects and do
-# variancePartition
+# variancePartition -- calculate the percent variance explained.
+# NOTE: Channel and Subject may be confounded
 form = formula(~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Genotype) + (1|Subject))
 prot_varpart = fitExtractVarPartModel(dm, form, info)
 
 # save
-myfile <- file.path(root,"rdata","prot_varpart.rda")
-save(prot_varpart, file=myfile, version=2)
+#myfile <- file.path(root,"rdata","prot_varpart.rda")
+#save(prot_varpart, file=myfile, version=2)
+
+#########################################
+
+# Works, but is sample-wise
+form = formula(~ (1|Module))
+info = data.table(Protein = rownames(dm),
+	   Module = as.factor(partition[rownames(dm)]))
+prot_varpart = fitExtractVarPartModel(t(dm), form, info)
+
+head(prot_varpart)
+
+prots = split(names(partition),partition)[[2]]
+df = reshape2::melt(dm[prots,])
+df$Var2 <- partition[df$Var1]
+
