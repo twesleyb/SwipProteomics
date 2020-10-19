@@ -91,6 +91,7 @@ updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
 calcApvarcovar <- function(fx,data,thopt,sigma) {
   ## PROBLEMATIC bc calls devFun
   # calc asymptotic variance covariance matrix given params sigma and theta
+  #' @importFrom lmerTest lmer
   fm <- lmerTest::lmer(fx,data)
   dd <- devFun(fx,data)
   h <- myhessian(dd, c(thopt, sigma = sigma))
@@ -115,8 +116,9 @@ devFun <- function(fx,data) {
   ## PROBLEMATIC
   fm <- lmerTest::lmer(fx,data)
   # devfun function as a function of optimal parameters
-  #' @importFrom lme4 isGLMM isLMM getME
   #' @importFrom methods is
+  #' @importFrom lmerTest lmer
+  #' @importFrom lme4 isGLMM isLMM getME
   # NOTE: appears to be pretty much verbatim from devfun5 in lmertest
   stopifnot(is(fm, "merMod"))
   np <- length(fm@pp$theta)
@@ -268,7 +270,7 @@ fit1 <- function(protein) {
   # boundary fit -- problem with combination of mixture and subject
   #fx <- formula("Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype") 
   ## [2] Only mixed effect of Subject:
-  fx <- formula("Abundance ~ 0 + BioFraction + (1|Subject) + Genotype")
+  fx <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
   # NOTE: what is meaning of intercept term 0 or 1 or just Abundance ~
   # BioFraction... 
   #r.squaredGLMM.merMod(fm)
@@ -320,7 +322,7 @@ fit1 <- function(protein) {
   rho$s2 <- av$"Mean Sq" / av$"F value"
   # calcuate symtoptic var-covar matrix
   rho$A <- MSstatsTMT::calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) 
-  # we store the proteins statistics in a list
+  # we store some proteins statistics in a list
   stats_list <- list()
   # calculate posterior s2
   s2.post <- MSstatsTMT::calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
@@ -329,16 +331,17 @@ fit1 <- function(protein) {
   #############################################################################
   ## Q5. How to define contrast matrix?
   vec = rho$coeff
-  vec[] <- rep(-2/(length(vec)-1), length(vec))
-  vec[length(vec)] <- 1
+  vec[] <- 0
+  vec[1] <- -1
+  vec[2] <- +1
   contrast_matrix <- vec
   #############################################################################
   varcor <- vss(t(contrast_matrix), thpars=c(rho$thopt, rho$sigma))
   vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
-  se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
+  se2 <- as.numeric(contrast_matrix %*% as.matrix(vcov) %*% contrast_matrix)
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
-  variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
+  variance <- as.numeric(contrast_matrix %*% as.matrix(vcov.post) %*% contrast_matrix)
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
@@ -359,36 +362,38 @@ fit1 <- function(protein) {
   return(rho)
 } #EOF
 
+## ----------------------------------------------------------------------------
 
-## loop
+## loop to fit all proteins
 prots = unique(as.character(msstats_prot$Protein))
 results_list = list()
+pbar <- txtProgressBar(max=length(prots),style=3)
 for (protein in prots) {
-	try(results_list[[protein]] <- fit1(protein),silent=TRUE)
+	suppressMessages({
+	  try(results_list[[protein]] <- fit1(protein),silent=TRUE)
+	})
+	setTxtProgressBar(pbar,value=match(protein,prots))
 } # EOL
+close(pbar)
 
 
-results_df <- parse_results(results_list,gene_map)
+# collect results
+results_df <- bind_rows(sapply(results_list,"[","stats"))
 
-results_df %>% head() %>% knitr::kable()
+# drop singular
+results_df <- results_df %>% filter(!isSingular)
+results_df$isSingular <- NULL
 
-
-parse_results <- function(results_list,gene_map) {
-  # collect results
-  results_df <- bind_rows(sapply(results_list,"[","stats"))
-  # drop singular
-  results_df <- results_df %>% filter(!isSingular)
-  results_df$isSingular <- NULL
-  # annotate with gene symbols
-  idx <- match(results_df$protein,gene_map$uniprot)
-  results_df <- tibble::add_column(results_df,
+# annotate with gene symbols
+idx <- match(results_df$protein,gene_map$uniprot)
+results_df <- tibble::add_column(results_df,
   				 symbol=gene_map$symbol[idx],
   				 .after="protein")
-  # padjust
-  results_df <- tibble::add_column(results_df, 
-  				 Padjust=p.adjust(results_df$Pvalue,"BH"),
-  				 .after="Pvalue")
-  # sort
-  results_df <- results_df %>% arrange(Pvalue)
-  return(results_df)
-}
+
+# adjust pvals 
+results_df <- tibble::add_column(results_df, 
+			 Padjust=p.adjust(results_df$Pvalue,"BH"),
+			 .after="Pvalue")
+
+# sort
+results_df <- results_df %>% arrange(Pvalue)
