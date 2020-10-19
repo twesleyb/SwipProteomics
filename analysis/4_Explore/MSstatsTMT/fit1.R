@@ -5,14 +5,21 @@
 # description: fit lmer model for comparisons between Control and Mutant mice
 # adjusted for differences in subcellular fraction.
 
-# input:
+## inputs:
+n_cores <- 23
 root <- "~/projects/SwipProteomics"
-# * msstats_prot
 
-# load renv
+## load renv
 if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
 
-# imports
+## load local data and functions
+devtools::load_all(root)
+
+data(msstats_prot)
+data(gene_map)
+data(swip)
+
+## other imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(doParallel)
@@ -243,24 +250,6 @@ mygradient <- function(fun, x, delta = 1e-4,
 
 ## load the data --------------------------------------------------------------
 
-# load msstats preprocessed protein data from SwipProteomics in root/data
-#devtools::load_all()
-load(file.path(root,"data","msstats_prot.rda"))
-load(file.path(root,"data","swip.rda")); protein = swip
-data(gene_map)
-
-# Munge sample annotations:
-# * create Genotype column
-# * create BioFraction column
-genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-subject <- interaction(msstats_prot$Mixture,genotype)
-msstats_prot$Genotype <- as.factor(genotype)
-msstats_prot$BioFraction <- biofraction
-msstats_prot$Subject <- subject
-
-# define protein to be analyzed
-proteins = unique(as.character(msstats_prot$Protein))
 
 lmerTestProtein <- function(protein) {
   #############################################################################
@@ -322,13 +311,13 @@ lmerTestProtein <- function(protein) {
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
   # calcuate symtoptic var-covar matrix
-  rho$A <- MSstatsTMT::calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) 
+  rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # was ::
   # we store some proteins statistics in a list
   stats_list <- list()
   # calculate posterior s2
-  s2.post <- MSstatsTMT::calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
+  s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior) # was ::
   # compute variance-covariance matrix
-  vss <- MSstatsTMT::vcovLThetaLM(fx,subdat)
+  vss <- vcovLThetaLM(fx,subdat) # was ::
   #############################################################################
   ## Q5. How to define contrast matrix?
   vec = rho$coeff
@@ -346,7 +335,7 @@ lmerTestProtein <- function(protein) {
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
-  g <- MSstatsTMT::mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
+  g <- mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma)) # was ::
   denom <- t(g) %*% rho$A %*% g
   # compute df.posterior
   df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
@@ -363,12 +352,22 @@ lmerTestProtein <- function(protein) {
   return(rho)
 } #EOF
 
-## ----------------------------------------------------------------------------
+## main ------------------------------------------------------------------------
 
-n_cores = 23
-BiocParallel::register(BiocParallel::SnowParam(n_cores))
+## FIXME: put in 0_PD preprocess
+# Munge sample annotations:
+# * create Genotype column
+# * create BioFraction column
+genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+subject <- interaction(msstats_prot$Mixture,genotype)
+msstats_prot$Genotype <- as.factor(genotype)
+msstats_prot$BioFraction <- biofraction
+msstats_prot$Subject <- subject
 
 ## loop to fit all proteins
+BiocParallel::register(BiocParallel::SnowParam(n_cores))
+
 prots = unique(as.character(msstats_prot$Protein))
 
 results_list <- foreach(protein = prots) %dopar% {
@@ -378,7 +377,8 @@ results_list <- foreach(protein = prots) %dopar% {
 } # EOL
 
 
-# collect results
+## collect results ------------------------------------------------------------
+
 results_df <- bind_rows(sapply(results_list,"[","stats"))
 
 # drop singular
