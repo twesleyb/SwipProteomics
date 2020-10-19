@@ -11,10 +11,8 @@ renv::load(root)
 devtools::load_all()
 
 # local data
-data(swip)
-data(gene_map)
+data(gene_map) 
 data(msstats_prot)
-data(leidenalg_partition)
 
 # global imports
 suppressPackageStartupMessages({
@@ -52,43 +50,57 @@ dm <- msstats_prot %>%
 #dm <- dm[sample(nrow(dm),10),]
 
 ## collect sample metadata
-metadata <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
-colnames(metadata) <- c("Mixture", "Channel", "Genotype", 
+samples <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
+colnames(samples) <- c("Mixture", "Channel", "Genotype", 
 			"BioFraction", "Subject")
-rownames(metadata) <- colnames(dm)
+rownames(samples) <- colnames(dm)
+samples$Genotype <- factor(samples$Genotype)
+samples$Subject <- factor(samples$Subject)
+samples$BioFraction <- factor(samples$BioFraction,
+			      levels=c("F4","F5","F6","F7","F8","F9", "F10"))
 
-knitr::kable(metadata)
+levels(samples$Genotype)
+levels(samples$Subject)
+# There are six mice (subjects)--3x Control and 3x Mutant.
 
+levels(samples$BioFraction)
+# We measured 7 subcellular fractions (BioFraction) per mouse.
 
 # the model to be fit:
-form <- formula("~ BioFraction + (1|Subject) + Genotype")
+# NOTE: Q1 to include an intercept (~ 1 + ...) or not?
+form <- formula("~ 1 + Genotype + BioFraction + (1|Subject)")
+#form <- formula("~ Genotype + BioFraction + (1|Subject)")
+#form <- formula("~ 0 + Genotype + BioFraction + (1|Subject)")
+
 
 ## create dge object
 dge <- edgeR::DGEList(dm)
 
-# do the repeated measures bit
-dream_dge <- variancePartition::voomWithDreamWeights(dge, form, metadata)
+
+## do the repeated measures bit with variancePartition (voom)
+dream_dge <- variancePartition::voomWithDreamWeights(dge, form, samples)
 
 # names(dream_dge)
 # [1] "targets" "E"       "weights" 
 
-# create a contrast to be tested:
+
+## create a contrast to be tested:
 # NOTE: simple contrasts are tested by default
-#L <- getContrast(dream_dge, form, metadata, "GenotypeMutant")
+L <- getContrast(dream_dge, form, samples, c("GenotypeMutant","(Intercept)"))
 
-# the variance for each protein parititioned
-#fx = ~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Subject) + (1|Genotype)
-#vp = fitExtractVarPartModel(dream_dge, fx, metadata)
-#head(vp) # typically, BioFraction explains a vast majority of the variance
-#vp[swip,] # for some proteins Genotype explains the majority of variance
-#plotVarPart( sortCols(vp))
+# check the design:
+plotContrasts(L)
 
-# fit DREAM model for each protein with comparisons specified by contrasts L
-#dream_fit <- variancePartition::dream(dream_dge, form, metadata, L)
-dream_fit <- variancePartition::dream(dream_dge, form, metadata)
+## fit DREAM model for each protein with comparisons specified by contrasts L
+dream_fit <- variancePartition::dream(dream_dge, form, samples, L)
 
-# get results
-results <- topTable(dream_fit, number=Inf)
+# Warning message:
+# In variancePartition::dream(dream_dge, form, samples, L) :
+# Contrasts with only a single non-zero term are already evaluated by default.
+
+
+## get results
+results <- topTable(dream_fit, coef="L1", number=Inf)
 
 # clean-up results
 results <- tibble::add_column(results, Protein=rownames(results),.before=1)
@@ -97,4 +109,4 @@ symbols <- gene_map$symbol[idx]
 results <- tibble::add_column(results,Symbol=symbols,.after="Protein")
 
 # inspect top proteins
-results %>% arrange(P.Value) %>% knitr::kable()
+results %>% arrange(P.Value) %>% head() %>% knitr::kable()
