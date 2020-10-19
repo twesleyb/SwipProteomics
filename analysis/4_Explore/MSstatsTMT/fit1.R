@@ -376,10 +376,15 @@ results_list <- foreach(protein = prots) %dopar% {
 	})
 } # EOL
 
+## collect results ------------------------------------------------------------
+# do moderated p-value analysis
 
 ## collect results ------------------------------------------------------------
 
-results_df <- bind_rows(sapply(results_list,"[","stats"))
+# collect stats
+idx <- unlist(sapply(results_list,class)) != "try-error"
+filt_list <- results_list[which(idx)]
+results_df <- bind_rows(sapply(filt_list,"[[","stats"))
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)

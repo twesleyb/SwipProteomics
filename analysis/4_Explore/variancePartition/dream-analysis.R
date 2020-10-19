@@ -56,6 +56,7 @@ samples$BioFraction <- factor(samples$BioFraction,
 form <- formula("~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Subject)")
 
 #L1 = getContrast(subdm, form, samples, c("GenotypeMutant","GenotypeControl"))
+
 L1 = c(GenotypeControl = -1, GenotypeMutant = 1, 
        BioFractionF5 = 0, BioFractionF6 = 0, BioFractionF7 = 0, 
        BioFractionF8 = 0, BioFractionF9 = 0, BioFractionF10 = 0)
@@ -76,5 +77,53 @@ myfile <- file.path(root,"rdata","dream_results.csv")
 fwrite(results_df,file=myfile)
 
 # status
-message("\nNumber of differentially abundant proteins: ", sum(results_df$adj.P.Val < 0.05))
+message("\nNumber of differentially abundant proteins: ", 
+	sum(results_df$adj.P.Val < 0.05))
 results_df %>% filter(adj.P.Val < 0.05) %>% knitr::kable(row.names=FALSE)
+
+################################################################
+## what about BioFraction versus all else?
+
+# function
+annotate <- function(x) {
+	protein <- rownames(x)
+	x = tibble::add_column(x,protein,.before=1)
+	idx <- match(protein, gene_map$uniprot)
+	symbol = gene_map$symbol[idx]
+	x = tibble::add_column(x,symbol,.after=1)
+	return(x)
+}
+
+
+## the model to be fit:
+form <- formula("~ 0 + BioFraction + Genotype + (1|Mixture) + (1|Subject)")
+
+# munge up some contrasts
+contrasts <- c("F4","F5","F6","F7","F8","F9","F10")
+L0 = c(BioFractionF4 = NA, BioFractionF5 = NA, # F4 
+       BioFractionF6 = NA, BioFractionF7 = NA, 
+       BioFractionF8 = NA, BioFractionF9 = NA, 
+       BioFractionF10 = NA, GenotypeMutant = 0)
+contrasts_list <- list()
+for (i in c(1:length(contrasts))) {
+  L = L0
+  L[which(grepl(contrasts[i],names(L)))] <- 1
+  L[is.na(L)] <- -1/6
+  contrasts_list[[i]] <- L
+}
+names(contrasts_list) <- contrasts
+
+L <- do.call(cbind, contrasts_list)
+
+# fit the model
+fit <- dream(dm, form, samples, L)
+
+# collect the results
+results_list <- lapply(colnames(L),function(x) topTable(fit,coef=x,number="Inf"))
+names(results_list) <- contrasts
+
+# annotate with gene ids
+results_list <- lapply(results_list, annotate)
+
+
+write_excel(results_list,"dream-BioFraction-vs-else.xlsx")
