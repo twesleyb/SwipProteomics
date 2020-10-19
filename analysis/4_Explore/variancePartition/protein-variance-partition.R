@@ -3,19 +3,22 @@
 # prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
-devtools::load_all()
+devtools::load_all(root)
 
+# load the data
 data(swip)
 data(msstats_prot)
 data(pd_annotation)
 data(leidenalg_partition)
 
+# imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
   library(variancePartition)
 })
 
+## do work
 
 # munge to split Condition (Geno.BioFrac) into geno annotation
 samples <- pd_annotation
@@ -43,21 +46,23 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 form = formula(~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Genotype) + (1|Subject))
 prot_varpart = fitExtractVarPartModel(dm, form, info)
 
-# save
-#myfile <- file.path(root,"rdata","prot_varpart.rda")
-#save(prot_varpart, file=myfile, version=2)
+## save ------------------------------------------------------------------------
 
-#########################################
+myfile <- file.path(root,"rdata","prot_varpart.rda")
+save(prot_varpart, file=myfile, version=2)
 
-# Works, but is sample-wise
+myfile <- file.path(root,"rdata","prot_varpart.csv")
+fwrite(prot_varpart,myfile)
+
+
+## calculate percent variance explained module-wise ----------------------------
+
 form = formula(~ (1|Module))
+
 info = data.table(Protein = rownames(dm),
 	   Module = as.factor(partition[rownames(dm)]))
-prot_varpart = fitExtractVarPartModel(t(dm), form, info)
+rownames(info) <- info$Protein
 
-head(prot_varpart)
+mod_varpart = fitExtractVarPartModel(t(dm), form, info)
 
-prots = split(names(partition),partition)[[2]]
-df = reshape2::melt(dm[prots,])
-df$Var2 <- partition[df$Var1]
-
+head(mod_varpart)

@@ -53,7 +53,7 @@ samples$BioFraction <- factor(samples$BioFraction,
 
 
 ## the model to be fit:
-form <- formula("~ 0 + Genotype + BioFraction + (1|Subject)")
+form <- formula("~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Subject)")
 
 #L1 = getContrast(subdm, form, samples, c("GenotypeMutant","GenotypeControl"))
 L1 = c(GenotypeControl = -1, GenotypeMutant = 1, 
@@ -71,4 +71,10 @@ Symbol <- gene_map$symbol[match(Protein,gene_map$uniprot)]
 results_df <- tibble::add_column(results_df,Protein,.before=1)
 results_df <- tibble::add_column(results_df,Symbol,.after=1)
 
-knitr::kable(results_df, row.names=FALSE)
+# save
+myfile <- file.path(root,"rdata","dream_results.csv")
+fwrite(results_df,file=myfile)
+
+# status
+message("\nNumber of differentially abundant proteins: ", sum(results_df$adj.P.Val < 0.05))
+results_df %>% filter(adj.P.Val < 0.05) %>% knitr::kable(row.names=FALSE)

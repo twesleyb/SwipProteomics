@@ -244,6 +244,7 @@ mygradient <- function(fun, x, delta = 1e-4,
 #devtools::load_all()
 load(file.path(root,"data","msstats_prot.rda"))
 load(file.path(root,"data","swip.rda")); protein = swip
+data(gene_map)
 
 # Munge sample annotations:
 # * create Genotype column
@@ -257,18 +258,15 @@ msstats_prot$Subject <- subject
 
 # define protein to be analyzed
 proteins = unique(as.character(msstats_prot$Protein))
-protein = sample(proteins,1)
 
+fit1 <- function(protein) {
   #############################################################################
   ## Q1. Which model is the correct model?
-  
   ## We are interested in differences between levels of Genotype
   ## adjusted for 'BioFraction'.
-  
   ## [1] all covariates
   # boundary fit -- problem with combination of mixture and subject
   #fx <- formula("Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype") 
-  
   ## [2] Only mixed effect of Subject:
   fx <- formula("Abundance ~ 0 + BioFraction + (1|Subject) + Genotype")
   # NOTE: what is meaning of intercept term 0 or 1 or just Abundance ~
@@ -279,106 +277,118 @@ protein = sample(proteins,1)
   # R2c is total variance explained
   # R2m is the variance explained by fixed effects
   # remaineder = ~0.05 is the variance explained by mixed effects.
-  
   ## [3] Only mixed effect of Mixture:
   #fx <- formula("Abundance ~ BioFraction + (1|Mixture) + Genotype")
   #r.squaredGLMM.merMod(fm)
   #    R2m       R2c
   #[1,] 0.9222618 0.9355818  <-- R2c = total variance explained 
   #############################################################################
-
   # the data cannot contain missing values
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
   	warning("The data cannot contain missing values.")
         return(NULL)
   }
-
   fm <- lmerTest::lmer(fx, data=subdat)
-
   #############################################################################
   ## Q3. please help me better understand output of:
   #summary(fm)
   #############################################################################
-
   #############################################################################
   ## Q4. Goodness of fit. How to asses?
   #qqnorm(resid(fm))
   #qqline(resid(fm))
-
   #############################################################################
-
   # compute some model statistics, store in list rho
   rho <- list()
   rho$protein <- protein
   rho$formula <- fx
   rho$model <- fm
   rho$data <- subdat
-
   # here we compute the unmoderated statistics
   rho$df.prior <- 0
   rho$s2.prior <- 0
-
   # check if singular (boundary) fit
   rho$isSingular <- lme4::isSingular(fm)
-
   # calculate coeff, sigma, and theta:
   rho$coeff <- lme4::fixef(fm)
   rho$sigma <- stats::sigma(fm)
   rho$thopt <- lme4::getME(fm, "theta")
-
   # calculate degrees of freedom and sigma^2:
   av <- anova(fm)
   rho$s2_df <- av$DenDF
   rho$s2 <- av$"Mean Sq" / av$"F value"
-
   # calcuate symtoptic var-covar matrix
   rho$A <- MSstatsTMT::calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) 
-
   # we store the proteins statistics in a list
   stats_list <- list()
-
   # calculate posterior s2
   s2.post <- MSstatsTMT::calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior)
-
   # compute variance-covariance matrix
   vss <- MSstatsTMT::vcovLThetaLM(fx,subdat)
-
   #############################################################################
   ## Q5. How to define contrast matrix?
   vec = rho$coeff
-  vec[] <- 0
-  #vec[1] <- -1
+  vec[] <- rep(-2/(length(vec)-1), length(vec))
   vec[length(vec)] <- 1
   contrast_matrix <- vec
   #############################################################################
-
   varcor <- vss(t(contrast_matrix), thpars=c(rho$thopt, rho$sigma))
   vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
   se2 <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov) %*% contrast_matrix)
-
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
   variance <- as.numeric(t(contrast_matrix) %*% as.matrix(vcov.post) %*% contrast_matrix)
-
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
   g <- MSstatsTMT::mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma))
   denom <- t(g) %*% rho$A %*% g
-
   # compute df.posterior
   df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
-
   ## Q5. FC seems inflated?
   # compute fold change and the t-statistic
   FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
   t <- FC / sqrt(variance) # the Fold change and the variance
-
   # compute the p-value
   p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
-
   # compile results
   rho$stats <- data.frame(protein=protein,contrast="Mutant-Control",
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
   		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
+  return(rho)
+} #EOF
+
+
+## loop
+prots = unique(as.character(msstats_prot$Protein))
+results_list = list()
+for (protein in prots) {
+	try(results_list[[protein]] <- fit1(protein),silent=TRUE)
+} # EOL
+
+
+results_df <- parse_results(results_list,gene_map)
+
+results_df %>% head() %>% knitr::kable()
+
+
+parse_results <- function(results_list,gene_map) {
+  # collect results
+  results_df <- bind_rows(sapply(results_list,"[","stats"))
+  # drop singular
+  results_df <- results_df %>% filter(!isSingular)
+  results_df$isSingular <- NULL
+  # annotate with gene symbols
+  idx <- match(results_df$protein,gene_map$uniprot)
+  results_df <- tibble::add_column(results_df,
+  				 symbol=gene_map$symbol[idx],
+  				 .after="protein")
+  # padjust
+  results_df <- tibble::add_column(results_df, 
+  				 Padjust=p.adjust(results_df$Pvalue,"BH"),
+  				 .after="Pvalue")
+  # sort
+  results_df <- results_df %>% arrange(Pvalue)
+  return(results_df)
+}
