@@ -82,6 +82,7 @@ message("\nNumber of differentially abundant proteins: ",
 results_df %>% filter(adj.P.Val < 0.05) %>% knitr::kable(row.names=FALSE)
 
 ################################################################
+
 ## what about BioFraction versus all else?
 
 # function
@@ -119,11 +120,11 @@ L <- do.call(cbind, contrasts_list)
 fit <- dream(dm, form, samples, L)
 
 # collect the results
-results_list <- lapply(colnames(L),function(x) topTable(fit,coef=x,number="Inf"))
+results_list <- lapply(contrasts,function(x) topTable(fit,coef=x,number="Inf"))
 names(results_list) <- contrasts
 
 # annotate with gene ids
 results_list <- lapply(results_list, annotate)
 
-
+# save
 write_excel(results_list,"dream-BioFraction-vs-else.xlsx")

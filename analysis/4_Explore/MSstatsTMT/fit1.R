@@ -258,7 +258,7 @@ lmerTestProtein <- function(protein) {
   ## adjusted for 'BioFraction'.
   ## [1] all covariates
   # boundary fit -- problem with combination of mixture and subject
-  #fx <- formula("Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype") 
+  #fx <- Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype) 
   ## [2] Only mixed effect of Subject:
   fx <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
   # NOTE: what is meaning of intercept term 0 or 1 or just Abundance ~
@@ -331,12 +331,15 @@ lmerTestProtein <- function(protein) {
   se2 <- as.numeric(contrast_matrix %*% as.matrix(vcov) %*% contrast_matrix)
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
-  variance <- as.numeric(contrast_matrix %*% as.matrix(vcov.post) %*% contrast_matrix)
+  variance <- as.numeric({
+	        contrast_matrix %*% as.matrix(vcov.post) %*% contrast_matrix
+  })
   # calculate degrees of freedom
   # given params theta and sigma from lmer and the Acovar
   # NOTE: careful formatting can break things
-  g <- mygradient(function(x) vss(t(contrast_matrix), x)$varcor, c(rho$thopt, rho$sigma)) # was ::
-  denom <- t(g) %*% rho$A %*% g
+  fx <- function(x) { vss(t(contrast_matrix), x)$varcor }
+  g <- mygradient(fx, c(rho$thopt, rho$sigma)) # was ::
+  denom <- as.numeric(t(g) %*% rho$A %*% g)
   # compute df.posterior
   df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
   ## Q5. FC seems inflated?
@@ -348,7 +351,8 @@ lmerTestProtein <- function(protein) {
   # compile results
   rho$stats <- data.frame(protein=protein,contrast="Mutant-Control",
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, isSingular=rho$isSingular)
+  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, 
+		 isSingular=rho$isSingular)
   return(rho)
 } #EOF
 
