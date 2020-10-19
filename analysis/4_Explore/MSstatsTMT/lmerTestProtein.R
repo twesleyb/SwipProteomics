@@ -270,8 +270,4 @@ s2 <- av$"Mean Sq" / av$"F value"
 
 # Beta = estimates(lmer,Condition)
 # variance-covariance matrix of fixed effects (Condition)
-V_hat = merDeriv::vcov.lmerMod(fm,full=FALSE) 
-
-
-
-
+#V_hat = merDeriv::vcov.lmerMod(fm,full=FALSE) 

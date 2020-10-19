@@ -15,6 +15,7 @@ if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
 # imports
 suppressPackageStartupMessages({
   library(dplyr)
+  library(doParallel)
 })
 
 
@@ -261,7 +262,7 @@ msstats_prot$Subject <- subject
 # define protein to be analyzed
 proteins = unique(as.character(msstats_prot$Protein))
 
-fit1 <- function(protein) {
+lmerTestProtein <- function(protein) {
   #############################################################################
   ## Q1. Which model is the correct model?
   ## We are interested in differences between levels of Genotype
@@ -364,17 +365,17 @@ fit1 <- function(protein) {
 
 ## ----------------------------------------------------------------------------
 
+n_cores = 23
+BiocParallel::register(BiocParallel::SnowParam(n_cores))
+
 ## loop to fit all proteins
 prots = unique(as.character(msstats_prot$Protein))
-results_list = list()
-pbar <- txtProgressBar(max=length(prots),style=3)
-for (protein in prots) {
+
+results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(results_list[[protein]] <- fit1(protein),silent=TRUE)
+	  try(lmerTestProtein(protein),silent=TRUE)
 	})
-	setTxtProgressBar(pbar,value=match(protein,prots))
 } # EOL
-close(pbar)
 
 
 # collect results
@@ -397,3 +398,6 @@ results_df <- tibble::add_column(results_df,
 
 # sort
 results_df <- results_df %>% arrange(Pvalue)
+
+# examine top results
+results_df %>% head() %>% knitr::kable()
