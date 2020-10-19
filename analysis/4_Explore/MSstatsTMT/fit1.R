@@ -271,6 +271,8 @@ protein = sample(proteins,1)
   
   ## [2] Only mixed effect of Subject:
   fx <- formula("Abundance ~ 0 + BioFraction + (1|Subject) + Genotype")
+  # NOTE: what is meaning of intercept term 0 or 1 or just Abundance ~
+  # BioFraction... 
   #r.squaredGLMM.merMod(fm)
   #    R2m       R2c
   # [1,] 0.9162647 0.9663459 <-- better fit(?) (more var explained)
