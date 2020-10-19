@@ -358,17 +358,6 @@ lmerTestProtein <- function(protein) {
 
 ## main ------------------------------------------------------------------------
 
-## FIXME: put in 0_PD preprocess
-# Munge sample annotations:
-# * create Genotype column
-# * create BioFraction column
-genotype <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-biofraction <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-subject <- interaction(msstats_prot$Mixture,genotype)
-msstats_prot$Genotype <- as.factor(genotype)
-msstats_prot$BioFraction <- biofraction
-msstats_prot$Subject <- subject
-
 ## loop to fit all proteins
 BiocParallel::register(BiocParallel::SnowParam(n_cores))
 
@@ -380,8 +369,6 @@ results_list <- foreach(protein = prots) %dopar% {
 	})
 } # EOL
 
-## collect results ------------------------------------------------------------
-# do moderated p-value analysis
 
 ## collect results ------------------------------------------------------------
 
