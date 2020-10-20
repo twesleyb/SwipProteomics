@@ -1,11 +1,9 @@
-Loading SwipProteomics
-Warning messages:
-1: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘SwipProteomics’ 
-2: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘SwipProteomics’ 
-3: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘SwipProteomics’ 
-Linear mixed model fit by REML. t-tests use Satterthwaite's method [
-lmerModLmerTest]
-Formula: fx0
+## Model0 -- Intrafraction Comparisons
+
+```
+Linear mixed model fit by REML. t-tests use Satterthwaite's method 
+[lmerModLmerTest]
+Formula: Abundance ~ 0 + Genotype.BioFraction + (1|Mixture)
    Data: msstats_prot %>% filter(Protein == swip)
 
 REML criterion at convergence: 3.7
@@ -38,24 +36,31 @@ ConditionMutant.F8     5.4930     0.1213 17.2481   45.28   <2e-16 ***
 ConditionMutant.F9     5.7813     0.1213 17.2481   47.66   <2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
 
-Correlation matrix not shown by default, as p = 14 > 12.
-Use print(x, correlation=TRUE)  or
-    vcov(x)        if you need it
-
-
+### Goodness of fit
 
 |       R2m|       R2c|
 |---------:|---------:|
 | 0.9351423| 0.9493463|
 
+_Marginal and conditional R-squared for mixed effect model (Nakagawa et al., 2014)._
 
-|protein |contrast                               |    log2FC| percentControl| Pvalue| Tstatistic|        SE|       DF|isSingular |
-|:-------|:--------------------------------------|---------:|--------------:|------:|----------:|---------:|--------:|:----------|
-|Q3UMB9  |ConditionMutant.F7-ConditionControl.F7 | -1.688576|       0.310233|      0|  -11.13831| 0.1516008| 25.99987|FALSE      |
-Linear mixed model fit by REML. t-tests use Satterthwaite's method [
-lmerModLmerTest]
-Formula: fx1
+
+### Statistical Results
+
+|protein |contrast             |    log2FC| Pvalue| Tstatistic|        SE|       DF|
+|:-------|:--------------------|---------:|------:|----------:|---------:|--------:|
+|Q3UMB9  |Mutant.F7-Control.F7 | -1.688576|      0|  -11.13831| 0.1516008| 25.99987|
+
+----
+
+## Model1 -- Mutant-Control Comparison
+
+```
+Linear mixed model fit by REML. t-tests use Satterthwaite's method 
+[lmerModLmerTest]
+Formula: Abundance ~ 0 + Genotype + BioFraction + (1|Subject)
    Data: msstats_prot %>% filter(Protein == swip)
 
 REML criterion at convergence: -7.2
@@ -82,23 +87,16 @@ BioFractionF9    0.30969    0.08742 30.00000   3.542 0.001319 **
 BioFractionF10   0.64373    0.08742 30.00000   7.363 3.34e-08 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
 
-Correlation of Fixed Effects:
-            GntypC GntypM BFrcF5 BFrcF6 BFrcF7 BFrcF8 BFrcF9
-GenotypMtnt  0.208                                          
-BioFractnF5 -0.348 -0.348                                   
-BioFractnF6 -0.348 -0.348  0.500                            
-BioFractnF7 -0.348 -0.348  0.500  0.500                     
-BioFractnF8 -0.348 -0.348  0.500  0.500  0.500              
-BioFractnF9 -0.348 -0.348  0.500  0.500  0.500  0.500       
-BioFrctnF10 -0.348 -0.348  0.500  0.500  0.500  0.500  0.500
-
+### Goodness of fit
 
 |       R2m|       R2c|
 |---------:|---------:|
 | 0.9162647| 0.9663459|
 
+### Statistical Results
 
-|protein |contrast                       |    log2FC| percentControl|    Pvalue| Tstatistic|        SE|       DF|isSingular |
-|:-------|:------------------------------|---------:|--------------:|---------:|----------:|---------:|--------:|:----------|
-|Q3UMB9  |GenotypeMutant-GenotypeControl | -1.516727|      0.3494779| 0.0006566|  -9.605806| 0.1578969| 3.999999|FALSE      |
+|protein |contrast       |    log2FC|    Pvalue| Tstatistic|        SE|       DF|
+|:-------|:--------------|---------:|---------:|----------:|---------:|--------:|
+|Q3UMB9  |Mutant-Control | -1.516727| 0.0006566|  -9.605806| 0.1578969| 3.999999|
