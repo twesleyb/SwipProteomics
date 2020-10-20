@@ -11,6 +11,7 @@ sessionInfo.txt
 
 
 ## project specific files to ignore.
+*.email
 *.sw*
 *.report
 renv.lock

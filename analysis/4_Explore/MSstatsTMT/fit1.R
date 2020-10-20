@@ -10,11 +10,8 @@ root <- "~/projects/SwipProteomics"
 renv::load(root); devtools::load_all(root)
 
 ## inputs:
-n_cores <- 23
-
-## data
 data(msstats_prot)
-data(gene_map)
+#data(gene_map)
 data(swip)
 
 ## other imports
@@ -38,7 +35,8 @@ suppressPackageStartupMessages({
 
 # NOTE: I added fx, data to all functions that handle the lmer model. 
 # These functions init a fit model by fitting the function to the data.
-# NOTE: Names have been changed by MSstats and then again by myself.
+# NOTE: Names have been changed by MSstats and then again by myself for clarify
+# or uniqueness.
 
 
 calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
@@ -358,7 +356,7 @@ cm0["ConditionMutant.F7"] <- +1
 model0 <- lmerTestProtein(swip, fx0, msstats_prot, cm0)
 model0$stats %>% knitr::kable()
 
-# repeat for comparisons across all fractions:
+## repeat for comparisons across all fractions:
 
 # fit a model
 fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
@@ -380,41 +378,41 @@ model1$stats %>% knitr::kable()
 
 ## loop to fit all proteins ----------------------------------------------------
 
-BiocParallel::register(BiocParallel::SnowParam(n_cores))
-
-prots = unique(as.character(msstats_prot$Protein))
-
-results_list <- foreach(protein = prots) %dopar% {
-	suppressMessages({
-	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
-	})
-} # EOL
-
-
-## collect results ------------------------------------------------------------
-
-# collect stats
-idx <- unlist(sapply(results_list,class)) != "try-error"
-filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[","stats"))
-
-# drop singular
-results_df <- results_df %>% filter(!isSingular)
-results_df$isSingular <- NULL
-
-# annotate with gene symbols
-idx <- match(results_df$protein,gene_map$uniprot)
-results_df <- tibble::add_column(results_df,
-  				 symbol=gene_map$symbol[idx],
-  				 .after="protein")
-
-# adjust pvals 
-results_df <- tibble::add_column(results_df, 
-			 Padjust=p.adjust(results_df$Pvalue,"BH"),
-			 .after="Pvalue")
-
-# sort
-results_df <- results_df %>% arrange(Pvalue)
-
-# examine top results
-results_df %>% head() %>% knitr::kable()
+#n_cores <- parallel::detectCores()
+#BiocParallel::register(BiocParallel::SnowParam(n_cores))
+#
+#prots = unique(as.character(msstats_prot$Protein))
+#
+#results_list <- foreach(protein = prots) %dopar% {
+#	suppressMessages({
+#	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
+#	})
+#} # EOL
+#
+#
+### collect results ------------------------------------------------------------
+## collect stats
+#idx <- unlist(sapply(results_list,class)) != "try-error"
+#filt_list <- results_list[which(idx)]
+#results_df <- bind_rows(sapply(filt_list,"[","stats"))
+#
+## drop singular
+#results_df <- results_df %>% filter(!isSingular)
+#results_df$isSingular <- NULL
+#
+## annotate with gene symbols
+#idx <- match(results_df$protein,gene_map$uniprot)
+#results_df <- tibble::add_column(results_df,
+#  				 symbol=gene_map$symbol[idx],
+#  				 .after="protein")
+#
+## adjust pvals 
+#results_df <- tibble::add_column(results_df, 
+#			 Padjust=p.adjust(results_df$Pvalue,"BH"),
+#			 .after="Pvalue")
+#
+## sort
+#results_df <- results_df %>% arrange(Pvalue)
+#
+## examine top results
+#results_df %>% head() %>% knitr::kable()
