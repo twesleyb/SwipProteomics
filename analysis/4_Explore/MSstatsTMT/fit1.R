@@ -5,16 +5,14 @@
 # description: fit lmer model for comparisons between Control and Mutant mice
 # adjusted for differences in subcellular fraction.
 
+## prepare the env
+root <- "~/projects/SwipProteomics"
+renv::load(root); devtools::load_all(root)
+
 ## inputs:
 n_cores <- 23
-root <- "~/projects/SwipProteomics"
 
-## load renv
-if (dir.exists(file.path(root,"renv"))) { renv::load(root,quiet=TRUE) }
-
-## load local data and functions
-devtools::load_all(root)
-
+## data
 data(msstats_prot)
 data(gene_map)
 data(swip)
@@ -27,7 +25,21 @@ suppressPackageStartupMessages({
 
 
 ## Functions ------------------------------------------------------------------
-# Modified from internal MSstats functions.
+# Modified from internal MSstatsTMT functions.
+
+# * calcPosterior
+# * updateLModel
+# * calcApvarcovar
+# * devFun
+# * vcovLThetaLM
+# * myhessian
+# * mygradient
+# * lmerTestProtein - model fitting and statistical testing for a given protein
+
+# NOTE: I added fx, data to all functions that handle the lmer model. 
+# These functions init a fit model by fitting the function to the data.
+# NOTE: Names have been changed by MSstats and then again by myself.
+
 
 calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
   # a function to compute s2 posterior
@@ -37,9 +49,9 @@ calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
 
 
 updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
-  ## PROBLEMATIC
   object <- lmerTest::lmer(fx,data)
-  # generate a deviance function as a function of optimal parameters
+  # NOTE: from lmerTest update
+  # generate a deviance function as a function
   #' @importFrom stats formula getCall terms update.formula
   if (is.null(call <- getCall(object))) {
     stop("object should contain a 'call' component")
@@ -97,7 +109,9 @@ updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
 
 
 calcApvarcovar <- function(fx,data,thopt,sigma) {
-  ## PROBLEMATIC bc calls devFun
+  # why not:
+  # as_lmerModLmerTest(fx, tol = 1e-08)
+  # vcov_varpar of param theta sigma
   # calc asymptotic variance covariance matrix given params sigma and theta
   #' @importFrom lmerTest lmer
   fm <- lmerTest::lmer(fx,data)
@@ -121,7 +135,6 @@ calcApvarcovar <- function(fx,data,thopt,sigma) {
 
 
 devFun <- function(fx,data) {
-  ## PROBLEMATIC
   fm <- lmerTest::lmer(fx,data)
   # devfun function as a function of optimal parameters
   #' @importFrom methods is
@@ -190,7 +203,6 @@ myhessian <- function(fun, x, fx = NULL, delta = 1e-4, ...) {
 
 
 vcovLThetaLM <- function(fx,data) {
-  ## PROBLEMATIC
   fm <- lmerTest::lmer(fx,data)
   # returns Lc %*% vcov as a function of theta parameters %*% t(Lc)
   #' @importFrom methods is
@@ -248,58 +260,26 @@ mygradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-## load the data --------------------------------------------------------------
 
-
-lmerTestProtein <- function(protein) {
-  #############################################################################
-  ## Q1. Which model is the correct model?
-  ## We are interested in differences between levels of Genotype
-  ## adjusted for 'BioFraction'.
-  ## [1] all covariates
-  # boundary fit -- problem with combination of mixture and subject
-  #fx <- Abundance ~ BioFraction + (1|Mixture) + (1|Subject) + Genotype) 
-  ## [2] Only mixed effect of Subject:
-  fx <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
-  # NOTE: what is meaning of intercept term 0 or 1 or just Abundance ~
-  # BioFraction... 
-  #r.squaredGLMM.merMod(fm)
-  #    R2m       R2c
-  # [1,] 0.9162647 0.9663459 <-- better fit(?) (more var explained)
-  # R2c is total variance explained
-  # R2m is the variance explained by fixed effects
-  # remaineder = ~0.05 is the variance explained by mixed effects.
-  ## [3] Only mixed effect of Mixture:
-  #fx <- formula("Abundance ~ BioFraction + (1|Mixture) + Genotype")
-  #r.squaredGLMM.merMod(fm)
-  #    R2m       R2c
-  #[1,] 0.9222618 0.9355818  <-- R2c = total variance explained 
-  #############################################################################
-  # the data cannot contain missing values
+lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
+  # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
+	# the data cannot contain missing values
   	warning("The data cannot contain missing values.")
         return(NULL)
   }
+  # fit the model
   fm <- lmerTest::lmer(fx, data=subdat)
-  #############################################################################
-  ## Q3. please help me better understand output of:
-  #summary(fm)
-  #############################################################################
-  #############################################################################
-  ## Q4. Goodness of fit. How to asses?
-  #qqnorm(resid(fm))
-  #qqline(resid(fm))
-  #############################################################################
-  # compute some model statistics, store in list rho
+  # compute some key model statistics, store in list rho
   rho <- list()
   rho$protein <- protein
   rho$formula <- fx
   rho$model <- fm
   rho$data <- subdat
   # here we compute the unmoderated statistics
-  rho$df.prior <- 0
-  rho$s2.prior <- 0
+  df.prior <- 0
+  s2.prior <- 0
   # check if singular (boundary) fit
   rho$isSingular <- lme4::isSingular(fm)
   # calculate coeff, sigma, and theta:
@@ -308,64 +288,105 @@ lmerTestProtein <- function(protein) {
   rho$thopt <- lme4::getME(fm, "theta")
   # calculate degrees of freedom and sigma^2:
   av <- anova(fm)
-  rho$s2_df <- av$DenDF
-  rho$s2 <- av$"Mean Sq" / av$"F value"
+  s2_df <- av$DenDF # dof
+  s2 <- av$"Mean Sq" / av$"F value"
   # calcuate symtoptic var-covar matrix
-  rho$A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma) # was ::
-  # we store some proteins statistics in a list
-  stats_list <- list()
+  A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma)
   # calculate posterior s2
-  s2.post <- calcPosterior(rho$s2, rho$s2_df, rho$s2.prior, rho$df.prior) # was ::
-  # compute variance-covariance matrix
-  vss <- vcovLThetaLM(fx,subdat) # was ::
+  s2.post <- calcPosterior(s2, s2_df, s2.prior, df.prior)
   #############################################################################
   ## Q5. How to define contrast matrix?
-  vec = rho$coeff
-  vec[] <- 0
-  vec[1] <- -1
-  vec[2] <- +1
-  contrast_matrix <- vec
+  #vec = rho$coeff
+  #vec[] <- 0
+  #vec[which(grepl("Control.F10",names(vec)))] <- -1
+  #vec[which(grepl("Mutant.F10",names(vec)))] <- +1
+  #contrast_matrix <- vec
+  #vec[1] <- -1
+  #vec[2] <- +1
+  #contrast_matrix <- vec
   #############################################################################
+  # compute variance-covariance matrix
+  vss <- vcovLThetaLM(fx,subdat) 
   varcor <- vss(t(contrast_matrix), thpars=c(rho$thopt, rho$sigma))
-  vcov <- varcor$unscaled.varcor * rho$s2 # scaled covariance matrix
+  # compute scaled covariance matrix and se2
+  vcov <- varcor$unscaled.varcor * s2 
   se2 <- as.numeric(contrast_matrix %*% as.matrix(vcov) %*% contrast_matrix)
   # calculate variance
   vcov.post <- varcor$unscaled.varcor * s2.post
   variance <- as.numeric({
 	        contrast_matrix %*% as.matrix(vcov.post) %*% contrast_matrix
   })
-  # calculate degrees of freedom
-  # given params theta and sigma from lmer and the Acovar
-  # NOTE: careful formatting can break things
-  fx <- function(x) { vss(t(contrast_matrix), x)$varcor }
-  g <- mygradient(fx, c(rho$thopt, rho$sigma)) # was ::
-  denom <- as.numeric(t(g) %*% rho$A %*% g)
-  # compute df.posterior
-  df.post <- 2 * (se2)^2 / denom + rho$df.prior # df.post
-  ## Q5. FC seems inflated?
+  # calculate degrees of freedom posterior
+  # given params theta and sigma from lmer and the covariance matrix
+  # NOTE: careful formatting-- can break things
+  myfun <- function(x) { vss(t(contrast_matrix), x)$varcor }
+  g <- mygradient(myfun, c(rho$thopt, rho$sigma))
+  denom <- as.numeric(t(g) %*% A %*% g)
+  df.post <- 2 * (se2)^2 / denom + df.prior
   # compute fold change and the t-statistic
-  FC <- (contrast_matrix %*% rho$coeff)[, 1] # coeff
-  t <- FC / sqrt(variance) # the Fold change and the variance
-  # compute the p-value
-  p <- 2 * pt(-abs(t), df = df.post) # t-statistic and df.post
+  FC <- (contrast_matrix %*% rho$coeff)[, 1]
+  t <- FC / sqrt(variance) 
+  # compute the p-value given t-statistic and df.post
+  p <- 2 * pt(-abs(t), df = df.post) 
   # compile results
-  rho$stats <- data.frame(protein=protein,contrast="Mutant-Control",
+  comparison <- paste(names(contrast_matrix)[contrast_matrix == +1], 
+		      names(contrast_matrix)[contrast_matrix == -1],sep="-")
+  rho$stats <- data.frame(protein=protein,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
   		 Tstatistic=t, SE=sqrt(variance), DF=df.post, 
 		 isSingular=rho$isSingular)
   return(rho)
 } #EOF
 
-## main ------------------------------------------------------------------------
 
-## loop to fit all proteins
+## check Swip's fit -----------------------------------------------------------
+
+# demonstrate fit:
+fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
+summary(fm0)
+
+knitr::kable(r.squaredGLMM.merMod(fm0))
+
+# build a contrast matrix:
+cm0 <- lme4::fixef(fm0)
+cm0[] <- 0
+cm0["ConditionControl.F7"] <- -1
+cm0["ConditionMutant.F7"] <- +1 
+
+# test a comparison defined by contrast_matrix
+model0 <- lmerTestProtein(swip, fx0, msstats_prot, cm0)
+model0$stats %>% knitr::kable()
+
+# repeat for comparisons across all fractions:
+
+# fit a model
+fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
+summary(fm1)
+
+knitr::kable(r.squaredGLMM.merMod(fm1))
+
+# generate contrast
+cm1 <- lme4::fixef(fm1)
+cm1[] <- 0
+cm1["GenotypeControl"] <- -1
+cm1["GenotypeMutant"] <- +1
+
+# test the model
+model1 <- lmerTestProtein(swip, fx1, msstats_prot, cm1)
+model1$stats %>% knitr::kable()
+
+
+## loop to fit all proteins ----------------------------------------------------
+
 BiocParallel::register(BiocParallel::SnowParam(n_cores))
 
 prots = unique(as.character(msstats_prot$Protein))
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein),silent=TRUE)
+	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
 	})
 } # EOL
 
@@ -375,7 +396,7 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect stats
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[[","stats"))
+results_df <- bind_rows(sapply(filt_list,"[","stats"))
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
