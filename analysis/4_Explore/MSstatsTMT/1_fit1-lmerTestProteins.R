@@ -9,6 +9,7 @@
 # [-] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 # [+] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
+## NOTE: model specific contrasts are defined below
 
 ## prepare the env ------------------------------------------------------------
 
@@ -20,7 +21,7 @@ FDR_alpha = 0.05 # threshold for significance
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-suppressWarninsg({
+suppressWarnings({
 	devtools::load_all(root)
 })
 
@@ -65,7 +66,6 @@ expandGroups <- function(conditions,biofractions) {
 ## check Swip's fit -----------------------------------------------------------
 
 ## formulae to be fit:
-#fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
 ## fit model 1
@@ -86,14 +86,14 @@ results$stats %>% knitr::kable()
 
 ## loop to fit all proteins ----------------------------------------------------
 
+prots = unique(as.character(msstats_prot$Protein))
+
 n_cores <- parallel::detectCores() - 1
 BiocParallel::register(BiocParallel::SnowParam(n_cores))
 
-prots = unique(as.character(msstats_prot$Protein))
-
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx1, msstats_prot, contrasts), silent=T))
+	  try(lmerTestProtein(protein, fx1, msstats_prot, contrasts), silent=T)
 	})
 } # EOL
 

@@ -86,10 +86,10 @@ results$stats %>% knitr::kable()
 
 ## loop to fit all proteins ----------------------------------------------------
 
+prots = unique(as.character(msstats_prot$Protein))
+
 n_cores <- parallel::detectCores() - 1
 BiocParallel::register(BiocParallel::SnowParam(n_cores))
-
-prots = unique(as.character(msstats_prot$Protein))
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
@@ -106,8 +106,8 @@ filt_list <- results_list[which(idx)]
 results_df <- bind_rows(sapply(filt_list,"[","stats"))
 
 # drop singular
-results_df <- results_df %>% filter(!isSingular)
-results_df$isSingular <- NULL
+#results_df <- results_df %>% filter(!isSingular)
+#results_df$isSingular <- NULL
 
 ## annotate with gene symbols
 idx <- match(results_df$protein,gene_map$uniprot)
