@@ -141,5 +141,8 @@ results_df <- results_df %>% arrange(Pvalue)
 # examine top results
 results_df %>% head() %>% knitr::kable()
 
+# status
 message("Total number of significant proteins: ",
 	sum(results_df$Padjust < 0.05))
+
+
