@@ -140,14 +140,13 @@ msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
 msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
 
 # add BioFraction, Genotype, and Subject columns
-colnames(msstats_prot)
-
 geno <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
 biof <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+subject <- as.numeric(interaction(msstats_prot$Mixture,geno))
 msstats_prot$Genotype <- factor(geno,levels=c("Mutant","Control"))
-msstats_prot$BioFraction <- biof
-
-strsplit(msstats_prot$Condition,"\\.")
+msstats_prot$BioFraction <- factor(biof,
+				   levels=c("F4","F5","F6","F7","F8","F9","F10"))
+msstats_prot$Subject <- as.factor(subject)
 
 
 ## clean-up msstats_results ---------------------------------------------------

@@ -3,7 +3,6 @@
 #' @export lmerTestProtein
 
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
-  # TODO: add lmer gof test
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
@@ -15,7 +14,8 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
   fm <- lmerTest::lmer(fx, data=subdat)
   # evaluate R2 for marginal (fixed) and conditional (total) effects
   if (gof) {
-	  r2_nakagawa <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),nm=c("R2m_fixef", "R2c_total"))
+	  r2_nakagawa <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
+				  nm=c("R2m_fixef", "R2c_total"))
 	  r2_nakagawa["R2r_mixef"] <- r2_nakagawa[2] - r2_nakagawa[1]
 	  r2_nakagawa <- r2_nakagawa[c(3,1,2)]
   }
@@ -44,8 +44,8 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
 	   contrast %*% fm@Jac_list[[2]] %*% contrast)
     denom <- as.numeric(t(g) %*% A %*% g)
     # NOTE: which is correct?
-    df_post <- (2 * se2) / (denom + df_prior) # or se2^2 ???
-    #df_post <- (2 * se2^2) / (denom + df_prior)
+    #df_post <- (2 * se2) / (denom + df_prior) # or se2^2 ???
+    df_post <- (2 * se2^2) / (denom + df_prior)
     # compute fold change and the t-statistic
     FC <- (contrast %*% coeff)[, 1]
     t <- FC / sqrt(se2) 

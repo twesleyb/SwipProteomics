@@ -3,7 +3,7 @@
 # title: SwipProteomics
 # author: twab
 # description: fit protein-wise lmer models and perform statistical inferences
-# for a given contrast
+# for intrafraction (BioFraction) contrasts
 
 ## formulae to be fit:
 # [+] fx0: Abundance ~ 0 + Condition + (1|Mixture)
@@ -81,7 +81,9 @@ myfile <- file.path(root,"data","fm0.rda")
 save(fm0,file=myfile,version=2)
 
 ## evaluate gof
-r2fm0
+r2_nakagawa <- r.squaredGLMM.merMod(fm0)
+
+knitr::kable(rbind(c("fixef","total"),r2_nakagawa))
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl","ConditionMutant")
@@ -100,7 +102,7 @@ save(cm0,file=myfile,version=2)
 
 # check the results for swip
 message("\nResults for WASHC4:")
-results <- lmerTestProtein(swip,fx0,msstats_prot,contrasts)
+results <- lmerTestProtein(swip,fx0,msstats_prot,contrasts,gof=TRUE)
 results$stats %>% knitr::kable()
 
 
@@ -112,20 +114,33 @@ prots = unique(as.character(msstats_prot$Protein))
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores=n_cores)
 
+# specify gof = TRUE to calculate Nakagawa R2 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent=T)
+	  try(lmerTestProtein(protein, fx0, msstats_prot, 
+			      contrasts, gof = TRUE), silent=T)
 	})
 } # EOL
 
 
 ## process results ------------------------------------------------------------
 
+
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-#results_df <- dplyr::bind_rows(sapply(filt_list,"[","stats"))  # works when interactive
-results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))  # works when executed
+names(filt_list) <- sapply(filt_list,"[[","protein")
+
+## FIXME: why does one work interactively but not when executed?
+#results_df <- dplyr::bind_rows(sapply(filt_list,"[","stats")) # interactive
+results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))  # executed
+
+# extract gof stats
+gof <- dplyr::bind_rows(sapply(filt_list,"[[","gof"),.id="protein")
+
+# save gof stats -- we can annotate plots with fit
+myfile <- file.path(root,"data","fit0_gof.rda")
+save(gof,file=myfile,version=2)
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -198,6 +213,6 @@ if (length(common_prots) > 0) {
 }
 
 # save as rda
-fit0_results <- results_list
-myfile <- file.path(root,"tables",results_file)
+fit0_results <- results_df
+myfile <- file.path(root,"data","fit0_results.rda")
 save(fit0_results,file=myfile,version=2)
