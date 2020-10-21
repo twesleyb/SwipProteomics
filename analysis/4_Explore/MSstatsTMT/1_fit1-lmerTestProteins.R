@@ -6,14 +6,13 @@
 # for a given contrast
 
 ## formulae to be fit:
-# [+] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-# [-] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
+# [-] fx0: Abundance ~ 0 + Condition + (1|Mixture)
+# [+] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
 ## prepare the env ------------------------------------------------------------
 
 ## input 
-results_file = "fit0_results.csv" # saved in root/rdata
-#results_file = "fit1_results.csv" # saved in root/rdata
+results_file = "fit1_results.csv" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
@@ -61,26 +60,22 @@ expandGroups <- function(conditions,biofractions) {
 ## check Swip's fit -----------------------------------------------------------
 
 ## formulae to be fit:
-fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-#fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
+#fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
-## fit model 0
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-print(summary(fm0, ddf = "Satterthwaite"))
+## fit model 1
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
+print(summary(fm1, ddf = "Satterthwaite"))
 
-# cm1
-#cm1 <- getContrast(fm1,"GenotypeControl","GenotypeMutant")
+# create contrast
+contrast <- getContrast(fm1,"GenotypeControl","GenotypeMutant")
 
-## munge to create contrast matrices for intrafraction comparisons:
-condition <- c("ConditionControl","ConditionMutant")
-biofraction <- c("F4","F5","F6","F7","F8","F9","F10")
-contrasts <- lapply(expandGroups(condition,biofraction), function(x) {
-			  getContrast(fm0,x[1],x[2]) })
-names(contrasts) <- sapply(contrasts, function(x) {
-				 paste(names(x)[x==+1],names(x)[x==-1],sep="-") })
+# contrasts should be a list:
+contrasts <- list(contrast)
 
 # check the results for swip
-results <- lmerTestProtein(swip,fx0,msstats_prot,contrasts)
+# FIXME: function should check if contrast is list of numeric or numeric 
+results <- lmerTestProtein(swip,fx1,msstats_prot,contrasts)
 results$stats %>% knitr::kable()
 
 
@@ -93,7 +88,7 @@ prots = unique(as.character(msstats_prot$Protein))
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts),silent=TRUE)
+	  try(lmerTestProtein(protein, fx1, msstats_prot, contrasts), silent=T))
 	})
 } # EOL
 
