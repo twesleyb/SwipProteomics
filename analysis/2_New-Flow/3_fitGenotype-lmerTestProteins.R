@@ -91,20 +91,21 @@ save(cm1,file=myfile,version=2)
 
 # check the results for swip
 # FIXME: function should check if contrast is list of numeric or numeric 
-results <- lmerTestProtein(swip,fx1,msstats_prot,contrasts)
+results <- lmerTestProtein(swip,fx1,msstats_prot,contrasts,gof=TRUE)
 results$stats %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------
 
-prots = unique(as.character(msstats_prot$Protein))
+prots <- unique(as.character(msstats_prot$Protein))
 
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores=n_cores)
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx1, msstats_prot, contrasts), silent=T)
+	  try(lmerTestProtein(protein, fx1, msstats_prot, 
+			      contrasts, gof=TRUE), silent=TRUE)
 	})
 } # EOL
 
@@ -152,3 +153,21 @@ write_excel(results_df, myfile)
 fit1_results <- results_df
 myfile <- file.path(root,"data","fit1_results.rda")
 save(fit1_results, file=myfile,version=2)
+
+## collect gof
+gof <- bind_rows(sapply(filt_list,"[[","gof"))
+gof <- tibble::add_column(gof,"protein" = unlist(sapply(filt_list,"[[","protein")),
+			  .before=1)
+idx <- match(gof$protein,gene_map$uniprot)
+gof <- tibble::add_column(gof,"symbol" = gene_map$symbol[idx],
+			  .after="protein")
+gof <- tibble::add_column(gof,"entrez" = gene_map$entrez[idx],
+			  .after="symbol")
+gof <- as.data.table(gof) %>% arrange(desc(R2c_total))
+
+# 619 less than 0.7
+#gof %>% filter(R2c_total < 0.7) %>% select(protein) %>% unlist() %>% unique() %>% length()
+
+# save
+myfile <- file.path(root,"data","fit1_gof.rda")
+save(gof,file=myfile,version=2)
