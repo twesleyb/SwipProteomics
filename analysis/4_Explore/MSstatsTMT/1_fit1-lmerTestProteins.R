@@ -89,7 +89,7 @@ results$stats %>% knitr::kable()
 prots = unique(as.character(msstats_prot$Protein))
 
 n_cores <- parallel::detectCores() - 1
-BiocParallel::register(BiocParallel::SnowParam(n_cores))
+doParallel::registerDoParallel(cores=n_cores)
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
@@ -103,7 +103,7 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[[","stats"))
+results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -136,3 +136,8 @@ message("Total number of significant proteins: ",
 # save as excel
 myfile <- file.path(root,"tables",results_file)
 write_excel(results_df, myfile)
+
+# save as rda
+fit1_results <- results_df
+myfile <- file.path(root,"data","fit1_results.rda")
+save(fit1_results, file=myfile,version=2)

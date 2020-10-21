@@ -95,7 +95,7 @@ doParallel::registerDoParallel(cores=n_cores)
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts),silent=TRUE)
+	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent=T)
 	})
 } # EOL
 
@@ -177,3 +177,8 @@ if (length(common_prots) > 0) {
 	message("\nCommonly significant proteins: ", 
 		paste(common_prots,collapse=", "))
 }
+
+# save as rda
+fit0_results <- results_list
+myfile <- file.path(root,"tables",results_file)
+save(fit0_ersults,file=myfile,version=2)
