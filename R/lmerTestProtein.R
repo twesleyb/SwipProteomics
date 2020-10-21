@@ -2,7 +2,8 @@
 #' @import lme4 lmerTest
 #' @export lmerTestProtein
 
-lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
+lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
+  # TODO: add lmer gof test
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {

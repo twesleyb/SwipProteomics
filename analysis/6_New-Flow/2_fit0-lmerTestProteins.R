@@ -67,9 +67,15 @@ expandGroups <- function(conditions,biofractions) {
 ## formulae to be fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
+myfile <- file.path(root,"data","fx0.rda")
+save(fx0,file=myfile,version=2)
+
 ## fit model 0
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 #print(summary(fm0, ddf = "Satterthwaite"))
+
+myfile <- file.path(root,"data","fm0.rda")
+save(fm0,file=myfile,version=2)
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl","ConditionMutant")
@@ -78,6 +84,13 @@ contrasts <- lapply(expandGroups(condition,biofraction), function(x) {
 			  getContrast(fm0,x[1],x[2]) })
 names(contrasts) <- sapply(contrasts, function(x) {
 				 paste(names(x)[x==+1],names(x)[x==-1],sep="-") })
+
+
+# save contrasts
+cm0 <- contrasts
+myfile <- file.path(root,"data","cm0.rda")
+save(cm0,file=myfile,version=2)
+
 
 # check the results for swip
 message("\nResults for WASHC4:")
