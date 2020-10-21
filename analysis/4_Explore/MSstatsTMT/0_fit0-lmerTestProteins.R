@@ -80,6 +80,7 @@ names(contrasts) <- sapply(contrasts, function(x) {
 				 paste(names(x)[x==+1],names(x)[x==-1],sep="-") })
 
 # check the results for swip
+message("\nResults for WASHC4:")
 results <- lmerTestProtein(swip,fx0,msstats_prot,contrasts)
 results$stats %>% knitr::kable()
 
@@ -104,7 +105,8 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[","stats")) 
+#results_df <- dplyr::bind_rows(sapply(filt_list,"[","stats"))  # works when interactive
+results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))  # works when executed
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -130,8 +132,14 @@ results_df <- results_df %>%
 results_df <- results_df %>% arrange(Pvalue)
 
 # status
-message("\nTotal number of significant proteins: ",
+message("\nTotal instances of significant change: ",
 	sum(results_df$Padjust < FDR_alpha))
+
+# total (unique) sig prots
+sig_prots <- results_df %>% ungroup() %>% filter(Padjust < FDR_alpha) %>% 
+	select(protein) %>% unique() %>% unlist() 
+message("\nTotal number of significant proteins: ",
+	length(sig_prots))
 
 
 ## save results ----------------------------------------------------------------
@@ -161,3 +169,11 @@ write_excel(results_list,myfile)
 message("\nSummary of significant proteins for intrafraction comparisons:")
 df <- data.frame(nsig=sapply(results_list, function(x) sum(x$Padjust < FDR_alpha)))
 knitr::kable(df)
+
+# proteins
+prot_list <- sapply(results_list,function(x) x$protein[x$Padjust < FDR_alpha])
+common_prots <- Reduce(intersect, prot_list)
+if (length(common_prots) > 0) {
+	message("\nCommonly significant proteins: ", 
+		paste(common_prots,collapse=", "))
+}

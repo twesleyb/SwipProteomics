@@ -133,6 +133,6 @@ message("Total number of significant proteins: ",
 
 ## save results ----------------------------------------------------------------
 
-# save as csv
+# save as excel
 myfile <- file.path(root,"tables",results_file)
 write_excel(results_df, myfile)
