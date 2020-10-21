@@ -12,6 +12,8 @@ authors: Tyler W A Bradshaw
 root = "~/projects/SwipProteomics"
 
 ## Parameters for multiresolution methods:
+## NOTE: some parameters are not used if they are not required by the set 
+## optimization method
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
 nsteps = 100 # Number of steps to take between rmin and rmax.

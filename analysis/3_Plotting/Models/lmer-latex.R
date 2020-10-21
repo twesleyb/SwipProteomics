@@ -135,13 +135,17 @@ for (protein in proteins) {
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   # fit models
   ## FIXME: if any error => pass
-  fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) # | Condition = Genotype.BioFraction
-  fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", subprot(protein))
-  fm2 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + (1|Protein) + Genotype", submod(module))
+  fm0 <- lmerTest::lmer("Abundance ~ (1|Mixture) + Condition",subprot(protein)) 
+  #^ | Condition = Genotype.BioFraction
+  fm1 <- lmerTest::lmer("Abundance ~ 0 + (1|BioFraction) + Genotype", 
+			subprot(protein))
+  fm2 <- lmerTest::lmer("Abundance ~0+ (1|BioFraction) + (1|Protein) + Genotype",
+			submod(module))
   ## FIXME: breaks if error
   # if lmerTest was used, then coerce class to something stargazer can work with
   class(fm0) <- "lmerMod"; class(fm1) <- "lmerMod"; class(fm2) <- "lmerMod"
-  # NOTE: ^fixes error about $ and S4 class (https://stackoverflow.com/questions/31319030)
+  # NOTE: ^fixes error about $ and S4 class 
+  # From: (https://stackoverflow.com/questions/31319030)
   # init latex document
   output_file <- file.path(figsdir,paste(protein,gene,"report.tex",sep="_"))
   if (file.exists(output_file)) { unlink(output_file); warning("rm ",output_file) }
@@ -153,10 +157,14 @@ for (protein in proteins) {
   writeLines("\\author{Tyler W. A. Bradshaw}",latex_file)
   writeLines("\\maketitle",latex_file)
   # latex tables of model summaries
-  writeLines(stargazer(fm0,title=as.character(attr(fm0,"call"))[2]),latex_file) # fm0
-  writeLines(stargazer(fm1,title=as.character(attr(fm1,"call"))[2]),latex_file) # fm1
-  writeLines(stargazer(fm2,title=as.character(attr(fm2,"call"))[2]),latex_file) # fm2
-  writeLines("marginal (fixed effects) and conditional (total variance) R2:",latex_file)
+  writeLines(stargazer(fm0,title=as.character(attr(fm0,"call"))[2]),latex_file) 
+  # fm0
+  writeLines(stargazer(fm1,title=as.character(attr(fm1,"call"))[2]),latex_file) 
+  # fm1
+  writeLines(stargazer(fm2,title=as.character(attr(fm2,"call"))[2]),latex_file) 
+  # fm2
+  writeLines("marginal (fixed effects) and conditional (total variance) R2:",
+	     latex_file)
   writeLines(knitr::kable(r.squaredGLMM.merMod(fm0),format="latex"),latex_file)
   writeLines(knitr::kable(r.squaredGLMM.merMod(fm1),format="latex"),latex_file)
   writeLines(knitr::kable(r.squaredGLMM.merMod(fm2),format="latex"),latex_file)

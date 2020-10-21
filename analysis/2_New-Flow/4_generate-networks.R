@@ -8,8 +8,9 @@
 ## INPUTs ----------------------------------------------------------------------
 root = "~/projects/SwipProteomics"
 
-# * data(msstats_prot)
 # * data(gene_map)
+# * data(msstats_prot)
+# * data(fit0_gof)
 # * data(musInteractome) from twesleyb/getPPIs
 
 ## OPTIONs ---------------------------------------------------------------------
@@ -63,31 +64,51 @@ devtools::load_all()
 # Load the proteomics data
 data(gene_map)
 data(msstats_prot)
+data(fit0_gof) # gof
+data(fit1_results)
 data(musInteractome)
 
 # data for output tables
 tabsdir <- file.path(root,"tables")
 if (!dir.exists(tabsdir)) { mkdir(tabsdir) }
 
+## filter proteins ------------------------------------------------------------
+
+# build network from list of fit proteins
+all_prots <- fit1_results$protein
+
+R2c_threshold = 0.7
+
+# identify protein with poor fits
+proteins <- gof %>% filter(protein %in% all_prots) %>% 
+	filter(R2c_total > R2c_threshold) %>% 
+	select(protein) %>% unlist() %>% unique()
+
 
 ## Create protein covariation network -----------------------------------------
 
 # Cast protein data into a data.matrix. No need to log2 transform.
 # MSstats has done this already. Rownames are unique for each Sample.
-dm <- msstats_prot %>% as.data.table() %>% filter(Genotype == "Control") %>%
+dm <- msstats_prot %>% as.data.table() %>% 
+	filter(Genotype == "Control") %>%
+	filter(Protein %in% proteins) %>% # keep prots with reasonably good fits
 	dcast(interaction(Mixture,BioFraction,Genotype) ~ Protein, 
 	      value.var="Abundance") %>%
 	as.matrix(rownames=TRUE)
 
-# normalize such that sum is 1? normalize each protein to its max!
-norm_dm = dm
-#norm_dm = apply(dm,2,function(x) x/max(x,na.rm=TRUE))
-
 # drop rows with any missing values
 # NOTE: the data was transposed for bicor
-out <- apply(norm_dm,2,function(x) any(is.na(x)))
-subdm <- norm_dm[,!out]
+out <- apply(dm,2,function(x) any(is.na(x)))
+subdm <- dm[,!out]
 warning(formatC(sum(out),big.mark=",")," proteins with any missing values were removed.")
+
+# status
+n_samples <- dim(subdm)[1]
+n_proteins <- dim(subdm)[2]
+
+message("Building network with:",
+	"\nN Samples  = ", n_samples, 
+	"\nN Proteins = ", n_proteins)
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
@@ -101,6 +122,8 @@ ne_adjm <- neten::neten(adjm)
 
 ## Create PPI network ---------------------------------------------------------
 message("\nCreating protein-protein interaction network.")
+
+# NOTE: the PPI network is not used in the clustering of the data.
 
 # Collect all entrez cooresponding to proteins in our network.
 proteins <- colnames(adjm)
