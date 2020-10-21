@@ -29,7 +29,7 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
     df_prior=0
     s2_prior=0
     # things that depend upon the contrast
-    se2 <- as.numeric(contrast %*% vcov %*% contrast) # == variance
+    se2 <- as.numeric(contrast %*% vcov %*% contrast) # == variance 
     # calculate posterior s2
     s2_post <- (s2_prior * df_prior + sigma^2 * s2_df) / (df_prior + s2_df)
     # calculate gradient
