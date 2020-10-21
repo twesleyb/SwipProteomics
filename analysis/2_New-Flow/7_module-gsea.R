@@ -80,7 +80,7 @@ names(module_entrez) <- paste0("M",names(module_entrez))
 all_entrez <- unlist(module_entrez,use.names=FALSE)
 
 # Collect WASH BioID genes.
-wash_prots <- unique(wash_interactome$Accession)
+wash_prots <- wash_interactome
 wash_genes <- na.omit(gene_map$entrez[match(wash_prots,gene_map$uniprot)])
 
 # Clean up lopit dc predictions.
@@ -183,7 +183,7 @@ message(paste("\nNumber of modules with something interesting going on:",
 #message(sum(sig_modules %in% sig_dt$Module)," of ", length(sig_modules),
 #	" significant modules exhibit GSEA enrichment.")
 
-sig_dt %>% filter(Module %in% sig_modules) %>% knitr::kable()
+#sig_dt %>% filter(Module %in% sig_modules) %>% knitr::kable()
 
 
 # Save the data.
