@@ -2,8 +2,7 @@
 #' @import lme4 lmerTest
 #' @export lmerTestProtein
 
-lmerTestProtein <- function(protein, fx, msstats_prot, 
-			    contrast_matrix, s2_prior=0, df_prior=0) {
+lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
@@ -20,33 +19,42 @@ lmerTestProtein <- function(protein, fx, msstats_prot,
   sigma <- model_summary$sigma # == stats::sigma(fm)
   theta <- model_summary$optinfo$val # aka thopt == lme4::getME(fm, "theta")
   vcov <- model_summary$vcov # variance-covariance matrix
-  se2 <- as.numeric(contrast_matrix %*% vcov %*% contrast_matrix) # == variance
-  s2_prior = sigma^2
-  # calculate posterior s2
-  s2_post <- (s2_prior * df_prior + sigma^2 * s2_df) / (df_prior + s2_df)
   # calcuate symtoptic var-covar matrix
   A <- fm@vcov_varpar
-  # FIXME: there might not always be two?
-  g <- c(contrast_matrix %*% fm@Jac_list[[1]] %*% contrast_matrix,
-	 contrast_matrix %*% fm@Jac_list[[2]] %*% contrast_matrix)
-  denom <- as.numeric(t(g) %*% A %*% g)
-  # NOTE: which is correct?
-  df_post <- (2 * se2) / (denom + df_prior) # or se2^2 ???
-  #df_post <- (2 * se2^2) / (denom + df_prior)
-  # compute fold change and the t-statistic
-  FC <- (contrast_matrix %*% coeff)[, 1]
-  t <- FC / sqrt(se2) 
-  # compute the p-value given t-statistic and df.post
-  p <- 2 * pt(-abs(t), df = df_post) 
-  # compile results
+  ## Loop through contrasts to perform tests.
+  ## FIXME: should be a function that does one iter
+  stats_list <- list()
+  for (contrast in contrasts) {
+    # we compute the unmoderated statistics:
+    df_prior=0
+    s2_prior=0
+    # things that depend upon the contrast
+    se2 <- as.numeric(contrast %*% vcov %*% contrast) # == variance
+    # calculate posterior s2
+    s2_post <- (s2_prior * df_prior + sigma^2 * s2_df) / (df_prior + s2_df)
+    # calculate gradient
+    g <- c(contrast %*% fm@Jac_list[[1]] %*% contrast,
+	   contrast %*% fm@Jac_list[[2]] %*% contrast)
+    denom <- as.numeric(t(g) %*% A %*% g)
+    # NOTE: which is correct?
+    df_post <- (2 * se2) / (denom + df_prior) # or se2^2 ???
+    #df_post <- (2 * se2^2) / (denom + df_prior)
+    # compute fold change and the t-statistic
+    FC <- (contrast %*% coeff)[, 1]
+    t <- FC / sqrt(se2) 
+    # compute the p-value given t-statistic and df.post
+    p <- 2 * pt(-abs(t), df = df_post) 
+    comparison <- paste(names(contrast)[contrast == +1], 
+		        names(contrast)[contrast == -1],sep="-")
+    stats_list[[comparison]] <- data.frame(protein=protein,contrast=comparison,
+  		   log2FC=FC, percentControl=2^FC, Pvalue=p,
+  		   Tstatistic=t, SE=sqrt(se2), DF=df_post, 
+		   isSingular=lme4::isSingular(fm))
+  } # EOL through contrasts
+  ## compile results
   rho <- list()
   rho$protein <- protein
   rho$model <- fx
-  comparison <- paste(names(contrast_matrix)[contrast_matrix == +1], 
-		      names(contrast_matrix)[contrast_matrix == -1],sep="-")
-  rho$stats <- data.frame(protein=protein,contrast=comparison,
-  		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(se2), DF=df_post, 
-		 isSingular=lme4::isSingular(fm))
+  rho$stats <- bind_rows(stats_list)
   return(rho)
 } #EOF
