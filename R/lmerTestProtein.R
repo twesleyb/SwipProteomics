@@ -44,11 +44,10 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
 	   contrast %*% fm@Jac_list[[2]] %*% contrast)
     denom <- as.numeric(t(g) %*% A %*% g)
     # NOTE: which is correct?
-    #df_post <- (2 * se2) / (denom + df_prior) # or se2^2 ???
-    df_post <- (2 * se2^2) / (denom + df_prior)
+    df_post <- (2 * se2) / (denom + df_prior)
     # compute fold change and the t-statistic
     FC <- (contrast %*% coeff)[, 1]
-    t <- FC / sqrt(se2) 
+    t <- FC / sqrt(se2) # 
     # compute the p-value given t-statistic and df.post
     p <- 2 * pt(-abs(t), df = df_post) 
     comparison <- paste(names(contrast)[contrast == +1], 
