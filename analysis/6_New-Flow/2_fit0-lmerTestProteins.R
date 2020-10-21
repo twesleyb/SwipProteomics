@@ -67,15 +67,21 @@ expandGroups <- function(conditions,biofractions) {
 ## formulae to be fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
+# save model formula
 myfile <- file.path(root,"data","fx0.rda")
 save(fx0,file=myfile,version=2)
+
 
 ## fit model 0
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 #print(summary(fm0, ddf = "Satterthwaite"))
 
+# save fit model
 myfile <- file.path(root,"data","fm0.rda")
 save(fm0,file=myfile,version=2)
+
+## evaluate gof
+r2fm0
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl","ConditionMutant")

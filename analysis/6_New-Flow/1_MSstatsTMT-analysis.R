@@ -139,6 +139,16 @@ Entrez <- gene_map$entrez[idx]
 msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
 msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
 
+# add BioFraction, Genotype, and Subject columns
+colnames(msstats_prot)
+
+geno <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
+biof <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
+msstats_prot$Genotype <- factor(geno,levels=c("Mutant","Control"))
+msstats_prot$BioFraction <- biof
+
+strsplit(msstats_prot$Condition,"\\.")
+
 
 ## clean-up msstats_results ---------------------------------------------------
 

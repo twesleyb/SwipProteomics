@@ -13,6 +13,12 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
   }
   # fit the model
   fm <- lmerTest::lmer(fx, data=subdat)
+  # evaluate R2 for marginal (fixed) and conditional (total) effects
+  if (gof) {
+	  r2_nakagawa <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),nm=c("R2m_fixef", "R2c_total"))
+	  r2_nakagawa["R2r_mixef"] <- r2_nakagawa[2] - r2_nakagawa[1]
+	  r2_nakagawa <- r2_nakagawa[c(3,1,2)]
+  }
   # compute Satterthwaite degrees of freedom and other key statistics
   model_summary <- summary(fm, ddf = "Satterthwaite")
   s2_df <- as.numeric(model_summary$coefficients[,"df"][1]) 
@@ -55,7 +61,10 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
   ## compile results
   rho <- list()
   rho$protein <- protein
-  rho$model <- fx
+  rho$formula <- fx
   rho$stats <- bind_rows(stats_list)
+  if (gof) {
+	  rho$gof <- r2_nakagawa
+  }
   return(rho)
 } #EOF
