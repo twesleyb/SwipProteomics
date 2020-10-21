@@ -14,7 +14,7 @@
 ## prepare the env ------------------------------------------------------------
 
 ## input 
-results_file = "fit1_results.csv" # saved in root/rdata
+results_file = "fit1_lmerTestProtein_results.xlsx" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
@@ -103,7 +103,7 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[","stats"))
+results_df <- bind_rows(sapply(filt_list,"[[","stats"))
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -134,5 +134,5 @@ message("Total number of significant proteins: ",
 ## save results ----------------------------------------------------------------
 
 # save as csv
-myfile <- file.path(root,"rdata",results_file)
-fwrite(results_df, myfile)
+myfile <- file.path(root,"tables",results_file)
+write_excel(results_df, myfile)

@@ -13,7 +13,7 @@
 ## prepare the env ------------------------------------------------------------
 
 ## input 
-results_file = "fit0_results.csv" # saved in root/rdata
+results_file = "fit0_lmerTestProtein_results.xlsx" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
@@ -103,11 +103,11 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[","stats"))
+results_df <- bind_rows(sapply(filt_list,"[[","stats"))
 
 # drop singular
-#results_df <- results_df %>% filter(!isSingular)
-#results_df$isSingular <- NULL
+results_df <- results_df %>% filter(!isSingular)
+results_df$isSingular <- NULL
 
 ## annotate with gene symbols
 idx <- match(results_df$protein,gene_map$uniprot)
@@ -130,9 +130,22 @@ results_df %>% head() %>% knitr::kable()
 message("Total number of significant proteins: ",
 	sum(results_df$Padjust < FDR_alpha))
 
-
 ## save results ----------------------------------------------------------------
 
-# save as csv
-myfile <- file.path(root,"rdata",results_file)
-fwrite(results_df, myfile)
+# results split by BioFraction
+
+results_list <- results_df %>% group_by(contrast) %>% group_split()
+
+# munge to get list names
+namen <- sapply(strsplit(sapply(results_list, function(x) unique(x$contrast)),
+			 "\\."),"[",3) # get third element after split, F#
+names(results_list) <- namen 
+
+# FIXME: where is strange class from?
+# class(results_list)
+# [1] "vctrs_list_of" "vctrs_vctr"    "list"    
+class(results_list) <- "list"
+
+# save as excel
+myfile <- file.path(root,"tables",results_file)
+write_excel(results_list,myfile)
