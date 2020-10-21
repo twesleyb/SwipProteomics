@@ -141,6 +141,9 @@ namen <- sapply(strsplit(sapply(results_list, function(x) unique(x$contrast)),
 			 "\\."),"[",3) # get third element after split, F#
 names(results_list) <- namen 
 
+# sort the results by biofraction
+results_list <- results_list[biofraction]
+
 # FIXME: where is strange class from?
 # class(results_list)
 # [1] "vctrs_list_of" "vctrs_vctr"    "list"    
