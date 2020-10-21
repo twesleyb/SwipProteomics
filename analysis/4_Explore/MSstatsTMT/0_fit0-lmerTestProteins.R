@@ -87,9 +87,10 @@ results$stats %>% knitr::kable()
 ## loop to fit all proteins ----------------------------------------------------
 
 prots = unique(as.character(msstats_prot$Protein))
+#prots = sample(prots, 23)
 
 n_cores <- parallel::detectCores() - 1
-BiocParallel::register(BiocParallel::SnowParam(n_cores))
+doParallel::registerDoParallel(cores=n_cores)
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
@@ -103,7 +104,7 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[[","stats"))
+results_df <- bind_rows(sapply(filt_list,"[","stats")) 
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -116,19 +117,22 @@ results_df <- tibble::add_column(results_df,
   				 .after="protein")
 
 ## adjust pvals 
-results_df <- tibble::add_column(results_df, 
-			 Padjust=p.adjust(results_df$Pvalue,"BH"),
-			 .after="Pvalue")
+results_df <- results_df %>% 
+	group_by(contrast) %>% 
+	mutate("Padjust"=p.adjust(Pvalue,"BH"))
 
-## sort
+
+# sort cols
+results_df <- results_df %>% 
+	select(protein,symbol,contrast,log2FC,percentControl,Pvalue,Padjust,SE,DF)
+
+# sort rows
 results_df <- results_df %>% arrange(Pvalue)
 
-# examine top results
-results_df %>% head() %>% knitr::kable()
-
 # status
-message("Total number of significant proteins: ",
+message("\nTotal number of significant proteins: ",
 	sum(results_df$Padjust < FDR_alpha))
+
 
 ## save results ----------------------------------------------------------------
 
@@ -152,3 +156,8 @@ class(results_list) <- "list"
 # save as excel
 myfile <- file.path(root,"tables",results_file)
 write_excel(results_list,myfile)
+
+# status
+message("\nSummary of significant proteins for intrafraction comparisons:")
+df <- data.frame(nsig=sapply(results_list, function(x) sum(x$Padjust < FDR_alpha)))
+knitr::kable(df)

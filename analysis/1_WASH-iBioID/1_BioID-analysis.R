@@ -401,6 +401,10 @@ bioid_se <- c(se_list,
 	      "vsn"= list(vsn_se), 
 	      "results" = list(dep_results))
 
-# save
+# save bioid  results
 myfile <- file.path(datadir,"bioid_se.rda")
 save(bioid_se,file=myfile,version=2)
+
+# save
+bioid_results <- results_df
+save(bioid_results,file=myfile, version=2)
