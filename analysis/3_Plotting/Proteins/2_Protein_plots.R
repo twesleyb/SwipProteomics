@@ -61,7 +61,7 @@ plot_protein <- function(prot_df, gene_map, protein,legend=FALSE) {
   plot <- plot + aes(x = BioFraction, y = Abundance, 
   		   group = interaction(Mixture,Genotype),
   		   colour = interaction(Mixture,Genotype))
-  plot <- plot + geom_point(aes(shape=Genotype, fill=Genotype),size=2)
+  plot <- plot + geom_point(aes(shape=Mixture, fill=Genotype),size=2)
   plot <- plot + geom_line()
   plot <- plot + ggtitle(protein)
   # Annotate with significance stars.
@@ -70,7 +70,7 @@ plot_protein <- function(prot_df, gene_map, protein,legend=FALSE) {
   }
   # Add Custom colors and modify legend title and labels.
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
-  plot <- plot + scale_colour_manual(name="Replicate", values=colors, labels=mylabs) 
+  plot <- plot + scale_colour_manual(name="Mixture", values=colors, labels=mylabs) 
   #plot <- plot + scale_x_discrete(labels=stats$Cfg.Force)
   #plot <- plot + xlab("Force (xg)")
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
@@ -130,13 +130,16 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 data(swip)
 data(gene_map)
 data(partition)
-data(sig_modules)
+#data(sig_modules)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
 
 # combine protein data and statistical results
 # we will use stats to annotate plots with stars
+biofraction <- sapply(strsplit(msstats_results$Label,"\\."),"[",3)
+msstats_results$BioFraction <- biofraction
+
 prot_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
 
 # annotate with module membership
