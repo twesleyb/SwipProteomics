@@ -6,6 +6,7 @@
 # for a given contrast
 
 # fx0: Abundance ~ 0 + Condition + (1|Mixture)
+# fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
 ## prepare the env ------------------------------------------------------------
 
@@ -97,9 +98,10 @@ results_list <- foreach(protein = prots) %dopar% {
 
 ## process results ------------------------------------------------------------
 
+# collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- bind_rows(sapply(filt_list,"[[","stats"))
+results_df <- bind_rows(sapply(filt_list,"[","stats"))
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -132,55 +134,3 @@ message("Total number of significant proteins: ",
 # save as csv
 myfile <- file.path(root,"rdata",results_file)
 fwrite(results_df, myfile)
-#!/usr/bin/env Rscript
-
-# title: SwipProteomics
-# author: twab
-# description: examine the fits for WASHC4 (aka Swip) and save contrast matrices
-# to be used by lmerTestProtein
-
-## prepare the env
-root <- "~/projects/SwipProteomics"
-renv::load(root); devtools::load_all(root)
-
-## data
-data(swip)
-data(msstats_prot)
-
-## other imports
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(doParallel)
-  # require(lme4)
-  # require(knitr)
-  # require(tibble)
-  # require(lmerTest)
-  # requre(data.table)
-})
-
-
-## functions ------------------------------------------------------------------
-
-getContrast <- function(fm, negative_index, positive_index) {
-  # build a contrast matrix:
-  contrast_matrix <- lme4::fixef(fm)
-  contrast_matrix[] <- 0
-  contrast_matrix[positive_index] <- +1 
-  contrast_matrix[negative_index] <- -1
-  return(contrast_matrix)
-}
-
-
-expandGroups <- function(conditions,biofractions) {
-	# munge to create contrast matrix for fm1
-	groups <- apply(expand.grid(conditions,biofractions),1,paste,collapse=".")
-	idx <- rep(c(1:length(biofraction)),each=length(condition))
-	contrast_list <- split(groups, idx)
-	return(contrast_list)
-}
-
-## save results ----------------------------------------------------------------
-
-# save contrast matrices
-myfile <- file.path(root,"data","cm_list.rda")
-save(cm_list,file=myfile,version=2)
