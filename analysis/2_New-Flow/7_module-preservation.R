@@ -7,11 +7,12 @@
 ## INPUT data:
 # specify the partition to be used:
 part_file = "leidenalg_partition.rda" # in root/data
+subset_WT = TRUE
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:
-stats = c(1,6,7) # Statistics by which module preservation is enforced. 
-# NOTE: recommended to use 1,6, and 7
+stats = c(1,2,6,7) # Statistics by which module preservation is enforced. 
+# NOTE: recommended to use 1,2, 6, and 7
 strength = "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges = "zero" # How will negative edges be replacedR? Abs val or zero.
 replace_zero_index = TRUE # If min(module index)==0, +1 such that all indices >0.
@@ -321,12 +322,28 @@ netw <- netw_list[["discovery"]]
 data <- data_list[["discovery"]]
 part <- part_list[["discovery"]]
 
+# only keep proteins that per clustered
+proteins <- intersect(colnames(data),names(part))
+
+# more input munge
+adjm <- adjm[proteins,proteins]
+netw <- netw[proteins,proteins]
+data <- data[ ,proteins]
+part <- part[proteins]
+
 # Insure names are equal.
 new_data <- set_matching_node_order(adjm,netw,data,part)
+
 data_list[["discovery"]] <- new_data$data
 adjm_list[["discovery"]] <- new_data$adjm
 netw_list[["discovery"]] <- new_data$netw
 part_list[["discovery"]] <- new_data$part
+
+# Should we keep the Mut data?
+# network was not build with Mut data, and it probably should not be kept
+if (subset_WT) {
+  data <- data[grep("Control",rownames(data)),]
+}
 
 # Should data be log transformed?
 if (log_data == TRUE) {
@@ -373,8 +390,7 @@ if (discovery_data == test_data) {
 }
 
 # Perform permutation test for module preservation.
-# Suppress warnings about missing values.
-suppressWarnings({
+suppressWarnings({ # Suppress warnings about missing values.
   results <- NetRep::modulePreservation(
     network = netw_list,
     data = data_list,

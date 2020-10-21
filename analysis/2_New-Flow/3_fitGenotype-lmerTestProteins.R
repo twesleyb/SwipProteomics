@@ -88,7 +88,6 @@ cm1 <- contrasts
 myfile <- file.path(root,"data","cm1.rda")
 save(cm1,file=myfile,version=2)
 
-quit()
 
 # check the results for swip
 # FIXME: function should check if contrast is list of numeric or numeric 
