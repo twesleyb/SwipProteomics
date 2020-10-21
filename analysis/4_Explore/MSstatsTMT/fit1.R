@@ -11,7 +11,7 @@ renv::load(root); devtools::load_all(root)
 
 ## inputs:
 data(msstats_prot)
-#data(gene_map)
+data(gene_map)
 data(swip)
 
 ## other imports
@@ -25,12 +25,9 @@ suppressPackageStartupMessages({
 # Modified from internal MSstatsTMT functions.
 
 # * calcPosterior
-# * updateLModel
-# * calcApvarcovar
-# * devFun
-# * vcovLThetaLM
-# * myhessian
+# * vcovLThetaLM (updateLModel > devFun)
 # * mygradient
+#
 # * lmerTestProtein - model fitting and statistical testing for a given protein
 
 # NOTE: I added fx, data to all functions that handle the lmer model. 
@@ -39,10 +36,10 @@ suppressPackageStartupMessages({
 # or uniqueness.
 
 
-calcPosterior <- function(s2, s2_df, s2.prior, df.prior) {
+calcPosterior <- function(s2, s2_df, s2_prior, df_prior) {
   # a function to compute s2 posterior
-  s2.post <- (s2.prior * df.prior + s2 * s2_df) / (df.prior + s2_df)
-  return(s2.post)
+  s2_post <- (s2_prior * df_prior + s2 * s2_df) / (df_prior + s2_df)
+  return(s2_post)
 }
 
 
@@ -259,14 +256,8 @@ mygradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
-  # slimed down, but requires:
-  # * calcPosterior
-  # * vcovLThetaLM(fx,subdat)
-  # * mygradient(myfun, c(theta, sigma))
-  # here we compute the unmoderated statistics
-  df_prior <- 0
-  s2_prior <- 0
+lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix, s2_prior=0, df_prior=0) {
+  # req: mygradient, vcovLThetaLM (updateLModel and devFun)
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
@@ -286,18 +277,14 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
   se2 <- as.numeric(contrast_matrix %*% vcov %*% contrast_matrix) # variance
   # calculate posterior s2
   s2_post <- calcPosterior(sigma^2, s2_df, s2_prior, df_prior)
-  # calculate degrees of freedom posterior
-  # given params theta and sigma from lmer and the covariance matrix
   # calcuate symtoptic var-covar matrix
-  vss <- vcovLThetaLM(fx,subdat)
-  varcor <- vss(t(contrast_matrix), c(theta, sigma))
-  vcov.post <- varcor$unscaled.varcor * s2_post
   A <- fm@vcov_varpar
+  vss <- vcovLThetaLM(fx,subdat)
   myfun <- function(x) { vss(t(contrast_matrix), x)$varcor }
   g <- mygradient(myfun, c(theta, sigma))
   denom <- as.numeric(t(g) %*% A %*% g)
-  #df.post <- 2 * se2^2 / denom + df.prior # is se2 ^2 correct?
-  df_post <- 2 * se2 / denom + df_prior
+  varcor <- vss(t(contrast_matrix), c(theta, sigma))
+  df_post <- 2 * se2 / denom + df_prior # or se2^2 ???
   # compute fold change and the t-statistic
   FC <- (contrast_matrix %*% coeff)[, 1]
   t <- FC / sqrt(se2) 
@@ -340,7 +327,8 @@ model0 <- lmerTestProtein(swip, fx0, msstats_prot, cm0)
 
 model0$stats %>% knitr::kable()
 
-## repeat for comparisons across all fractions:
+
+## repeat for comparisons across all fractions ---------------------------------
 
 # fit a model
 fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
@@ -362,41 +350,44 @@ model1$stats %>% knitr::kable()
 
 ## loop to fit all proteins ----------------------------------------------------
 
-#n_cores <- parallel::detectCores()
-#BiocParallel::register(BiocParallel::SnowParam(n_cores))
-#
-#prots = unique(as.character(msstats_prot$Protein))
-#
-#results_list <- foreach(protein = prots) %dopar% {
-#	suppressMessages({
-#	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
-#	})
-#} # EOL
-#
-#
-### collect results ------------------------------------------------------------
-## collect stats
-#idx <- unlist(sapply(results_list,class)) != "try-error"
-#filt_list <- results_list[which(idx)]
-#results_df <- bind_rows(sapply(filt_list,"[","stats"))
-#
-## drop singular
-#results_df <- results_df %>% filter(!isSingular)
-#results_df$isSingular <- NULL
-#
+n_cores <- parallel::detectCores()
+BiocParallel::register(BiocParallel::SnowParam(n_cores))
+
+prots = unique(as.character(msstats_prot$Protein))
+
+results_list <- foreach(protein = prots) %dopar% {
+	suppressMessages({
+	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
+	})
+} # EOL
+
+
+## collect results ------------------------------------------------------------
+
+idx <- unlist(sapply(results_list,class)) != "try-error"
+filt_list <- results_list[which(idx)]
+results_df <- bind_rows(sapply(filt_list,"[[","stats"))
+
+# drop singular
+results_df <- results_df %>% filter(!isSingular)
+results_df$isSingular <- NULL
+
 ## annotate with gene symbols
-#idx <- match(results_df$protein,gene_map$uniprot)
-#results_df <- tibble::add_column(results_df,
-#  				 symbol=gene_map$symbol[idx],
-#  				 .after="protein")
-#
+idx <- match(results_df$protein,gene_map$uniprot)
+results_df <- tibble::add_column(results_df,
+  				 symbol=gene_map$symbol[idx],
+  				 .after="protein")
+
 ## adjust pvals 
-#results_df <- tibble::add_column(results_df, 
-#			 Padjust=p.adjust(results_df$Pvalue,"BH"),
-#			 .after="Pvalue")
-#
+results_df <- tibble::add_column(results_df, 
+			 Padjust=p.adjust(results_df$Pvalue,"BH"),
+			 .after="Pvalue")
+
 ## sort
-#results_df <- results_df %>% arrange(Pvalue)
-#
-## examine top results
-#results_df %>% head() %>% knitr::kable()
+results_df <- results_df %>% arrange(Pvalue)
+
+# examine top results
+results_df %>% head() %>% knitr::kable()
+
+message("Total number of significant proteins: ",
+	sum(results_df$Padjust < 0.05))
