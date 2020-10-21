@@ -249,15 +249,38 @@ mygradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
+#lmerTestModule <- function(msstats_prot,module,contrast_matrix) {
+data(msstats_prot)
+data(leidenalg_partition)
+
+msstats_prot$Module <- paste0("M",partition[msstats_prot$Protein])
+msstats_prot <- msstats_prot %>% filter(!is.na(Module))
+
+module = "M1"
+
   subdat <- msstats_prot %>% filter(Module == module)
   # the data cannot contain missing values
   if (any(is.na(subdat))) {
     warning("The data cannot contain missing values.")
     return(NULL)
   }
+
+# the lmer formula to each module-level subset of the data:
+fx <- Abundance ~ 0 + Genotype + BioFraction + (1|Protein)
+
+dm = msstats_prot %>% reshape2::dcast(Protein ~ Mixture + Genotype + BioFraction, value.var = "Abundance")
+df <- reshape2::melt(dm,id="Protein",variable.name="ID",value.name="Abundance")
+df$Module <- sapply(strsplit(as.character(df$ID),"_"),"[",1)
+df$Genotype <- sapply(strsplit(as.character(df$ID),"_"),"[",2)
+df$BioFraction <- sapply(strsplit(as.character(df$ID),"_"),"[",3)
+df %>% unique()
+
+
+head(df)
+
   # fit the model:
-  fm <- suppressMessages({try(lmerTest::lmer(fx, data=subdat),silent=TRUE)})
+  fm <- lm(fx, data=df)
+
   # FIXME: catch errors/warnings!
   if (inherits(fm,"try-error")) { 
     warning("try-error")

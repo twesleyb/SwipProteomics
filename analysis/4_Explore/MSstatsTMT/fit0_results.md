@@ -20,8 +20,8 @@ Total number of significant proteins: 179
 Summary of significant proteins for intrafraction comparisons:
 
 
-|    | nsig|
-|:---|----:|
+|BioFraction    | nsig|
+|:--------------|----:|
 |F4  |   43|
 |F5  |   37|
 |F6  |   37|
@@ -30,4 +30,4 @@ Summary of significant proteins for intrafraction comparisons:
 |F9  |   63|
 |F10 |   64|
 
-Commonly significant proteins:Q8C2E7, P35282, Q3UMB9, Q8VDD8, Q9R118, Q8K4Z0
+Commonly significant proteins (6): Q8C2E7, P35282, Q3UMB9, Q8VDD8, Q9R118, Q8K4Z0

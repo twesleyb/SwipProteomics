@@ -11,25 +11,29 @@
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
 
-
-## Output ---------------------------------------------------------------------
-
-
-## Functions -------------------------------------------------------------------
-
-
 ## Prepare environment --------------------------------------------------------
 
 renv::load(root,quiet=TRUE)
 
+suppressWarnings({ devtools::load_all() })
+
+# load the data
+data(swip)
+data(gene_map)
+data(msstats_prot)
+data(fit0_results)
+data(fit1_results)
+data(module_colors)
+data(leidenalg_partition)
+
+# other imports
 suppressPackageStartupMessages({
 	library(dplyr)
 	library(ggplot2)
 	library(data.table)
 })
 
-suppressWarnings({ devtools::load_all() })
-
+# project dirs
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Modules","Proteins")
 
@@ -39,18 +43,13 @@ if (! dir.exists(figsdir)) {
 
 ggtheme(); set_font("Arial",font_path=fontdir)
 
-# load the data
-data(swip)
-data(gene_map)
-data(partition)
-data(sig_modules)
-data(msstats_prot)
-data(module_colors)
-data(msstats_results)
 
 ## plot protein summary --------------------------------------------------------
 
-plot_protein_summary <- function(protein) {
+data(fit0_results)
+
+plot_protein_summary <- function(protein, msstats_prot, fit0_results, partition) {
+
   # a function to generate a proteins summary plot
   # requires SwipProteomics for col2hex and data
   require(dplyr,quietly=TRUE)
@@ -59,18 +58,22 @@ plot_protein_summary <- function(protein) {
   wt_color = "#47b2a4"
   mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
   # prepare the data
-  msstats_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
-  msstats_df$Module <- paste0("M",partition[msstats_df$Protein])
+  msstats_prot$Module <- paste0("M",partition[msstats_prot$Protein])
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
-  df <- subset(msstats_df,msstats_df$Protein == protein) %>% 
+
+
+  # subset
+  df <- subset(msstats_prot, msstats_prot$Protein == protein) %>% 
 	select(Mixture,Channel,Condition,Protein,Abundance,SE,Module) %>% 
 	unique() %>% 
 	group_by(Condition,Protein) %>% 
 	summarize(mean_Abundance = mean(Abundance),
 		  SD = sd(Abundance),
 		  SE = unique(SE),.groups="drop")
+
   df <- df %>% mutate(CV = SD/mean_Abundance)
   df <- df %>% mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
+
   df$BioFraction <- sapply(strsplit(as.character(df$Condition),"\\."),"[",2)
   df$Genotype <- sapply(strsplit(as.character(df$Condition),"\\."),"[",1)
   df$BioFraction <- factor(df$BioFraction,
@@ -107,7 +110,7 @@ plot_protein_summary <- function(protein) {
 
 ## ----------------------------------------------------------------------------
 
-#plot_protein_summary(swip)
+plot_protein_summary(swip)
 
 # Loop to do work.
 modules <- split(names(partition),partition)[-1]

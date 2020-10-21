@@ -12,12 +12,6 @@
 root = "~/projects/SwipProteomics"
 
 
-## Output ---------------------------------------------------------------------
-
-
-## Functions -------------------------------------------------------------------
-
-
 ## Prepare environment --------------------------------------------------------
 
 renv::load(root,quiet=TRUE)
@@ -26,12 +20,9 @@ suppressWarnings({ devtools::load_all() })
 # load the data
 data(swip)
 data(gene_map)
-data(partition)
-data(sig_modules)
 data(msstats_prot)
 data(module_colors)
-data(msstats_results)
-data(leidenalg_partition) 
+data(leidenalg_partition)
 
 # imports
 suppressPackageStartupMessages({
@@ -56,7 +47,10 @@ washc_prots = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
 
 ## plot protein summary --------------------------------------------------------
 
-plot_protein_summary <- function(protein) {
+data(fit1_results)
+data(fit0_results)
+
+plot_protein_summary <- function(protein,fit0_results=NULL) {
   # a function to generate a proteins summary plot
   # requires SwipProteomics for col2hex and data
   require(dplyr,quietly=TRUE)
@@ -65,7 +59,6 @@ plot_protein_summary <- function(protein) {
   wt_color = "#47b2a4"
   mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
   # prepare the data
-  msstats_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
   msstats_df$Module <- paste0("M",partition[msstats_df$Protein])
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   df <- subset(msstats_df,msstats_df$Protein == protein) %>% 
@@ -114,17 +107,22 @@ plot_protein_summary <- function(protein) {
 ## main ------------------------------------------------------------------------
 
 # Loop to do work.
-partition <- setNames(rep(1,length(washc_prots)),nm=washc_prots)
-modules <- split(names(partition),partition)
+#partition <- setNames(rep(1,length(washc_prots)),nm=washc_prots)
+#modules <- split(names(partition),partition)
+#names(modules) <- paste0("M",names(modules))
 
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-module = "M60"
+# drop modules that are less than min_size
+min_size = 5
+too_small <- names(which(sapply(modules,length) < min_size))
+modules <- modules[names(modules) %notin% too_small]
+
 
 for (module in names(modules)) {
-  # Get the modules color
 
+  # Get the modules color
   wt_color = "#47b2a4"
   #mut_color <- col2hex("purple")
   mut_color <- module_colors[module]
@@ -152,6 +150,7 @@ for (module in names(modules)) {
   # (each protein scaled to maximum within a plot) into a single df
   # and generate combined plot
   df <- bind_rows(sapply(plots,"[", "data"))
+
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
   plot <- plot + aes(y = norm_Abundance)
@@ -215,6 +214,8 @@ msstats_psm <- msstats_psm %>% filter(!is.na(Intensity))
 ## another attempt...
 
 # how to summarize module abundance...
+df = plot$data
+df = df %>% group_by(Genotype,BioFraction) %>% mutate(Fit = median(norm_Abundance))
 
 fm <- lm(norm_Abundance ~ 0 + Condition + Protein, data = plot$data)
 cf <- as.data.table(coef(fm),keep.rownames="Condition")
