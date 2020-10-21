@@ -106,33 +106,34 @@ updateLModel <- function(fx, data, mf.final = NULL, ..., change.contr = FALSE) {
 } #EOF
 
 
-calcApvarcovar <- function(fx,data,thopt,sigma) {
-  # why not:
-  # as_lmerModLmerTest(fx, tol = 1e-08)
-  # vcov_varpar of param theta sigma
-  # calc asymptotic variance covariance matrix given params sigma and theta
-  #' @importFrom lmerTest lmer
-  fm <- lmerTest::lmer(fx,data)
-  dd <- devFun(fx,data)
-  h <- myhessian(dd, c(thopt, sigma = sigma))
-  ch <- try(chol(h), silent = TRUE)
-  if (inherits(ch, "try-error")) {
-    return(rho)
-  }
-  A <- 2 * chol2inv(ch)
-  eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
-  isposA <- TRUE
-  if (min(eigval) < sqrt(.Machine$double.eps)) { ## tol ~ sqrt(.Machine$double.eps)
-    isposA <- FALSE
-  }
-  if (!isposA) {
-    print("Asymptotic covariance matrix A is not positive!")
-  }
-  return(A)
-} #EOF
+#calcApvarcovar <- function(fx,data,thopt,sigma) {
+#  # why not:
+#  # as_lmerModLmerTest(fx, tol = 1e-08)
+#  # vcov_varpar of param theta sigma
+#  # calc asymptotic variance covariance matrix given params sigma and theta
+#  #' @importFrom lmerTest lmer
+#  fm <- lmerTest::lmer(fx,data)
+#  dd <- devFun(fx,data)
+#  h <- myhessian(dd, c(thopt, sigma = sigma))
+#  ch <- try(chol(h), silent = TRUE)
+#  if (inherits(ch, "try-error")) {
+#    return(rho)
+#  }
+#  A <- 2 * chol2inv(ch)
+#  eigval <- eigen(h, symmetric = TRUE, only.values = TRUE)$values
+#  isposA <- TRUE
+#  if (min(eigval) < sqrt(.Machine$double.eps)) { ## tol ~ sqrt(.Machine$double.eps)
+#    isposA <- FALSE
+#  }
+#  if (!isposA) {
+#    print("Asymptotic covariance matrix A is not positive!")
+#  }
+#  return(A)
+#} #EOF
 
 
 devFun <- function(fx,data) {
+  # NOTE: requires updateLModel
   fm <- lmerTest::lmer(fx,data)
   # devfun function as a function of optimal parameters
   #' @importFrom methods is
@@ -168,36 +169,36 @@ devFun <- function(fx,data) {
 } #EOF
 
 
-myhessian <- function(fun, x, fx = NULL, delta = 1e-4, ...) {
-  # calculate hessian matrix
-  # from lmertest::myhess in deriv.R
-  nx <- length(x)
-  fx <- if (!is.null(fx)) fx else fun(x, ...)
-  H <- array(NA, dim = c(nx, nx))
-  for (j in 1:nx) {
-    ## Diagonal elements:
-    xadd <- xsub <- x
-    xadd[j] <- x[j] + delta
-    xsub[j] <- x[j] - delta
-    H[j, j] <- (fun(xadd, ...) - 2 * fx +
-      fun(xsub, ...)) / delta^2
-    ## Upper triangular (off diagonal) elements:
-    for (i in 1:nx) {
-      if (i >= j) break
-      xaa <- xas <- xsa <- xss <- x
-      xaa[c(i, j)] <- x[c(i, j)] + c(delta, delta)
-      xas[c(i, j)] <- x[c(i, j)] + c(delta, -delta)
-      xsa[c(i, j)] <- x[c(i, j)] + c(-delta, delta)
-      xss[c(i, j)] <- x[c(i, j)] - c(delta, delta)
-      H[i, j] <- (fun(xaa, ...) - fun(xas, ...) -
-        fun(xsa, ...) + fun(xss, ...)) /
-        (4 * delta^2)
-    }
-  }
-  ## Fill in lower triangle:
-  H[lower.tri(H)] <- t(H)[lower.tri(H)]
-  return(H)
-} #EOF
+#myhessian <- function(fun, x, fx = NULL, delta = 1e-4, ...) {
+#  # calculate hessian matrix
+#  # from lmertest::myhess in deriv.R
+#  nx <- length(x)
+#  fx <- if (!is.null(fx)) fx else fun(x, ...)
+#  H <- array(NA, dim = c(nx, nx))
+#  for (j in 1:nx) {
+#    ## Diagonal elements:
+#    xadd <- xsub <- x
+#    xadd[j] <- x[j] + delta
+#    xsub[j] <- x[j] - delta
+#    H[j, j] <- (fun(xadd, ...) - 2 * fx +
+#      fun(xsub, ...)) / delta^2
+#    ## Upper triangular (off diagonal) elements:
+#    for (i in 1:nx) {
+#      if (i >= j) break
+#      xaa <- xas <- xsa <- xss <- x
+#      xaa[c(i, j)] <- x[c(i, j)] + c(delta, delta)
+#      xas[c(i, j)] <- x[c(i, j)] + c(delta, -delta)
+#      xsa[c(i, j)] <- x[c(i, j)] + c(-delta, delta)
+#      xss[c(i, j)] <- x[c(i, j)] - c(delta, delta)
+#      H[i, j] <- (fun(xaa, ...) - fun(xas, ...) -
+#        fun(xsa, ...) + fun(xss, ...)) /
+#        (4 * delta^2)
+#    }
+#  }
+#  ## Fill in lower triangle:
+#  H[lower.tri(H)] <- t(H)[lower.tri(H)]
+#  return(H)
+#} #EOF
 
 
 vcovLThetaLM <- function(fx,data) {
@@ -258,8 +259,14 @@ mygradient <- function(fun, x, delta = 1e-4,
 } #EOF
 
 
-
 lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
+  # slimed down, but requires:
+  # * calcPosterior
+  # * vcovLThetaLM(fx,subdat)
+  # * mygradient(myfun, c(theta, sigma))
+  # here we compute the unmoderated statistics
+  df_prior <- 0
+  s2_prior <- 0
   # subset the data
   subdat <- msstats_prot %>% filter(Protein == protein)
   if (any(is.na(subdat))) {
@@ -269,70 +276,43 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
   }
   # fit the model
   fm <- lmerTest::lmer(fx, data=subdat)
-  # compute some key model statistics, store in list rho
-  rho <- list()
-  rho$protein <- protein
-  rho$formula <- fx
-  rho$model <- fm
-  rho$data <- subdat
-  # here we compute the unmoderated statistics
-  df.prior <- 0
-  s2.prior <- 0
-  # check if singular (boundary) fit
-  rho$isSingular <- lme4::isSingular(fm)
-  # calculate coeff, sigma, and theta:
-  rho$coeff <- lme4::fixef(fm)
-  rho$sigma <- stats::sigma(fm)
-  rho$thopt <- lme4::getME(fm, "theta")
-  # calculate degrees of freedom and sigma^2:
-  av <- anova(fm)
-  s2_df <- av$DenDF # dof
-  s2 <- av$"Mean Sq" / av$"F value"
-  # calcuate symtoptic var-covar matrix
-  A <- calcApvarcovar(fx, subdat, rho$thopt,rho$sigma)
+  # compute Satterthwaite degrees of freedom and other key statistics
+  model_summary <- summary(fm, ddf = "Satterthwaite")
+  s2_df <- as.numeric(model_summary$coefficients[,"df"][1])
+  coeff <- model_summary$coeff[,"Estimate"]
+  sigma <- model_summary$sigma # == sigma(fm)
+  theta <- model_summary$optinfo$val # aka thopt
+  vcov <- model_summary$vcov # variance-covariance matrix
+  se2 <- as.numeric(contrast_matrix %*% vcov %*% contrast_matrix) # variance
   # calculate posterior s2
-  s2.post <- calcPosterior(s2, s2_df, s2.prior, df.prior)
-  #############################################################################
-  ## Q5. How to define contrast matrix?
-  #vec = rho$coeff
-  #vec[] <- 0
-  #vec[which(grepl("Control.F10",names(vec)))] <- -1
-  #vec[which(grepl("Mutant.F10",names(vec)))] <- +1
-  #contrast_matrix <- vec
-  #vec[1] <- -1
-  #vec[2] <- +1
-  #contrast_matrix <- vec
-  #############################################################################
-  # compute variance-covariance matrix
-  vss <- vcovLThetaLM(fx,subdat) 
-  varcor <- vss(t(contrast_matrix), thpars=c(rho$thopt, rho$sigma))
-  # compute scaled covariance matrix and se2
-  vcov <- varcor$unscaled.varcor * s2 
-  se2 <- as.numeric(contrast_matrix %*% as.matrix(vcov) %*% contrast_matrix)
-  # calculate variance
-  vcov.post <- varcor$unscaled.varcor * s2.post
-  variance <- as.numeric({
-	        contrast_matrix %*% as.matrix(vcov.post) %*% contrast_matrix
-  })
+  s2_post <- calcPosterior(sigma^2, s2_df, s2_prior, df_prior)
   # calculate degrees of freedom posterior
   # given params theta and sigma from lmer and the covariance matrix
-  # NOTE: careful formatting-- can break things
+  # calcuate symtoptic var-covar matrix
+  vss <- vcovLThetaLM(fx,subdat)
+  varcor <- vss(t(contrast_matrix), c(theta, sigma))
+  vcov.post <- varcor$unscaled.varcor * s2_post
+  A <- fm@vcov_varpar
   myfun <- function(x) { vss(t(contrast_matrix), x)$varcor }
-  g <- mygradient(myfun, c(rho$thopt, rho$sigma))
+  g <- mygradient(myfun, c(theta, sigma))
   denom <- as.numeric(t(g) %*% A %*% g)
-  df.post <- 2 * (se2)^2 / denom + df.prior
+  #df.post <- 2 * se2^2 / denom + df.prior # is se2 ^2 correct?
+  df_post <- 2 * se2 / denom + df_prior
   # compute fold change and the t-statistic
-  FC <- (contrast_matrix %*% rho$coeff)[, 1]
-  t <- FC / sqrt(variance) 
+  FC <- (contrast_matrix %*% coeff)[, 1]
+  t <- FC / sqrt(se2) 
   # compute the p-value given t-statistic and df.post
-  p <- 2 * pt(-abs(t), df = df.post) 
+  p <- 2 * pt(-abs(t), df = df_post) 
   # compile results
+  rho <- list()
+  rho$protein <- protein
+  rho$model <- fx
   comparison <- paste(names(contrast_matrix)[contrast_matrix == +1], 
 		      names(contrast_matrix)[contrast_matrix == -1],sep="-")
   rho$stats <- data.frame(protein=protein,contrast=comparison,
   		 log2FC=FC, percentControl=2^FC, Pvalue=p,
-  		 Tstatistic=t, SE=sqrt(variance), DF=df.post, 
-		 isSingular=rho$isSingular)
+  		 Tstatistic=t, SE=sqrt(se2), DF=df_post, 
+		 isSingular=lme4::isSingular(fm))
   return(rho)
 } #EOF
 
@@ -342,8 +322,11 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrast_matrix) {
 # demonstrate fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-summary(fm0)
 
+model_summary <- summary(fm0, ddf = "Satterthwaite")
+model_summary
+
+# FIXME: need to replace with more reproducible code
 knitr::kable(r.squaredGLMM.merMod(fm0))
 
 # build a contrast matrix:
@@ -354,6 +337,7 @@ cm0["ConditionMutant.F7"] <- +1
 
 # test a comparison defined by contrast_matrix
 model0 <- lmerTestProtein(swip, fx0, msstats_prot, cm0)
+
 model0$stats %>% knitr::kable()
 
 ## repeat for comparisons across all fractions:
