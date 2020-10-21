@@ -78,25 +78,26 @@ lmerTestProtein <- function(protein, fx, msstats_prot,
 
 ## check Swip's fit -----------------------------------------------------------
 
-# fit a model
-fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
-fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
+# demonstrate fit:
+fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 
-model_summary <- summary(fm1, ddf = "Satterthwaite")
+# ddf options: c("Satterthwaite", "Kenward-Roger", "lme4"))
+model_summary <- summary(fm0, ddf = "Satterthwaite")
 model_summary
 
-# FIXME: replace with better code
-knitr::kable(r.squaredGLMM.merMod(fm1))
+# FIXME: need to replace with more reproducible code
+knitr::kable(r.squaredGLMM.merMod(fm0))
 
-# generate contrast
-cm1 <- lme4::fixef(fm1)
-cm1[] <- 0
-cm1["GenotypeControl"] <- -1
-cm1["GenotypeMutant"] <- +1
+# build a contrast matrix:
+cm0 <- lme4::fixef(fm0)
+cm0[] <- 0
+cm0["ConditionControl.F7"] <- -1
+cm0["ConditionMutant.F7"] <- +1 
 
-# test the model
-model1 <- lmerTestProtein(swip, fx1, msstats_prot, cm1)
-model1$stats %>% knitr::kable()
+# test a comparison defined by contrast_matrix
+model0 <- lmerTestProtein(swip, fx0, msstats_prot, cm0)
+model0$stats %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------
@@ -108,7 +109,7 @@ prots = unique(as.character(msstats_prot$Protein))
 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx1, msstats_prot, cm1),silent=TRUE)
+	  try(lmerTestProtein(protein, fx0, msstats_prot, cm0),silent=TRUE)
 	})
 } # EOL
 
@@ -140,6 +141,5 @@ results_df <- results_df %>% arrange(Pvalue)
 # examine top results
 results_df %>% head() %>% knitr::kable()
 
-# status:
 message("Total number of significant proteins: ",
 	sum(results_df$Padjust < 0.05))
