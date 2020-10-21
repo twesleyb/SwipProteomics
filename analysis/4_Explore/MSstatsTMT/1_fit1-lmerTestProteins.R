@@ -9,6 +9,7 @@
 # [-] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 # [+] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
+
 ## prepare the env ------------------------------------------------------------
 
 ## input 
@@ -17,7 +18,11 @@ FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
 root <- "~/projects/SwipProteomics"
-renv::load(root); devtools::load_all(root)
+renv::load(root)
+
+suppressWarninsg({
+	devtools::load_all(root)
+})
 
 ## load data
 data(swip)

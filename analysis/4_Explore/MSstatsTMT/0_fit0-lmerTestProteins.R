@@ -9,16 +9,20 @@
 # [+] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 # [-] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
+
 ## prepare the env ------------------------------------------------------------
 
 ## input 
 results_file = "fit0_results.csv" # saved in root/rdata
-#results_file = "fit1_results.csv" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
 root <- "~/projects/SwipProteomics"
-renv::load(root); devtools::load_all(root)
+renv::load(root)
+ 
+suppressWarnings({ # FIXME: warnings about replacing imports
+	devtools::load_all(root)
+})
 
 ## load data
 data(swip)
@@ -62,14 +66,10 @@ expandGroups <- function(conditions,biofractions) {
 
 ## formulae to be fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-#fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
 ## fit model 0
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-print(summary(fm0, ddf = "Satterthwaite"))
-
-# cm1
-#cm1 <- getContrast(fm1,"GenotypeControl","GenotypeMutant")
+#print(summary(fm0, ddf = "Satterthwaite"))
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl","ConditionMutant")
