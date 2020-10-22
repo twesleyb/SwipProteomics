@@ -68,11 +68,15 @@ expandGroups <- function(conditions,biofractions) {
 ## formulae to be fit:
 fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
+message("\nfit: ", paste(as.character(fx1)[2],as.character(fx1)[3],sep=" ~ "))
+
 myfile <- file.path(root,"data","fx1.rda")
-save(fx1,file=myfile,version=2)
+save(fx1, file=myfile, version=2)
 
 ## fit model 1
 fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
+
+# model summary with Satterthwaite degrees of freedom:
 print(summary(fm1, ddf = "Satterthwaite"))
 
 myfile <- file.path(root,"data","fm1.rda")
@@ -81,18 +85,17 @@ save(fm1,file=myfile,version=2)
 # create contrast
 contrast <- getContrast(fm1,"GenotypeControl","GenotypeMutant")
 
-# contrasts should be a list:
-contrasts <- list(contrast)
-
-cm1 <- contrasts
+cm1 <- contrast
 myfile <- file.path(root,"data","cm1.rda")
 save(cm1,file=myfile,version=2)
 
-
 # check the results for swip
-# FIXME: function should check if contrast is list of numeric or numeric 
-results <- lmerTestProtein(swip,fx1,msstats_prot,contrasts,gof=TRUE)
+results <- lmerTestProtein(swip, fx1, msstats_prot, contrast, gof=TRUE)
+
 results$stats %>% knitr::kable()
+
+# goodness-of-fit
+t(results$gof) %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------

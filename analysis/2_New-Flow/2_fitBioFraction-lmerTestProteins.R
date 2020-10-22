@@ -20,9 +20,7 @@ FDR_alpha = 0.05 # threshold for significance
 root <- "~/projects/SwipProteomics"
 renv::load(root)
  
-suppressWarnings({ # FIXME: warnings about replacing imports
-	devtools::load_all(root)
-})
+devtools::load_all(root)
 
 ## load data
 data(swip)
@@ -67,27 +65,27 @@ expandGroups <- function(conditions,biofractions) {
 ## formula to be fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
-message("\nfit: ",
-	paste(as.character(fx0)[2],as.character(fx0)[3],sep=" ~ "))
+message("\nfit: ", paste(as.character(fx0)[2],as.character(fx0)[3],sep=" ~ "))
 
 # save model formula
 myfile <- file.path(root,"data","fx0.rda")
 save(fx0,file=myfile,version=2)
 
 
-## fit model 0
+## fit model 0 and get Satterthwaite degrees of freedoM
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 print(summary(fm0, ddf = "Satterthwaite"))
-
 
 # save fit model
 myfile <- file.path(root,"data","fm0.rda")
 save(fm0,file=myfile,version=2)
 
-## evaluate gof
+## evaluate gof using a function ported directly from the MuMin package
 r2_nakagawa <- r.squaredGLMM.merMod(fm0)
 
 knitr::kable(rbind(c("fixef","total"),r2_nakagawa))
+
+## FIXME: add some more info about calculation 
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl","ConditionMutant")
