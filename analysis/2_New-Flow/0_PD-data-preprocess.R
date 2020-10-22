@@ -11,11 +11,13 @@ root = "~/projects/SwipProteomics"
 
 # the PSM data is in root/rdata:
 # NOTE: the raw data is 75 mb and is too large to be managed by git.
+# After preprocessing, the PSM-level data is saved as pd_psm.rda in
+# root/data.
 input_dir = "rdata/PSM.zip"
 
 # PSM.zip contains:
 input_psm = "PSM/5359_PSM_Report.xlsx" # the data exported from PD
-input_samples = "PSM/5359_Sample_Report.xlsx" # also exported from PD?
+input_samples = "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 
 
 ## Options --------------------------------------------------------------------
@@ -29,7 +31,7 @@ save_rda = TRUE # save key R objects?
 #       Symbols.
 # * pd_psm - PSM data from Proteome Discoverer reformatted for MSstatsTMT.
 #       This file is just less than 50 mb.
-# * msstats_samples - the annotation object for PDtoMSstatsTMTformat().
+# * pd_annotation - the annotation object for PDtoMSstatsTMTformat().
 #       This maps individual MS runs to Spectrum.File and other sample
 #       information
 # * msstats_contrasts - a matrix specifying all pairwise intrafraction contrasts
@@ -144,7 +146,7 @@ raw_pd <- readxl::read_excel(myfile,progress=FALSE)
 raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
 
 
-## load sample data in root/rdata ---------------------------------------------
+## load sample data -----------------------------------------------------------
 # recieved this excel spreadsheet from GW--I think he exported from PD
 
 # pass meaningful colnames to read_excel
@@ -174,7 +176,7 @@ samples$Genotype <- munge2(samples$ConditionFraction)
 samples$ConditionFraction <- NULL
 
 # this is how MSstatsTMT needs 'Condition' for intra-fraction contrasts:
-# >>> BioCondition.BioFraction %eg% Control.F10
+# >>> BioCondition.BioFraction e.g. Control.F10
 condition <- as.character(interaction(samples$Genotype,samples$BioFraction))
 condition[grepl("SPQC",condition)] <-"Norm" 
 samples$Condition <- condition
@@ -311,9 +313,6 @@ annotation_dt$Condition <- samples$Condition[idx]
 annotation_dt$Channel <- samples$Channel[idx]
 annotation_dt$BioReplicate <- samples$BioReplicate[idx]
 
-# FIXME: how to pass additional covariates to MSstats?
-# FIXME: how to handle repeated measures design? 
-
 # Remove un-needed cols
 annotation_dt$"MS.Channel" <- NULL
 
@@ -333,37 +332,42 @@ conditions <- conditions[conditions != "Norm"] # should not include 'Norm'
 
 # utilizes internal function made available by my fork to generate a contrast
 # matrix for all pairwise comparisions defined by comp
-msstats_contrasts <- MSstatsTMT::makeContrasts(comp, groups=conditions)
+all_contrasts <- MSstatsTMT::makeContrast(groups=conditions)
+
+# subset contrasts matrix
+biof <- sapply(strsplit(rownames(all_contrasts),"\\.|-"),"[", 
+	       c(2,4),simplify=FALSE)
+idx <- sapply(biof,function(x) x[1] == x[2])
+# subset and flip sign of the comparisons: Mutant - Control
+msstats_contrasts <- -1 * all_contrasts[idx,]
 
 
 ## Save outputs to file ---------------------------------------------------------
 
-
 # save to file
 if (save_rda) {
 
-        # save Washc4's uniprot 
+        # save Swip/Washc4's uniprot ID
         swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
 	myfile <- file.path(root,"data","swip.rda")
         save(swip,file=myfile,version=2)
 	message("\nSaved ",squote(basename(myfile))," in ",
 		      squote(dirname(myfile)),".")
 
-	# gene_map for all proteins
+	# gene_map - gene identifiers for all proteins
 	myfile <- file.path(datadir,"gene_map.rda")
 	save(gene_map,file=myfile,version=2)
 	message("\nSaved ",squote(basename(myfile))," in ",
 		squote(dirname(myfile)),".")
 
-        # PD_annotation data - input annotations for MSstatsTMT
+        # pd_annotation - input annotations for MSstatsTMT
 	pd_annotation <- annotation_dt
 	myfile <- file.path(datadir,"pd_annotation.rda")
 	save(pd_annotation,file=myfile,version=2)
 	message("\nSaved ",squote(basename(myfile))," in ",
 		      squote(dirname(myfile)),".")
 
-	# PD_raw - the raw PSM data--input for MSstatsTMT
-	# NOTE: the data is too large
+	# pd_psm - the raw PSM data--input for MSstatsTMT
 	pd_psm <- filt_pd
 	myfile <- file.path(datadir,"pd_psm.rda")
 	save(pd_psm,file=myfile,version=2)
