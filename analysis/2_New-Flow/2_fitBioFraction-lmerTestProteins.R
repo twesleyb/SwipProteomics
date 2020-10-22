@@ -116,12 +116,19 @@ message("\nAnalyzing ", length(prots), " proteins.")
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores=n_cores)
 
-# specify gof = TRUE to calculate Nakagawa R2 
+t0 <- Sys.time()
+
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
 	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent=T)
 	})
 } # EOL
+
+t1 <- Sys.time()
+
+# status
+message("\nTime to analyze ", length(prots), " proteins:")
+difftime(t1,t0)
 
 
 ## process results ------------------------------------------------------------
