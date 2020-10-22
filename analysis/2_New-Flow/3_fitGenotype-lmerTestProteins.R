@@ -3,7 +3,7 @@
 # title: SwipProteomics
 # author: twab
 # description: fit protein-wise lmer models and perform statistical inferences
-# for a given contrast
+# for given contrasts
 
 ## formulae to be fit:
 # [-] fx0: Abundance ~ 0 + Condition + (1|Mixture)
@@ -21,9 +21,7 @@ FDR_alpha <- 0.05 # threshold for significance
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-suppressWarnings({
-  devtools::load_all(root)
-})
+devtools::load_all(root)
 
 ## load data
 data(swip)
@@ -139,10 +137,10 @@ results_df <- results_df %>% filter(!isSingular)
 results_df$isSingular <- NULL
 
 ## annotate with gene symbols
-idx <- match(results_df$protein, gene_map$uniprot)
+idx <- match(results_df$Protein, gene_map$uniprot)
 results_df <- tibble::add_column(results_df,
-  symbol = gene_map$symbol[idx],
-  .after = "protein"
+  Symbol = gene_map$symbol[idx],
+  .after = "Protein"
 )
 
 ## adjust pvals
@@ -174,5 +172,5 @@ write_excel(results_df, myfile)
 
 # save as rda
 fit1_results <- results_df
-myfile <- file.path(root, "data", "fit1_results.rda")
+myfile <- file.path(root, "data", "fitGenotype_results.rda")
 save(fit1_results, file = myfile, version = 2)

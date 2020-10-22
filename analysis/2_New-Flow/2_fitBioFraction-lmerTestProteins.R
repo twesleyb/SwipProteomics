@@ -65,15 +65,17 @@ expandGroups <- function(conditions, biofractions) {
 ## formula to be fit:
 fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
-message("\nfit: ", paste(as.character(fx0)[2], as.character(fx0)[3], sep = " ~ "))
+message("\nfit: ", 
+	paste(as.character(fx0)[2], as.character(fx0)[3], sep = " ~ "))
 
 # save model formula
 myfile <- file.path(root, "data", "fx0.rda")
 save(fx0, file = myfile, version = 2)
 
 
-## fit model 0 and get Satterthwaite degrees of freedoM
+## fit model 0 and get Satterthwaite degrees of freedon
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
+
 print(summary(fm0, ddf = "Satterthwaite"))
 
 # save fit model
@@ -107,28 +109,29 @@ save(cm0, file = myfile, version = 2)
 # check the results for swip
 message("\nResults for WASHC4:")
 results_df <- lmerTestProtein(swip, fx0, msstats_prot, contrasts)
+
 results_df %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------
 
 prots <- unique(as.character(msstats_prot$Protein))
-message("\nAnalyzing ", length(prots), " proteins.")
+message("\nAnalyzing ", formatC(length(prots),big.mark=","), " proteins.")
 
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores = n_cores)
 
-t0 <- Sys.time()
+t0 <- Sys.time() # start
 
 results_list <- foreach(protein = prots) %dopar% {
   suppressMessages({
-    try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent = T)
+    try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent = TRUE)
   })
 } # EOL
 
-t1 <- Sys.time()
+t1 <- Sys.time() # stop
 
-# status
+# elapsed time
 message("\nTime to analyze ", length(prots), " proteins:")
 difftime(t1, t0)
 
@@ -146,22 +149,22 @@ results_df <- results_df %>% filter(!isSingular)
 results_df$isSingular <- NULL
 
 ## annotate with gene symbols
-idx <- match(results_df$protein, gene_map$uniprot)
+idx <- match(results_df$Protein, gene_map$uniprot)
 results_df <- tibble::add_column(results_df,
-  symbol = gene_map$symbol[idx],
-  .after = "protein"
+  Symbol = gene_map$symbol[idx],
+  .after = "Protein"
 )
 
 ## adjust pvals  for each contrast
 results_df <- results_df %>%
-  group_by(contrast) %>%
+  group_by(Contrast) %>%
   mutate("Padjust" = p.adjust(Pvalue, "BH"))
 
 
 # sort cols
 results_df <- results_df %>%
   select(
-    protein, symbol, contrast, log2FC,
+    Protein, Symbol, Contrast, log2FC,
     percentControl, Pvalue, Padjust, SE, DF
   )
 
@@ -178,7 +181,7 @@ message(
 sig_prots <- results_df %>%
   ungroup() %>%
   filter(Padjust < FDR_alpha) %>%
-  select(protein) %>%
+  select(Protein) %>%
   unique() %>%
   unlist()
 message(
@@ -192,12 +195,12 @@ message(
 # results split by BioFraction
 
 results_list <- results_df %>%
-  group_by(contrast) %>%
+  group_by(Contrast) %>%
   group_split()
 
 # munge to get list names
 namen <- sapply(strsplit(
-  sapply(results_list, function(x) unique(x$contrast)),
+  sapply(results_list, function(x) unique(x$Contrast)),
   "\\."
 ), "[", 3) # get third element after split, F#
 names(results_list) <- namen
@@ -222,7 +225,7 @@ df <- data.frame(nsig = sapply(results_list, function(x) {
 knitr::kable(df)
 
 # proteins
-prot_list <- sapply(results_list, function(x) x$protein[x$Padjust < FDR_alpha])
+prot_list <- sapply(results_list, function(x) x$Protein[x$Padjust < FDR_alpha])
 common_prots <- Reduce(intersect, prot_list)
 if (length(common_prots) > 0) {
   message(
@@ -233,5 +236,5 @@ if (length(common_prots) > 0) {
 
 # save as rda
 fit0_results <- results_df
-myfile <- file.path(root, "data", "fit0_results.rda")
+myfile <- file.path(root, "data", "fitBioFraction_results.rda")
 save(fit0_results, file = myfile, version = 2)

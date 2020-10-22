@@ -66,15 +66,15 @@ devtools::load_all()
 # Load the proteomics data
 data(gene_map)
 data(msstats_prot)
-data(fit0_gof) # gof
-data(fit1_results)
 data(musInteractome)
+data(fitGenotype_results)
 
 # data for output tables
 tabsdir <- file.path(root, "tables")
 if (!dir.exists(tabsdir)) {
   mkdir(tabsdir)
 }
+
 
 ## filter proteins ------------------------------------------------------------
 
