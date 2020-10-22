@@ -62,7 +62,7 @@ if (nprot > length(proteins) | nprot == "all") {
 	msstats_input <- pd_psm
 } else {
 	# subset the data
-	message("\nAnalyzing a subset of data (n=",nprot,") proteins.")
+	message("\nAnalyzing a subset of the data (n=",nprot,") proteins.")
 	prots <- sample(proteins,nprot)
 	pd_filt <- pd_psm %>% 
 		filter(Master.Protein.Accessions %in% prots)
@@ -72,6 +72,8 @@ if (nprot > length(proteins) | nprot == "all") {
 
 ## [1] convert to msstats format -----------------------------------------------
 # Proteins with a single feature are removed.
+
+message("\nConverting PD PSM-level data into MSstatsTMT format.")
 
 t0 = Sys.time()
 
@@ -91,6 +93,8 @@ message("\nTime to pre-process ", nprot, " proteins: ",
 ## [2] summarize protein level data ----------------------------------------------
 # Perform protein summarization for each run.
 t0 = Sys.time()
+
+message("\nPerforming normalization and protein summarization using MSstatsTMT.")
 
 suppressMessages({ # verbosity
 
@@ -114,6 +118,8 @@ message("\nTime to summarize ", nprot, " proteins: ",
 # lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)
 # We specify Condition as Genotype.BioFraction for all intra-fraction
 # comparisons. T-statistics are moderated using ebayes methods in limma.
+
+message("\nAssessing intrafraction comparisons with MSstatsTMT.")
 
 t0 = Sys.time()
 
