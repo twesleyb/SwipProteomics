@@ -2,5 +2,4 @@
 
 export(lmerTestContrast)
 export(lmerTestProtein)
-import(lme4)
 import(lmerTest)

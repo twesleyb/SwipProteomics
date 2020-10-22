@@ -14,7 +14,7 @@
 ## prepare the env ------------------------------------------------------------
 
 ## input 
-results_file = "fit1_lmerTestProtein_results.xlsx" # saved in root/rdata
+results_file = "fitGenotype_lmerTestProtein_results.xlsx" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
@@ -65,10 +65,14 @@ expandGroups <- function(conditions,biofractions) {
 
 ## check Swip's fit -----------------------------------------------------------
 
+
 ## formulae to be fit:
 fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
-message("\nfit: ", paste(as.character(fx1)[2],as.character(fx1)[3],sep=" ~ "))
+# status
+gene <- gene_map$symbol[which(gene_map$uniprot == swip)]
+message("\nlmer: ", as.character(fx1)[2],
+	"(",gene,") ~ ",as.character(fx1)[3])
 
 myfile <- file.path(root,"data","fx1.rda")
 save(fx1, file=myfile, version=2)
@@ -82,7 +86,7 @@ print(summary(fm1, ddf = "Satterthwaite"))
 myfile <- file.path(root,"data","fm1.rda")
 save(fm1,file=myfile,version=2)
 
-# create contrast
+# create contrast vector
 contrast <- getContrast(fm1,"GenotypeControl","GenotypeMutant")
 
 cm1 <- contrast
@@ -90,12 +94,11 @@ myfile <- file.path(root,"data","cm1.rda")
 save(cm1,file=myfile,version=2)
 
 # check the results for swip
-results <- lmerTestProtein(swip, fx1, msstats_prot, contrast, gof=TRUE)
-
-results$stats %>% knitr::kable()
+results <- lmerTestProtein(swip, fx1, msstats_prot, contrast)
+results %>% knitr::kable()
 
 # goodness-of-fit
-t(results$gof) %>% knitr::kable()
+r.squaredGLMM.merMod(fm1) %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------
@@ -105,12 +108,19 @@ prots <- unique(as.character(msstats_prot$Protein))
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores=n_cores)
 
+t0 <- Sys.time()
+
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx1, msstats_prot, 
-			      contrasts, gof=TRUE), silent=TRUE)
+	  try(lmerTestProtein(protein, fx1, 
+			      msstats_prot, contrast), silent=TRUE)
 	})
 } # EOL
+
+t1 <- Sys.time()
+
+message("\nTime to analyze ",length(prots)," proteins:")
+difftime(t1,t0)
 
 
 ## process results ------------------------------------------------------------
@@ -118,7 +128,7 @@ results_list <- foreach(protein = prots) %dopar% {
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))
+results_df <- do.call(rbind,filt_list)
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -156,21 +166,3 @@ write_excel(results_df, myfile)
 fit1_results <- results_df
 myfile <- file.path(root,"data","fit1_results.rda")
 save(fit1_results, file=myfile,version=2)
-
-## collect gof
-gof <- bind_rows(sapply(filt_list,"[[","gof"))
-gof <- tibble::add_column(gof,"protein" = unlist(sapply(filt_list,"[[","protein")),
-			  .before=1)
-idx <- match(gof$protein,gene_map$uniprot)
-gof <- tibble::add_column(gof,"symbol" = gene_map$symbol[idx],
-			  .after="protein")
-gof <- tibble::add_column(gof,"entrez" = gene_map$entrez[idx],
-			  .after="symbol")
-gof <- as.data.table(gof) %>% arrange(desc(R2c_total))
-
-# 619 less than 0.7
-#gof %>% filter(R2c_total < 0.7) %>% select(protein) %>% unlist() %>% unique() %>% length()
-
-# save
-myfile <- file.path(root,"data","fit1_gof.rda")
-save(gof,file=myfile,version=2)

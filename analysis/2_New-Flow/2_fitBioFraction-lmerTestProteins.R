@@ -13,7 +13,7 @@
 ## prepare the env ------------------------------------------------------------
 
 ## input 
-results_file = "fit0_lmerTestProtein_results.xlsx" # saved in root/rdata
+results_file = "BioFraction_lmerTestProtein_results.xlsx" # saved in root/rdata
 FDR_alpha = 0.05 # threshold for significance
 
 ## load renv
@@ -83,7 +83,7 @@ save(fm0,file=myfile,version=2)
 ## evaluate gof using a function ported directly from the MuMin package
 r2_nakagawa <- r.squaredGLMM.merMod(fm0)
 
-knitr::kable(rbind(c("fixef","total"),r2_nakagawa))
+knitr::kable(rbind(c("marginal/fixef","conditional/total"),r2_nakagawa))
 
 ## FIXME: add some more info about calculation 
 
@@ -104,14 +104,14 @@ save(cm0,file=myfile,version=2)
 
 # check the results for swip
 message("\nResults for WASHC4:")
-results <- lmerTestProtein(swip,fx0,msstats_prot,contrasts,gof=TRUE)
-results$stats %>% knitr::kable()
+results_df <- lmerTestProtein(swip,fx0,msstats_prot,contrasts)
+results_df %>% knitr::kable()
 
 
 ## loop to fit all proteins ----------------------------------------------------
 
-prots = unique(as.character(msstats_prot$Protein))
-#prots = sample(prots, 23)
+prots <- unique(as.character(msstats_prot$Protein))
+message("\nAnalyzing ", length(prots), " proteins.")
 
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores=n_cores)
@@ -119,30 +119,18 @@ doParallel::registerDoParallel(cores=n_cores)
 # specify gof = TRUE to calculate Nakagawa R2 
 results_list <- foreach(protein = prots) %dopar% {
 	suppressMessages({
-	  try(lmerTestProtein(protein, fx0, msstats_prot, 
-			      contrasts, gof = TRUE), silent=T)
+	  try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent=T)
 	})
 } # EOL
 
 
 ## process results ------------------------------------------------------------
 
-
 # collect results
 idx <- unlist(sapply(results_list,class)) != "try-error"
 filt_list <- results_list[which(idx)]
-names(filt_list) <- sapply(filt_list,"[[","protein")
-
-## FIXME: why does one work interactively but not when executed?
-#results_df <- dplyr::bind_rows(sapply(filt_list,"[","stats")) # interactive
-results_df <- dplyr::bind_rows(sapply(filt_list,"[[","stats"))  # executed
-
-# extract gof stats
-gof <- dplyr::bind_rows(sapply(filt_list,"[[","gof"),.id="protein")
-
-# save gof stats -- we can annotate plots with fit
-myfile <- file.path(root,"data","fit0_gof.rda")
-save(gof,file=myfile,version=2)
+results_df <- do.call(rbind,filt_list)
+rownames(results_df) <- NULL
 
 # drop singular
 results_df <- results_df %>% filter(!isSingular)
@@ -154,7 +142,7 @@ results_df <- tibble::add_column(results_df,
   				 symbol=gene_map$symbol[idx],
   				 .after="protein")
 
-## adjust pvals 
+## adjust pvals  for each contrast
 results_df <- results_df %>% 
 	group_by(contrast) %>% 
 	mutate("Padjust"=p.adjust(Pvalue,"BH"))
@@ -162,7 +150,8 @@ results_df <- results_df %>%
 
 # sort cols
 results_df <- results_df %>% 
-	select(protein,symbol,contrast,log2FC,percentControl,Pvalue,Padjust,SE,DF)
+	select(protein,symbol,contrast,log2FC,
+	       percentControl,Pvalue,Padjust,SE,DF)
 
 # sort rows
 results_df <- results_df %>% arrange(Pvalue)
@@ -203,7 +192,8 @@ write_excel(results_list,myfile)
 
 # status
 message("\nSummary of significant proteins for intrafraction comparisons:")
-df <- data.frame(nsig=sapply(results_list, function(x) sum(x$Padjust < FDR_alpha)))
+df <- data.frame(nsig=sapply(results_list, function(x) {
+				     sum(x$Padjust < FDR_alpha) }))
 knitr::kable(df)
 
 # proteins

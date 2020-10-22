@@ -1,8 +1,8 @@
 #' lmerTestProtein
-#' @importFrom lmerTest
+#' @import lmerTest
 #' @export lmerTestContrast lmerTestProtein
 
-lmerTestContrast <- function(contrast, fm, df_prior=0,s2_prior=0) {
+lmerTestContrast <- function(protein, fm, contrast, df_prior=0,s2_prior=0) {
 
     # define the comparison to be tested
     pos_group <- names(contrast[contrast==1])
@@ -58,7 +58,8 @@ lmerTestContrast <- function(contrast, fm, df_prior=0,s2_prior=0) {
     p <- 2 * pt(-abs(t), df = df_post) 
 
     # collect stats
-    stats_df <- data.frame(contrast=comparison,
+    prot_stats <- data.frame(protein = protein,
+			   contrast=comparison,
 			   log2FC=FC, 
 			   percentControl=2^FC, 
 			   Pvalue=p,
@@ -67,13 +68,11 @@ lmerTestContrast <- function(contrast, fm, df_prior=0,s2_prior=0) {
 			   DF=df_post, 
 			   isSingular=lme4::isSingular(fm))
 
-    return(stats_df)
+    return(prot_stats)
 } #EOF
-#' lmerTestProtein
-#' @import lme4 lmerTest
-#' @export lmerTestProtein
 
-lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
+
+lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
   # input contrasts should be a numeric vector, or list of such 
   if (inherits(contrasts,"numeric")) {
@@ -93,25 +92,14 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts, gof=FALSE) {
   # fit the model
   fm <- lmerTest::lmer(fx, data=subdat)
 
-  # evaluate R2 for marginal (fixed) and conditional (total) effects
-  if (gof) {
-	  r2_nakagawa <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
-				  nm=c("R2_fixef", "R2_total"))
-	  r2_nakagawa["R2_mixef"] <- r2_nakagawa[2] - r2_nakagawa[1]
-	  r2_nakagawa <- r2_nakagawa[c(3,1,2)]
-  }
-
-  # evaluate statistical comparisons between contrasts
-  stats <- lapply(contrasts, lmerTestContrast, fm)
+  # evaluate statistical comparisons for all contrasts
+  stats_list <- lapply(contrasts, function(contrast) {
+			  lmerTestContrast(protein, fm, contrast)
+			   })
 
   # compile results
-  rho <- list()
-  rho$protein <- protein
-  rho$formula <- fx
-  rho$stats <- as.data.frame(dplyr::bind_rows(stats))
-  if (gof) {
-	  rho$gof <- r2_nakagawa
-  }
+  stats_df <- do.call(rbind, stats_list)
+  rownames(stats_df) <- NULL
 
-  return(rho)
+  return(stats_df)
 } #EOF
