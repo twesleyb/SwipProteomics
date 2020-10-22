@@ -1,16 +1,16 @@
 #!/usr/bin/env Rscript
 
-# title: MSstatsTMT 
+# title: MSstatsTMT
 # description: analysis of intrafraction comparisons with MSstats
 # author: twab
 
 ## Input:
-root = "~/projects/SwipProteomics"
+root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot = "all" # the number of proteins to be analyzed or 'all'
-FDR_alpha = 0.05 # FDR threshold for significance
-save_rda = TRUE
+nprot <- "all" # the number of proteins to be analyzed or 'all'
+FDR_alpha <- 0.05 # FDR threshold for significance
+save_rda <- TRUE
 
 
 ## prepare the working environment ---------------------------------------------
@@ -26,8 +26,8 @@ suppressPackageStartupMessages({
 })
 
 
-## NOTE: my fork attempts to suppress much of MSstats's verbosity as well as 
-## includes access to the internal functions used by MSstatsTMT to fit 
+## NOTE: my fork attempts to suppress much of MSstats's verbosity as well as
+## includes access to the internal functions used by MSstatsTMT to fit
 ## protein-wise models and perform statistical comparisons between groups.
 ## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass
 ## arguments for parallel processing to proteinSummarization to speed things up.
@@ -36,7 +36,9 @@ suppressPackageStartupMessages({
 ## load data ------------------------------------------------------------------
 
 # load functions in root/R and make data in root/data accessible
-suppressWarnings({ devtools::load_all() })
+suppressWarnings({
+  devtools::load_all()
+})
 
 # load data in root/data
 data(pd_psm) # 46 mb
@@ -54,18 +56,20 @@ data(msstats_contrasts)
 proteins <- unique(as.character(pd_psm$Master.Protein.Accessions))
 
 # define proteins to be analyzed:
-if (nprot > length(proteins) | nprot == "all") {	
-	# using all proteins
-	message("\nAnalyzing 'all' (N=",
-		formatC(length(proteins),big.mark=","),") proteins.")
-	msstats_input <- pd_psm
+if (nprot > length(proteins) | nprot == "all") {
+  # using all proteins
+  message(
+    "\nAnalyzing 'all' (N=",
+    formatC(length(proteins), big.mark = ","), ") proteins."
+  )
+  msstats_input <- pd_psm
 } else {
-	# subset the data
-	message("\nAnalyzing a subset of the data (n=",nprot,") proteins.")
-	prots <- sample(proteins,nprot)
-	pd_filt <- pd_psm %>% 
-		filter(Master.Protein.Accessions %in% prots)
-	msstats_input <- pd_filt
+  # subset the data
+  message("\nAnalyzing a subset of the data (n=", nprot, ") proteins.")
+  prots <- sample(proteins, nprot)
+  pd_filt <- pd_psm %>%
+    filter(Master.Protein.Accessions %in% prots)
+  msstats_input <- pd_filt
 } # EIS
 
 
@@ -74,42 +78,47 @@ if (nprot > length(proteins) | nprot == "all") {
 
 message("\nConverting PD PSM-level data into MSstatsTMT format.")
 
-t0 = Sys.time()
+t0 <- Sys.time()
 
 suppressMessages({ # verbosity
 
-  msstats_psm <- PDtoMSstatsTMTFormat(msstats_input, 
-				      pd_annotation, 
-				      which.proteinid="Master.Protein.Accessions",
-				      rmProtein_with1Feature = TRUE)
+  msstats_psm <- PDtoMSstatsTMTFormat(msstats_input,
+    pd_annotation,
+    which.proteinid = "Master.Protein.Accessions",
+    rmProtein_with1Feature = TRUE
+  )
 })
 
 # aprox 7 minutes for all proteins
-message("\nTime to pre-process ", nprot, " proteins: ", 
-	round(difftime(Sys.time(), t0, units="min"),3)," minutes.")
+message(
+  "\nTime to pre-process ", nprot, " proteins: ",
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
+)
 
 
 ## [2] summarize protein level data ----------------------------------------------
 # Perform protein summarization for each run.
-t0 = Sys.time()
+t0 <- Sys.time()
 
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
 
 suppressMessages({ # verbosity
 
   msstats_prot <- proteinSummarization(msstats_psm,
-				       method="msstats",	
-				       global_norm=TRUE,	
-				       MBimpute=TRUE,
-				       reference_norm=TRUE,
-				       clusters=23)
-
+    method = "msstats",
+    global_norm = TRUE,
+    MBimpute = TRUE,
+    reference_norm = TRUE,
+    clusters = 23
+  )
 })
 
 # This takes about 11 minutes for 8.5 k proteins with 23 cores
 # FIXME: fix warnings messages about closing clusters.
-message("\nTime to summarize ", nprot, " proteins: ", 
-  round(difftime(Sys.time(), t0, units="min"), 3)," minutes.")
+message(
+  "\nTime to summarize ", nprot, " proteins: ",
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
+)
 
 
 ## [3] perform statistical comparisons ----------------------------------------
@@ -120,21 +129,23 @@ message("\nTime to summarize ", nprot, " proteins: ",
 
 message("\nAssessing intrafraction comparisons with MSstatsTMT.")
 
-t0 = Sys.time()
+t0 <- Sys.time()
 
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
 
-    msstats_results <- groupComparisonTMT(msstats_prot, 
-					  msstats_contrasts, 
-					  moderated = TRUE)
-
+    msstats_results <- groupComparisonTMT(msstats_prot,
+      msstats_contrasts,
+      moderated = TRUE
+    )
   })
 })
 
 # This takes about 21 minutes for 8.5 k proteins
-message("\nTime to perform group comparisons for ", nprot, " proteins: ", 
-	round(difftime(Sys.time(),t0 ,units="min"),3)," minutes.")
+message(
+  "\nTime to perform group comparisons for ", nprot, " proteins: ",
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
+)
 
 
 ## annotate msstats_prot with gene ids ----------------------------------------
@@ -142,16 +153,17 @@ message("\nTime to perform group comparisons for ", nprot, " proteins: ",
 idx <- match(msstats_prot$Protein, gene_map$uniprot)
 Symbol <- gene_map$symbol[idx]
 Entrez <- gene_map$entrez[idx]
-msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after="Protein")
-msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after="Symbol")
+msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after = "Protein")
+msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after = "Symbol")
 
 # add BioFraction, Genotype, and Subject columns
-geno <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",1)
-biof <- sapply(strsplit(as.character(msstats_prot$Condition),"\\."),"[",2)
-subject <- as.numeric(interaction(msstats_prot$Mixture,geno))
-msstats_prot$Genotype <- factor(geno,levels=c("Mutant","Control"))
+geno <- sapply(strsplit(as.character(msstats_prot$Condition), "\\."), "[", 1)
+biof <- sapply(strsplit(as.character(msstats_prot$Condition), "\\."), "[", 2)
+subject <- as.numeric(interaction(msstats_prot$Mixture, geno))
+msstats_prot$Genotype <- factor(geno, levels = c("Mutant", "Control"))
 msstats_prot$BioFraction <- factor(biof,
-				   levels=c("F4","F5","F6","F7","F8","F9","F10"))
+  levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10")
+)
 msstats_prot$Subject <- as.factor(subject)
 
 
@@ -164,18 +176,24 @@ msstats_results <- msstats_results %>% filter(is.na(issue))
 msstats_results$issue <- NULL
 
 # annotate results with gene symbols
-idx <- match(msstats_results$Protein,gene_map$uniprot)
+idx <- match(msstats_results$Protein, gene_map$uniprot)
 Symbol <- gene_map$symbol[idx]
-msstats_results <- tibble::add_column(msstats_results,Symbol,.after="Protein")
+msstats_results <- tibble::add_column(msstats_results, Symbol, .after = "Protein")
 
 # summary
-message("\nSummary of signifcant (FDR<",
-	FDR_alpha,") proteins for intrafraction comparisons:")
-df = msstats_results %>% 
-	group_by(Label) %>% arrange(adj.pvalue) %>% 
-	summarize(`n Sig` = sum(adj.pvalue < FDR_alpha),
-		  `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
-					    collapse=", "), .groups="drop")
+message(
+  "\nSummary of signifcant (FDR<",
+  FDR_alpha, ") proteins for intrafraction comparisons:"
+)
+df <- msstats_results %>%
+  group_by(Label) %>%
+  arrange(adj.pvalue) %>%
+  summarize(
+    `n Sig` = sum(adj.pvalue < FDR_alpha),
+    `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
+      collapse = ", "
+    ), .groups = "drop"
+  )
 colnames(df)[1] <- "Contrast"
 knitr::kable(df)
 
@@ -185,20 +203,19 @@ knitr::kable(df)
 if (save_rda) {
 
   # save msstats_results -- MSstatsTMT statistical results
-  myfile <- file.path(root,"data","msstats_results.rda")
-  save(msstats_results,file=myfile,version=2)
-  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
-  
-  # save msstats_prot -- the normalized protein
-  myfile <- file.path(root,"data","msstats_prot.rda")
-  save(msstats_prot,file=myfile,version=2)
-  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
-  
-  # save msstats_psm -- the psm level data reformatted for MSstats
-  myfile <- file.path(root,"rdata","msstats_psm.rda")
-  save(msstats_psm,file=myfile,version=2)
-  message("\nSaved ",basename(myfile)," in ",dirname(myfile))
+  myfile <- file.path(root, "data", "msstats_results.rda")
+  save(msstats_results, file = myfile, version = 2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
+  # save msstats_prot -- the normalized protein
+  myfile <- file.path(root, "data", "msstats_prot.rda")
+  save(msstats_prot, file = myfile, version = 2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
+  # save msstats_psm -- the psm level data reformatted for MSstats
+  myfile <- file.path(root, "rdata", "msstats_psm.rda")
+  save(msstats_psm, file = myfile, version = 2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 }
 
 message("\nCompleted MSstatsTMT intrafraction statistical analysis.")
