@@ -221,6 +221,7 @@ if parameters.get('resolution_parameter') is None:
 ## Save Leidenalg clustering results ------------------------------------------
 
 if recursive:
+
     # Save initial partition.
     df = DataFrame(columns = profile[0].graph.vs['name'])
     df.loc['Membership'] = initial_membership
@@ -235,12 +236,14 @@ if len(profile) == 1:
             'Membership' : [partition.membership for partition in profile],
             'Summary'    : [partition.summary() for partition in profile]}
 else:
+
     # Multi-resolution profile:
     results = {
         'Modularity' : [partition.modularity for partition in profile],
         'Membership' : [partition.membership for partition in profile],
         'Summary'    : [partition.summary() for partition in profile],
         'Resolution' : [partition.resolution_parameter for partition in profile]}
+
 # Ends if/else
 
 # Save cluster membership vectors.
