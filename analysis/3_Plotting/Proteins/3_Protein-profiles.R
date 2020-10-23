@@ -45,9 +45,9 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## plot protein summary --------------------------------------------------------
 
-
-plot_protein_summary <- function(protein, wt_color = "#47b2a4",
-				 mut_color = col2hex(c("R"=148,"G"=33,"B"=146))) {
+plot_profile <- function(protein, wt_color = "#47b2a4",
+				 mut_color = col2hex(c("R"=148,"G"=33,"B"=146)),
+				 scale_abundance = FALSE) {
   # assumes msstats_prot and msstats_results are available in the current env
   # get protein's gene symbol
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
@@ -56,38 +56,56 @@ plot_protein_summary <- function(protein, wt_color = "#47b2a4",
   prot_df <- msstats_prot
   results_df <- msstats_results
   results_df$BioFraction <- factor(biofraction,levels=c("F4","F5","F6","F7","F8","F9","F10"))
-  # prepare the data -- why not do it in one long pipe?
+  # prepare the data 
   df <- prot_df %>% left_join(results_df,by=c("Protein","BioFraction")) %>%
+	  # subset -- only keep clusterd proteins
 	  filter(Protein %in% names(partition)) %>%  
+	  # annotate with module membership
 	  mutate(Module = paste0("M",partition[Protein])) %>%
+	  # subset -- keep data from single protein
 	  filter(Protein == protein) %>% 
-	  select(Protein, Mixture, Channel, Condition, BioFraction, Abundance, SE, Module) %>% 
-	  unique() %>% 
-	  group_by(Condition,Protein) %>% 
+	  # collect data
+	  select(Protein, Mixture, Channel, Condition, BioFraction, Abundance, SE, Module) %>%
+          # group by Genotype.BioFraction.Protein
+	  group_by(Condition,Protein) %>%
+	  # calculate the average of the three mixtures
 	  summarize(mean_Abundance = mean(Abundance),
 		    SD = sd(Abundance),
 		    SE = unique(SE),.groups="drop") %>% 
-	  mutate(CV = SD/mean_Abundance) %>% 
+	  mutate(CV = SD/mean_Abundance) %>%
+	  # scale profile
 	  mutate(norm_Abundance = mean_Abundance/max(mean_Abundance)) %>%
+	  # munge
 	  mutate(BioFraction = sapply(strsplit(as.character(Condition),"\\."),"[",2)) %>%
 	  mutate(Genotype = sapply(strsplit(as.character(Condition),"\\."),"[",1)) %>%
 	  mutate(BioFraction = factor(BioFraction, levels=c("F4","F5","F6","F7","F8","F9","F10")))
-  # Generate the plot.
+  # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = norm_Abundance)
+  # switch - scale = TRUE/FALSE
+  if (scale_abundance) {
+	  plot <- plot + aes(y = norm_Abundance)
+  } else {
+	  plot <- plot + aes(y = mean_Abundance)
+  }
   plot <- plot + aes(group = Genotype)
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=norm_Abundance - CV)
-  plot <- plot + aes(ymax=norm_Abundance + CV)
+  # switch - scale = TRUE/FALSE
+  if (scale_abundance) {
+    plot <- plot + aes(ymin=norm_Abundance - CV)
+    plot <- plot + aes(ymax=norm_Abundance + CV)
+  } else {
+    plot <- plot + aes(ymin=mean_Abundance - mean_Abundance * CV)
+    plot <- plot + aes(ymax=mean_Abundance + mean_Abundance * CV)
+  }
   plot <- plot + geom_line()
   plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
   plot <- plot + geom_point(size=2)
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-  plot <- plot + ylab("Normalized Abundance")
+  plot <- plot + ylab("Protein Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
@@ -105,6 +123,26 @@ plot_protein_summary <- function(protein, wt_color = "#47b2a4",
 } #EOF
 
 
+## explore swip -------------------------------------------------------------
+
+#plot <- plot_profile(swip)
+#
+## get swip's fit
+#data(fm1)
+#
+#mut_color = col2hex(c("R"=148,"G"=33,"B"=146)),
+#
+## y_int is estimated value
+#groups <- c("GenotypeMutant","GenotypeControl")
+#y_int = lme4::fixef(fm1)[groups]
+#
+#p1 <- plot + geom_hline(yintercept=y_int["GenotypeMutant"],
+#		  linetype="dashed",colour=mut_color)
+#
+#p2 <- plot + geom_hline(yintercept=y_int["GenotypeControl"],
+#		  linetype="dashed",colour=wt_color)
+#
+
 ## generate plots -------------------------------------------------------------
 
 # protein names sorted by module membership
@@ -115,7 +153,7 @@ plots <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 for (protein in sorted_prots) {
 	module <- paste0("M",partition[protein])
-	plot <- plot_protein_summary(protein,mut_color=module_colors[module])
+	plot <- plot_profile(protein,mut_color=module_colors[module])
 	plot_label <- paste("Module:", partition[protein])
 	yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
 		select(norm_Abundance) %>% range()
