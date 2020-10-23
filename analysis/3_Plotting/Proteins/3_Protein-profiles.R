@@ -49,6 +49,11 @@ plot_profile <- function(protein, wt_color = "#47b2a4",
 				 mut_color = col2hex(c("R"=148,"G"=33,"B"=146)),
 				 scale_abundance = FALSE) {
   # assumes msstats_prot and msstats_results are available in the current env
+  # * gene_map
+  # * msstats_prot
+  # * msstats_results
+  # require(dplyr)
+  # require(ggplot2)
   # get protein's gene symbol
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   # annotate msstats_results with BioFraction
