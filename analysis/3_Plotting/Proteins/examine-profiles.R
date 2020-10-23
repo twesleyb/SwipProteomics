@@ -19,25 +19,12 @@ load(myfile) # ne_adjm
 suppressPackageStartupMessages({
   library(dplyr)
   library(ggplot2)
+  library(data.table)
 })
 
-#' getMedoid
-#'
-#' Find representative branch from groups determined by heirarchical clustering
-#'
-#' @param adjm adjacency matrix for heirarchical clustering
-#'
-#' @return none
-#'
-#' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
-#'
-#' @references none
-#'
-#' @keywords none
-#'
-#' @examples
-#' getMedoid(adjm, h)
+
 getMedoid <- function(adjm, k = NULL, h = NULL, method = "complete") {
+  # Find representative branches among groups in a heirarchy
   # The medoid of the group is the branch that is closest to
   # all branches in its group.
   hc <- hclust(as.dist(1 - adjm), method)
@@ -55,19 +42,63 @@ getMedoid <- function(adjm, k = NULL, h = NULL, method = "complete") {
 prots <- getMedoid(adjm,k=5)
 
 plots <- lapply(prots, plot_profile)
+names(plots) <- prots
 
-adjm[prots,prots]
-ne_adjm[prots,prots]
-partition[prots]
+subadjm = adjm[prots,prots]
+subadjm[lower.tri(subadjm,diag=TRUE)] <- NA
+df = reshape2::melt(subadjm,na.rm=TRUE)
+colnames(df) <- c("ProtA","ProtB","weight")
+df <- df %>% arrange(desc(weight))
+
+head(df)
+
+protA <- names(plots)[1]
+protB <- names(plots)[2]
+
+corProt <- function(protA,protB,method="pearson") {
+	# requires msstats_prot
+	#library(dplyr)
+	#library(data.table)
+	df <- msstats_prot %>% filter(Protein == protA | Protein == protB)
+	dm <- df %>% reshape2::dcast(Protein ~ Mixture + Channel, 
+				     value.var = "Abundance") %>%
+	        as.data.table() %>%
+	        as.matrix(rownames="Protein")
+	if (method %in% c("pearson", "kendall", "spearman")) {
+		rho <- cor(t(dm), method = method)
+	} else if (method == "bicor") {
+		rho <- WGCNA::bicor(t(dm))
+	} else {
+		stop("method should be one of: ",
+		    "c('pearson', 'kendall', 'spearman', 'bicor').")
+	}
+	return(rho)
+}
+
+corProt("E9Q8I9","P41216",method = "spearman")
+
+corProt("E9Q8I9","P41216",method = "kendall")
+
+corProt("E9Q8I9","P41216",method = "pearson")
+
+corProt("E9Q8I9","P41216",method = "bicor")
+
+plots[["E9Q8I9"]]
+
+plots[["P41216"]] # these two are very different, but bicor is .2
 
 plots[[1]]
+plots[[2]] # these two are more similar
 
-plots[[2]]
+protA <- names(plots)[1]
+protB <- names(plots)[2]
 
-plots[[3]]
+corProt(protA,protB,method = "spearman") # .60
 
-plots[[4]]
+corProt(protA,protB,method = "kendall") # .46
 
-plots[[5]]
+corProt(protA,protB,method = "pearson") # 0.92
 
-partition[prots]
+corProt(protA,protB,method="bicor") # here bicor is -.12
+
+# wow, this is pretty profound -- need to illustrate this example
