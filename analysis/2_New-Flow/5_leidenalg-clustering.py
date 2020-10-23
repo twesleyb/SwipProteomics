@@ -145,24 +145,29 @@ for key in out: del parameters[key]
 
 # Perform Leidenalg module detection.
 if parameters.get('resolution_parameter') is None:
-    # Single resolution methods + first iteration if recursive.
+
+    # Single resolution methods: first iteration if recursive
     profile = list()
     partition = find_partition(**parameters)
     optimiser = Optimiser()
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
+
     if not recursive:
         print("... Final partition: " + partition.summary() + ".", file=stderr)
 
     # Recursively split modules that are too big.
     if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
+
         # Update optimization method.
         method = methods.get(recursive_method).get('partition_type')
+
         if type(method) is str:
                 parameters['partition_type'] = getattr(import_module('leidenalg'),method)
         elif type(method) == 'type':
                 parameters['partition_type'] = method
+
         # Initial module membership.
         initial_membership = partition.membership
         subgraphs = partition.subgraphs()
@@ -170,6 +175,7 @@ if parameters.get('resolution_parameter') is None:
         n_big = sum(too_big)
         msg = "\nSplitting {} modules that contain more than {} nodes."
         print(msg.format(n_big,max_size),file=stderr)
+
         while any(too_big):
             # Perform clustering for any subgraphs that are too big.
             idx = [i for i, too_big in enumerate(too_big) if too_big]
@@ -181,6 +187,7 @@ if parameters.get('resolution_parameter') is None:
             subgraphs.extend(part.subgraphs())
             too_big = [subg.vcount() > max_size for subg in subgraphs]
         #EOL
+
         # Collect subgraph membership as a single partition.
         nodes = [subg.vs['name'] for subg in subgraphs]
         parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
@@ -192,20 +199,23 @@ if parameters.get('resolution_parameter') is None:
         profile[0] = partition
         print("... Final partition: " + partition.summary() + ".", file=stderr)
 
-    #else:
-    #    # Multi-resolution methods:
-    #    pbar = ProgressBar()
-    #    profile = list()
-    #    resolution_range = linspace(**parameters.get('resolution_parameter'))
-    #    for resolution in pbar(resolution_range):
-    #        # Update resolution parameter.
-    #        parameters['resolution_parameter'] = resolution
-    #        partition = find_partition(**parameters)
-    #        optimiser = Optimiser()
-    #        diff = optimiser.optimise_partition(partition,n_iterations=-1)
-    #        profile.append(partition)
-    #    # Ends loop.
-# Ends If/else.
+    else:
+
+        # Multi-resolution methods:
+        pbar = ProgressBar()
+        profile = list()
+        resolution_range = linspace(**parameters.get('resolution_parameter'))
+
+        for resolution in pbar(resolution_range):
+            # Update resolution parameter.
+            parameters['resolution_parameter'] = resolution
+            partition = find_partition(**parameters)
+            optimiser = Optimiser()
+            diff = optimiser.optimise_partition(partition,n_iterations=-1)
+            profile.append(partition)
+        # Ends loop.
+
+# Ends If/else {single resolution OR multi-resolution}
 
 
 ## Save Leidenalg clustering results ------------------------------------------
