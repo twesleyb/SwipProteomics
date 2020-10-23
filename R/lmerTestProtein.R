@@ -54,7 +54,7 @@ lmerTestContrast <- function(fm, contrast,
     # given gradient and asy var-covar, compute posterior df
     denom <- as.numeric(t(g) %*% A %*% g)
     se2 <- as.numeric(contrast %*% vcov %*% contrast) # == variance 
-    df_post <- (se2 / denom) + df_prior
+    df_post <- 2 * (se2^2 / denom) + df_prior
 
     # compute fold change and the t-statistic
     FC <- (contrast %*% coeff)[, 1]
@@ -78,6 +78,11 @@ lmerTestContrast <- function(fm, contrast,
 
 
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
+
+  # check input args
+  stopifnot(is.character(protein))
+  stopifnot(inherits(fx,"formula"))
+  stopifnot(inherits(msstats_prot,"data.frame"))
 
   # input contrasts should be a numeric vector, or list of such 
   if (inherits(contrasts,"numeric")) {
@@ -109,9 +114,10 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
   # compile results
   stats_df <- do.call(rbind, stats_list)
   rownames(stats_df) <- NULL
+
   # sort cols
-  stats_df[,c("Protein","Contrast","log2FC","percentControl",
-	      "Pvalue","Tstatistic","SE", "DF", "isSingular")]
+  stats_df <- stats_df[,c("Protein","Contrast","log2FC","percentControl",
+	      "Tstatistic","Pvalue","SE", "DF", "isSingular")]
 
   return(stats_df)
 } #EOF

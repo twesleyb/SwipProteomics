@@ -9,6 +9,9 @@
 # [+] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 # [-] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
 
+# NOTE: this analysis can also be done with MSstatsTMT by specifying the 
+# contrast matrix like: c(rep(1/7,7), rep(-1/7,7)
+
 
 ## prepare the env ------------------------------------------------------------
 
@@ -111,6 +114,9 @@ message("\nResults for WASHC4:")
 results_df <- lmerTestProtein(swip, fx0, msstats_prot, contrasts)
 
 results_df %>% knitr::kable()
+
+# you can also directly test a contrast:
+#lmerTestContrast(fm0,contrasts[[1]])
 
 
 ## loop to fit all proteins ----------------------------------------------------

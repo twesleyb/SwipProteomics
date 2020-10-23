@@ -94,7 +94,7 @@ myfile <- file.path(root, "data", "cm1.rda")
 save(cm1, file = myfile, version = 2)
 
 # check the results for swip
-results <- lmerTestProtein(swip, fx1, msstats_prot, contrast)
+results <- lmerTestContrast(fm, contrast)
 results %>% knitr::kable()
 
 # goodness-of-fit
@@ -108,7 +108,7 @@ prots <- unique(as.character(msstats_prot$Protein))
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(cores = n_cores)
 
-t0 <- Sys.time()
+t0 <- Sys.time() # start
 
 results_list <- foreach(protein = prots) %dopar% {
   suppressMessages({
@@ -119,7 +119,7 @@ results_list <- foreach(protein = prots) %dopar% {
   })
 } # EOL
 
-t1 <- Sys.time()
+t1 <- Sys.time() # stop
 
 message("\nTime to analyze ", length(prots), " proteins:")
 difftime(t1, t0)
