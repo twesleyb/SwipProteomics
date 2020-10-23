@@ -61,7 +61,7 @@ data(partition)
 # The number of colors we need.
 modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
-n_colors <- length(modules) - 2 # M0 will be gray. M(Swip) will be purple.
+n_colors <- length(modules) # NOTE: M0 will be gray. M(Swip) will be purple.
 
 # Path to python script which is a simple script that uses the python 
 # port of randomcolors to generate random colors.
@@ -89,6 +89,7 @@ module_colors[wash_module] <- swip_color
 # The reamining colors are random.
 idx <- is.na(module_colors)
 module_colors[idx] <- sample(colors,sum(idx))
+
 
 ## Save the data --------------------------------------------------------------
 

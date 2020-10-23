@@ -1,13 +1,13 @@
 #!/usr/bin/env Rscript
 
 # load renv
-root = "~/projects/SwipProteomics"
+root <- "~/projects/SwipProteomics"
 renv::load(root)
 
 # load project
 devtools::load_all(root)
 
-# load data
+# load project's data
 data(swip)
 data(gene_map)
 data(partition)
@@ -35,7 +35,11 @@ msstats_filt$Module <- paste0("M",partition[msstats_filt$Protein])
 #fx3 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)")
 #anova(fm2,fm3) # justify inclusion of Mixture
 
-module = paste0("M",partition[swip])
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
+
+module = sample(names(modules),1)
+message("\nAnalyzing a random module: ", module)
 
 fx <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)")
 fm <- lmerTest::lmer(fx, data=msstats_filt %>% filter(Module==module))
@@ -44,7 +48,8 @@ summary(fm, ddf="Satterthwaite")
 
 
 ## examine gof:
-r.squaredGLMM.merMod(fm) %>% knitr::kable()
+r.squaredGLMM.merMod(fm) %>% 
+	knitr::kable()
 
 
 ## build a contrast
@@ -61,7 +66,8 @@ contrast["GenotypeControl"] <- -1
 
 
 # asses contrast:
-lmerTestContrast(fm, contrast) %>% knitr::kable()
+lmerTestContrast(fm, contrast) %>% 
+	knitr::kable()
 
 
 ## loop to fit modules
@@ -69,8 +75,13 @@ fit_list <- list()
 modules <- unique(msstats_filt$Module)
 
 for (module in modules) {
-	fm <- lmerTest::lmer(fx, data=msstats_filt %>% filter(Module==module))
+	fm <- try(lmerTest::lmer(fx, data=msstats_filt %>% filter(Module==module)),silent=TRUE)
+	if (inherits(fm,"try-error")) {
+	  warning("Unable to fit module ", module,".")
+	  fit_list[[module]] <- NULL
+	} else {
 	fit_list[[module]] <- fm
+	}
 }
 
 
@@ -92,6 +103,9 @@ df <- do.call(rbind,results) %>% arrange(Pvalue) %>%
 knitr::kable(head(df))
 
 
+##############
+quit()
+stop()
 # wash prots
 washc = gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
 
@@ -112,7 +126,6 @@ fx1 <- formula("Abundance ~ 0 + BioFraction + (1|Mixture) + (1|Protein)")
 fm0 <- lmerTest::lmer(fx0, data=msstats_filt %>% filter(Protein %in% washc))
 fm1 <- lmerTest::lmer(fx1, data=msstats_filt %>% filter(Protein %in% washc))
 
-anova(fm0,fm1)
 
 fx0 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)")
 fx1 <- formula("Abundance ~ 0 + BioFraction + (1|Mixture) + (1|Protein)")
