@@ -94,7 +94,7 @@ myfile <- file.path(root, "data", "cm1.rda")
 save(cm1, file = myfile, version = 2)
 
 # check the results for swip
-results <- lmerTestContrast(fm, contrast)
+results <- lmerTestContrast(fm1, contrast)
 results %>% knitr::kable()
 
 # goodness-of-fit
