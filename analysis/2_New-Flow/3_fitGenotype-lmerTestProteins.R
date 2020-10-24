@@ -8,28 +8,28 @@
 ## formulae to be fit:
 # [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 
-# [?] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Subject) + (1|Mixture)
+# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Subject) + (1|Mixture)
 
 # This is the model we really want to fit. But Subject and Mixture are
 # confounded. We can either choose to account for the effect of Subject or Mixture. 
 # Mixture contributes more to variance, thus it makes sense to use Mixture.
 # The model becomres:
 
-# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture)
+# [3] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture)
 
 # this is equivalent to :
 # [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 # When Condition is interaction(Genotype,BioFraction)
 
-# Thus we can actually perform the contrast of interest using the MSstatsTMT
-# given the correct contrast matrix. We define this below.
+# Thus, we can actually perform the contrast of interest using the MSstatsTMT
+# given be provide the correct contrast matrix. We define this below.
 
 
 ## prepare the env ------------------------------------------------------------
 
 ## options
 save_rda = FALSE
-results_file = "fitGenotype_lmerTestProtein_results.xlsx" # saved in root/tables
+results_file = "lmerTest_Control-Mutant.csv" # saved in root/tables
 FDR_alpha <- 0.05 # threshold for significance
 
 ## load renv
@@ -48,6 +48,7 @@ data(msstats_prot)
 suppressPackageStartupMessages({
   library(dplyr)
   library(doParallel)
+  ## other packages used:
   # require(lme4)
   # require(knitr)
   # require(tibble)
@@ -82,7 +83,6 @@ expandGroups <- function(conditions, biofractions) {
 
 ## formula to be fit:
 fx1 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-#formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
 # status
 gene <- gene_map$symbol[which(gene_map$uniprot == swip)]
@@ -173,10 +173,20 @@ results_df <- tibble::add_column(results_df,
   .after = "Protein"
 )
 
+
+## Remove redundant contrasts
+results_df <- results_df %>% mutate(Contrast = "Mutant-Control") %>% unique()
+
+
 ## adjust pvals
 results_df <- tibble::add_column(results_df,
-  Padjust = p.adjust(results_df$Pvalue, "BH"),
+  FDR = p.adjust(results_df$Pvalue, "BH"),
   .after = "Pvalue"
+)
+
+results_df <- tibble::add_column(results_df,
+  Padjust = p.adjust(results_df$Pvalue, "bonferroni"),
+  .after = "FDR"
 )
 
 ## sort
@@ -190,7 +200,15 @@ results_df %>%
 # status
 message(
   "Total number of significant proteins: ",
-  sum(results_df$Padjust < FDR_alpha)
+  sum(results_df$FDR < FDR_alpha), 
+  " (FDR < " , FDR_alpha,")."
+)
+
+# status
+message(
+  "Total number of significant proteins: ",
+  sum(results_df$Padjust < FDR_alpha),
+  " (Bonferroni < " , FDR_alpha,")."
 )
 
 

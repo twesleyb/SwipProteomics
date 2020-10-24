@@ -29,11 +29,13 @@ msstats_filt <- msstats_prot %>% filter(Protein %in% names(partition))
 msstats_filt$Module <- paste0("M",partition[msstats_filt$Protein])
 
 # the function to be fit:
-#fx0 <- formula("Abundance ~ 0 + Genotype")
-#fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction")
-#fx2 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Protein)")
-#fx3 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)")
-#anova(fm2,fm3) # justify inclusion of Mixture
+#fx0 <- Abundance ~ 0 + Genotype
+#fx1 <- Abundance ~ 0 + Genotype + BioFraction
+#fx2 <- Abundance ~ 0 + Genotype + BioFraction + (1|Protein)
+#fx3 <- Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)
+#fx4 <- Ab ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Subject) + (1|Protein)
+
+#anova(fm2,fm3) # justify inclusion of Mixture(?)
 
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
