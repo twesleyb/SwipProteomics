@@ -6,10 +6,24 @@
 # for given contrasts
 
 ## formulae to be fit:
-# [-] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-# [+] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
+# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
 
-## NOTE: model specific contrasts are defined below
+# [?] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Subject) + (1|Mixture)
+
+# This is the model we really want to fit. But Subject and Mixture are
+# confounded. We can either choose to account for the effect of Subject or Mixture. 
+# Mixture contributes more to variance, thus it makes sense to use Mixture.
+# The model becomres:
+
+# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture)
+
+# this is equivalent to :
+# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
+# When Condition is interaction(Genotype,BioFraction)
+
+# Thus we can actually perform the contrast of interest using the MSstatsTMT
+# given the correct contrast matrix. We define this below.
+
 
 ## prepare the env ------------------------------------------------------------
 
@@ -64,8 +78,9 @@ expandGroups <- function(conditions, biofractions) {
 ## check Swip's fit -----------------------------------------------------------
 
 
-## formulae to be fit:
-fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
+## formula to be fit:
+fx1 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+#formula("Abundance ~ 0 + Genotype + BioFraction + (1|Subject)")
 
 # status
 gene <- gene_map$symbol[which(gene_map$uniprot == swip)]
@@ -78,6 +93,7 @@ myfile <- file.path(root, "data", "fx1.rda")
 save(fx1, file = myfile, version = 2)
 
 ## fit model 1
+# NOTE: the underlying model will be the same!
 fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
 
 # model summary with Satterthwaite degrees of freedom:
@@ -87,11 +103,22 @@ myfile <- file.path(root, "data", "fm1.rda")
 save(fm1, file = myfile, version = 2)
 
 # create contrast vector
-contrast <- getContrast(fm1, "GenotypeControl", "GenotypeMutant")
+# NOTE: here's the appropriate contrast matrix:
+alt_contrast <- lme4::fixef(fm1)
+alt_contrast[] <- 0
 
-cm1 <- contrast
-myfile <- file.path(root, "data", "cm1.rda")
-save(cm1, file = myfile, version = 2)
+idx <- which(grepl("Control",names(alt_contrast)))
+alt_contrast[idx] <- -1/length(idx)
+
+idx <- which(grepl("Mutant",names(alt_contrast)))
+alt_contrast[idx] <- +1/length(idx)
+
+cm1 <- alt_contrast
+
+if (save_rda) {
+  myfile <- file.path(root, "data", "cm1.rda")
+  save(cm1, file = myfile, version = 2)
+}
 
 # check the results for swip
 results <- lmerTestContrast(fm1, cm1)
