@@ -21,6 +21,7 @@ data(msstats_contrasts)
 ## imports
 suppressPackageStartupMessages({
   library(dplyr)
+  library(data.table)
   library(MSstatsTMT)
 })
 
@@ -58,7 +59,8 @@ results[["lmerTest::IntraFraction"]] <- do.call(lmerTestProtein, input)
 input = list("data" = msstats_prot %>% filter(Protein==swip),
 	     "contrast.matrix" = msstats_contrasts,
 	     "moderated"=FALSE)
-results[["MSstatsTMT::IntraFraction"]] <- do.call(groupComparisonTMT, input)
+results[["MSstatsTMT::IntraFraction"]] <- suppressMessages({
+	do.call(groupComparisonTMT, input) })
 
 # FIXME: Remove message printing formula
 
@@ -82,12 +84,8 @@ colnames(alt_contrast)<- levels(msstats_prot$Condition)
 input = list("data" = msstats_prot %>% filter(Protein==swip),
 	     "contrast.matrix" = alt_contrast,
 	     "moderated"=FALSE)
-results[["MSstatsTMT::Mutant-Control"]] <- do.call(groupComparisonTMT, input)
-
-
-#------------------------------------------------------------------------------
-
-lapply(results,knitr::kable)
+results[["MSstatsTMT::Mutant-Control"]] <- suppressMessages({
+	do.call(groupComparisonTMT, input) })
 
 
 ###############################################################################
@@ -98,6 +96,7 @@ lapply(results,knitr::kable)
 ###############################################################################
 
 
+## Control-Mutant comparisons with alternative contrast and lmerTest ----------
 # the result is not the same. Something is different here.
 # somehow the result is different, even though we expected the same result
 
@@ -105,7 +104,48 @@ lapply(results,knitr::kable)
 input = list(swip, fx0, msstats_prot, alt_contrast) 
 results[["lmerTest::alt-Mutant-Control"]] <- do.call(lmerTestProtein, input)
 
+# ^this result matches MSstats
 
-# this result matches MSstats.
+## Examine results:
+lapply(results,knitr::kable)
+
+
+###############################################################################
 
 # which is correct way to specify the model?
+
+# as ther are no sig prots with lmerTestContrast(fm1), it seems like something
+# may be wrong
+
+###############################################################################
+
+
+
+## timed comparison -----------------------------------------------------------
+
+# do MSstatsTMT groupComparisons
+MSstatsTMT <- function() { 
+	input = list("data" = msstats_prot %>% filter(Protein==swip),
+		     "contrast.matrix" = msstats_contrasts,"moderated"=FALSE)
+        results <- suppressMessages({ do.call(groupComparisonTMT, input) })
+}
+
+# do lmerTestProtein
+lmerTest <- function() {
+	input = list(swip, fx0, msstats_prot, msstats_contrasts) 
+	results <- do.call(lmerTestProtein, input)
+}
+
+timed_res <- microbenchmark(MSstatsTMT(), lmerTest(), times=100L)   
+
+print(timed_res)
+
+# it appears that lmerTest approach is significantly faster ~1.5x
+df <- as.data.table(do.call(cbind,timed_res)) 
+
+# time to evaluate 10,000 proteins
+fold_diff <- df %>% group_by(expr) %>% 
+	summarize(mean=mean(time),.groups="drop") %>%
+	mutate("Duration" = 10000*(mean*10^-9)/60)
+
+# savings of ~7 min

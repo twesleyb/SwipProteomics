@@ -81,9 +81,11 @@ lmerTestContrast <- function(fm, contrast,
 
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
-  require(lme4)
-  require(dplyr)
-  require(lmerTest)
+  suppressPackageStartupMessages({
+    library(lme4)
+    library(dplyr)
+    library(lmerTest)
+  })
 
   getIndex <- function(namen,dm=lme4::fixef(fm)) {
     # a helper function to find column index 

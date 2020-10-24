@@ -14,7 +14,8 @@ root <- "~/projects/SwipProteomics"
 # * data(musInteractome) from twesleyb/getPPIs
 
 ## OPTIONs ---------------------------------------------------------------------
-os_keep <- as.character(c(9606, 10116, 1090)) # keep ppis from human, rat, and mus.
+# species to keep when building the ppi graph:
+os_keep <- as.character(c(9606, 10116, 1090))  # human, rat, and mus.
 
 ## OUTPUTs in root/rdata:
 
@@ -27,6 +28,7 @@ os_keep <- as.character(c(9606, 10116, 1090)) # keep ppis from human, rat, and m
 # * ppi_adjm.rda
 
 # * norm_prot in root/data
+
 
 ## functions ------------------------------------------------------------------
 
@@ -52,7 +54,7 @@ renv::load(root, quiet = TRUE)
 # Imports
 suppressPackageStartupMessages({
   library(dplyr) # for manipulating data
-  library(WGCNA) # for bicor function
+  #library(WGCNA) # for bicor function
   library(neten) # for network enhancement
   suppressWarnings({
     library(getPPIs)
@@ -76,22 +78,6 @@ if (!dir.exists(tabsdir)) {
 }
 
 
-## filter proteins ------------------------------------------------------------
-
-# build network from list of fit proteins
-all_prots <- fit1_results$protein
-
-R2c_threshold <- 0.7
-
-# identify protein with poor fits
-proteins <- gof %>%
-  filter(protein %in% all_prots) %>%
-  filter(R2c_total > R2c_threshold) %>%
-  select(protein) %>%
-  unlist() %>%
-  unique()
-
-
 ## Create protein covariation network -----------------------------------------
 
 # Cast protein data into a data.matrix. No need to log2 transform.
@@ -99,14 +85,12 @@ proteins <- gof %>%
 dm <- msstats_prot %>%
   as.data.table() %>%
   filter(Genotype == "Control") %>%
-  filter(Protein %in% proteins) %>% # keep prots with reasonably good fits
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
     value.var = "Abundance"
   ) %>%
   as.matrix(rownames = TRUE)
 
 # drop rows with any missing values
-# NOTE: the data was transposed for bicor
 out <- apply(dm, 2, function(x) any(is.na(x)))
 subdm <- dm[, !out]
 warning(formatC(sum(out), big.mark = ","), " proteins with any missing values were removed.")
@@ -116,14 +100,15 @@ n_samples <- dim(subdm)[1]
 n_proteins <- dim(subdm)[2]
 
 message(
-  "Building network with:",
-  "\nN Samples  = ", n_samples,
-  "\nN Proteins = ", n_proteins
+  "Building protein covariation network from:",
+  "\n\tN Samples  = ", n_samples,
+  "\n\tN Proteins = ", n_proteins
 )
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
-adjm <- WGCNA::bicor(subdm)
+#adjm <- WGCNA::bicor(subdm)
+adjm <- cor(subdm,method="pearson")
 
 # Enhanced network
 # NOTE: this can take a couple minutes

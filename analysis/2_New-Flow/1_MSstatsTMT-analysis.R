@@ -146,6 +146,7 @@ message(
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
+
 ## [4] perform statistical comparisons for 'Control-Mutant' comparison ---------
 
 # create a contrast for assessing difference between Control and Mutant
@@ -155,15 +156,17 @@ row.names(alt_contrast) <- "Mutant-Control"
 colnames(alt_contrast)<- levels(msstats_prot$Condition)
 
 
-# do MSstatsTMT groupComparisons
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
+
     res2 <- MSstatsTMT::groupComparisonTMT(data = msstats_prot,
 				           contrast.matrix = alt_contrast,
 				           moderated=TRUE)
+
   })
 })
 
+results_list <- list(msstats_results,res2)
 
 ## annotate msstats_prot with gene ids ----------------------------------------
 
@@ -214,8 +217,42 @@ df <- msstats_results %>%
 colnames(df)[1] <- "Contrast"
 knitr::kable(df)
 
+## clean-up res2 ---------------------------------------------------
+
+# if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
+res2 <- res2 %>% filter(is.na(issue))
+
+# drop issue column
+res2$issue <- NULL
+
+# annotate results with gene symbols
+idx <- match(res2$Protein, gene_map$uniprot)
+Symbol <- gene_map$symbol[idx]
+res2 <- tibble::add_column(res2, Symbol, .after = "Protein")
+
+# summary
+message(
+  "\nSummary of signifcant (FDR<",
+  FDR_alpha, ") proteins for 'Mutant-Control' comparison:"
+)
+df <- res2 %>%
+  group_by(Label) %>%
+  arrange(adj.pvalue) %>%
+  summarize(
+    `n Sig` = sum(adj.pvalue < FDR_alpha),
+    `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
+      collapse = ", "
+    ), .groups = "drop"
+  )
+colnames(df)[1] <- "Contrast"
+knitr::kable(df)
+
 
 ## save results ---------------------------------------------------------------
+
+
+msstats_results <- list("Intra-Fraction"=msstats_results,
+			"Mutant-Control" = res2)
 
 if (save_rda) {
 
