@@ -27,17 +27,19 @@
 
 ## prepare the env ------------------------------------------------------------
 
-## input
-results_file <- "fitGenotype_lmerTestProtein_results.xlsx" # saved in root/rdata
+## options
+save_rda = FALSE
+results_file = "fitGenotype_lmerTestProtein_results.xlsx" # saved in root/tables
 FDR_alpha <- 0.05 # threshold for significance
 
 ## load renv
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
+# load project functions
 devtools::load_all(root)
 
-## load data
+## load input data
 data(swip)
 data(gene_map)
 data(msstats_prot)
@@ -142,7 +144,7 @@ results_list <- foreach(protein = prots) %dopar% {
   suppressMessages({
     try(lmerTestProtein(
       protein, fx1,
-      msstats_prot, contrast
+      msstats_prot, cm1
     ), silent = TRUE)
   })
 } # EOL

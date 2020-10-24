@@ -1,5 +1,5 @@
 #' lmerTestProtein
-#' @import dplyr lmerTest
+#' @import dplyr lmerTest data.table
 #' @export lmerTestContrast lmerTestProtein
 
 
@@ -85,6 +85,7 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
     library(lme4)
     library(dplyr)
     library(lmerTest)
+    library(data.table)
   })
 
   getIndex <- function(namen,dm=lme4::fixef(fm)) {
@@ -115,7 +116,7 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
   }
 
   # subset the data
-  subdat <- msstats_prot %>% dplyr::filter(Protein == protein)
+  subdat <- msstats_prot %>% as.data.table() %>% dplyr::filter(Protein == protein)
   if (any(is.na(subdat))) {
 	# the data cannot contain missing values
   	warning("The data cannot contain missing values.")
