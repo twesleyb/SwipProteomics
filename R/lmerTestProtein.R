@@ -8,7 +8,8 @@ lmerTestContrast <- function(fm, contrast,
 
     # comparison should be a numeric
     stopifnot(inherits(contrast,"numeric"))
-    stopifnot(sum(contrast)==0)
+    stopifnot(sum(contrast[contrast<0],contrast[contrast>0])==0)
+
     pos_group <- names(contrast[contrast>0])
     neg_group <- names(contrast[contrast<0])
     comparison <- paste(pos_group,neg_group,sep="-")
@@ -106,7 +107,9 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 	  stopifnot(all(sapply(contrast_list,sum)==0))
   } else if (inherits(contrasts,"numeric")) {
 	  # the sum of contrast vector should be 0
-	  stopifnot(sum(contrasts)==0)
+	  # FIXME: why is sum sometimes wrong?!?!
+	  stopifnot(sum(contrasts[contrasts<0], contrasts[contrasts>0]) == 0)
+
 	  contrast_list <- list(contrasts)
   } else if (inherits(contrasts,"list")) {
           contrast_list <- contrasts
