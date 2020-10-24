@@ -9,7 +9,6 @@ lmerTestContrast <- function(fm, contrast,
     # comparison should be a numeric
     stopifnot(inherits(contrast,"numeric"))
     stopifnot(sum(contrast)==0)
-
     pos_group <- names(contrast[contrast>0])
     neg_group <- names(contrast[contrast<0])
     comparison <- paste(pos_group,neg_group,sep="-")
@@ -82,6 +81,10 @@ lmerTestContrast <- function(fm, contrast,
 
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
+  require(lme4)
+  require(dplyr)
+  require(lmerTest)
+
   getIndex <- function(namen,dm=lme4::fixef(fm)) {
     # a helper function to find column index 
     idy <- which(grepl(namen,names(dm)))
@@ -99,17 +102,18 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 	  contrast_list <- unlist(apply(contrasts,1,list),recursive=FALSE)
 	  stopifnot(all(sapply(contrast_list,sum)==0))
   } else if (inherits(contrasts,"numeric")) {
-	  stopifnot(all(sapply(contrast_list,sum)==0))
+	  # the sum of contrast vector should be 0
+	  stopifnot(sum(contrasts)==0)
 	  contrast_list <- list(contrasts)
-	  # comparison names will be generated from pos and neg coefficients
   } else if (inherits(contrasts,"list")) {
           contrast_list <- contrasts
+	  # comparison names will be generated from pos and neg coefficients
   } else {
-	  stop()
+	  stop("problem parsing input 'contrasts'.")
   }
 
   # subset the data
-  subdat <- msstats_prot %>% filter(Protein == protein)
+  subdat <- msstats_prot %>% dplyr::filter(Protein == protein)
   if (any(is.na(subdat))) {
 	# the data cannot contain missing values
   	warning("The data cannot contain missing values.")
@@ -121,16 +125,24 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
   # evaluate statistical comparisons for all contrasts
   stats_list <- list()
-  for (comparison in names(contrast_list)) {
+
+  for (comparison in contrast_list) {
+
     # the contrast to be tested, ensure it matches names(fixef(fm))
-    contrast <- contrast_list[[comparison]]
-    contrast <- contrast[names(sort(sapply(names(contrast),getIndex)))]
+    contrast <- comparison[names(sort(sapply(names(comparison),getIndex)))]
+    ## FIXME: we do this work twice!
+
+    pos_group <- paste0(names(contrast[contrast>0]),collapse="+")
+    neg_group <- paste(names(contrast[contrast<0]),collapse="+")
+    comparison <- paste(pos_group,neg_group,sep="-")
+
     # assess contrast
     test_results <- lmerTestContrast(fm, contrast)
+
     # collect results
     test_results$Protein <- protein 
     stats_list[[comparison]] <- test_results
-  }
+  } # EOL for every comparison
 
   # compile results
   stats_df <- do.call(rbind, stats_list)

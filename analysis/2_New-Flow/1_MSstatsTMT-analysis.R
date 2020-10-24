@@ -103,7 +103,6 @@ t0 <- Sys.time()
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
 
 suppressMessages({ # verbosity
-
   msstats_prot <- proteinSummarization(msstats_psm,
     method = "msstats",
     global_norm = TRUE,
@@ -146,6 +145,24 @@ message(
   "\nTime to perform group comparisons for ", nprot, " proteins: ",
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
+
+## [4] perform statistical comparisons for 'Control-Mutant' comparison ---------
+
+# create a contrast for assessing difference between Control and Mutant
+alt_contrast <- matrix(c(-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,
+		     1/7,1/7,1/7,1/7,1/7,1/7,1/7), nrow=1)
+row.names(alt_contrast) <- "Mutant-Control"
+colnames(alt_contrast)<- levels(msstats_prot$Condition)
+
+
+# do MSstatsTMT groupComparisons
+suppressWarnings({ # about closing clusters FIXME:
+  suppressMessages({ # verbosity
+    res2 <- MSstatsTMT::groupComparisonTMT(data = msstats_prot,
+				           contrast.matrix = alt_contrast,
+				           moderated=TRUE)
+  })
+})
 
 
 ## annotate msstats_prot with gene ids ----------------------------------------
