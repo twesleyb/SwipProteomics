@@ -85,7 +85,7 @@ cleanResults <- function(df) {
 }
 
 
-## subset the data ------------------------------------------------------------
+## [0] subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of
 # (single) Uniprot Identifiers. NOTE: Only run once!
 
@@ -156,9 +156,11 @@ message(
 )
 
 
-## [3] perform statistical comparisons ----------------------------------------
+## [3] perform intrafraction statistical comparisons ----------------------------------------
+
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
 # lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)
+
 # We specify Condition as Genotype.BioFraction for all intra-fraction
 # comparisons. T-statistics are moderated using ebayes methods in limma.
 
@@ -198,6 +200,7 @@ suppressWarnings({ # about closing clusters FIXME:
   })
 })
 
+
 ## clean-up and combine results -----------------------------------------------
 
 # combine results
@@ -226,5 +229,11 @@ if (save_rda) {
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
+  # save contrast matrix for 'Mutant-Control' comparison
+  #cm1 <- alt_contrast
+  #myfile <- file.path(root, "data", "cm1.rda")
+  #save(cm1, file = myfile, version = 2)
+  #message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
 }
