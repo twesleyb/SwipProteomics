@@ -149,3 +149,4 @@ fold_diff <- df %>% group_by(expr) %>%
 	mutate("Duration" = 10000*(mean*10^-9)/60)
 
 # savings of ~7 min
+lmerTestProtein(swip,fx0,msstats_prot,contrast)

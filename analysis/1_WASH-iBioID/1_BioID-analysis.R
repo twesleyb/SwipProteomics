@@ -36,9 +36,23 @@ getrd <- function(here=getwd(), dpat= ".git") {
 }
 
 
-# Check CV of WASH, Control, and SPQC groups.
+lquote <- function(string, single = TRUE) {
+  # Wrap a string in single or double quotes.
+  single_quote <- "'"
+  double_quote <- "\""
+  if (single) {
+    # Single quote.
+    return(paste0(single_quote, string, single_quote))
+  } else {
+    # Double quote.
+    return(paste0(double_quote, string, double_quote))
+  }
+}
+
+
 check_group_CV <- function(tidy_prot) {
-	# Calculate the Coefficient of Covarition (CV).
+  # Check CV of WASH, Control, and SPQC groups.
+  # Calculate the Coefficient of Covarition (CV).
 	cv <- function(x) { sd(x)/mean(x) }
 	# Annotate with QC and biological replicates groups.
 	tmp_dt <- tidy_prot %>% as.data.table()
@@ -57,8 +71,8 @@ check_group_CV <- function(tidy_prot) {
 }
 
 
-# reformat the data for DEP
 reformatDEP <- function(prot_df, gene_map) {
+  # reformat the data for DEP
   # NOTE: this function only works with expected input
   # returns a summarized experiment object formated for DEP
   # NOTE: you can access the data contained in a sumamrized experiment object with 
@@ -103,6 +117,194 @@ reformatDEP <- function(prot_df, gene_map) {
   dep_se <- DEP::make_se(dep_prot,columns=idy,exp_design)
   return(dep_se)
 }
+
+
+tidyProt <- function(raw_data,id.vars,species=NULL,
+		     samples=NULL,summary=FALSE){
+	# description: a function to tidy proteomics data.
+	suppressPackageStartupMessages({
+		library(data.table)
+		library(tibble)
+		library(dplyr)
+	})
+	dt <- as.data.table(raw_data) %>%
+		melt(id.vars = id.vars,
+		     variable.name="Sample",
+		     value.name="Intensity",
+		     variable.factor=FALSE) # Don't coerce to factor.
+	# Remove proteins that do not coorespond to species of interest.
+	idx <- grepl(paste0("OS=",species),dt$Description)
+	if (!all(idx)) {
+		n_out <- length(unique(dt$Accession[!idx]))
+		msg <- paste(n_out,"proteins are not from", lquote(species),
+			     "and will be removed.")
+		warning(msg,call.=FALSE)
+		dt <- dt %>% filter(grepl(paste0("OS=",species),Description))
+	}
+	# Insure zeros are NA.
+	dt$Intensity[dt$Intensity==0] <- NA
+	# Return tidy df.
+	return(as.data.table(dt))
+}
+
+
+normSL <- function(tp, groupBy=NULL){
+	suppressPackageStartupMessages({
+		library(dplyr)
+		library(data.table)
+	})
+	# Create an expression that will be evaluated to dynamically 
+	# group data based on user provided grouping factors. Default's
+	# to Sample -- every replicate.
+	tp <- ungroup(as.data.frame(tp))
+	cmd <- paste0("group_by(tp, ",paste(groupBy,collapse=", "),")")
+	# Calculate column sums for grouped samples.
+	# FIXME: if .groups is set to 'drop' to avoid Warning msg, then error?
+	data_list <- eval(parse(text=cmd)) %>% 
+		summarize(Total=sum(Intensity,na.rm=TRUE),.groups="drop") %>%
+		group_split()
+	# Calculate normalization factors.
+	data_SL <- lapply(data_list,function(x) {
+				     x$"Mean(Total)" <- mean(x$Total,na.rm=TRUE)
+				     x$NormFactor <- x$"Mean(Total)"/x$Total
+				     x$Norm <- x$Total*x$NormFactor
+			      return(x) }) %>% bind_rows()
+	# Collect normalization factors as named vector.
+	SL_factors <- data_SL$NormFactor
+	names(SL_factors) <- as.character(data_SL[["Sample"]])
+	# Normalize measurements by sample factors.
+	tp$Intensity <- tp$Intensity * SL_factors[as.character(tp[["Sample"]])]
+	return(as.data.table(tp))
+}
+
+
+normSP <- function(tp, pool){
+	# perform normalization to pooled QC samples
+
+	# Store a copy of the data.
+	tp <- ungroup(tp)
+	tp_copy <- tp
+
+	# Group pooled together.
+	tp$Group <- as.numeric(grepl(paste(pool,collapse="|"),tp$Sample))
+	tp_list <- tp %>% group_by(Accession,Group) %>% 
+		dplyr::summarize(Mean_Intensity=mean(Intensity,na.rm=TRUE),
+			  n = length(Intensity), .groups="drop") %>%
+	as.data.table() %>% 
+	arrange(Accession,Group) %>% 
+	group_by(Accession) %>% group_split()
+
+	# Loop to calculate normalization factors.
+        new_list <- list()
+	for (i in 1:length(tp_list)){
+		x <- tp_list[[i]]
+		x$NormFactor <- c(x$Mean_Intensity[2]/x$Mean_Intensity[1],1)
+		x$Norm_Mean_Intensity <- x$Mean_Intensity * x$NormFactor
+		new_list[[i]] <- x
+	}
+	tp_list <- new_list
+
+	# Collect in a df.
+	df <- do.call(rbind,tp_list) %>% 
+		dplyr::select(Accession,Group,NormFactor)
+
+	# Merge with input data.
+	tp_norm <- left_join(tp,df,by=c("Accession","Group"))
+
+	# Perform normalization step.
+	tp_norm$Intensity <- tp_norm$Intensity * tp_norm$NormFactor
+	tp_norm <- tp_norm %>% dplyr::select(colnames(tp_copy))
+	tp_norm <- as.data.table(tp_norm)
+
+	# Return the normalized data.
+	return(tp_norm)
+}
+
+
+imputeKNNprot <- function(tidy_prot,ignore="QC",k=10,rowmax=0.5,colmax=0.8,
+			  quiet=TRUE){
+	# Determine how many missing values each protein has,
+	# and then determine the permisible number of missing values 
+	# for any given protein.
+	# Imports.
+	suppressPackageStartupMessages({
+		library(impute)
+		library(dplyr)
+		library(tibble)
+		library(data.table)
+	})
+	# Store a copy of the input data.
+	tp <- tp_in <- tidy_prot
+	# How many missing values are there?
+	tp$Intensity[tp$Intensity==0] <- NA
+	N_missing <- sum(is.na(tp$Intensity))
+	if (N_missing ==0) { 
+		message(paste("There are no missing values.",
+			   "Returning untransformed data."))
+		return(tp_in)
+	}
+	# Separate data to be imputed.
+	if (!is.null(ignore)) {
+		# Do not impute:
+		tp_ignore <- tp %>% filter(grepl(ignore,Sample)) %>% 
+			dplyr::select(Accession,Sample,Intensity) %>% 
+			as.data.table
+		# Data to be imputed:
+		tp_impute <- tp %>% filter(!grepl(ignore,Sample)) %>% 
+			as.data.table
+	} else {
+		tp_ignore <- NULL
+	}
+	# Cast the data into a matrix.
+	dm <- tp_impute %>%
+		dcast(Accession ~ Sample, value.var="Intensity") %>% 
+		as.matrix(rownames=TRUE)
+	# Don't impute rows (proteins) with too many missing values.
+	n_missing <- apply(dm,1,function(x) sum(is.na(x)))
+	limit <- ncol(dm) * rowmax
+	rows_to_ignore <- n_missing > limit
+	n_ignore <- sum(rows_to_ignore)
+	if (n_ignore > 0) {
+		msg <- paste(n_ignore,"proteins have more than",limit,
+			     "missing values, these values cannot be imputed,",
+			     "and will be ignored.")
+		warning(msg,call.=FALSE)
+	}
+	# Total number of missing values to be imputed.
+	n_imputed <- sum(is.na(dm[!rows_to_ignore,]))
+	if (!quiet){
+		message(paste("There are",n_imputed, "missing",
+		      "values that will be replaced by imputing."))
+	}
+	# Perform KNN imputing.
+		# 
+	if (quiet) {
+		# Suppress output from impute.knn.
+		silence({
+			data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
+					       k=k,colmax=colmax,rowmax=rowmax)
+		})
+	} else {
+		data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
+				       k=k,colmax=colmax,rowmax=rowmax)
+	}
+	# Collect the imputed data.
+	dm_knn <- dm
+	dm_knn[!rows_to_ignore,] <- 2^data_knn$data
+	# Melt into tidy df.
+	dt_knn <- as.data.table(dm_knn,keep.rownames="Accession")
+	tp_imputed <- melt(dt_knn,id.vars="Accession",
+			  variable.name="Sample",value.name="Intensity")
+	# Combine with any samples that were ignored.
+	tp_imputed <- rbind(tp_ignore,tp_imputed)
+	# Combine with input meta data.
+	tp_in$Intensity <- NULL
+	tp_in$Sample <- as.character(tp_in$Sample)
+	tp_imputed$Sample <- as.character(tp_imputed$Sample)
+	tp_out <- left_join(tp_in,tp_imputed,by=c("Sample","Accession")) %>%
+		as.data.table
+	return(tp_out)
+} #EOF
 
 
 ## Prepare the workspace -------------------------------------------------------

@@ -3,14 +3,28 @@
 # title: SwipProteomics
 # author: twab
 # description: fit protein-wise lmer models and perform statistical inferences
-# for intrafraction (BioFraction) contrasts
+# for defined contrasts
 
 ## formulae to be fit:
-# [+] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-# [-] fx1: Aundance ~ 0 + Genotype + BioFraction + (1|Subject)
+# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
+# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Subject) + (1|Mixture)
 
-# NOTE: this analysis can also be done with MSstatsTMT by specifying the 
-# contrast matrix like: c(rep(1/7,7), rep(-1/7,7)
+# To assess 'Mutant-Control' comparisons we should fit formula 2.
+# However, 'Subject' and 'Mixture' are confounded.
+# Therefore can either choose to account for the effect of 'Subject' or
+# 'Mixture', but not both. 
+# As 'Mixture' contributes more to the overall variance, it makes sense to
+# account for 'Mixture' and not the random effect inherint in the repeated
+# mesaures of each 'Subject'.
+# Removing 'Subject' from the model, we have:
+# [3] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture)
+
+# this is equivalent to:
+# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
+# When Condition is interaction(Genotype,BioFraction)
+
+# Thus, we can actually perform the contrast of interest using the MSstatsTMT,
+# provided the correct contrast matrix.
 
 
 ## prepare the env ------------------------------------------------------------
@@ -244,31 +258,8 @@ if (length(common_prots) > 0) {
 fit0_results <- results_df
 myfile <- file.path(root, "data", "fitBioFraction_results.rda")
 save(fit0_results, file = myfile, version = 2)
-#!/usr/bin/env Rscript
 
-# title: SwipProteomics
-# author: twab
-# description: fit protein-wise lmer models and perform statistical inferences
-# for given contrasts
-
-## formulae to be fit:
-# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-
-# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Subject) + (1|Mixture)
-
-# This is the model we really want to fit. But Subject and Mixture are
-# confounded. We can either choose to account for the effect of Subject or Mixture. 
-# Mixture contributes more to variance, thus it makes sense to use Mixture.
-# The model becomres:
-
-# [3] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture)
-
-# this is equivalent to :
-# [1] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-# When Condition is interaction(Genotype,BioFraction)
-
-# Thus, we can actually perform the contrast of interest using the MSstatsTMT
-# given be provide the correct contrast matrix. We define this below.
+########################################################################################
 
 
 ## prepare the env ------------------------------------------------------------
