@@ -155,6 +155,9 @@ message(
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
+# clean-up results
+msstats_prot <- cleanProt(msstats_prot)
+
 
 ## [3] perform intrafraction statistical comparisons ----------------------------------------
 
@@ -206,7 +209,12 @@ suppressWarnings({ # about closing clusters FIXME:
 # combine results
 tmp_list <- cleanResults(msstats_results) %>% group_by(Label) %>% group_split()
 names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Label))
-results_list <- c("Normalized Protein" = list(cleanProt(msstats_prot)), 
+
+# simplify names
+names(tmp_list) <- sapply(strsplit(names(tmp_list),"\\."),"[",3)
+
+# combine into list to be saved as excel
+results_list <- c("Normalized Protein" = list(msstats_prot), 
 		  tmp_list,  # intrafraction results
 		  "Control-Mutant" = list(cleanResults(res2)))
 
@@ -221,7 +229,7 @@ if (save_rda) {
 
   # save msstats_prot -- the normalized protein data
   myfile <- file.path(root, "data", "msstats_prot.rda")
-  save(cleanProt(msstats_prot), file = myfile, version = 2)
+  save(msstats_prot, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
   # save results
@@ -229,11 +237,5 @@ if (save_rda) {
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-
-  # save contrast matrix for 'Mutant-Control' comparison
-  #cm1 <- alt_contrast
-  #myfile <- file.path(root, "data", "cm1.rda")
-  #save(cm1, file = myfile, version = 2)
-  #message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
 }
