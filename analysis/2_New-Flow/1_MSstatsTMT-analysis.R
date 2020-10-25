@@ -26,7 +26,7 @@ suppressPackageStartupMessages({
 })
 
 
-## NOTE: my fork attempts to suppress much of MSstats's verbosity as well as
+## NOTE: my fork attempts to remove much of MSstats's verbosity as well as
 ## includes access to the internal functions used by MSstatsTMT to fit
 ## protein-wise models and perform statistical comparisons between groups.
 ## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass
@@ -47,6 +47,43 @@ data(pd_annotation)
 data(msstats_contrasts)
 # NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
 # BioFraction.Control and BioFraction.Mutant
+
+## Functions ------------------------------------------------------------------
+
+cleanProt <- function(df) {
+  # clean-up msstats_prot
+  # add BioFraction, Genotype, and Subject columns
+  idx <- match(df$Protein, gene_map$uniprot)
+  Symbol <- gene_map$symbol[idx]
+  Entrez <- gene_map$entrez[idx]
+  df <- tibble::add_column(df, Symbol, .after = "Protein")
+  df <- tibble::add_column(df, Entrez, .after = "Symbol")
+  geno <- sapply(strsplit(as.character(df$Condition), "\\."), "[", 1)
+  biof <- sapply(strsplit(as.character(df$Condition), "\\."), "[", 2)
+  subject <- as.numeric(interaction(df$Mixture, geno))
+  df$Genotype <- factor(geno, levels = c("Mutant", "Control"))
+  df$BioFraction <- factor(biof,
+    levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10"))
+  df$Subject <- as.factor(subject)
+  df <- df %>% select("Mixture","Channel","BioFraction","Genotype",
+		      "Subject", "Protein","Symbol","Entrez", "Abundance")
+  return(df)
+}
+
+
+cleanResults <- function(df) {
+  # clean-up msstat_results
+  idx <- match(df$Protein, gene_map$uniprot)
+  df$Symbol <- gene_map$symbol[idx]
+  df$Entrez <- gene_map$entrez[idx]
+  df <- df %>% filter(is.na(issue))
+  df$issue <- NULL
+  df <- df %>% select(Label,Protein,Entrez,
+		      Symbol,log2FC,pvalue,adj.pvalue,SE,DF) %>% 
+	  unique() %>% arrange(pvalue)
+  return(df)
+}
+
 
 ## subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of
@@ -81,7 +118,6 @@ message("\nConverting PD PSM-level data into MSstatsTMT format.")
 t0 <- Sys.time()
 
 suppressMessages({ # verbosity
-
   msstats_psm <- PDtoMSstatsTMTFormat(msstats_input,
     pd_annotation,
     which.proteinid = "Master.Protein.Accessions",
@@ -132,7 +168,6 @@ t0 <- Sys.time()
 
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
-
     msstats_results <- groupComparisonTMT(msstats_prot,
       msstats_contrasts,
       moderated = TRUE
@@ -155,121 +190,41 @@ alt_contrast <- matrix(c(-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,
 row.names(alt_contrast) <- "Mutant-Control"
 colnames(alt_contrast)<- levels(msstats_prot$Condition)
 
-
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
-
     res2 <- MSstatsTMT::groupComparisonTMT(data = msstats_prot,
 				           contrast.matrix = alt_contrast,
-				           moderated=TRUE)
-
+				           moderated=FALSE)
   })
 })
 
-results_list <- list(msstats_results,res2)
+## clean-up and combine results -----------------------------------------------
 
-## annotate msstats_prot with gene ids ----------------------------------------
+# combine results
+tmp_list <- cleanResults(msstats_results) %>% group_by(Label) %>% group_split()
+names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Label))
+results_list <- c("Normalized Protein" = list(cleanProt(msstats_prot)), 
+		  tmp_list,  # intrafraction results
+		  "Control-Mutant" = list(cleanResults(res2)))
 
-idx <- match(msstats_prot$Protein, gene_map$uniprot)
-Symbol <- gene_map$symbol[idx]
-Entrez <- gene_map$entrez[idx]
-msstats_prot <- tibble::add_column(msstats_prot, Symbol, .after = "Protein")
-msstats_prot <- tibble::add_column(msstats_prot, Entrez, .after = "Symbol")
-
-# add BioFraction, Genotype, and Subject columns
-geno <- sapply(strsplit(as.character(msstats_prot$Condition), "\\."), "[", 1)
-biof <- sapply(strsplit(as.character(msstats_prot$Condition), "\\."), "[", 2)
-subject <- as.numeric(interaction(msstats_prot$Mixture, geno))
-msstats_prot$Genotype <- factor(geno, levels = c("Mutant", "Control"))
-msstats_prot$BioFraction <- factor(biof,
-  levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10")
-)
-msstats_prot$Subject <- as.factor(subject)
-
-
-## clean-up msstats_results ---------------------------------------------------
-
-# if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
-msstats_results <- msstats_results %>% filter(is.na(issue))
-
-# drop issue column
-msstats_results$issue <- NULL
-
-# annotate results with gene symbols
-idx <- match(msstats_results$Protein, gene_map$uniprot)
-Symbol <- gene_map$symbol[idx]
-msstats_results <- tibble::add_column(msstats_results, Symbol, .after = "Protein")
-
-# summary
-message(
-  "\nSummary of signifcant (FDR<",
-  FDR_alpha, ") proteins for intrafraction comparisons:"
-)
-df <- msstats_results %>%
-  group_by(Label) %>%
-  arrange(adj.pvalue) %>%
-  summarize(
-    `n Sig` = sum(adj.pvalue < FDR_alpha),
-    `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
-      collapse = ", "
-    ), .groups = "drop"
-  )
-colnames(df)[1] <- "Contrast"
-knitr::kable(df)
-
-## clean-up res2 ---------------------------------------------------
-
-# if not NA, then issue. e.g. isSingleMeasure (7x in 100 protein fits)
-res2 <- res2 %>% filter(is.na(issue))
-
-# drop issue column
-res2$issue <- NULL
-
-# annotate results with gene symbols
-idx <- match(res2$Protein, gene_map$uniprot)
-Symbol <- gene_map$symbol[idx]
-res2 <- tibble::add_column(res2, Symbol, .after = "Protein")
-
-# summary
-message(
-  "\nSummary of signifcant (FDR<",
-  FDR_alpha, ") proteins for 'Mutant-Control' comparison:"
-)
-df <- res2 %>%
-  group_by(Label) %>%
-  arrange(adj.pvalue) %>%
-  summarize(
-    `n Sig` = sum(adj.pvalue < FDR_alpha),
-    `Top 5 Sig Prots` = paste(head(Symbol[adj.pvalue < FDR_alpha]),
-      collapse = ", "
-    ), .groups = "drop"
-  )
-colnames(df)[1] <- "Contrast"
-knitr::kable(df)
+# save results as excel document
+myfile <- file.path(root,"tables","S2_MSstatsTMT_Results.xlsx")
+write_excel(results_list, myfile)
 
 
 ## save results ---------------------------------------------------------------
 
-
-msstats_results <- list("Intra-Fraction"=msstats_results,
-			"Mutant-Control" = res2)
-
 if (save_rda) {
 
-  # save msstats_results -- MSstatsTMT statistical results
+  # save msstats_prot -- the normalized protein data
+  myfile <- file.path(root, "data", "msstats_prot.rda")
+  save(cleanProt(msstats_prot), file = myfile, version = 2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
+  # save results
+  msstats_results <- cleanResults(rbind(msstats_results,res2))
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
-  # save msstats_prot -- the normalized protein
-  myfile <- file.path(root, "data", "msstats_prot.rda")
-  save(msstats_prot, file = myfile, version = 2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-
-  # save msstats_psm -- the psm level data reformatted for MSstats
-  myfile <- file.path(root, "rdata", "msstats_psm.rda")
-  save(msstats_psm, file = myfile, version = 2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 }
-
-message("\nCompleted MSstatsTMT intrafraction statistical analysis.")
