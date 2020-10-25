@@ -65,7 +65,7 @@ cleanProt <- function(df) {
   df$BioFraction <- factor(biof,
     levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10"))
   df$Subject <- as.factor(subject)
-  df <- df %>% select("Mixture","Channel","BioFraction","Genotype",
+  df <- df %>% select("Mixture","Channel","Condition","BioFraction","Genotype",
 		      "Subject", "Protein","Symbol","Entrez", "Abundance")
   return(df)
 }
@@ -155,9 +155,6 @@ message(
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
-# clean-up results
-msstats_prot <- cleanProt(msstats_prot)
-
 
 ## [3] perform intrafraction statistical comparisons ----------------------------------------
 
@@ -205,6 +202,9 @@ suppressWarnings({ # about closing clusters FIXME:
 
 
 ## clean-up and combine results -----------------------------------------------
+
+# clean-up protein results
+msstats_prot <- cleanProt(msstats_prot)
 
 # combine results
 tmp_list <- cleanResults(msstats_results) %>% group_by(Label) %>% group_split()

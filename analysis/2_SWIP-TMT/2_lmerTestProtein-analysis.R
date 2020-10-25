@@ -30,7 +30,7 @@
 ## prepare the env ------------------------------------------------------------
 
 ## input
-save_rda = FALSE
+save_rda = TRUE
 results_file <- "lmerTestProtein_Results.xlsx" # saved in root/tables
 FDR_alpha <- 0.05 # threshold for significance
 
@@ -78,33 +78,56 @@ expandGroups <- function(conditions, biofractions) {
 } # EOF
 
 
+compileTests <- function(results_list, moderated=FALSE) {
+  # FIXME: where is strange class from?
+  # class(results_list)
+  # [1] "vctrs_list_of" "vctrs_vctr"    "list"
+  # clean-up the results list return by lmerTestProtein loop
+  class(results_list) <- "list"
+  idx <- unlist(sapply(results_list, class)) != "try-error"
+  filt_list <- results_list[which(idx)]
+  results_df <- do.call(rbind, filt_list)
+  # drop singular
+  results_df <- results_df %>% filter(!isSingular)
+  results_df$isSingular <- NULL
+  # annotate with gene symbols
+  idx <- match(results_df$Protein, gene_map$uniprot)
+  results_df$Symbol <- gene_map$symbol[idx]
+  # Remove redundant contrasts
+  results_df <- results_df %>% mutate(Contrast = "Mutant-Control") %>% unique()
+  # adjust pvals
+  # adjust pvals  for each contrast
+  #results_df <- results_df %>% group_by(Contrast) %>% 
+  #	  mutate("Padjust" = p.adjust(Pvalue, "BH"))
+  results_df$FDR <- p.adjust(results_df$Pvalue, "BH")
+  results_df$Padjust <- p.adjust(results_df$Pvalue, "bonferroni")
+  # sort
+  results_df <- results_df %>% arrange(Pvalue)
+  return(results_df)
+} #EOF
+
+
 ## check Swip's fit -----------------------------------------------------------
 
 ## formula to be fit:
-fx1 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+fx <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
 # status
 gene <- gene_map$symbol[which(gene_map$uniprot == swip)]
 message(
-  "\nlmer: ", as.character(fx1)[2],
-  "(", gene, ") ~ ", as.character(fx1)[3]
+  "\nlmer: ", as.character(fx)[2],
+  "(", gene, ") ~ ", as.character(fx)[3]
 )
 
-myfile <- file.path(root, "data", "fx1.rda")
-save(fx1, file = myfile, version = 2)
 
 ## fit model 1
-# NOTE: the underlying model will be the same!
-fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein == swip))
+fm <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein == swip))
 
 # model summary with Satterthwaite degrees of freedom:
 print(summary(fm1, ddf = "Satterthwaite"))
 
-myfile <- file.path(root, "data", "fm1.rda")
-save(fm1, file = myfile, version = 2)
 
-# create contrast vector
-# NOTE: here's the appropriate contrast matrix:
+# create contrast
 alt_contrast <- lme4::fixef(fm1)
 alt_contrast[] <- 0
 
@@ -113,80 +136,40 @@ alt_contrast[idx] <- -1/length(idx)
 
 idx <- which(grepl("Mutant",names(alt_contrast)))
 alt_contrast[idx] <- +1/length(idx)
-
 cm1 <- alt_contrast
 
-if (save_rda) {
-  myfile <- file.path(root, "data", "cm1.rda")
-  save(cm1, file = myfile, version = 2)
-}
 
-# check the results for swip
+# examine the results for swip
 results <- lmerTestContrast(fm1, cm1)
 
-results %>% knitr::kable()
+results %>% mutate(Contrast = "Mutant-Control") %>% unique() %>% knitr::kable()
 
 # goodness-of-fit
-r.squaredGLMM.merMod(fm1) %>% knitr::kable()
-
-
-## formula to be fit:
-fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-
-message("\nfit: ", 
-	paste(as.character(fx0)[2], as.character(fx0)[3], sep = " ~ "))
-
-# save model formula
-myfile <- file.path(root, "data", "fx0.rda")
-save(fx0, file = myfile, version = 2)
-
-
-## fit model 0 and get Satterthwaite degrees of freedon
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-
-print(summary(fm0, ddf = "Satterthwaite"))
-
-# save fit model
-myfile <- file.path(root, "data", "fm0.rda")
-save(fm0, file = myfile, version = 2)
-
-## evaluate gof using a function ported directly from the MuMin package
-r2_nakagawa <- r.squaredGLMM.merMod(fm0)
+r2_nakagawa <- r.squaredGLMM.merMod(fm)
 
 knitr::kable(rbind(c("marginal/fixef", "conditional/total"), r2_nakagawa))
-
-## FIXME: add some more info about calculation
 
 
 ## munge to create contrast matrices for intrafraction comparisons:
 condition <- c("ConditionControl", "ConditionMutant")
 biofraction <- c("F4", "F5", "F6", "F7", "F8", "F9", "F10")
 contrasts <- lapply(expandGroups(condition, biofraction), function(x) {
-  getContrast(fm0, x[1], x[2])
-
+  getContrast(fm, x[1], x[2])
 })
 names(contrasts) <- sapply(contrasts, function(x) {
   paste(names(x)[x == +1], names(x)[x == -1], sep = "-")
 })
-
-
-# save contrasts
 cm0 <- contrasts
-myfile <- file.path(root, "data", "cm0.rda")
-save(cm0, file = myfile, version = 2)
 
 
 # check the results for swip
 message("\nResults for WASHC4:")
-results_df <- lmerTestProtein(swip, fx0, msstats_prot, contrasts)
+results_df <- lmerTestProtein(swip, fx, msstats_prot, contrasts)
 
 results_df %>% knitr::kable()
 
-# you can also directly test a contrast:
-#lmerTestContrast(fm0,contrasts[[1]])
 
-
-## loop to fit all proteins ----------------------------------------------------
+## assess intrafraction comparisons -------------------------------------------
 
 prots <- unique(as.character(msstats_prot$Protein))
 message("\nAnalyzing ", formatC(length(prots),big.mark=","), " proteins.")
@@ -198,7 +181,7 @@ t0 <- Sys.time() # start
 
 results_list <- foreach(protein = prots) %dopar% {
   suppressMessages({
-    try(lmerTestProtein(protein, fx0, msstats_prot, contrasts), silent = TRUE)
+    try(lmerTestProtein(protein, fx, msstats_prot, contrasts), silent = TRUE)
   })
 } # EOL
 
@@ -221,9 +204,12 @@ rownames(results_df) <- NULL
 results_df <- results_df %>% filter(!isSingular)
 results_df$isSingular <- NULL
 
-
 ## perform p-value moderation
+eb_fit <- limma::squeezeVar(results_df$SE, results_df$DF)
 
+#eb_fit$df.prior
+
+#eb_fit$var.prior
 
 ## annotate with gene symbols
 idx <- match(results_df$Protein, gene_map$uniprot)
@@ -231,11 +217,6 @@ results_df <- tibble::add_column(results_df,
   Symbol = gene_map$symbol[idx],
   .after = "Protein"
 )
-
-## adjust pvals  for each contrast
-results_df <- results_df %>%
-  group_by(Contrast) %>%
-  mutate("Padjust" = p.adjust(Pvalue, "BH"))
 
 # sort cols
 results_df <- results_df %>%
@@ -247,36 +228,14 @@ results_df <- results_df %>%
 # sort rows
 results_df <- results_df %>% arrange(Pvalue)
 
-# FIXME: where is strange class from?
-# class(results_list)
-# [1] "vctrs_list_of" "vctrs_vctr"    "list"
-class(results_list) <- "list"
-
 
 # status
 message("\nSummary of significant proteins for intrafraction comparisons:")
-df <- data.frame(nsig = sapply(results_list, function(x) {
-  sum(x$Padjust < FDR_alpha)
-}))
-knitr::kable(df)
-
-# proteins
-prot_list <- sapply(results_list, function(x) x$Protein[x$Padjust < FDR_alpha])
-common_prots <- Reduce(intersect, prot_list)
-if (length(common_prots) > 0) {
-  message(
-    "\nCommonly significant proteins: ",
-    paste(common_prots, collapse = ", ")
-  )
-}
-
-# save as rda
-fit0_results <- results_df
-myfile <- file.path(root, "data", "fitBioFraction_results.rda")
-save(fit0_results, file = myfile, version = 2)
+results_df %>% group_by(Contrast) %>% 
+	summarize(nsig = sum(Padjust < FDR_alpha)) %>% knitr::kable()
 
 
-## loop to fit all proteins ----------------------------------------------------
+## loop to assess Mutant-Control contrast -------------------------------------
 
 prots <- unique(as.character(msstats_prot$Protein))
 
@@ -287,10 +246,8 @@ t0 <- Sys.time() # start
 
 results_list <- foreach(protein = prots) %dopar% {
   suppressMessages({
-    try(lmerTestProtein(
-      protein, fx1,
-      msstats_prot, cm1
-    ), silent = TRUE)
+	  input = list(protein,fx,msstats_prot,cm1)
+	  try(do.call(lmerTestProtein,input), silent = TRUE)
   })
 } # EOL
 
@@ -300,54 +257,23 @@ message("\nTime to analyze ", length(prots), " proteins:")
 difftime(t1, t0)
 
 
-## process results ------------------------------------------------------------
-
-# collect results
-idx <- unlist(sapply(results_list, class)) != "try-error"
-filt_list <- results_list[which(idx)]
-results_df <- do.call(rbind, filt_list)
-
-# drop singular
-results_df <- results_df %>% filter(!isSingular)
-results_df$isSingular <- NULL
-
-## annotate with gene symbols
-idx <- match(results_df$Protein, gene_map$uniprot)
-results_df <- tibble::add_column(results_df,
-  Symbol = gene_map$symbol[idx],
-  .after = "Protein"
-)
-
-## Remove redundant contrasts
-results_df <- results_df %>% mutate(Contrast = "Mutant-Control") %>% unique()
-
-## adjust pvals
-results_df <- tibble::add_column(results_df,
-  FDR = p.adjust(results_df$Pvalue, "BH"),
-  .after = "Pvalue"
-)
-
-results_df <- tibble::add_column(results_df,
-  Padjust = p.adjust(results_df$Pvalue, "bonferroni"),
-  .after = "FDR"
-)
-
-## sort
-results_df <- results_df %>% arrange(Pvalue)
-
-
-
 ## save results ----------------------------------------------------------------
 
-# save as excel
-myfile <- file.path(root, "tables", results_file)
-write_excel(results_df, myfile)
-
-# save as rda
-fit1_results <- results_df
-myfile <- file.path(root, "data", "fitGenotype_results.rda")
-save(fit1_results, file = myfile, version = 2)
-
-# save as excel
+# save results as excel document
 myfile <- file.path(root, "tables", results_file)
 write_excel(results_list, myfile)
+
+if (save_rda) {
+
+  myfile <- file.path(root, "data", "fm1.rda")
+  save(fm1, file = myfile, version = 2)
+
+  myfile <- file.path(root, "data", "cm0.rda")
+  save(cm0, file = myfile, version = 2)
+
+  myfile <- file.path(root, "data", "fx1.rda")
+  save(fx1, file = myfile, version = 2)
+
+  myfile <- file.path(root, "data", "cm1.rda")
+  save(cm1, file = myfile, version = 2)
+}
