@@ -7,7 +7,7 @@
 ## INPUT data:
 # specify the partition to be used:
 part_file <- "leidenalg_partition.rda" # in root/data
-subset_WT <- TRUE
+subset_WT <- TRUE # we only use WT control data for generating clusters
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:

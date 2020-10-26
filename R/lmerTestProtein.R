@@ -17,8 +17,8 @@ lmerTestContrast <- function(fm, contrast,
     model_summary <- summary(fm, ddf = "Satterthwaite")
 
     # collect deviance and residual.df for evaluating goodness of fit.
-    dev <- as.numeric(stats::deviance(fm,REML=FALSE))
-    ddf <- as.numeric(stats::df.residual(fm))
+    #dev <- as.numeric(stats::deviance(fm,REML=FALSE))
+    #ddf <- as.numeric(stats::df.residual(fm))
 
     # collect model's df and coefficients
     s2_df <- as.numeric(model_summary$coefficients[,"df"][pos_group])[1]
@@ -65,8 +65,6 @@ lmerTestContrast <- function(fm, contrast,
 			     Tstatistic=t, 
 			     SE=sqrt(se2), 
 			     DF=df_post, 
-			     residualDF = ddf,
-			     deviance = dev,
 			     isSingular=lme4::isSingular(fm))
 
     return(prot_stats)

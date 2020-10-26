@@ -54,7 +54,6 @@ renv::load(root, quiet = TRUE)
 # Imports
 suppressPackageStartupMessages({
   library(dplyr) # for manipulating data
-  #library(WGCNA) # for bicor function
   library(neten) # for network enhancement
   suppressWarnings({
     library(getPPIs)
@@ -69,7 +68,6 @@ devtools::load_all()
 data(gene_map)
 data(msstats_prot)
 data(musInteractome)
-data(fitGenotype_results)
 
 # data for output tables
 tabsdir <- file.path(root, "tables")
@@ -107,7 +105,6 @@ message(
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
-#adjm <- WGCNA::bicor(subdm)
 adjm <- cor(subdm,method="pearson")
 
 # Enhanced network
@@ -135,8 +132,8 @@ ppi_data <- musInteractome %>%
   filter(osEntrezB %in% entrez)
 
 # Save to excel.
-myfile <- file.path(root, "tables", "Swip_TMT_Network_PPIs.xlsx")
-write_excel(list("Network PPIs" = ppi_data), file = myfile)
+#myfile <- file.path(root, "tables", "Swip_TMT_Network_PPIs.xlsx")
+#write_excel(list("Network PPIs" = ppi_data), file = myfile)
 
 # Create simple edge list (sif) and matrix with node attributes (noa).
 sif <- ppi_data %>% select(osEntrezA, osEntrezB)
