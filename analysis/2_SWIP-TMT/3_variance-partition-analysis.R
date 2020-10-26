@@ -7,9 +7,8 @@ devtools::load_all(root)
 
 # load the data
 data(swip)
+data(partition)
 data(msstats_prot)
-data(pd_annotation)
-data(leidenalg_partition)
 
 # imports
 suppressPackageStartupMessages({
@@ -18,17 +17,8 @@ suppressPackageStartupMessages({
   library(variancePartition)
 })
 
-## do work
 
-# munge to split Condition (Geno.BioFrac) into geno annotation
-samples <- pd_annotation
-samples$Genotype <- sapply(strsplit(samples$Condition,"\\."),"[",1)
-
-# munge to create mouse Subject identifier
-samples$Subject <- as.numeric(interaction(samples$Genotype,samples$Experiment))
-
-# munge to annotate msstats_prot with Subject (1-6)
-msstats_prot$Subject <- as.numeric(interaction(msstats_prot$Genotype,msstats_prot$Mixture))
+## prepare the data -----------------------------------------------------------
 
 # cast the data into a matrix.
 fx <- formula(Protein ~ Mixture + Channel + BioFraction + Genotype + Subject)
@@ -43,26 +33,25 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 # Create a formula specifying all covariates as mixed effects and do
 # variancePartition -- calculate the percent variance explained.
 # NOTE: Channel and Subject may be confounded
-form = formula(~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Genotype) + (1|Subject))
-prot_varpart = fitExtractVarPartModel(dm, form, info)
+form = formula(~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Genotype))
+#fx1 = formula(~ (1|Subject) + (1|Channel) + (1|BioFraction) + (1|Genotype))
+
+## analyze variance explained by covariates:
+prot_varpart <- fitExtractVarPartModel(dm, form, info) %>% 
+	as.data.frame() %>% as.data.table(keep.rownames="Protein")
+
+#sum(varpart0$Mixture) #  168.5578
+
+#varpart1 <- fitExtractVarPartModel(dm, fx1, info) %>% 
+#	as.data.frame() %>% as.data.table(keep.rownames="Protein")
+
+#sum(varpart1$Subject) #  234.55 --> maybe it makes more sense to model subject??
+
 
 ## save ------------------------------------------------------------------------
 
-myfile <- file.path(root,"rdata","prot_varpart.rda")
+myfile <- file.path(root,"data","prot_varpart.rda")
 save(prot_varpart, file=myfile, version=2)
 
-myfile <- file.path(root,"rdata","prot_varpart.csv")
-fwrite(prot_varpart,myfile)
-
-
-## calculate percent variance explained module-wise ----------------------------
-
-form = formula(~ (1|Module))
-
-info = data.table(Protein = rownames(dm),
-	   Module = as.factor(partition[rownames(dm)]))
-rownames(info) <- info$Protein
-
-mod_varpart = fitExtractVarPartModel(t(dm), form, info)
-
-head(mod_varpart)
+myfile <- file.path(root,"tables","S4_variancePartition_Results.xlsx")
+write_excel(list("Variance Partition" = prot_varpart),myfile)
