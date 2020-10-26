@@ -32,20 +32,11 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
 # Create a formula specifying all covariates as mixed effects and do
 # variancePartition -- calculate the percent variance explained.
-# NOTE: Channel and Subject may be confounded
 form = formula(~ (1|Mixture) + (1|Channel) + (1|BioFraction) + (1|Genotype))
-#fx1 = formula(~ (1|Subject) + (1|Channel) + (1|BioFraction) + (1|Genotype))
 
 ## analyze variance explained by covariates:
 prot_varpart <- fitExtractVarPartModel(dm, form, info) %>% 
 	as.data.frame() %>% as.data.table(keep.rownames="Protein")
-
-#sum(varpart0$Mixture) #  168.5578
-
-#varpart1 <- fitExtractVarPartModel(dm, fx1, info) %>% 
-#	as.data.frame() %>% as.data.table(keep.rownames="Protein")
-
-#sum(varpart1$Subject) #  234.55 --> maybe it makes more sense to model subject??
 
 
 ## save ------------------------------------------------------------------------
