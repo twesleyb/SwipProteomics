@@ -1,6 +1,76 @@
 #' lmerTestProtein
 #' @import dplyr lmerTest data.table
-#' @export lmerTestProtein
+#' @export lmerTestProtein lmerTestContrast
+
+
+lmerTestContrast <- function(fm, contrast, 
+			     df_prior=0,s2_prior=0) {
+
+    # comparison should be a numeric and sum of vector == 0
+    stopifnot(inherits(contrast,"numeric"))
+    stopifnot(sum(contrast[contrast<0],contrast[contrast>0])==0)
+    pos_group <- names(contrast[contrast>0])
+    neg_group <- names(contrast[contrast<0])
+    comparison <- paste(pos_group,neg_group,sep="-")
+
+    # compute Satterthwaite degrees of freedom
+    model_summary <- summary(fm, ddf = "Satterthwaite")
+
+    # collect deviance and residual.df for evaluating goodness of fit.
+    dev <- as.numeric(stats::deviance(fm,REML=FALSE))
+    ddf <- as.numeric(stats::df.residual(fm))
+
+    # collect model's df and coefficients
+    s2_df <- as.numeric(model_summary$coefficients[,"df"][pos_group])[1]
+    coeff <- model_summary$coeff[,"Estimate"] # == lme4::fixef(fm)
+
+    # extract sigma and theta
+    sigma <- as.numeric(model_summary$sigma) # == stats::sigma(fm)
+    theta <- as.numeric(model_summary$optinfo$val) # == lme4::getME(fm, "theta")
+
+    # calculate posterior s2
+    s2_post <- (s2_prior * df_prior + sigma^2 * s2_df) / (df_prior + s2_df)
+
+    # compute the unscaled covar matrix with unsc()
+    unscaled_vcov <- fm@pp$unsc()
+
+    # compute scaled variance-covariance matrix
+    vcov <- as.matrix(model_summary$vcov) # == vcov(fm) == fm@vcov_beta
+
+    # compute variance
+    se2 <- as.numeric(contrast %*% vcov %*% contrast) # == variance 
+
+    # extract asymtoptic var-covar matrix from fit model
+    A <- fm@vcov_varpar
+
+    # calculate gradient from gradient matrices
+    g <- sapply(fm@Jac_list, function(gm) contrast %*% gm %*% contrast)
+
+    # given gradient and asymptoptic var-covar, compute posterior df
+    denom <- as.numeric(g %*% A %*% g)
+    df_post <- 2 * (se2^2 / denom) + df_prior 
+
+    # compute fold change and the t-statistic
+    FC <- (contrast %*% coeff)[, 1]
+    t <- FC / sqrt(se2) 
+
+    # compute the p-value given t-statistic and posterior degrees of freedom
+    p <- 2 * pt(-abs(t), df = df_post) 
+
+    # collect stats
+    prot_stats <- data.frame(Contrast=comparison,
+			     log2FC=FC, 
+			     percentControl=2^FC, 
+			     Pvalue=p,
+			     Tstatistic=t, 
+			     SE=sqrt(se2), 
+			     DF=df_post, 
+			     residualDF = ddf,
+			     deviance = dev,
+			     isSingular=lme4::isSingular(fm))
+
+    return(prot_stats)
+} #EOF
 
 
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
@@ -29,10 +99,8 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 	  contrast_list <- unlist(apply(contrasts,1,list),recursive=FALSE)
 	  stopifnot(all(sapply(contrast_list,sum)==0))
   } else if (inherits(contrasts,"numeric")) {
-	  # the sum of contrast vector should be 0
-	  # FIXME: why is sum sometimes wrong?!?!
+	  # the sum of positive and neg coeff in contrast should be 0
 	  stopifnot(sum(contrasts[contrasts<0], contrasts[contrasts>0]) == 0)
-
 	  contrast_list <- list(contrasts)
   } else if (inherits(contrasts,"list")) {
           contrast_list <- contrasts
@@ -55,22 +123,24 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
   # evaluate statistical comparisons for all contrasts
   stats_list <- list()
 
-  for (comparison in contrast_list) {
+  for (i in seq(contrast_list)) {
 
-    # the contrast to be tested, ensure it matches names(fixef(fm))
+    # insure contrast matches names(fixef(fm))
+    comparison = contrast_list[[i]]
     contrast <- comparison[names(sort(sapply(names(comparison),getIndex)))]
-    ## FIXME: we do this work twice!
-
-    pos_group <- paste0(names(contrast[contrast>0]),collapse="+")
-    neg_group <- paste(names(contrast[contrast<0]),collapse="+")
-    comparison <- paste(pos_group,neg_group,sep="-")
 
     # assess contrast
     test_results <- lmerTestContrast(fm, contrast)
 
     # collect results
     test_results$Protein <- protein 
-    stats_list[[comparison]] <- test_results
+
+    if (!is.null(attr(contrast_list,"names"))) {
+      # use names of contrasts in contrast_list if they exist
+      test_results$Contrast <- names(contrast_list)[i]
+    }
+
+    stats_list[[i]] <- test_results
   } # EOL for every comparison
 
   # compile results
@@ -83,3 +153,7 @@ lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
   return(stats_df)
 } #EOF
+
+#' @import dplyr lmerTest data.table
+
+
