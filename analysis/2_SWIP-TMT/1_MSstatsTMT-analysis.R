@@ -63,11 +63,14 @@ cleanProt <- function(df) {
   subject <- as.numeric(interaction(df$Mixture, geno))
   df$Genotype <- factor(geno, levels = c("Mutant", "Control"))
   df$BioFraction <- factor(biof,
-    levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10"))
+    levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10")
+  )
   df$Subject <- as.factor(subject)
-  df <- df %>% select("Run","Mixture","TechRepMixture","Channel","Condition",
-		      "BioFraction","Genotype", "Subject", "BioReplicate",
-		      "Protein","Symbol", "Entrez", "Abundance")
+  df <- df %>% select(
+    "Run", "Mixture", "TechRepMixture", "Channel", "Condition",
+    "BioFraction", "Genotype", "Subject", "BioReplicate",
+    "Protein", "Symbol", "Entrez", "Abundance"
+  )
   return(df)
 }
 
@@ -79,9 +82,13 @@ cleanResults <- function(df) {
   df$Entrez <- gene_map$entrez[idx]
   df <- df %>% filter(is.na(issue))
   df$issue <- NULL
-  df <- df %>% select(Label,Protein,Entrez,
-		      Symbol,log2FC,pvalue,adj.pvalue,SE,DF) %>% 
-	  unique() %>% arrange(pvalue)
+  df <- df %>%
+    select(
+      Label, Protein, Entrez,
+      Symbol, log2FC, pvalue, adj.pvalue, SE, DF
+    ) %>%
+    unique() %>%
+    arrange(pvalue)
   return(df)
 }
 
@@ -161,6 +168,7 @@ message(
 
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
 # lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)
+fx0 <- formula(Abundance ~ 0 + Condition + (1|Mixture))
 
 # We specify Condition as Genotype.BioFraction for all intra-fraction
 # comparisons. T-statistics are moderated using ebayes methods in limma.
@@ -188,16 +196,20 @@ message(
 ## [4] perform statistical comparisons for 'Control-Mutant' comparison ---------
 
 # create a contrast for assessing difference between Control and Mutant
-alt_contrast <- matrix(c(-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,-1/7,
-		     1/7,1/7,1/7,1/7,1/7,1/7,1/7), nrow=1)
+alt_contrast <- matrix(c(
+  -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
+  1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
+), nrow = 1)
 row.names(alt_contrast) <- "Mutant-Control"
-colnames(alt_contrast)<- levels(msstats_prot$Condition)
+colnames(alt_contrast) <- levels(msstats_prot$Condition)
 
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
-    res2 <- MSstatsTMT::groupComparisonTMT(data = msstats_prot,
-				           contrast.matrix = alt_contrast,
-				           moderated=FALSE)
+    res2 <- MSstatsTMT::groupComparisonTMT(
+      data = msstats_prot,
+      contrast.matrix = alt_contrast,
+      moderated = FALSE
+    )
   })
 })
 
@@ -208,19 +220,23 @@ suppressWarnings({ # about closing clusters FIXME:
 msstats_prot <- cleanProt(msstats_prot)
 
 # combine results
-tmp_list <- cleanResults(msstats_results) %>% group_by(Label) %>% group_split()
+tmp_list <- cleanResults(msstats_results) %>%
+  group_by(Label) %>%
+  group_split()
 names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Label))
 
 # simplify names
-names(tmp_list) <- sapply(strsplit(names(tmp_list),"\\."),"[",3)
+names(tmp_list) <- sapply(strsplit(names(tmp_list), "\\."), "[", 3)
 
 # combine into list to be saved as excel
-results_list <- c("Normalized Protein" = list(msstats_prot), 
-		  tmp_list,  # intrafraction results
-		  "Control-Mutant" = list(cleanResults(res2)))
+results_list <- c(
+  "Normalized Protein" = list(msstats_prot),
+  tmp_list, # intrafraction results
+  "Control-Mutant" = list(cleanResults(res2))
+)
 
 # save results as excel document
-myfile <- file.path(root,"tables","S2_MSstatsTMT_Results.xlsx")
+myfile <- file.path(root, "tables", "S2_MSstatsTMT_Results.xlsx")
 write_excel(results_list, myfile)
 
 
@@ -228,15 +244,19 @@ write_excel(results_list, myfile)
 
 if (save_rda) {
 
+  # save the model formula
+  myfile <- file.path(root, "data", "fx0.rda")
+  save(fx0,file=myfile,version=2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
   # save msstats_prot -- the normalized protein data
   myfile <- file.path(root, "data", "msstats_prot.rda")
   save(msstats_prot, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
   # save results
-  msstats_results <- cleanResults(rbind(msstats_results,res2))
+  msstats_results <- cleanResults(rbind(msstats_results, res2))
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-
 }
