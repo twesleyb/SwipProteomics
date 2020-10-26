@@ -78,20 +78,32 @@ expandGroups <- function(conditions, biofractions) {
 } # EOF
 
 
-compileTests <- function(results_list, moderated=FALSE) {
+compileTests <- function(results_list) {
   # clean-up the results list return by lmerTestProtein loop
   # remove errors
   idx <- unlist(sapply(results_list, class)) != "try-error"
   filt_list <- results_list[which(idx)]
   results_df <- do.call(rbind, filt_list)
+
   # drop singular
   results_df <- results_df %>% filter(!isSingular)
   results_df$isSingular <- NULL
+
   # annotate with gene symbols
   idx <- match(results_df$Protein, gene_map$uniprot)
   results_df$Symbol <- gene_map$symbol[idx]
+
   # Remove any redundant results
   results_df <- results_df %>% unique()
+
+  # for each contrast perform moderation??
+  #y = results_df %>% group_by(Contrast) %>% group_split()
+  #x = y[[1]]
+  #mod_stats = limma::squeezeVar(x$SE^2,x$DF)
+  #df_prior = mod_stats$df.prior
+  #s2_prior = mod_stats$var.prior
+  #lmerTestContrast(fm,kkk
+
   # adjust pvals for each contrast
   results_df <- results_df %>% group_by(Contrast) %>% 
   	  mutate("FDR" = p.adjust(Pvalue, "BH"),
@@ -178,7 +190,7 @@ lmerTest_results <- compileTests(results_list)
 
 # split into list of results for each contrast
 all_results <- lmerTest_results %>% group_by(Contrast) %>% group_split()
-names(all_results) <- sapply(results_list,function(x) unique(x$Contrast))
+names(all_results) <- sapply(all_results,function(x) unique(x$Contrast))
 
 # rename
 namen <- gsub("ConditionMutant.F[0-9]{1,2}-ConditionControl.","",
@@ -190,6 +202,11 @@ all_results <- all_results[c(biofraction,"Mutant-Control")]
 
 # add protein data
 all_results <- c("Normalized Protein" = list(msstats_prot), all_results)
+
+
+## save results ----------------------------------------------------------------
+
+
 
 
 ## save results ----------------------------------------------------------------

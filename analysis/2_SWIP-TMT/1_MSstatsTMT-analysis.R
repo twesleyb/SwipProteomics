@@ -65,8 +65,9 @@ cleanProt <- function(df) {
   df$BioFraction <- factor(biof,
     levels = c("F4", "F5", "F6", "F7", "F8", "F9", "F10"))
   df$Subject <- as.factor(subject)
-  df <- df %>% select("Mixture","Channel","Condition","BioFraction","Genotype",
-		      "Subject", "Protein","Symbol","Entrez", "Abundance")
+  df <- df %>% select("Run","Mixture","TechRepMixture","Channel","Condition",
+		      "BioFraction","Genotype", "Subject", "BioReplicate",
+		      "Protein","Symbol", "Entrez", "Abundance")
   return(df)
 }
 
