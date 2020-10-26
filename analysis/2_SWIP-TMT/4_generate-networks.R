@@ -82,7 +82,7 @@ if (!dir.exists(tabsdir)) {
 # MSstats has done this already. Rownames are unique for each Sample.
 dm <- msstats_prot %>%
   as.data.table() %>%
-  filter(Genotype == "Control") %>%
+  #filter(Genotype == "Control") %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
     value.var = "Abundance"
   ) %>%

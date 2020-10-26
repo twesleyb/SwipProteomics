@@ -21,13 +21,11 @@ max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
 optimization_method = 'Surprise'
-#optimization_method = 'CPM'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-#recursive = True # If module_size > max_size, then cluster recursively.
-recursive = False # If module_size > max_size, then cluster recursively.
+recursive = True # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 ## Input data:
@@ -158,12 +156,12 @@ if parameters.get('resolution_parameter') is None:
 
     # Recursively split modules that are too big.
     if recursive:
-
         print("... Initial partition: " + partition.summary() + ".", file=stderr)
         # Update optimization method.
         method = methods.get(recursive_method).get('partition_type')
         if type(method) is str:
-                parameters['partition_type'] = getattr(import_module('leidenalg'),method)
+          parameters['partition_type'] = getattr(import_module('leidenalg'),
+                  method)
         elif type(method) == 'type':
                 parameters['partition_type'] = method
         # Initial module membership.
@@ -213,34 +211,8 @@ if parameters.get('resolution_parameter') is None:
 
 ## Save Leidenalg clustering results ------------------------------------------
 
-if recursive:
-
-    # Save initial partition.
-    df = DataFrame(columns = profile[0].graph.vs['name'])
-    df.loc['Membership'] = profile[0].membership
-    myfile = os.path.join(rdatdir, output_name + "_partition.csv")
-    df.to_csv(myfile)
-
-# Collect partition results and save as csv.
-if len(profile) == 1:
-    # Single resolution profile:
-    results = {
-            'Modularity' : [partition.modularity for partition in profile],
-            'Membership' : [partition.membership for partition in profile],
-            'Summary'    : [partition.summary() for partition in profile]}
-else:
-
-    # Multi-resolution profile:
-    results = {
-        'Modularity' : [partition.modularity for partition in profile],
-        'Membership' : [partition.membership for partition in profile],
-        'Summary'    : [partition.summary() for partition in profile],
-        'Resolution' : [partition.resolution_parameter for partition in profile]}
-
-# Ends if/else
-
-# Save cluster membership vectors.
+# Save final partition
+df = DataFrame(columns = profile[0].graph.vs['name'])
+df.loc['Membership'] = profile[0].membership
 myfile = os.path.join(rdatdir, output_name + "_partition.csv")
-df = DataFrame(results['Membership'])
-df.columns = profile[0].graph.vs['name']
 df.to_csv(myfile)

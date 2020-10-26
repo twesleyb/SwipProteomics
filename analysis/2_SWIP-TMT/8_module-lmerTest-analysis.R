@@ -31,10 +31,11 @@ msstats_filt$Module <- paste0("M",partition[msstats_filt$Protein])
 # wash prots
 washc <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
 
-# the model to be fit:
+# the formula to be fit:
 fx <- formula(paste(c("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)",
 		      " + (1|Protein)"), collapse=" "))
 
+# fit the model:
 fm <- lmerTest::lmer(fx, data=msstats_filt %>% filter(Protein %in% washc))
 
 summary(fm,ddf="Satterthwaite")
@@ -56,6 +57,9 @@ lmerTestContrast(fm, contrast) %>%
 
 
 ## loop through all modules
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
+
 results_list <- list()
 for (module in names(modules)){
   input <- list(fx, data=msstats_filt %>% filter(Module==module))
@@ -70,9 +74,10 @@ for (module in names(modules)){
 ## collect results
 results_df <- do.call(rbind,results_list) 
 
+# singular results will be removed
 warning(sum(results_df$isSingular),
-	" modules with singular fit will be removed.")
-
+	" modules with singular fits will be removed.")
+ 
 results_df <- results_df %>% filter(!isSingular) %>% 
 	arrange(Pvalue) %>% 
 	as.data.table(keep.rownames="Module") %>% 
@@ -81,3 +86,14 @@ results_df <- results_df %>% filter(!isSingular) %>%
 
 ## examine top results
 knitr::kable(head(results_df))
+
+# save
+df <- data.table(Protein=names(partition),Module=partition)
+results_list <- list("Partition" = df, "Mutant-Control" = results_df)
+myfile <- file.path(root,"tables","S5_Module_Results.xlsx")
+write_excel(results_list,myfile)
+
+# save
+module_results <- results_df
+myfile <- file.path(root,"data","module_results.rda")
+save(module_results,file=myfile,version=2)

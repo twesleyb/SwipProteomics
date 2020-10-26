@@ -7,11 +7,12 @@
 ## INPUT data:
 # specify the partition to be used:
 part_file <- "leidenalg_partition.rda" # in root/data
-subset_WT <- TRUE # we only use WT control data for generating clusters
+subset_WT <- FALSE # we only use WT control data for generating clusters
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:
-stats <- c(1, 2, 6, 7) # Statistics by which module preservation is enforced.
+#stats <- c(1, 2, 6, 7) # Statistics by which module preservation is enforced.
+stats <- c(1, 6, 7) # Statistics by which module preservation is enforced.
 # NOTE: recommended to use 1,2, 6, and 7
 strength <- "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
 negative_edges <- "zero" # How will negative edges be replacedR? Abs val or zero.
