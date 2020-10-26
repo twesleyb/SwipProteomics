@@ -75,7 +75,7 @@ reformatDEP <- function(prot_df, gene_map) {
   # reformat the data for DEP
   # NOTE: this function only works with expected input
   # returns a summarized experiment object formated for DEP
-  # NOTE: you can access the data contained in a sumamrized experiment object with 
+  # NOTE: to access data within a SummarizedExperiment object, use:
   # library(SummarizedExperiment)
   # rowDat(se)
   # colData(se)
@@ -180,11 +180,9 @@ normSL <- function(tp, groupBy=NULL){
 
 normSP <- function(tp, pool){
 	# perform normalization to pooled QC samples
-
 	# Store a copy of the data.
 	tp <- ungroup(tp)
 	tp_copy <- tp
-
 	# Group pooled together.
 	tp$Group <- as.numeric(grepl(paste(pool,collapse="|"),tp$Sample))
 	tp_list <- tp %>% group_by(Accession,Group) %>% 
@@ -193,7 +191,6 @@ normSP <- function(tp, pool){
 	as.data.table() %>% 
 	arrange(Accession,Group) %>% 
 	group_by(Accession) %>% group_split()
-
 	# Loop to calculate normalization factors.
         new_list <- list()
 	for (i in 1:length(tp_list)){
@@ -203,19 +200,15 @@ normSP <- function(tp, pool){
 		new_list[[i]] <- x
 	}
 	tp_list <- new_list
-
 	# Collect in a df.
 	df <- do.call(rbind,tp_list) %>% 
 		dplyr::select(Accession,Group,NormFactor)
-
 	# Merge with input data.
 	tp_norm <- left_join(tp,df,by=c("Accession","Group"))
-
 	# Perform normalization step.
 	tp_norm$Intensity <- tp_norm$Intensity * tp_norm$NormFactor
 	tp_norm <- tp_norm %>% dplyr::select(colnames(tp_copy))
 	tp_norm <- as.data.table(tp_norm)
-
 	# Return the normalized data.
 	return(tp_norm)
 }
@@ -552,7 +545,8 @@ results_df <- tibble::add_column(results_df,
 			          .after="Accession")
 
 # final sort
-results_df <- results_df %>% arrange(desc(significant),desc(up),PValue,desc(logFC))
+results_df <- results_df %>% 
+	arrange(desc(significant),desc(up),PValue,desc(logFC))
 
 
 ## Save the data --------------------------------------------------------------
@@ -607,6 +601,6 @@ bioid_se <- c(se_list,
 myfile <- file.path(datadir,"bioid_se.rda")
 save(bioid_se,file=myfile,version=2)
 
-# save
-bioid_results <- results_df
-save(bioid_results,file=myfile, version=2)
+# save gene_map
+myfile <- file.path(datadir,"bioid_gene_map.rda")
+save(gene_map,file=myfile,version=2)
