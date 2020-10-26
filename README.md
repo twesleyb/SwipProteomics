@@ -1,6 +1,7 @@
 # SwipProteomics
-This repository contains the proteomics [data](./data) and source [code](./analysis) for the analyses 
-performed by [Courtland _et al._, 2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
+This repository contains the proteomics [data](./data/README.md) and source
+[code](./analysis/README.md) for the analyses performed by 
+[Courtland _et al._,2020](https://www.biorxiv.org/content/10.1101/2020.08.06.239517v1).
 
 
 ## The WASH complex member SWIP: an intellectual disability gene

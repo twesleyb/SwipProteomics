@@ -1,4 +1,4 @@
-## SwipProteomics/data
+## `SwipProteomics/data`
 
 ## BioID data and results
 * BioID.zip
