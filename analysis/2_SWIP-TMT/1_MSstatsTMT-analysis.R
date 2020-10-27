@@ -278,6 +278,9 @@ write_excel(results_list, myfile)
 
 ## summarize significant results ----------------------------------------------
 
+message("\nTotal instances of significant change: ",
+	sum(sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha))))
+
 message("\nSummary of significant proteins:")
 sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha)) %>% t() %>% knitr::kable()
 
