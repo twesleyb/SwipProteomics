@@ -5,7 +5,7 @@
 #' authors: Tyler W Bradshaw
 
 ## Optional parameters:
-BF_alpha <- 0.05 # Significance threshold.
+BF_alpha <- 0.05 # Significance threshold for enrichment
 
 ## Misc function - getrd() ----------------------------------------------------
 
@@ -25,53 +25,50 @@ getrd <- function(here = getwd(), dpat = ".git") {
 
 ## Set-up the workspace -------------------------------------------------------
 
-# Load renv.
+# Load renv
 root <- getrd()
 renv::load(root, quiet = TRUE)
 
-# Global imports.
+# Global imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
   library(geneLists) # for gene lists (pathways)
 })
 
-# Load functions in root/R and data in root/data.
+# Load functions in root/R and data in root/data
 suppressWarnings({
   devtools::load_all()
 })
 
-# Directories.
+# Project Directories
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
 # Load the gene lists from geneLists.
-data(list = "corum") # CORUM protein complexes. 1
-data(list = "lopitDCpredictions") # Predicted subcellular locations from Geledaki. 2
-data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. 3
-data(list = "ePSD") # Uezu et al., 2016 4
-data(list = "iPSD") # Uezu et al., 2016 5
+# FIXME: geneLists need Pubmed IDs!
+data(list = "corum") # CORUM protein complexes. [1]
+data(list = "lopitDCpredictions") # Predicted subcellular locations from Geledaki. [2]
+data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. [3]
+data(list = "ePSD") # Uezu et al., 2016 [4]
+data(list = "iPSD") # Uezu et al., 2016 [5]
 
-# Add retriever complex.
-retriever <- c("Vps35l", "Vps26c", "Vps29")
+# Add retriever complex
 # Retriever complex from McNally et al., 2017. [6]
-
-# Load WASH interactome.
-data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. 7
-
-# data(list="synGO") # Koopmans et al., SynGO database.
+retriever <- c("Vps35l", "Vps26c", "Vps29")
 
 # Load the data from root/data.
 data(gene_map) # gene mapping data
 data(partition) # the graph partition
-# data(sig_modules) # module with sig change in abundance
 data(msstats_prot) # the proteomics data
+data(module_results) # module-level statistics
+data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. [7]
 
 
 ## Do work --------------------------------------------------------------------
 
-# Add retriever complexes.
+# get entrez ids for retriever prots
 names(retriever) <- gene_map$entrez[match(retriever, gene_map$symbol)]
 
 # Collect list of modules, map Uniprot accession to Entrez.
@@ -119,8 +116,8 @@ gene_lists <- c(
 )
 
 # Remove lists with less than 3 proteins.
-# drop <- which(sapply(gene_lists,length) < 3)
-# gene_lists <- gene_lists[-drop]
+drop <- which(sapply(gene_lists,length) < 3)
+gene_lists <- gene_lists[-drop]
 
 # Loop to perform GSE for each pathway.
 message("\nPerforming GSE analysis for all modules:")
@@ -189,7 +186,13 @@ close(pbar)
 # Collect the results in a single data.table.
 dt <- bind_rows(results)
 
+# only sig results:
 sig_dt <- dt %>% filter(P.adjust < BF_alpha)
+
+# NOTE: No retriever enrichment
+#unique(sapply(strsplit(dt$Pathway,":"),"[",1)) %notin% unique(sapply(strsplit(sig_dt$Pathway,":"),"[",1))
+# NOTE: all lopitDC compartments are represented
+#all(names(lopitDCpredictions) %in% sig_dt$Pathway)
 
 # Status:
 n_mods <- length(unique(sig_dt$Module))
@@ -197,12 +200,6 @@ message(paste(
   "\nNumber of modules with something interesting going on:",
   n_mods
 ))
-
-# message(sum(sig_modules %in% sig_dt$Module)," of ", length(sig_modules),
-# 	" significant modules exhibit GSEA enrichment.")
-
-# sig_dt %>% filter(Module %in% sig_modules) %>% knitr::kable()
-
 
 # Save the data.
 myfile <- file.path(rdatdir, "Module_GSEA_Results.csv")
@@ -212,3 +209,20 @@ fwrite(sig_dt, myfile)
 module_gsea <- dt
 myfile <- file.path(root, "data", "module_gsea.rda")
 save(module_gsea, file = myfile, version = 2)
+
+# summarize top pathway for all modules (sig)
+sig_dt %>% 
+	group_by(Module) %>% 
+	arrange(P.adjust) %>% 
+	summarize(TopPathway = head(Pathway,1),.groups="drop") %>%
+	knitr::kable()
+
+## summarize top LopitDC predictions:
+sig_dt[grepl("LopitDC",sig_dt$Pathway),] %>% 
+	group_by(Pathway) %>%  arrange(P.adjust) %>%
+	summarize(TopModule = head(Module,1), 
+		  FE = head(`Fold enrichment`,1),
+		  P.adjust = head(P.adjust,1)) %>%
+	knitr::kable()
+
+# DONE!

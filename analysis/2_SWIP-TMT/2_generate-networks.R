@@ -57,9 +57,7 @@ renv::load(root, quiet = TRUE)
 suppressPackageStartupMessages({
   library(dplyr) # for manipulating data
   library(neten) # for network enhancement
-  suppressWarnings({
-    library(getPPIs)
-  }) # for PPI data
+  library(getPPIs) # for PPI data
   library(data.table) # for working with tables
 })
 

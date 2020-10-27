@@ -7,7 +7,6 @@
 ## INPUT data:
 # specify the partition to be used:
 part_file <- "leidenalg_partition.rda" # in root/data
-subset_WT <- FALSE # we only use WT control data for generating clusters
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:
@@ -345,11 +344,6 @@ adjm_list[["discovery"]] <- new_data$adjm
 netw_list[["discovery"]] <- new_data$netw
 part_list[["discovery"]] <- new_data$part
 
-# Should we keep the Mut data?
-# network was not build with Mut data, and it probably should not be kept
-if (subset_WT) {
-  data <- data[grep("Control", rownames(data)), ]
-}
 
 # Should data be log transformed?
 if (log_data == TRUE) {
