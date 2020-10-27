@@ -89,12 +89,6 @@ names(lopitDCpredictions) <- paste("LopitDC:", names(lopitDCpredictions))
 # Clean-up corum names:
 names(corum) <- paste("CORUM:", names(corum))
 
-# Clean-up names of pre- and post- synaptic go terms in SynGO.
-# idx1 <- which(grepl("GO:0098794",names(synGO))) # postsynapse
-# idx2 <- which(grepl("GO:0098793",names(synGO))) # presynapse
-# names(synGO)[idx1] <- paste0("SYNGO:Postsynapse (",names(synGO)[idx1],")")
-# names(synGO)[idx2] <- paste0("SYNGO:Presynapse (",names(synGO)[idx2],")")
-
 # Clean-up takamori names.
 names(takamori2006SV) <- paste("Takamori et al., 2006:", names(takamori2006SV))
 
@@ -118,6 +112,7 @@ gene_lists <- c(
 # Remove lists with less than 3 proteins.
 drop <- which(sapply(gene_lists,length) < 3)
 gene_lists <- gene_lists[-drop]
+
 
 # Loop to perform GSE for each pathway.
 message("\nPerforming GSE analysis for all modules:")
@@ -144,7 +139,7 @@ for (experiment in names(gene_lists)) {
   )
   # Adjust p-values.
   hyper_dt$FDR <- p.adjust(hyper_dt$"P-value", method = "BH")
-  hyper_dt$P.adjust <- p.adjust(hyper_dt$"P-value", method = "bonferroni")
+  hyper_dt$Padjust <- p.adjust(hyper_dt$"P-value", method = "bonferroni")
   # Add module size annotation.
   sizes <- sapply(module_entrez, length)
   hyper_dt <- tibble::add_column(hyper_dt,
@@ -174,7 +169,7 @@ for (experiment in names(gene_lists)) {
   # Sort by fold enrichment.
   hyper_dt <- hyper_dt %>% arrange(desc(`Fold enrichment`))
   Entrez <- sapply(module_entrez[hyper_dt$Module], function(x) x[x %in% as.numeric(gene_lists[[experiment]])])
-  hyper_dt$Proteins <- lapply(Entrez, function(x) {
+  hyper_dt$Genes <- lapply(Entrez, function(x) {
     paste(gene_map$symbol[match(x, gene_map$entrez)], collapse = "; ")
   })
   # Return the results.
@@ -187,7 +182,7 @@ close(pbar)
 dt <- bind_rows(results)
 
 # only sig results:
-sig_dt <- dt %>% filter(P.adjust < BF_alpha)
+sig_dt <- dt %>% filter(Padjust < BF_alpha)
 
 # NOTE: No retriever enrichment
 #unique(sapply(strsplit(dt$Pathway,":"),"[",1)) %notin% unique(sapply(strsplit(sig_dt$Pathway,":"),"[",1))
@@ -223,21 +218,28 @@ message("(",sum(sig_modules %in% sig_dt$Module)," of ",
 sig_dt %>% 
 	group_by(Module) %>% 
 	filter(Module %in% sig_modules) %>% 
-	arrange(P.adjust) %>% 
+	arrange(Padjust) %>% 
 	summarize(TopPathway = head(Pathway,1),
 		  FE = head(`Fold enrichment`,1),
-		  P.adjust = head(P.adjust,1),
+		  Padjust = head(Padjust,1),
 		  .groups="drop") %>%
 	knitr::kable()
 
 ## summarize top LopitDC predictions:
 message("\nModules with significant LopitDC gse:")
 sig_dt[grepl("LopitDC",sig_dt$Pathway),] %>% 
-	group_by(Pathway) %>%  arrange(P.adjust) %>%
+	group_by(Pathway) %>%  arrange(Padjust) %>%
 	summarize(TopModule = head(Module,1), 
 		  FE = head(`Fold enrichment`,1),
-		  P.adjust = head(P.adjust,1),
+		  Padjust = head(Padjust,1),
 		  .groups = "drop") %>%
 	knitr::kable()
+
+# Save as excel
+tmp_df <- data.table(Pathway=names(gene_lists),
+		Entrez = sapply(gene_lists,paste,collapse=";"))
+tmp_list <- list("Pathways" = tmp_df,"Module GSEA" = sig_dt)
+myfile <- file.path(root,"tables","S4_Module_GSEA_Results.xlsx")
+write_excel(tmp_list,myfile)
 
 # DONE!
