@@ -215,6 +215,11 @@ save(module_gsea, file = myfile, version = 2)
 sig_modules <- module_results %>% 
 	filter(Padjust < 0.05) %>% 
 	select(Module) %>% unlist() %>% unique()
+
+message("\nSignificant Modules with significant gse:")
+message("(",sum(sig_modules %in% sig_dt$Module)," of ",
+	length(sig_modules)," significant modules.)")
+
 sig_dt %>% 
 	group_by(Module) %>% 
 	filter(Module %in% sig_modules) %>% 
@@ -226,11 +231,13 @@ sig_dt %>%
 	knitr::kable()
 
 ## summarize top LopitDC predictions:
+message("\nModules with significant LopitDC gse:")
 sig_dt[grepl("LopitDC",sig_dt$Pathway),] %>% 
 	group_by(Pathway) %>%  arrange(P.adjust) %>%
 	summarize(TopModule = head(Module,1), 
 		  FE = head(`Fold enrichment`,1),
-		  P.adjust = head(P.adjust,1)) %>%
+		  P.adjust = head(P.adjust,1),
+		  .groups = "drop") %>%
 	knitr::kable()
 
 # DONE!
