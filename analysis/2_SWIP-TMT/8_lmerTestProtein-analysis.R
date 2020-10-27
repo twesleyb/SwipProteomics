@@ -53,7 +53,6 @@ msstats_alt_contrast <- alt_contrast
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
-  library(MSstatsTMT)
   library(doParallel)
   library(microbenchmark)
   ## other requirements:
