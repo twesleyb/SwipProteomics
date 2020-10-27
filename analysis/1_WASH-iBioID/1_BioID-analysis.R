@@ -612,3 +612,8 @@ save(bioid_se,file=myfile,version=2)
 # save gene_map
 myfile <- file.path(datadir,"bioid_gene_map.rda")
 save(gene_map,file=myfile,version=2)
+
+# save bioid results
+bioid_results <- results_list
+myfile <- file.path(root,"data","bioid_results.rda")
+save(bioid_results, file=myfile, version=2)

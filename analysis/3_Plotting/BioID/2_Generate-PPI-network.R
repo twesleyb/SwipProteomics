@@ -58,10 +58,9 @@ tabsdir <- file.path(root,"manuscript","tables")
 devtools::load_all()
 
 # Load BioID results.
-data(bioid_se)
-data(bioid_gene_map) # gene_map
-results <- DEP::get_results(bioid_se$results)
-
+data(bioid_results)
+data(bioid_gene_map)
+data(wash_interactome)
 
 #---------------------------------------------------------------------
 ## Create PPI graph.

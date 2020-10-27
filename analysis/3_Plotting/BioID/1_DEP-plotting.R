@@ -18,6 +18,8 @@ root <- "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
 
+FDR_alpha = 0.1
+enrichment_threshold = log2(3.0)
 
 ## FUNCTIONS -----------------------------------------------------------------
 
@@ -46,6 +48,7 @@ renv::load(root,quiet=TRUE)
 suppressPackageStartupMessages({
 	library(DEP) # twesleyb/DEP 
 	library(dplyr) # for manipulating data
+        library(ggplot2) # for manipulating plots
 	library(data.table) # for working with data.tables
 })
 
@@ -66,22 +69,30 @@ spn <- bioid_se$spn # post-SPN norm
 imp <- bioid_se$dep # post-imputing
 vsn <- bioid_se$vsn # post-vsn
 dep <- bioid_se$results
+
+#dep <- add_rejections(dep, alpha = FDR_alpha, lfc = enrichment_threshold)
+
 df <- DEP::get_results(dep)
+
+yint <- -1*log10(max(df$WASH_vs_Control_p.val[df$WASH_vs_Control_p.adj<FDR_alpha]))
 
 myfile <- file.path(figsdir,"WASH_BioID_DEP_plots.pdf")
 pdf(file=myfile,onefile=TRUE)
 
   hist(df$WASH_vs_Control_p.val,breaks=50)
+  abline(v=y)
 
-  meanSdPlot(vsn)
+  #meanSdPlot(raw)
 
-  plot_frequency(raw)
+  #meanSdPlot(vsn)
 
-  plot_numbers(raw)
+  #plot_frequency(raw)
 
-  plot_coverage(raw)
+  #plot_numbers(raw)
 
-  plot_missval(raw)
+  #plot_coverage(raw)
+
+  #plot_missval(raw)
 
   plot_detect(raw)
 
@@ -89,12 +100,13 @@ pdf(file=myfile,onefile=TRUE)
 
   plot_pca(vsn)
 
-  plot_imputation(spn, imp)
+  #plot_imputation(spn, imp)
 
-  plot_volcano(dep, contrast = "WASH_vs_Control", 
-		     label_size = 2, add_names = FALSE)
-
-  plot_volcano(dep, contrast = "WASH_vs_Control", 
+  plot <- plot_volcano(dep, contrast = "WASH_vs_Control", 
 		     label_size = 2, add_names = TRUE)
+  plot <- plot + geom_vline(xintercept=enrichment_threshold,linetype="dashed",color="darkred")
+  plot <- plot + geom_hline(yintercept=yint,linetype="dashed",color="darkred")
+  plot
+
 
 invisible(dev.off())

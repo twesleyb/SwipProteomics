@@ -7,7 +7,7 @@
 
 ## INPUT ----------------------------------------------------------------------
 # specify project's root directory
-ROOT <- "~/projects/SwipProteomics"
+root <- "~/projects/SwipProteomics"
 
 ## OPTIONS --------------------------------------------------------------------
 ##FDR_alpha <- 0.05 # BH significance threshold for protein DA
@@ -34,22 +34,22 @@ mkdir <- function(...) {
 ## Prepare the working environment ---------------------------------------------
 
 # directory for output tables:
-tabsdir <- file.path(ROOT,"tables"); mkdir(tabsdir)
+tabsdir <- file.path(root,"tables"); mkdir(tabsdir)
 
 # directory for output data:
-datadir <- file.path(ROOT,"data"); mkdir(datadir)
+datadir <- file.path(root,"data"); mkdir(datadir)
 
 # directory for temporary data:
-rdatdir <- file.path(ROOT,"rdata"); mkdir(rdatdir)
+rdatdir <- file.path(root,"rdata"); mkdir(rdatdir)
 
 # directory for figures:
-figsdir <- file.path(ROOT,"figs","DEP"); mkdir(figsdir)
+figsdir <- file.path(root,"figs","DEP"); mkdir(figsdir)
 
 
 ## Prepare the R environment ---------------------------------------------------
 
 # load renv
-renv::load(ROOT,quiet=TRUE)
+renv::load(root,quiet=TRUE)
 
 # imports
 suppressPackageStartupMessages({
@@ -59,95 +59,115 @@ suppressPackageStartupMessages({
 })
 
 # load functions in root/R
-devtools::load_all(ROOT)
+devtools::load_all(root)
 
 # load the data in root/data
-data(msstats_prot) # the preprocessed data
 data(gene_map)
+data(msstats_prot)
 
-#  load the data in root/rdata
-myfile <- file.path(rdatdir,"tidy_peptide.rda")
-load(myfile) # tidy_peptide
+# load the raw data
+myfile <- file.path(root,"rdata","msstats_psm.rda")
+load(myfile) # msstats_psm
 
 
 ## prepare raw protein data for DEP -------------------------------------------
-
-# summarize raw protein data
-tidy_prot <- summarize_prot(tidy_peptide)
+# NOTE: do not log transform the data
 
 # cast tidy data into a data.table
-# NOTE: do not log transform the data
-prot_df <- tidy_prot %>% as.data.table() %>%
-	dcast(Accession ~ Sample,value.var = "Intensity") %>% 
-	as.matrix(rownames="Accession") %>% # coerce to matrix
+
+norm_df <- msstats_prot %>%
+	group_by(Protein,Mixture,Channel,Condition) %>% 
+	reshape2::dcast(Protein ~ Mixture + Channel + Condition, 
+			value.var = "Abundance") %>% 
+	as.data.table() %>% 
+	as.matrix(rownames="Protein") %>%
+	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
+
+raw_df <- msstats_psm %>%  mutate(Condition = as.character(Condition)) %>%
+	filter(Condition != "Norm") %>%  # drop QC
+	group_by(ProteinName,Mixture,Channel,Condition) %>% 
+	summarize("Abundance" = sum(Intensity),.groups="drop") %>%
+	reshape2::dcast(ProteinName ~ Mixture + Channel + Condition, 
+			value.var = "Abundance") %>% 
+	as.data.table() %>% 
+	as.matrix(rownames="ProteinName") %>%
 	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
 
 # protein data.frame should contain unique protein IDs in 'ID' column
 # check for duplicates
-stopifnot(!any(duplicated(prot_df$ID))) # there should be no duplicate IDs
+#stopifnot(!any(duplicated(prot_df$ID))) # there should be no duplicate IDs
 
 # check for NA
-stopifnot(!any(is.na(prot_df$ID))) # there should be no NA
+#stopifnot(!any(is.na(prot_df$ID))) # there should be no NA
 
 # protein data.frame should contain unique protein names in 'name' column
 # we will annotate proteins with gene 'symbol's
-prot_df$name <- gene_map$symbol[match(prot_df$ID,gene_map$uniprot)]
+raw_df$name <- gene_map$symbol[match(raw_df$ID,gene_map$uniprot)]
+norm_df$name <- gene_map$symbol[match(norm_df$ID,gene_map$uniprot)]
 
-# check for NA
-stopifnot(!any(is.na(prot_df$name))) # there should be no NA
 
 # Multiple Uniprot Accession IDs may be mapped to the same gene Symbol.
 # If any duplicated, make names unique base::make.unique.
-prot_df$name <- make.unique(prot_df$name,sep="-")
+raw_df$name <- make.unique(raw_df$name,sep="-")
+norm_df$name <- make.unique(norm_df$name,sep="-")
 
 # check for duplicates
-stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
+#stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
 
 
 ## create exp_design -------------------------------------------
 
-exp_design <- data.frame(
-			 label = samples$Sample,
-			 condition = interaction(samples$Fraction,
-						 samples$Treatment),
-			 replicate = interaction(samples$Treatment,
-						 samples$Experiment),
-			 experiment = samples$Experiment,
-			 fraction = samples$Fraction,
-			 treatment = samples$Treatment
-			 )
+# create experimental design
+namen <- colnames(norm_df)[grep("M",colnames(prot_df))]
+exp_design <- data.table(label = namen,
+			 Mixture = sapply(strsplit(namen,"_"),"[",1),
+			 Channel = sapply(strsplit(namen,"_"),"[",2),
+			 condition = sapply(strsplit(namen,"_"),"[",3))
+exp_design$treatment <- sapply(strsplit(exp_design$condition,"\\."),"[",1)
+exp_design$BioFraction <- sapply(strsplit(exp_design$condition,"\\."),"[",2)
+exp_design$replicate <-  interaction(exp_design$Mixture,exp_design$treatment)
+
 
 # check for required columns in input
-stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
+#stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
 
 
 ## build SummarizedExperiment (se) object -------------------------------------
 
 # use DEP helper function to build a SE object
 # specify the column indices containing the numeric data (idy)
-idy <- grep("Abundance",colnames(prot_df))
-raw_se <- DEP::make_se(prot_df,columns=idy,exp_design)
+idy <- grep("M",colnames(raw_df))
+raw_se <- DEP::make_se(raw_df,columns=idy,exp_design)
+norm_se <- DEP::make_se(norm_df,columns=idy,exp_design)
 
 
 ## plots ----------------------------------------------------------------------
 
 # extract normalized protein data from se_list
 # NOTE: the se in se_list differ only in their rowData
-norm_se <- se_list[[1]]
 
 # save as pdf
 myfile <- file.path(figsdir,"DEP_Plots.pdf")
 
 # DEP preprocessing plots
-pdf(file=myfile,onefile=TRUE)
-print(plot_frequency(raw_se))
-print(plot_numbers(raw_se))
-print(plot_coverage(raw_se))
-print(plot_normalization(raw_se,norm_se))
-print(plot_missval(raw_se))
-print(plot_detect(raw_se))
+#pdf(file=myfile,onefile=TRUE)
+
+#print(plot_frequency(raw_se))
+
+plot_numbers(raw_se)
+
+plot_coverage(raw_se)
+
+#plot_normalization(raw_se,norm_se)
+
+#plot_missval(raw_se)
+
+plot_detect(raw_se)
+
 print(plot_pca(raw_se))
+
 print(plot_pca(norm_se))
+
 dev.off()
 
 message("\nSaved",myfile)
