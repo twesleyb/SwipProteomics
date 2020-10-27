@@ -134,6 +134,10 @@ plot <- ggplot(df, aes(sample = x)) + stat_qq() + stat_qq_line(col = "red")
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(n_cores)
 
+message("\nAssessing module-level contrasts with lmerTest.")
+
+t0 <- Sys.time()
+
 # loop through all modules
 results_list <- foreach(module = names(modules)) %dopar% {
   input <- list(fx1, data = msstats_filt %>% filter(Module == module))
@@ -146,6 +150,10 @@ results_list <- foreach(module = names(modules)) %dopar% {
   return(df)
 }
 names(results_list) <- names(modules)
+
+t1 <- Sys.time()
+message("\nTime to analyze ", length(results_list)," modules:")
+difftime(t1,t0)
 
 ## collect results
 results_df <- do.call(rbind, results_list) %>% 

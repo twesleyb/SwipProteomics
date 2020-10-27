@@ -8,7 +8,7 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot <- "all" # the number of proteins to be analyzed or 'all'
+nprot <- 23 #"all" # the number of proteins to be analyzed or 'all'
 FDR_alpha <- 0.05 # FDR threshold for significance
 save_rda <- TRUE
 
@@ -145,9 +145,16 @@ message(
 
 ## [2] summarize protein level data ----------------------------------------------
 # Perform protein summarization for each run.
-t0 <- Sys.time()
+
+# NOTE: my fork allows you to pass additional args to underlying MSstats 
+# dataProcess function  -- speed things up by specifying the number of cores to 
+# be used for parallel processing.
+
+n_cores <- parallel::detectCores() - 1
 
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
+
+t0 <- Sys.time()
 
 suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(msstats_psm,
@@ -155,7 +162,7 @@ suppressMessages({ # verbosity
     global_norm = TRUE,
     MBimpute = TRUE,
     reference_norm = TRUE,
-    clusters = 23
+    clusters = n_cores
   )
 })
 
@@ -191,7 +198,7 @@ suppressWarnings({ # about closing clusters FIXME:
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
-  "\nTime to perform group comparisons for ", nprot, " proteins: ",
+  "\nTime to perform intra-Biofraction comparisons for ", nprot, " proteins: ",
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
@@ -206,15 +213,25 @@ alt_contrast <- matrix(c(
 row.names(alt_contrast) <- "Mutant-Control"
 colnames(alt_contrast) <- levels(msstats_prot$Condition)
 
+message("\nAssessing 'Mutant-Control' comparison with MSstatsTMT.")
+
+t0 <- Sys.time()
+
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity
     res2 <- MSstatsTMT::groupComparisonTMT(
       data = msstats_prot,
       contrast.matrix = alt_contrast,
-      moderated = FALSE
+      moderated = FALSE # no moderation
     )
   })
 })
+
+# This takes about ?? minutes for 8.5 k proteins
+message(
+  "\nTime to perform comparison for ", nprot, " proteins: ",
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
+)
 
 
 ## clean-up and combine results -----------------------------------------------
@@ -224,9 +241,9 @@ msstats_prot <- cleanProt(msstats_prot)
 
 # combine results
 tmp_list <- cleanResults(msstats_results) %>%
-  group_by(Label) %>%
+  group_by(Contrast) %>%
   group_split()
-names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Label))
+names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Contrast))
 
 # simplify names
 names(tmp_list) <- sapply(strsplit(names(tmp_list), "\\."), "[", 3)
@@ -236,11 +253,10 @@ tmp_list <- tmp_list[c("F4", "F5", "F6", "F7", "F8", "F9", "F10")]
 
 # fix column names
 tmp_list <- lapply(tmp_list,function(x) {
-  colnames(x)[colnames(x) == "Label"] <- "Contrast"
   colnames(x)[colnames(x) == "pvalue"] <- "Pvalue"
   colnames(x)[colnames(x) == "adj.pvalue"] <- "FDR"
   return(x)
-}
+})
 
 
 # sort msstats_prot columns 
@@ -258,6 +274,16 @@ results_list <- c(
 # save results as excel document
 myfile <- file.path(root, "tables", "S2_SWIP_TMT_Results.xlsx")
 write_excel(results_list, myfile)
+
+
+## summarize significant results ----------------------------------------------
+
+message("\nSummary of significant proteins:")
+sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha)) %>% t() %>% knitr::kable()
+
+results_list[["Mutant-Control"]] %>% 
+	summarize(Contrast = unique(Contrast), nSig = sum(FDR<FDR_alpha)) %>% 
+	knitr::kable()
 
 
 ## save results ---------------------------------------------------------------
@@ -284,4 +310,5 @@ if (save_rda) {
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
 }
