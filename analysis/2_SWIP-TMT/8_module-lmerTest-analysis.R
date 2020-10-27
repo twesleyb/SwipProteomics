@@ -27,7 +27,7 @@ suppressPackageStartupMessages({
 })
 
 
-## functions
+## functions ------------------------------------------------------------------
 
 mapGeneIDs <- function(id_in,identifiers,new_ids) {
   # requires: gene_map
@@ -40,7 +40,6 @@ idx <- switch(type,
 	      many = match(id_in,gene_map[[identifiers]]))
 return(gene_map[[new_ids]][idx])
 } #EOF
-
 
 
 ## prepare the data -----------------------------------------------------------
@@ -73,8 +72,7 @@ message("\nMedian module size: ", median(sapply(modules,length)))
 ## fit WASH complex as an example ----------------------------------------------
 
 # wash complex prots
-washc_prots <- gene_map$uniprot[grepl("Washc*", gene_map$symbol)]
-
+washc_prots <- mapGeneIDs("Washc*","symbol","uniprot")
 
 # wash complex genes
 washc_genes <- sort(mapGeneIDs(washc_prots,"uniprot","symbol"))
@@ -90,7 +88,8 @@ message("\nlmer fit to WASH complex (", paste(washc_genes,collapse=", "),") prot
 
 
 ## fit the model:
-fm1 <- lmerTest::lmer(fx1, data = msstats_filt %>% filter(Protein %in% washc))
+fm1 <- lmerTest::lmer(fx1, 
+		      data = msstats_filt %>% filter(Protein %in% washc_prots))
 
 #plot_profiles(washc_prots)
 
@@ -118,7 +117,7 @@ contrast[idy] <- +1 / length(idy)
 lmerTestContrast(fm1, contrast) %>%
   mutate(Contrast = "Mutant-Control") %>%
   mutate(isSingular = NULL) %>%
-  mutate("nProteins" = length(washc)) %>%
+  mutate("nProteins" = length(washc_prots)) %>%
   unique() %>%
   knitr::kable()
 

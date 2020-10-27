@@ -201,6 +201,7 @@ message(paste(
   n_mods
 ))
 
+
 # Save the data.
 myfile <- file.path(rdatdir, "Module_GSEA_Results.csv")
 fwrite(sig_dt, myfile)
@@ -210,11 +211,18 @@ module_gsea <- dt
 myfile <- file.path(root, "data", "module_gsea.rda")
 save(module_gsea, file = myfile, version = 2)
 
-# summarize top pathway for all modules (sig)
+# summarize top pathway for sig modules
+sig_modules <- module_results %>% 
+	filter(Padjust < 0.05) %>% 
+	select(Module) %>% unlist() %>% unique()
 sig_dt %>% 
 	group_by(Module) %>% 
+	filter(Module %in% sig_modules) %>% 
 	arrange(P.adjust) %>% 
-	summarize(TopPathway = head(Pathway,1),.groups="drop") %>%
+	summarize(TopPathway = head(Pathway,1),
+		  FE = head(`Fold enrichment`,1),
+		  P.adjust = head(P.adjust,1),
+		  .groups="drop") %>%
 	knitr::kable()
 
 ## summarize top LopitDC predictions:
