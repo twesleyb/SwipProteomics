@@ -556,10 +556,18 @@ norm_prot <- cbind(SummarizedExperiment::rowData(vsn_se),
 		   SummarizedExperiment::assays(vsn_se)[[1]])
 colnames(norm_prot)[which(colnames(norm_prot) == "ID")] <- "Accession"
 norm_prot$name <- NULL
-
 norm_prot <- as.data.table(norm_prot)
 
+# full_results: stats and normalized protein
 full_results <- left_join(results_df,norm_prot, by = "Accession")
+
+# fix colnames of 'Raw Protein'
+idy <- grepl("WASH|Control|QC",colnames(tidy_dm))
+colnames(tidy_dm)[idy] <- paste("Intensity",colnames(tidy_dm)[idy])
+
+# fix colnames of 'BioID Results'
+idy <- grepl("WASH|Control",colnames(full_results))
+colnames(full_results)[idy] <- paste("Abundance",colnames(full_results)[idy])
 
 # Create list of results:
 results_list <- list("Raw Protein" = tidy_dm, "BioID Results" = full_results)

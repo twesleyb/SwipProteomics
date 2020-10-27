@@ -89,6 +89,9 @@ cleanResults <- function(df) {
     ) %>%
     unique() %>%
     arrange(pvalue)
+  colnames(df)[colnames(df)=="Label"] <- "Contrast"
+  colnames(df)[colnames(df)=="pvalue"] <- "Pvalue"
+  colnames(df)[colnames(df)=="adj.pvalue"] <- "FDR"
   return(df)
 }
 
@@ -228,15 +231,32 @@ names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Label))
 # simplify names
 names(tmp_list) <- sapply(strsplit(names(tmp_list), "\\."), "[", 3)
 
+# sort list
+tmp_list <- tmp_list[c("F4", "F5", "F6", "F7", "F8", "F9", "F10")]
+
+# fix column names
+tmp_list <- lapply(tmp_list,function(x) {
+  colnames(x)[colnames(x) == "Label"] <- "Contrast"
+  colnames(x)[colnames(x) == "pvalue"] <- "Pvalue"
+  colnames(x)[colnames(x) == "adj.pvalue"] <- "FDR"
+  return(x)
+}
+
+
+# sort msstats_prot columns 
+tmp_df <- msstats_prot %>% select(Mixture,Channel,Genotype,BioFraction,
+				  Condition,Subject,Protein,Symbol,Entrez,Abundance)
+
 # combine into list to be saved as excel
 results_list <- c(
-  "Normalized Protein" = list(msstats_prot),
+  "Normalized Protein" = list(tmp_df),
   tmp_list, # intrafraction results
-  "Control-Mutant" = list(cleanResults(res2))
+  "Mutant-Control" = list(cleanResults(res2))
 )
 
+
 # save results as excel document
-myfile <- file.path(root, "tables", "S2_MSstatsTMT_Results.xlsx")
+myfile <- file.path(root, "tables", "S2_SWIP_TMT_Results.xlsx")
 write_excel(results_list, myfile)
 
 
@@ -247,6 +267,11 @@ if (save_rda) {
   # save the model formula
   myfile <- file.path(root, "data", "fx0.rda")
   save(fx0,file=myfile,version=2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
+  # save contrast matrix for 'Mutant-Control' Comparison
+  myfile <- file.path(root, "data", "alt_contrast.rda")
+  save(alt_contrast,file=myfile,version=2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
   # save msstats_prot -- the normalized protein data
