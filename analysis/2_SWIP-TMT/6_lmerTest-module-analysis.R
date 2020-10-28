@@ -95,11 +95,23 @@ fm1 <- lmerTest::lmer(fx1,
 
 
 ## examine the model
-summary(fm1, ddf = "Satterthwaite")
+p = "Pr(>|t|)"
+dm <- summary(fm1, ddf = "Satterthwaite")[["coefficients"]]
+df <- t(apply(dm,1,round,3)) %>% as.data.table(keep.rownames="Term")
+df <- df %>% mutate(Term=gsub("Genotype","",Term))
+idx <- order(sapply(strsplit(df$Term,"\\:"),"[",1))
+df <- df[idx,]
+df[[p]] <- formatC(dm[,which(colnames(dm) == p)])
+colnames(df)[colnames(df) == "Std. Error"] <- "SE"
+colnames(df)[colnames(df) == "df"] <- "DF"
+colnames(df)[colnames(df) == "t value"] <- "Tvalue"
+colnames(df)[colnames(df) == p ] <- "Pvalue"
+
+df %>% knitr::kable(format="markdown")
 
 
 ## goodness of fit
-r.squaredGLMM.merMod(fm1) %>% knitr::kable()
+r.squaredGLMM.merMod(fm1) %>% knitr::kable(format="markdown")
 message("R2m: Marginal; variation explained by fixed effects.")
 message("R2c: Conditional; total variation explained by the model.")
 
