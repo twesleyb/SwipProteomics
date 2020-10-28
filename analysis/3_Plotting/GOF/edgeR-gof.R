@@ -63,14 +63,14 @@ dge$samples$Condition <- interaction(samples$Fraction[idx],samples$Genotype[idx]
 
 # create a design matrix with update samples
 design <- model.matrix(~ Mixture + Condition, data=dge$samples)
-#design <- model.matrix(~ Fraction + Genotype, data=dge$samples)
 
 
 ## estimate dispersion ---------------------------------------------------------
 # edgeR supports several methods of estimating dispersion.
 # For fitting GLMs it is only appropriate to use a global metric such as
 # 'Common' or 'Trended' dispersion. Here we explicitly estimate 'Trended' 
-# dispersion to account for Mean - Variance relationship in protein # quantification.
+# dispersion to account for Mean - Variance relationship in protein 
+# quantification.
 #dge <- estimateGLMTrendedDisp(dge, design, method="auto")
 
 # estimate all dispersion using all methods 
@@ -84,51 +84,41 @@ dge <- estimateDisp(dge,design,method="auto")
 ## fit protein-wise NB GLMs ---------------------------------------------------
 # fit model and generate data QC plots
 
-
 phi <- dge$trended.dispersion
-#phi <- dge$common.dispersion
-#phi <- dge$tagwise.dispersion
-#fit <- glmQLFit(dge, design, dispersion=phi, robust=TRUE)
 fit <- glmFit(dge,design,dispersion=phi,robust=TRUE)
-
-glm_gof <- gof(fit)
-message("Outliers: ", sum(glm_gof$outlier))
-
+myfile <- file.path(root,"figs","edgeR","trended-gof.pdf")
 pdf(file=myfile)
 glm_gof <- gof(fit,plot=TRUE)
+invisible(dev.off())
+message("Outliers: ", sum(glm_gof$outlier))
 
+phi <- dge$common.dispersion
+fit <- glmFit(dge,design,dispersion=phi,robust=TRUE)
+myfile <- file.path(root,"figs","edgeR","common-gof.pdf")
+pdf(file=myfile)
+glm_gof <- gof(fit,plot=TRUE)
+invisible(dev.off())
+message("Outliers: ", sum(glm_gof$outlier))
+
+phi <- dge$tagwise.dispersion
+fit <- glmFit(dge,design,dispersion=phi,robust=TRUE)
+myfile <- file.path(root,"figs","edgeR","tagwise-gof.pdf")
+pdf(file=myfile)
+glm_gof <- gof(fit,plot=TRUE)
+invisible(dev.off())
+message("Outliers: ", sum(glm_gof$outlier))
 
 # BCV
 myfile <- file.path(root,"figs","edgeR","plotBVC.pdf")
 pdf(file=myfile)
 plotBCV(dge)
-
-#clean-up
 invisible(dev.off())
 
 # QLDispersion
-myfile <- file.path(root,"figs","edgeR","plotQLDisp.pdf")
-pdf(file=myfile)
-plotQLDisp(fit)
+#fit <- glmQLFit(dge,design,robust=TRUE)
+#myfile <- file.path(root,"figs","edgeR","plotQLDisp.pdf")
+#pdf(file=myfile)
+#plotQLDisp(fit)
 
 #clean-up
-invisible(dev.off())
-
-
-## assess GOF -----------------------------------------------------------------
-# use edgeR gof function
-# gof
-myfile <- file.path(root,"figs","edgeR","gof.pdf")
-pdf(file=myfile)
-edgeR_gof <- edgeR::gof(fit,plot=TRUE)
-save(fit,file="fit.rda",version=2)
-
-# clean-up
-invisible(dev.off())
-
-message("\nSummary of outliers (blue):")
-knitr::kable(table(edgeR_gof$outlier))
-idx <- edgeR_gof$outlier
-to_drop  <- rownames(dge)[idx]
-
-# DONE
+#invisible(dev.off())
