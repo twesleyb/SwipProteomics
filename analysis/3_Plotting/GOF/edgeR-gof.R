@@ -57,11 +57,12 @@ sample_names <- rownames(dge$samples)
 idx <- match(sample_names,samples$Sample)
 dge$samples$Fraction <- samples$Fraction[idx]
 dge$samples$Genotype <- samples$Genotype[idx]
+dge$samples$Mixture <- samples$Experiment[idx]
 # update sample group(s) -- Fraction.Genotype
-dge$samples$group <- interaction(samples$Fraction[idx],samples$Genotype[idx])
+dge$samples$Condition <- interaction(samples$Fraction[idx],samples$Genotype[idx])
 
 # create a design matrix with update samples
-design <- model.matrix(~ 0 + group, data=dge$samples)
+design <- model.matrix(~ Mixture + Condition, data=dge$samples)
 #design <- model.matrix(~ Fraction + Genotype, data=dge$samples)
 
 
@@ -84,12 +85,18 @@ dge <- estimateDisp(dge,design,method="auto")
 # fit model and generate data QC plots
 
 
-#phi <- dge$trended.dispersion
+phi <- dge$trended.dispersion
 #phi <- dge$common.dispersion
-phi <- dge$tagwise.dispersion
+#phi <- dge$tagwise.dispersion
 #fit <- glmQLFit(dge, design, dispersion=phi, robust=TRUE)
-fit <- glmFit(dge,design,dispersion=phi)
-gof(fit,plot=T)
+fit <- glmFit(dge,design,dispersion=phi,robust=TRUE)
+
+glm_gof <- gof(fit)
+message("Outliers: ", sum(glm_gof$outlier))
+
+pdf(file=myfile)
+glm_gof <- gof(fit,plot=TRUE)
+
 
 # BCV
 myfile <- file.path(root,"figs","edgeR","plotBVC.pdf")

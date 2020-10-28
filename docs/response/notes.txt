@@ -1,0 +1,487 @@
+% latex
+
+% title: SwipProteomics
+% description: Response to eLife Reviewers
+% author: twab
+
+\documentclass[11pt]{elife} % a customized eLife template
+
+\usepackage{siunitx}
+\usepackage{caption} % for captions that span multiple pages
+\usepackage{gensymb} % for degree symbol
+\usepackage{ragged2e} % for \justify
+\usepackage{tabularx} % page-width tables: tex.stackexchange.com/questions/10535
+\usepackage{textgreek} % for greek symbols, e.g. beta. See NOTE
+\usepackage[version=4]{mhchem}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{etoolbox}
+\AtBeginEnvironment{quote}{\singlespacing\small}
+
+% NOTE1: to install packages: tlmgr install <package>
+% NOTE2: RE package textgreek Error: Cannot find the file lgrenc.def.
+% ^ must install textgreek, sudo apt install texlive-lang-greek.
+%\usepackage{graphix} % For including images.
+
+\DeclareSIUnit\Molar{M}
+
+% Location of figures.
+\graphicspath{ {./figs/} }
+
+% Multipage caption format.
+\DeclareCaptionLabelFormat{adja-page}{\hrulefill\\#1 #2 \emph{(Continued...)}}
+
+
+\title{Response to eLife Reviewers}
+
+\author[1]{Tyler W. A. Bradshaw}
+\affil[1]{Department of Neurobiology, 
+Duke University School of Medicine, Durham, NC 27710, USA}
+\corr{tyler.w.bradshaw@duke.edu}{TWAB}
+
+\begin{document}
+
+\maketitle
+
+\begin{fullwidth}
+
+At the centre of the reviewers' cogent critique of our manuscript 
+was the questioned statistical validity of our approach. Succinctly, 
+the issue at question is whether or not the R package \textbf{edgeR} 
+is an appropriate tool for statistical inference in mass spectrometry 
+experiments.
+
+High level statistical inference in \textbf{edgeR} is built on a 
+negative binomial (NB) generalized linear model (GLM) framework. 
+The data are assumed to be adequately described by a NB distribution 
+parameterized by a dispersion parameter, \phi. \footnotemark
+
+%\footnotetext{ The dispersion parameter can take several forms. 
+%\textbf{edgeR} supports three types of dispersion models: 'common', 'trended', and
+%'tagwise'. When using edgeR's robust Quasi-likelihood test methods, only global
+%(i.e. common or trended) dispersions are appropriate (see ?edgeR::glmQLFit).}
+
+Our previous approach used a customized workflow, \footnotemark design
+to accomodate our specific sources of variability in our experimental 
+design. We used \textbf{edgeR} to perform statistical testing  
+using its flexible GLM framework.
+
+%\footnotetext{ The most important step in our normalization approach is 
+%IRS normalization. IRS normalization scales protein measurements using an 
+%internal reference standard to normalize protein measurments composed of 
+%different peptides between diffirent TMT MS runs. Phillip Wilmarth's GitHub 
+%offers an excellent exploration of IRS normalization.
+%}
+
+Our decision to use \textbf{edgeR} was motivated by numerous 
+conceptual and practical considerations. \textbf{edgeR} is an excellent package,
+and should be strongly considered when analyzing RNA-sequencing data. Here we 
+only consider its appropriatness for our TMT dataset.
+
+\begin{figure}[!ht]
+	\begin{center}
+		\includegraphics{fig_01}
+		\caption{Goodness-of-fit of \textbf{edgeR} (a), and 
+		\textbf{MSstats} (b) statistical approaches. (a) The data were
+		fit with edgeR::glmFit using 'trended' dispersion. The residual
+		deviance is plotted as a quantile-quantile plot using
+		edgeR::gof. (b) The data were fit with a linear mixed model to
+		account for random effect of Mixture. The 
+	\end{center}
+\end{figure}
+
+% This command displays all refs in the bib file. 
+% PLEASE DELETE IT BEFORE YOU SUBMIT YOUR MANUSCRIPT!
+\nocite{*} 
+
+\section{References}
+
+\bibliography{refs}
+
+\end{fullwidth}
+
+\end{document}
+
+%\section{References}
+%\bibliography{refs}
+
+%In proteomics experiments, statistical inference is performed
+%in two steps:
+%(1) protein summarization
+%(2) statistical testing on proteins
+%
+%
+%
+%
+%We assessed the goodness-of-fit of edgeR and MSstatsTMT.
+%Statistical inference performed by MSstatsTMT is based on a mixed-model
+%modeffects models designed to handle complex sources of variation inherint in protein
+%abundance measurements made in mass spectrometry experiments.
+%# Response to reviewers
+%
+%## MSstatsTMT
+%
+%The full model:
+%Ymtcb =  +Mixturem + TechRep(Mixture)t(m) + Conditionc + Subjectmcb + "mtcb
+%
+%The reduced model:
+%Ymcb =  +Mixturem + Conditionc + "mcb
+%Miztuerm ~ iid N(0,sigma2M) 
+%Sum c=1 to Condition = 0
+%e mcb ~iid N(0,sigma2)
+%
+%The term e combines the biological variation and the technical variation that is
+%not explained by Mixture. Since the terms TechRep(Mixture)t(m) and 
+%
+%There are 36 unique MS runs:
+%There are 48 unique MS samples:
+%
+%We performed 3 TMT experiments, in each analyzing 16-TMT labeled samples
+%concatenated into a single `Mixture`.
+%This mixture was fractionated into 12 samples (`TechRepMixture`?). Thus, there
+%were 12 LCMS injections for each TMT experiment.
+%Thereby `3 x 12 = 36` injections and `Spectrum Files`. However, there are `16 x
+%3 = 48` TMT samples.
+%
+%In each experiment, two `Subjects` (mice) were analyzed. A 'Control' (WT) and
+%'Mutant' mouse from which 7 biological `Fractions` were prepared (`F2-F10`).
+%> __NOTE:__ Here `Fraction` is a subcellular fraction prepared by differential
+%> centrifugation, and not the same as the  12 fractions prepared from a single
+%> TMT mixture for each experiment.
+%So there are only 36 possible `Spectrum.Files` and 48 TMT `Runs` as I understand
+%it.
+%
+%```
+%# model 4
+%lmer(Abundance ~ 1 + (1|Mixture) + Condition, data = data)
+%```
+%
+%we utilized a mixed-effects models to 
+%describe a response vaiable (protein abundance) and some of the covariates that
+%have been measured for that response.(Bates lme4 book chapter 1)
+%in contrast to genearalized linear models (such as that used by edgeR) in which all effects are modeled as
+%fixed effecst mixed-effects models at least one of the covariates is a categorical covariate
+%representing experimentaal or observational "units" in the data set. This is
+%proteins in a module.
+%
+%## SNR
+%PSM level data were expored from Proteome Discover.
+%
+%> __NOTE:__ 
+%Because of ion statistical effects, measurements of intensities are more
+%variable and therefore less accurate when the mass peaks arise from a smaller
+%population of ions. When you perform precision quantification, you might want
+%to filter out reporter
+%peaks or spectra that have a variability that is too high because of ion
+%statistical effects. However, with an Orbitrap analyzer, the intensity of a
+%signal is not proportional to the number of ions corresponding to the signal.
+%Instead, the number of ions is proportional to the S/N value of a peak
+%(number_of_ions = 6  S/N for D30 Orbitraps, and number_of_ions = 4  S/N for
+%D20 Orbitraps). To filter reporter ion quantification input data that is
+%detected from a number of ions that is too small, you use the signal-to-noise
+%(S/N) values of the reporter ion peaks instead of their intensities to provide
+%such a measurement when ions are acquired in the Orbitrap. You can use the
+%settings of the Reporter Abundance Based On parameter of the Reporter Ions
+%Quantifier node to select signal-to-noise intensity values. For information on
+%this parameter, refer to the Help.
+%
+%
+%## Pairwise comparisons between conditions:
+%
+%Model-based testing for differentially abundant protins between pairs of
+%conditions was carried out through a contrast of condition means.
+%Beta 1 .. Bc the parameters associated with Condition (i.e. the levels of
+%Condition) and l1 .. 1c a vector of coefficients where lc = 0
+%Contrast vector: l = (1,-1,0,0) 
+%null = lcBc = 0
+%
+%estimate the parameters with REML to obtain Beta hat,
+%the contrast, and cooresponding t-statistic [derived by lmerTest]
+%
+%```
+%t = l^T * Beta^hat / sqrt(l * s^2 * V^hat * l^T)
+%```
+%
+%* `s^2` is the estimate of theta2 [eq S1]
+%* `V^hat` is unscaled variance-covariance matrix of B^hat
+%* `s^2 * V^hat` is the (scaled) variance-covariance matrix of B^hat
+%* `sqrt(l * s^2 * V^hat * l^T)` is the standard error of the contrast
+%
+%
+%estimates of s2 and Vhat are obtained by REML the matrix V is a function of
+%estimates sigma^2hat_M for random effect of mixtures sigma^2hat_T for random
+%effect of technical replicates
+%sigma^2_S for the random effect of subject
+%
+%standard error of the contrast takes into account both technical variancee
+%sigma^2_M, sigma^2_T, sigma^2 and biological variance sigma^2_S
+%
+%the degrees of freedom for the t-statstic are derifed by Satterhwaite approx
+%
+%when the number of biological replicates in each condition is small,
+%the Empirical Bayes moderation as implemented by the R package limma.
+%parameters d0 and s0^2 are estimated from the distribution of observed sigma^2
+%of all proteins using an EB approach (limma)
+%
+%posterior variance estimate is incorporated into residual variance of each
+%protein
+%
+%moderate t statistic = t^~ = l^T * beta^hat / sqrt(l * s^2~ * V^hat * l^T)
+%
+%with df + d0 dof
+%
+%
+%
+%# MSstatsTMT Protein-wise linear mixed modeling
+%
+%```R
+%# Code for repeated measure design from MSstats
+%
+%} else { 
+%    if (singleSubject) {
+%	fit.full <- lm(ABUNDANCE ~ GROUP, data=data2) # [1]
+%
+%    } else { 
+%	if (!TechReplicate) {
+%	      fit.full <- lmer(ABUNDANCE ~ GROUP + (1|SUBJECT), data=data2) # [2]
+%	      df.full <- lm(ABUNDANCE ~ GROUP + SUBJECT, data=data2)$df.residual
+%
+%	} else {
+%	      fit.full <- lmer(ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT), data=data2) # [3]
+%	      df.full <- lm(ABUNDANCE ~ GROUP + SUBJECT + GROUP:SUBJECT,  data=data2)$df.residual
+%	}
+%    }	
+%}
+%```
+%MSstats fits at least three different linear models:
+%1. `lm(ABUNDANCE ~ GROUP, data)`
+%2. `lmer(ABUNDANCE ~ GROUP + (1|SUBJECT), data)`
+%3. `lmer(ABUNDANCE ~ GROUP + (1|SUBJECT) + (1|GROUP:SUBJECT), data)`
+%
+%> Model [1] is the most basic design. No mixed effects. 
+%> Model [2] includes a mixed effect of Subject for repeated measures.
+%> Model [3] is for case repeated measures and Technical replication?
+%
+%Model __[2]__ is basic lmer for repeated measures:
+%`fit.full <- lmer(ABUNDANCE ~ GROUP + (1|SUBJECT), data=data2) # [2]`
+%> mixed effect of Subject/BioReplicate
+%
+%
+%
+%## lmerTest::lmer Models fit by MSstatsTMT:
+%> NOTE: Group == Condition; Subject == BioReplicate(?);
+%
+%1. `lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group, data)`
+%
+%2. `lmerAbundance ~ 1 + (1|Run) + Group, data)`
+%
+%3. `lm(Abundance ~ 1 + Group, data)` 
+%
+%4. `lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMix) + Group + (1|Subject:Group:Mixture), data)`
+%
+%5. `lmer(Abundance ~ 1 + (1|Run) + Group + (1|Subject:Group), data)`
+%
+%
+%#### lmer Variables
+%> Mixture: Concatenation of TMT samples (a TMT experiment)
+%> TechRepMixture: technical replicates of a mixture
+%> Run: From annotation_dt, should match Spectrum.File in raw.pd. Therefore
+%>    this cooresponds to the n Spectrum.Files in raw.pd. A MS analysis.
+%> Group: Condition
+%> Subject: BioReplicate
+%
+%## MSstatsTMT lmer wrappers:
+%1. `fit <- fit_full_model_spikedin(sub_data)`
+%2. `fit <- fit_reduced_model_mulrun(sub_data)`
+%3. `fit <- fit_reduced_model_onerun(sub_data)`
+%4. `fit <- fit_full_model(sub_data)`
+%5. `fit <- fit_reduced_model_techrep(sub_data)`
+%
+%# Protein-wise model.
+%* Mixture ~ an experiment: concatenation of all TMT channels
+%* TechRepMixture ~ technical replicate of a mixture
+%
+%Set-up for paired/timecourse experiment:
+%* 3x Mixture (a TMT experiment)
+%* TechRepMixture: are there technical replicates within a mixtur? No.
+%	WT1.Fraction1, WT1.Fraction2 == Biological replicate?
+%
+%Exp1: Fraction 1-7 [1x WT1, 1x MUT1, 2x SPQC1] Exp1.WT1.F1.ChannelX
+%Exp2: Fraction 1-7 [1x WT2, 1x MUT2, 2x SPQC2]
+%Exp3: Fraction 1-7 [1x WT3, 1x MUT3, 2x SPQC3]
+%
+%* Run : MS run ID [Sample]
+%* Protein: Protein ID [Accession]
+%* Abundance: Protein-level summarized abundance [Abundance]
+%* Channel: Labeling information (126, ... 131) [Channel]
+%* Condition: Condition (ex. Healthy, Cancer, Time0) [WT|MUT|SPQC]
+%* BioReplicate: Unique ID for biological subject [WT1,WT2,WT,...]
+%* TechRepMixture: Unique ID for technical replicate of a mixture [WT.F1?]
+%* Mixture : Unique ID for TMT mixture [Experiment?]
+%
+%
+%## Module-level model: mixed linear model with protein random effect
+%
+%
+%#### MSstats Protein-wise model:
+%lmerTest utilizes lmer and lme4
+%
+%* Documentation should include 'Charge' as this column is also required.
+%Minor, but item 'Protein', should be 'ProteinName'.
+%
+%  \item Run : MS run ID
+%  \item Protein : Protein ID
+%  \item Abundance: Protein-level summarized abundance
+%  \item Channel : Labeling information (126, ... 131)
+%  \item Condition : Condition (ex. Healthy, Cancer, Time0)
+%  \item BioReplicate : Unique ID for biological subject.
+%  \item TechRepMixture : Unique ID for technical replicate of one TMT mixture.
+%  \item Mixture : Unique ID for TMT mixture.
+%}
+%
+%```
+%cat << EOF
+%lmer                 package:lmerTest                  R Documentation
+%
+%
+%     This function overloads ‘lmer’ from the ‘lme4’-package
+%     (‘lme4::lmer’) and adds a couple of slots needed for the
+%     computation of Satterthwaite denominator degrees of freedom. All
+%     arguments are the same as for ‘lme4::lmer’ and all the usual
+%     ‘lmer’-methods work.
+%
+%     lmer(
+%       formula,
+%       data = NULL,
+%       REML = TRUE,
+%     )
+%
+%
+% formula: a two-sided linear formula object describing both the
+%          fixed-effects and random-effects part of the model, with the
+%          response on the left of a ‘~’ operator and the terms,
+%          separated by ‘+’ operators, on the right.  Random-effects
+%          terms are distinguished by vertical bars (‘|’) separating
+%          expressions for design matrices from grouping factors.  Two
+%          vertical bars (‘||’) can be used to specify multiple
+%          uncorrelated random effects for the same grouping variable.
+%          (Because of the way it is implemented, the ‘||’-syntax _works
+%          only for design matrices containing numeric (continuous)
+%          predictors_; to fit models with independent categorical
+%          effects, see ‘dummy’ or the ‘lmer_alt’ function from the
+%          ‘afex’ package.)
+%
+%    data: an optional data frame containing the variables named in
+%          ‘formula’.  By default the variables are taken from the
+%          environment from which ‘lmer’ is called. While ‘data’ is
+%          optional, the package authors _strongly_ recommend its use,
+%          especially when later applying methods such as ‘update’ and
+%          ‘drop1’ to the fitted model (_such methods are not guaranteed
+%          to work properly if ‘data’ is omitted_). If ‘data’ is
+%          omitted, variables will be taken from the environment of
+%          ‘formula’ (if specified as a formula) or from the parent
+%          frame (if specified as a character vector).
+%
+%    REML: logical scalar - Should the estimates be chosen to optimize
+%          the REML criterion (as opposed to the log-likelihood)?
+%
+%
+%
+%DEqMS is developped on top of Limma. However, Limma assumes
+%same prior variance for all genes. In proteomics, the accuracy
+%of protein abundance estimates varies by the number of
+%peptides/PSMs quantified in both label-free and labelled data.
+%Proteins quantification by multiple peptides or PSMs are more
+%accurate. DEqMS package is able to estimate different prior
+%variances for proteins quantified by different number of
+%PSMs/peptides, therefore acchieving better accuracy. The
+%package can be applied to analyze both label-free and labelled
+%proteomics data.
+%```
+%
+%contact this author:
+%
+%code: https://github.com/gu-mi/NBGOF
+%MSstatsTMT 
+%
+%It is based on a flexible family of linear
+%mixed-effects models that handle complex patterns of technical artifacts and
+%missing values. The approach is implemented in MSstatsTMT, a freely available
+%open-source R/Bioconductor package compatible with data processing
+%tools such as Proteome Discoverer, MaxQuant, OpenMS and SpectroMine. Evaluation
+%on a controlled mixture, simulated datasets, and three biological investigations
+%with diverse designs demonstrated that MSstatsTMT balanced the
+%sensitivity and the specificity of detecting differentially abundant proteins,
+%in particular in large-scale experiments
+%with multiple biological mixtures.
+%
+%
+%m = 1 Biological mixtures
+%# each mixture contains samples from distinct biological subjects labeled with
+%# isoobaric tags
+%
+%each mixture is 	profiled in t = 1 ... T Technical replicate mass spectrometry
+%runs. therefore an eexperiment has  a total of M x T MS Runs.
+%
+%Mixture (m)
+%Total Number of mixtures = M 
+%TechnicalReplicates (t) of a mixture
+%Run (R = M x T )
+%
+%M = mixture = Experiment = c(1,2,3) = 3
+%T = Technical replicates = 1
+%C = Condition = Treatment = c(Control, Mutant) = 2
+%B = Biological replicates = Fraction = 7
+%obs = 3 x 1 x 2 x 7 = 42 
+%spqc = 2 * 3 = 6
+%total = 48
+%
+%
+%# model 1
+%lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group + (1|Subject:Group:Mixture), data = data)
+%
+%# model 2
+%lmer(Abundance ~ 1 + (1|Run) + Group + (1|Subject:Group), data)
+%
+%# model 3
+%lmer(Abundance ~ 1 + (1|Mixture) + (1|Mixture:TechRepMixture) + Group, data = data)
+%
+%# model 4: random effect of TMT run? e.g. Exp1.126 v Exp1.126N
+%lmer(Abundance ~ 1 + (1|Run) + Group, data = data)
+%
+%# model 5: simple comparison
+%lm(Abundance ~ 1 + Group, data = data)
+%
+%
+%## References
+%
+%MSstatsTMT
+%
+%
+%Plubell, D. L., Wilmarth, P. A., Zhao, Y., Fenton, A. M., Minnier, J., Reddy, A.
+%P., Klimek, J., Yang, X., David,
+%L. L., and Pamir, N. (2017). Extended multiplexing of tandem mass tags (TMT)
+%labeling reveals age and high
+%fat diet specific proteome changes in mouse epididymal adipose tissue. Molecular
+%& Cellular Proteomics, 16,
+%873–890.
+%
+%Bates, D., M¨achler, M., Bolker, B., and Walker, S. (2015). Fitting linear
+%mixed-effects models using lme4.
+%Journal of Statistical Software, 67, 1–48.
+%
+%Kuznetsova, A., Brockhoff, P. B., and Christensen, R. H. B. (2017). lmertest
+%package: tests in linear mixed
+%effects models. Journal of statistical software, 82.
+%
+%Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., and Smyth, G.
+%K. (2015). limma powers
+%differential expression analyses for RNA-sequencing and microarray studies.
+%Nucleic Acids Research, 43, e47–
+%e47
+%
+%Satterthwaite, F. E. (1946). An approximate distribution of estimates of
+%variance components. Biometrics bulletin,
+%2, 110–114.
