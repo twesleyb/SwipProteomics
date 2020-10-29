@@ -28,7 +28,6 @@
 
 \setlength\parindent{0pt}
 \pagenumbering{gobble} 
-% options: abic, roman, Roman, alph, Alph, gobble--supress numbering
 
 \begin{document}
 
@@ -91,7 +90,7 @@ a mixed-effects model describing such an experiment:
 	Subject_{mtcb} + \epsilon_{mtcb}
 \end{equation}
 
-Parameters of the model are estimated with REML to obtain Beta hat. The
+Parameters of the model are estimated with REML to obtain $\hat{\beta}$.
 
 Model based testing of differential abundance between pairs of conditions
 is assessed through contrast of conditioned means obtained from the model.
@@ -105,7 +104,10 @@ be well fit by the linear mixed-models used by \texttt{MSstatsTMT}, providing
 justification for this approach. \\
 
 t-statistic for the contrast is taken to be:
-t = l^T * Beta^hat / sqrt(l * s^2 * V^hat * l^T)
+\begin{equation}
+	t = \frac{l^T * \hat{\beta}}{sqrt(l * s^2 * \hat{V} * l^T)}
+\end{equation}
+
 
 s^2 is  the error
 l is the contrast
