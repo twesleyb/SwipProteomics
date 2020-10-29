@@ -101,7 +101,11 @@ message(
 idx <- msstats_prot$Protein == swip
 fm <- lmerTest::lmer(fx0, msstats_prot[idx,])
 
-summary(fm,ddf="Satterthwaite")
+model_summary <- summary(fm,ddf="Satterthwaite")
+
+df <- model_summary$coefficients
+df %>% as.data.table(keep.rownames="Coefficient") %>% mutate(Coeffi
+
 
 ## evaluate goodness-of-fit
 r2_nakagawa <- r.squaredGLMM.merMod(fm)

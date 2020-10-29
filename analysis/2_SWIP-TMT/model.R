@@ -1,19 +1,24 @@
----
-mainfont: Arial.ttf
-sansfont: Arial.ttf
-monofont: Arial.ttf 
-mathfont: Arial.otf 
----
+#!/usr/bin/env Rscript
 
-```R
+root <- "~/projects/SwipProteomics"
 
 library(dplyr)
 library(lmerTest)
 library(SwipProteomics)
+library(variancePartition)
 
+data(swip)
 data(msstats_prot)
 
 washc_prots <- c("Q8C2E7", "Q6PGL7", "Q3UMB9", "Q9CR27", "Q8VDD8")
+
+# the formula to be fit:
+fx0 <- Abundance ~ 0 + Genotype:BioFraction + (1 | Mixture)
+
+fm0 <- lmer(fx0, data = msstats_prot %>% filter(Protein == swip))
+fm0_summary <- summary(fm0, ddf="Satterthwaite")
+
+lmerTestContrast(fm0,contrast=)
 
 # the formula to be fit:
 fx <- Abundance ~ 0 + Genotype:BioFraction + (1 | Mixture) + (1 | Protein)
@@ -43,7 +48,7 @@ model_summary <- summary(fm,ddf="Satterthwaite")
 |Mutant:BioFractionF9   |    5.897| 0.151| 6.909| 39.141|1.898e-09 |
 |Mutant:BioFractionF10  |    6.055| 0.151| 6.909| 40.186|3.447e-10 |
 
-```
+```R
 # define a contrast
 contrast <- lme4::fixef(fm)
 contrast[] <- 0
@@ -55,8 +60,26 @@ results <- lmerTestContrast(fm,contrast)
 
 results %>% mutate(Contrast = "Mutant-Control") %>% unique() %>% knitr::kable()
 
-```
 
-|Contrast       |    log2FC| percentControl| Pvalue| Tstatistic|        SE|  DF|
-|:--------------|---------:|--------------:|------:|----------:|---------:|---:|
-|Mutant-Control | -1.366434|      0.3878488|      0|  -36.93673| 0.0369939| 190|
+#|Contrast       |    log2FC| percentControl| Pvalue| Tstatistic|        SE|  DF|
+#|:--------------|---------:|--------------:|------:|----------:|---------:|---:|
+#|Mutant-Control | -1.366434|      0.3878488|      0|  -36.93673| 0.0369939| 190|
+#
+########
+
+data(varPartData)  
+form <- ~ Batch + (1|Individual) + (1|Tissue) 
+
+L1 = getContrast( geneExpr, form, info, "Batch3")
+
+L2 = getContrast( geneExpr, form, info, c("Batch2", "Batch3"))
+
+plotContrasts(cbind(L1,L2))
+
+getContrast <- function(fm,pos_coef=NULL,neg_coef=NULL,pairwise=TRUE){
+
+pos_coef=NULL
+neg_coef=NULL
+pairwise=TRUE
+
+	names(fixef(fm0))
