@@ -64,18 +64,18 @@ shared_cols <- intersect(colnames(msstats_results),colnames(msstats_prot))
 prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 
 # annotate with module membership
-prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>% 
-	mutate(Module = paste0("M",partition[protein])) 
+prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
+	mutate(Module = paste0("M",partition[Protein])) 
 
 # this is a nice tidy table of the final data!
-swip_tmt <- prot_df
-myfile <- file.path(root,"rdata","swip_tmt.rda")
-save(swip_tmt,file=myfile,version=2)
+#swip_tmt <- prot_df
+#myfile <- file.path(root,"rdata","swip_tmt.rda")
+#save(swip_tmt,file=myfile,version=2)
 
 
 ## Function ------------------------------------------------------------------
 
-# function to generate protein profile plot:
+# a function to generate protein profile plot:
 plot_profile <- function(prot_df, protein,
 			 gene = gene_map$symbol[match(protein,gene_map$uniprot)],
 			 wt_color = "#47b2a4",
@@ -151,18 +151,32 @@ plot_profile <- function(prot_df, protein,
   return(plot)
 } #EOF
 
-plot <- plot_profile(prot_df,swip)
 
 ## get swip's fit
-#fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-#fm0 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == swip))
-#fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
-#fm1 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == swip))
-#wt_yint <- lme4::fixef(fm0)["GenotypeControl"]
-#mut_yint <- lme4::fixef(fm0)["GenotypeMutant"]
-#plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
-#plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=mut_color)
 
+# save plots for a subset of proteins indivually
+washc_prots <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
+
+for (protein %in% washc_prots) {
+  gene = gene_map$symbol[match(protein,gene_map$uniprot)]
+  wt_color = "#47b2a4"
+  plot <- plot_profile(prot_df,protein)
+  fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+  fm0 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == protein))
+  fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
+  fm1 <- lmerTest::lmer(fx1,msstats_prot %>% filter(Protein == protein))
+  wt_yint <- lme4::fixef(fm1)["GenotypeControl"]
+  mut_yint <- lme4::fixef(fm1)["GenotypeMutant"]
+  plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
+  plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=prot_colors[protein])
+  (summary(fm1,ddf="Satterthwait"))
+  myfile <- file.path(figsdir,paste(protein,gene,"profile.pdf",sep="_"))
+  ggsave(myfile,plot)
+} # EOL
+
+
+quit()
+stop()
 
 ## generate plots -------------------------------------------------------------
 
