@@ -7,60 +7,22 @@
 %    sh >>> pdflatex response.tex
 
 
+<<renv, echo=FALSE, cache=FALSE, results='hide'>>=
+
+# prepare the R environment
+root <- "~/projects/SwipProteomics"
+renv::load(root,quiet=TRUE)
+devtools::load_all(quiet=TRUE)
+
+# global knitr options
+library(knitr)
+opts <- list(tidy=FALSE,message=FALSE,warning=FALSE,fig.width=4,fig.height=4.5)
+do.call(opts_chunk$set,opts)
+
+@
 
 
-
-\documentclass[12pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
-% maxwidth is the original width if it is less than linewidth
-% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-\let\hlipl\hlkwb
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass[12pt]{article}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -87,8 +49,9 @@
   \small{Durham, NC USA}}
 
 \lhead{Tyler W. A. Bradshaw}
-\rhead{Response to eLife Reviewers}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\rhead{Response to eLife Reviewers} 
+
+
 \begin{document}
 
 \setlength{\abovedisplayskip}{3pt}
@@ -271,64 +234,39 @@ negative coefficients in the model.
 Together, the denominator $\sqrt(l * \sigma^2 * \hat{V} * l^T)$ is the 
 standard error of the contrast.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(dplyr)}
+<<fit0, eval=TRUE, echo=TRUE>>=
 
-\hlcom{## load SwipProteomics data}
-\hlkwd{data}\hlstd{(swip)}
-\hlkwd{data}\hlstd{(gene_map)}
-\hlkwd{data}\hlstd{(msstats_prot)}
-\hlkwd{data}\hlstd{(alt_contrast)}
-\hlkwd{data}\hlstd{(msstats_contrasts)}
+library(dplyr)
+library(data.table)
 
-\hlcom{## formula to be fit:}
-\hlstd{fx0} \hlkwb{<-} \hlkwd{formula}\hlstd{(}\hlstr{"Abundance ~ 0 + Condition + (1|Mixture)"}\hlstd{)}
+## load SwipProteomics data
+data(swip)
+data(gene_map)
+data(msstats_prot)
+data(alt_contrast)
+data(msstats_contrasts)
 
-\hlcom{# fit the model}
-\hlstd{idx} \hlkwb{<-} \hlstd{msstats_prot}\hlopt{$}\hlstd{Protein} \hlopt{==} \hlstd{swip}
-\hlstd{fm} \hlkwb{<-} \hlstd{lmerTest}\hlopt{::}\hlkwd{lmer}\hlstd{(fx0, msstats_prot[idx,])}
+## formula to be fit:
+fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
 
-\hlcom{# calculate model statistics}
-\hlstd{model_summary} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm,}\hlkwc{ddf}\hlstd{=}\hlstr{"Satterthwaite"}\hlstd{)}
+# fit the model
+idx <- msstats_prot$Protein == swip
+fm <- lmerTest::lmer(fx0, msstats_prot[idx,])
 
-\hlstd{df} \hlkwb{<-} \hlstd{model_summary}\hlopt{$}\hlstd{coefficients}
-\hlstd{df} \hlopt{%>%} \hlkwd{as.data.table}\hlstd{(}\hlkwc{keep.rownames}\hlstd{=}\hlstr{"Coefficient"}\hlstd{)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
-\end{alltt}
+# calculate model statistics
+model_summary <- summary(fm,ddf="Satterthwaite")
 
+df <- model_summary$coefficients
+df %>% as.data.table(keep.rownames="Coefficient") %>% knitr::kable()
 
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.data.table(., keep.rownames = "{}Coefficient"{}): could not find function "{}as.data.table"{}}}\begin{alltt}
-\hlcom{# evaluate goodness-of-fit}
-\hlstd{r2_nakagawa} \hlkwb{<-} \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm)}
-\hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{(}\hlkwd{rbind}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"marginal/fixef"}\hlstd{,} \hlstr{"conditional/total"}\hlstd{), r2_nakagawa))}
-\end{alltt}
-\end{kframe}
-\begin{tabular}{l|l}
-\hline
-R2m & R2c\\
-\hline
-marginal/fixef & conditional/total\\
-\hline
-0.935142291105874 & 0.94934629533883\\
-\hline
-\end{tabular}
+# evaluate goodness-of-fit
+r2_nakagawa <- r.squaredGLMM.merMod(fm)
+knitr::kable(rbind(c("marginal/fixef", "conditional/total"), r2_nakagawa))
 
-\begin{kframe}\begin{alltt}
-\hlstd{contrast} \hlkwb{<-} \hlstd{msstats_contrasts[}\hlnum{1}\hlstd{,]}
-\hlkwd{lmerTestContrast}\hlstd{(fm,contrast)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\begin{tabular}{l|r|r|r|r|r|r|l}
-\hline
-Contrast & log2FC & percentControl & Pvalue & Tstatistic & SE & DF & isSingular\\
-\hline
-Mutant.F4-Control.F4 & -0.9075446 & 0.5330916 & 2.5e-06 & -5.986412 & 0.1516008 & 25.99986 & FALSE\\
-\hline
-\end{tabular}
+contrast <- msstats_contrasts[1,]
+lmerTestContrast(fm,contrast) %>% knitr::kable()
 
-
-\end{knitrout}
+@
 
 
 \end{document}
