@@ -138,7 +138,9 @@ fx <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
 
 plot_list <- list()
 modules <- paste0("M",names(split(partition,partition)[-1]))
+
 for (module in modules) {
+
 	fm <- lmerTest::lmer(fx,data=msstats_prot %>% filter(Module==module))
 	contrast <- lme4::fixef(fm)
 	contrast[grepl("Mutant",names(contrast))] <- +1/7
@@ -163,6 +165,7 @@ for (module in modules) {
 	plot <- plot + geom_line()
 	plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
 	plot <- plot + geom_point(size=2)
+
 	plot_list[[module]] <- plot
 }
 
