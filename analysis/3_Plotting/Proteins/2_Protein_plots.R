@@ -33,27 +33,23 @@ getrd <- function(here=getwd(), dpat= ".git") {
 }
 
 
-plot_protein <- function(prot_df, gene_map, protein,legend=FALSE) {
-
+plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
   # a function that generates the plot
   #wt_color = "#47b2a4"
   #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
   colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
   	    "#942192","#B847B4","#DC6AD7") # Swip Purples
-
   # function to generate a proteins plot
   # Subset the data.
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   df <- subset(prot_df,prot_df$Protein == protein)
-
   # Insure Fraction is a factor, and levels are in correct order.
   df$BioFraction <- factor(df$BioFraction,
   			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
-
   # Collect FDR stats.
   stats <- df %>% group_by(Genotype,BioFraction) %>% 
   		summarize(`Max Abundance` = max(Abundance),
-  			  FDR = unique(adj.pvalue),.groups="drop")
+  			  FDR = unique(FDR),.groups="drop")
   stats$ypos <- 1.02 * max(stats$`Max Abundance`)
   stats <- stats %>% filter(Genotype == "Control")
   stats$symbol <- ""
@@ -61,20 +57,18 @@ plot_protein <- function(prot_df, gene_map, protein,legend=FALSE) {
   stats$symbol[stats$FDR<0.05] <- "*"
   stats$symbol[stats$FDR<0.005] <- "**"
   stats$symbol[stats$FDR<0.0005] <- "***"
-
   # Generate the plot.
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction, y = Abundance)
   plot <- plot + aes(group = interaction(Mixture,Genotype))
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
-  #plot <- plot + aes(shape=Mixture)
+  plot <- plot + aes(shape=Mixture)
   #plot <- plot + aes(fill=Genotype)
-  #plot <- plot + aes(group = interaction(Mixture,Genotype))
-  #plot <- plot + aes(colour = interaction(Mixture,Genotype))
+  plot <- plot + aes(group = interaction(Mixture,Genotype))
+  plot <- plot + aes(colour = interaction(Mixture,Genotype))
   plot <- plot + geom_point(size=2)
   plot <- plot + geom_line()
   plot <- plot + ggtitle(protein)
-
   # Annotate with significance stars.
   if (any(stats$FDR<0.1)) {
     plot <- plot + annotate("text", 
@@ -82,33 +76,26 @@ plot_protein <- function(prot_df, gene_map, protein,legend=FALSE) {
 			    y=max(stats$ypos), 
 			    label=stats$symbol,size=7)
   }
-
   # Add Custom colors and modify legend title and labels.
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
   plot <- plot + scale_colour_manual(name="Subject", values=colors, labels=mylabs) 
   #plot <- plot + scale_x_discrete(labels=stats$Cfg.Force)
   #plot <- plot + xlab("Force (xg)")
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-
   # Edit y axis.
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-
   # Make x and y axes consistent.
   plot <- plot + theme(axis.text.x = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
   plot <- plot + theme(axis.text.y = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
-
   # Remove background.
   plot <- plot + theme(panel.background = element_blank())
-
   # Add x and y axes.
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-
   # Remove legend.
   if (!legend) {
 	  plot <- plot + theme(legend.position = "none")
   }
-
   return(plot)
 } #EOF
 
@@ -127,7 +114,6 @@ devtools::load_all()
 data(swip)
 data(gene_map)
 data(partition)
-#data(sig_modules)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)

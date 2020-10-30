@@ -1,3 +1,4 @@
+
 % title: Response to eLife Reviewers
 % author: twab
 
@@ -14,43 +15,39 @@ root <- "~/projects/SwipProteomics"
 renv::load(root,quiet=TRUE)
 devtools::load_all(quiet=TRUE)
 
+suppressPackageStartupMessages({
+  library(knitr)
+})
+
 # global knitr options
-library(knitr)
 opts <- list(tidy=FALSE,message=FALSE,warning=FALSE,fig.width=4,fig.height=4.5)
 do.call(opts_chunk$set,opts)
 
 @
 
 
-\documentclass[12pt]{article}
+\documentclass[11pt]{elife}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{ragged2e}
 \usepackage{caption}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
-\usepackage{tikz}
 \usepackage{titlesec}
 \usepackage{blkarray}
-\usepackage[position=top]{subfig}
-\usepackage[margin=1.0in]{geometry}
-\usepackage{inconsolata} % for mono font \texttt
 \usepackage{csquotes}
 
-\pagestyle{fancy}
-\pagenumbering{gobble} 
-\setlength\parindent{0pt}
 \graphicspath{ {./figs/} }
-\captionsetup[figure]{font=small}
 
-\title{eLife Response}
-\author{Tyler W. A. Bradshaw\\
-  \small{Duke University, Department of Neurobiology}\\
-  \small{Durham, NC USA}}
+\title{Genetic Disruption of WASHC4 Drives Endo-lysosomal Dysfunction and \\
+Cognitive-Movement Impairments in Mice and Humans}
 
-\lhead{Tyler W. A. Bradshaw}
+\author[1]{Tyler W. A. Bradshaw}
+\affil[1]{Duke University, Department of Neurobiology, Durham, NC USA}
+\corr{tyler.w.bradshaw@duke.edu}{TWAB}
+
 \rhead{Response to eLife Reviewers} 
-
 
 \begin{document}
 
@@ -59,17 +56,21 @@ do.call(opts_chunk$set,opts)
 
 \maketitle
 
+\begin{abstract}
+
+In our previously submitted manuscript, we described two mass spectrometry 
+experiments.
+
+\end{abstract}
+
+\newpage
+
+\begin{fullwidth}
+
+\section{Reanalysis of WASH iBioID}
+This is some text.
+
 \section{Reanalysis of Proteomics Data}
-
-In our submitted manuscript, 
-\textit{"Genetic Disruption of WASHC4 Drives Endo-lysosomal Dysfunction 
-and Cognitive-Movement Impairments in Mice and Humans"}, we described the 
-analysis of two protein mass spectrometry experiments:
-
-\begin{enumerate}
-	\item \textbf{WASH1 iBioID}
-	\item \textbf{WASHC4 spatial TMT-Proteomics} 
-\end{enumerate}
 
 At the center of the cogent critique of our manuscript 
 was the questioned statistical validity of our previously described approach.   
@@ -81,12 +82,17 @@ negative binomial (NB), generalized linear model (GLM) framework.
 Therefore, the data are assumed to be adequately described by a NB distribution 
 parameterized by a dispersion parameter, $\phi$. \footnotemark{} \\
 
-\footnotetext{ The dispersion parameter can take several forms. 
-\texttt{edgeR} supports three dispersion models: 'common', 'trended', and 
-'tagwise'. However, when using \texttt{edgeR's} 
-robust quasi-likelihood test methods, only global (i.e. 'common' or 'trended') 
-dispersion metrics are appropriate 
-(see \texttt{edgeR::glmQLFit's} documentation).}
+
+\footnotetext{ 
+  \begin{fullwidth}
+	The dispersion parameter can take several forms. 
+	\texttt{edgeR} supports three dispersion models: 'common',
+	'trended', and 'tagwise'. However, when using \texttt{edgeR's}
+	robust quasi-likelihood test methods, only global (i.e. 'common'
+	or 'trended') dispersion metrics are appropriate 
+	(see \texttt{edgeR::glmQLFit's} documentation).
+  \end{fullwidth}
+}
 
 Previously we used a customized workflow \footnotemark{} to preprocess
 and normalize the data prior to performing statistical testing using
@@ -94,20 +100,25 @@ and normalize the data prior to performing statistical testing using
 consider the overall adequacy of the NB framework for mass spectrometry data. 
 Here we reconsider its appropriatness for our TMT proteomics dataset.  \\
 
-\footnotetext{ The most important step in our normalization approach is 
-IRS normalization. MS2 random sampling results in identification and
-quantification of proteins by different peptides in each MS experiment.
-To account for this source of variability, protein measurements are adjusted by
-a scaling factor such that the geometric mean of all internal reference
-standards are equal (Plubell et al., 2017).
-This is essential to account for the stochasticisity of peptide
-quantification in MS experiments. Phillip Wilmarth's GitHub offers an 
-excellent exploration of IRS normalization.
+\footnotetext{ 
+  \begin{fullwidth} 
+	  The most important step in our normalization approach is 
+	  IRS normalization. MS2 random sampling results in identification and
+  	  quantification of proteins by different peptides in each MS experiment.
+	  To account for this source of variability, protein measurements are
+	  adjusted by a scaling factor such that the geometric mean of all
+	  internal reference standards are equal (Plubell et al., 2017).
+  	  This is essential to account for the stochasticisity of peptide
+  	  quantification in MS experiments. Phillip Wilmarth's
+  	  \href{https://github.com/pwilmart/IRS_normalization}[GitHub] offers an 
+	  excellent exploration of IRS normalization.
+  \end{fullwidth}
 }
 
 \begin{figure}[ht]
-	\begin{center}
-		\includegraphics[width=\textwidth]{gof}
+	\begin{fullwidth}
+		\begin{center}
+		\includegraphics[width=0.9\paperwidth,keepaspectratio]{gof}
 		\caption{\textbf{Goodness-of-fit of \texttt{edgeR} (A), and 
 		\texttt{MSstats} (B) statistical approaches.} The overall
 		adequacy of the linear models fit to the data were assessed 
@@ -132,6 +143,7 @@ excellent exploration of IRS normalization.
 		(Holm-adjusted P-value $<$ 0.05).}
 		\label{fig:gof}
 	\end{center}
+	\end{fullwidth}
 \end{figure}
 
 We evaluated the overall adequacy of the \texttt{edgeR} model by plotting the 
@@ -172,12 +184,14 @@ There were 6 Subjects, three bioreplicate Control and
 SWIP\textsuperscript{P1019R} Mutant mice.
 
 \begin{figure}[h]
-	\begin{center}
-		\includegraphics[width=\textwidth]{design}
-		\caption{\textbf{Experimental Design.} We utilized 16-plex 
-		TMT tags to label samples prepared from 6 mice.}
-		\label{fig:design}
-	\end{center}
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\textwidth,keepaspectratio]{design}
+	  \caption{\textbf{Experimental Design.} We utilized 16-plex
+	  TMT tags to label samples prepared from 6 mice.}
+	  \label{fig:design}
+  \end{center}
+  \end{fullwidth}
 \end{figure}
 
 In an experiment such as ours with multiple mixtures and biological replicates, 
@@ -234,10 +248,13 @@ negative coefficients in the model.
 Together, the denominator $\sqrt(l * \sigma^2 * \hat{V} * l^T)$ is the 
 standard error of the contrast.
 
-<<fit0, eval=TRUE, echo=TRUE>>=
 
-library(dplyr)
-library(data.table)
+<<fit the model, eval=TRUE, echo=TRUE>>=
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(data.table)
+})
 
 ## load SwipProteomics data
 data(swip)
@@ -261,12 +278,12 @@ df %>% as.data.table(keep.rownames="Coefficient") %>% knitr::kable()
 
 # evaluate goodness-of-fit
 r2_nakagawa <- r.squaredGLMM.merMod(fm)
-knitr::kable(rbind(c("marginal/fixef", "conditional/total"), r2_nakagawa))
+r2_nakagawa %>% round(3) %>% knitr::kable()
 
 contrast <- msstats_contrasts[1,]
 lmerTestContrast(fm,contrast) %>% knitr::kable()
 
 @
 
-
+\end{fullwidth}
 \end{document}
