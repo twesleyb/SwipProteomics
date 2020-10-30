@@ -194,6 +194,18 @@ SWIP\textsuperscript{P1019R} Mutant mice.
   \end{fullwidth}
 \end{figure}
 
+
+\begin{figure}[h]
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\textwidth,keepaspectratio]{contrasts}
+	  \caption{\textbf{Contrast matrix indicating 'Intra-BioFraction' and
+	  'Mutant-Control' comparisons.}} 
+	  \label{fig:contrasts}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
 In an experiment such as ours with multiple mixtures and biological replicates, 
 but no technical replication of mixture (T = 1) \texttt{MSstatsTMT} fits a
 linear mixed model of the following form to each protein:
