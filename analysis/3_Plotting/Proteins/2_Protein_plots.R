@@ -141,7 +141,8 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 # we will use stats to annotate plots with stars
 biofraction <- sapply(strsplit(msstats_results$Contrast,"\\."),"[",3)
 msstats_results$BioFraction <- biofraction
-prot_df <- left_join(msstats_prot,msstats_results,by=c("Protein","BioFraction"))
+shared_cols <- intersect(colnames(msstats_prot),colnames(msstats_results))
+prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 
 # annotate with module membership
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
