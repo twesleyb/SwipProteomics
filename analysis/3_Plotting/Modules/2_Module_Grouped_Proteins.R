@@ -20,9 +20,10 @@ suppressWarnings({ devtools::load_all() })
 # load the data
 data(swip)
 data(gene_map)
+data(partition)
 data(msstats_prot)
 data(module_colors)
-data(leidenalg_partition)
+data(msstats_results)
 
 # imports
 suppressPackageStartupMessages({
@@ -33,7 +34,7 @@ suppressPackageStartupMessages({
 
 # project dirs
 fontdir <- file.path(root, "fonts")
-figsdir <- file.path(root, "figs", "Modules","Groups")
+figsdir <- file.path(root, "figs", "Modules")
 if (! dir.exists(figsdir)) {
 	dir.create(figsdir,recursive=TRUE)
 }
@@ -47,27 +48,66 @@ washc_prots = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
 
 ## plot protein summary --------------------------------------------------------
 
-data(fit1_results)
-data(fit0_results)
+## GOAL plot a module
+fx <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
+fm <- lmerTest::lmer(fx, data = msstats_prot %>% filter(Protein %in% washc_prots))
 
-plot_protein_summary <- function(protein,fit0_results=NULL) {
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
+
+
+# combine protein data and statistical results
+# we will use stats to annotate plots with stars
+biofraction <- sapply(strsplit(msstats_results$Contrast,"\\."),"[",3)
+msstats_results$BioFraction <- biofraction
+shared_cols <- intersect(colnames(msstats_prot),colnames(msstats_results))
+prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
+
+# annotate with module membership
+prot_dt <- prot_df %>% filter(Protein %in% names(partition))
+prot_df$Module <- paste0("M",partition[prot_df$Protein])
+prot_df <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
+	  mutate(Module = paste0("M",names(partition[Protein])))
+
+#plot_module_prots <- function(module,fit0_results=NULL) {
   # a function to generate a proteins summary plot
   # requires SwipProteomics for col2hex and data
-  require(dplyr,quietly=TRUE)
-  require(ggplot2,quietly=TRUE)
+  #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
+
+module = "M25"
+
   # defaults
   wt_color = "#47b2a4"
-  mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
+  mut_color <- module_colors[[module]]
+
   # prepare the data
-  msstats_df$Module <- paste0("M",partition[msstats_df$Protein])
-  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
-  df <- subset(msstats_df,msstats_df$Protein == protein) %>% 
-	select(Mixture,Channel,Condition,Protein,Abundance,SE,Module) %>% 
-	unique() %>% 
+  df <- prot_df %>% filter(Protein %in% modules[[module]]) %>% 
+  # group by Genotype.BioFraction.Protein
+  group_by(Condition,Protein)  %>%
+  # calculate the average of the three mixtures
+  summarize(mean_Abundance = mean(Abundance),
+	    SD = sd(Abundance),
+	    SE = unique(SE),
+	    N = length(Abundance),
+	    .groups="drop")
+ 
+  %>%
+  # calculate coefficient of variation
+  mutate(CV = SD/mean_Abundance) %>%
+  # scale profile
+  mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
+  # munge to annotate with Genotype and BioFraction
+  condition <- as.character(df$Condition)
+  df$Genotype <- factor(sapply(strsplit(condition,"\\."),"[",1),
+		        levels=c("Control","Mutant"))
+  df$BioFraction <- factor(sapply(strsplit(condition,"\\."),"[",2),
+		        levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
+  n <- length(unique(df$Protein))
+
+
 	group_by(Condition,Protein) %>% 
 	summarize(mean_Abundance = mean(Abundance),
-		  SD = sd(Abundance),
-		  SE = unique(SE),.groups="drop")
   df <- df %>% mutate(CV = SD/mean_Abundance)
   df <- df %>% mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
   df$BioFraction <- sapply(strsplit(as.character(df$Condition),"\\."),"[",2)

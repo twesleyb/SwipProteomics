@@ -157,9 +157,10 @@ plot_profile <- function(prot_df, protein,
 # save plots for a subset of proteins indivually
 washc_prots <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
 
-for (protein %in% washc_prots) {
+for (protein in washc_prots) {
   gene = gene_map$symbol[match(protein,gene_map$uniprot)]
   wt_color = "#47b2a4"
+
   plot <- plot_profile(prot_df,protein)
   fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
   fm0 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == protein))
@@ -169,6 +170,7 @@ for (protein %in% washc_prots) {
   mut_yint <- lme4::fixef(fm1)["GenotypeMutant"]
   plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
   plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=prot_colors[protein])
+
   (summary(fm1,ddf="Satterthwait"))
   myfile <- file.path(figsdir,paste(protein,gene,"profile.pdf",sep="_"))
   ggsave(myfile,plot)
