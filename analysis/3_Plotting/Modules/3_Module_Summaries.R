@@ -26,14 +26,12 @@ subprot <- function(protein,required=c("msstats_prot")) {
 	# subset the protein-level data for a given protein
 	# FIXME: error message about env is not informative
 	#stopifnot(all(sapply(required,exists)))
-	require(dplyr, quietly=TRUE)
 	return(msstats_prot %>% dplyr::filter(Protein == protein))
 } #EOF
 
 submod <- function(module,required=c("msstats_prot")) {
 	# subset the module-level data for a given module
 	# FIXME: error message about env is not informative
-	require(dplyr, quietly=TRUE)
 	#stopifnot(all(sapply(required,exists)))
 	stopifnot("Module" %in% colnames(msstats_prot))
 	return(msstats_prot %>% dplyr::filter(Module == module))
@@ -56,7 +54,7 @@ suppressPackageStartupMessages({
 })
 
 # dir for output
-figsdir <- file.path(root,"figs","Modules", "Groups")
+figsdir <- file.path(root,"figs","Modules")
 if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
 
 # set font and ggplot theme
@@ -131,6 +129,49 @@ plot_protein_summary <- function(protein) {
 
 
 ## main ------------------------------------------------------------------------
+
+module <- paste0("M",partition[swip])
+msstats_prot <- msstats_prot %>% filter(Protein %in% names(partition)) %>%
+	mutate(Module=paste0("M",partition[Protein]))
+
+fx <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
+
+plot_list <- list()
+modules <- paste0("M",names(split(partition,partition)[-1]))
+for (module in modules) {
+	fm <- lmerTest::lmer(fx,data=msstats_prot %>% filter(Module==module))
+	contrast <- lme4::fixef(fm)
+	contrast[grepl("Mutant",names(contrast))] <- +1/7
+	contrast[grepl("Control",names(contrast))] <- -1/7
+	#lmerTestContrast(fm,contrast) %>% knitr::kable()
+	fm_summary <- summary(fm,ddf="Satterthwaite")
+	df <- fm_summary$coefficients %>% 
+		as.data.table(keep.rownames="coeff") %>% 
+		select(coeff,Estimate,`Std. Error`) %>% 
+		mutate(coeff=gsub("Genotype|BioFraction","",coeff)) %>%
+		mutate(Genotype = sapply(strsplit(coeff,"\\:"),"[",1)) %>%
+		mutate(BioFraction = sapply(strsplit(coeff,"\\:"),"[",2))
+	levels(df$BioFraction) <- c("F4","F5","F6","F7","F8","F9","F10")
+	##
+	plot <- ggplot(df)
+	plot <- plot + aes(x = BioFraction)
+	plot <- plot + aes(y = Estimate)
+	plot <- plot + aes(group = Genotype, colour = Genotype, 
+		     shape=Genotype, fill=Genotype,shade=Genotype)
+	plot <- plot + aes(ymin=Estimate - `Std. Error`)
+	plot <- plot + aes(ymax=Estimate + `Std. Error`)
+	plot <- plot + geom_line()
+	plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
+	plot <- plot + geom_point(size=2)
+	plot_list[[module]] <- plot
+}
+
+
+ggsavePDF(plot_list,"plots.pdf")
+
+
+
+
 
 # Loop to do work.
 modules <- split(names(partition),partition)[-1]
