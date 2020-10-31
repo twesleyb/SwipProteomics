@@ -303,7 +303,8 @@ part_list <- list(discovery = partition)
 # Insure that all module indices are > 0.
 if (replace_zero_index) {
   # Add 1 if minimum partition index is 0.
-  part_list <- lapply(part_list[which(sapply(part_list, min) == 0)], function(x) x + 1)
+  part_list <- lapply(part_list[which(sapply(part_list, min) == 0)], 
+		      function(x) x + 1)
 }
 
 # Coerce to named vector.
@@ -313,6 +314,7 @@ part_list <- lapply(part_list, unlist)
 too_small <- lapply(part_list, function(x) {
   as.numeric(names(which(sapply(split(x, x), length) < min_size)))
 })
+
 # Loop to remove small modules.
 message(paste("\nRemoving modules that contain less than", min_size, "nodes."))
 for (i in c(1:length(part_list))) {
@@ -328,7 +330,7 @@ data <- data_list[["discovery"]]
 part <- part_list[["discovery"]]
 
 # only keep proteins that per clustered
-proteins <- intersect(colnames(data), names(part))
+proteins <- Reduce(intersect,list(colnames(adjm),colnames(data),names(part)))
 
 # more input munge
 adjm <- adjm[proteins, proteins]

@@ -4,7 +4,6 @@
 root = "~/projects/SwipProteomics"
 wt_color = "#47b2a4"
 
-
 ## functions ------------------------------------------------------------------
 
 
@@ -37,29 +36,31 @@ data(msstats_results)
 
 # load data in root rdata -- to big to be stored in root/data
 load(file.path(root,"rdata","adjm.rda"))
-load(file.path(root,"rdata","ne_adjm.rda"))
-load(file.path(root,"rdata","ppi_adjm.rda"))
+#load(file.path(root,"rdata","ne_adjm.rda"))
+#load(file.path(root,"rdata","ppi_adjm.rda"))
 
 # collect list of modules
 modules = split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
 #for (module in modules){
-module = "M56"
+module = "M25"
 prots <- modules[[module]]
-subadjm0 <- adjm[prots,prots]
-subadjm1 <- ppi_adjm[prots,prots]
+prots <- prots[prots %in% colnames(adjm)]
 
-p0 <- ggcorrplot(subadjm0, 
+
+p0 <- ggcorrplot(ne_adjm[prots,prots], 
 		   hc.order = TRUE, 
 		   outline.col = "white", 
-		   colors = color_pallete,
+		   colors = c(module_colors[[module]],"gray",wt_color),
 		   type = "lower")
-p1 <- ggcorrplot(subadjm1, 
+
+p1 <- ggcorrplot(adjm[prots,prots], 
 		   hc.order = TRUE, 
 		   outline.col = "white", 
-		   colors = color_pallete,
+		   colors = c(module_colors[[module]],"gray",wt_color),
 		   type = "upper")
+
 p0 <- p0 + ggtitle(paste(module,"mean(bicor) =",mean(subadjm0)))
 
 # Customize x-axis label color

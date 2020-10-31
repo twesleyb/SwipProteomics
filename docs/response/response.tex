@@ -1,5 +1,5 @@
-
-% title: Response to eLife Reviewers
+% title: response.tex
+% description: Response to eLife Reviewers
 % author: twab
 
 % USAGE: 
@@ -10,6 +10,8 @@
 
 
 
+
+% document setup
 
 \documentclass[11pt]{elife}\usepackage[]{graphicx}\usepackage[]{color}
 % maxwidth is the original width if it is less than linewidth
@@ -73,44 +75,122 @@
 \usepackage{blkarray}
 \usepackage{csquotes}
 
+% location of figures for this compiled document
 \graphicspath{ {./figs/} }
 
-\title{Genetic Disruption of WASHC4 Drives Endo-lysosomal Dysfunction and \\
-Cognitive-Movement Impairments in Mice and Humans}
 
-\author[1]{Tyler W. A. Bradshaw}
-\affil[1]{Duke University, Department of Neurobiology, Durham, NC USA}
+\title{Supplementary Methods and Response to eLife Reviewers\\
+\small{Genetic Disruption of WASHC4 Drives Endo-lysosomal Dysfunction and \\
+Cognitive-Movement Impairments in Mice and Humans}}
+
+
+% Authors
+\author[1\authfn{0}]{Jamie Courtland}
+\author[1\authfn{0}]{Tyler W. A. Bradshaw}
+\author[2]{Greg Waitt}
+\author[2,3]{Erik J. Soderblom}
+\author[2]{Tricia Ho}
+\author[4]{Anna Rajab}
+\author[5]{Ricardo Vancini}
+\author[2\authfn{1}]{Il Hwan Kim}
+\author[6]{Ting Huang}
+\author[6]{Olga Vitek}
+\author[3]{Scott H. Soderling}
+
+\affil[1]{Department of Neurobiology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[2]{Proteomics and Metabolomics Shared Resource, 
+Duke University School of Medicine, Durham, NC 27710, USA}
+\affil[3]{Department of Cell Biology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[4]{Burjeel Hospital, VPS Healthcare, Muscat, Oman}
+\affil[5]{Department of Pathology, Duke University School of Medicine, 
+Durham, NC 27710, USA}
+\affil[6]{Khoury College of Computer Sciences, Northeaster University,
+Boston, MA 02115, USA}
+
+\contrib[\authfn{0}]{These authors contributed equally to this work.}
+\presentadd[\authfn{1}]{Department of Anatomy and Neurobiology, 
+University of Tennessee Health Science Center, Memphis, TN 38163, USA}
+
+\corr{jlc123@duke.edu}{JC}
 \corr{tyler.w.bradshaw@duke.edu}{TWAB}
+\corr{greg.waitt@duke.edu}{GW}
+\corr{erik.soderblom@duke.edu}{EJB}
+\corr{tricia.ho@duke.edu}{TH}
+\corr{drannarajab@gmail.com}{DR}
+\corr{ricardo.vancini@duke.edu}{RV}
+\corr{ikim9@uthsc.edu}{IK}
+\corr{huang.tin@northeastern.edu}{TH}
+\corr{o.vitek@northeastern.edu}{OV}
+\corr{scott.soderling@duke.edu}{SHS}
 
-\rhead{Response to eLife Reviewers}
+% page header
+\rhead{Response to eLife Reviewers} 
+
+% reduce space above and below equations
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{3pt}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
-\setlength{\abovedisplayskip}{3pt}
-\setlength{\belowdisplayskip}{3pt}
-
 \maketitle
+
 
 \begin{abstract}
 
-In our previously submitted manuscript, we described two mass spectrometry 
-experiments.
+In the review of this manuscript significant concerns were raised by the
+reviewers about the validity of our approach to perform protein- and 
+module-level inference from our TMT proteomics dataset. Here we address these 
+concerns and provide additional description of our stastical approach.
 
 \end{abstract}
 
 \newpage
 
-\begin{fullwidth}
 
-\section{Reanalysis of WASH iBioID}
-This is some text.
-
-\section{Reanalysis of Proteomics Data}
+\section{Reanalysis of SWIP\textsuperscript{P1019R} TMT Proteomics}
 
 At the center of the cogent critique of our manuscript 
-was the questioned statistical validity of our previously described approach.   
+were questions about statistical validity of our previously described approach.   
 Succinctly, the issue at question is whether or not the R package \texttt{edgeR}
 is an appropriate tool for analysis of protein mass spectrometry data.\\
+
+PreviousAt the Plubell et al., 2017
+Several tools for analysis of Proteomics data exist.
+At least one prior publicTwo previous publications describe the use of edgeR for analysis of TMT
+
+Previously we used a customized workflow \footnotemark{} to preprocess
+and normalize the data prior to performing statistical testing using
+\texttt{edgeR's} flexible GLM framework. 
+
+At the core of our normalization appraoch is the use of common quality control
+(QC) samples, analyzed in technical duplicate in each TMT mixture. The sample 
+pool QC sample was formed by combining aliquots of all biological replicates.
+This sample therefore is representative biological and technical variation.
+Our normalization appraoch, termed IRS normalization, is essential to correct
+for 
+
+The most important step in our normalization approach is 
+IRS normalization. MS2 random sampling results in identification and
+quantification of proteins by different peptides in each MS experiment.
+To account for this source of variability, protein measurements are
+adjusted by a scaling factor such that the geometric mean of all
+internal reference standards are equal (Plubell et al., 2017).
+This is essential to account for the stochasticisity of peptide
+quantification in MS experiments. Phillip Wilmarth's
+\href{https://github.com/pwilmart/IRS_normalization}[GitHub] offers an 
+excellent exploration of IRS normalization. \\
+
+However, we failed to thoughougly
+consider the overall adequacy of the NB framework for mass spectrometry data. 
+Here we reconsider its appropriatness for our TMT proteomics dataset.  \\
+Our previous appraoch can be sumamrized as the "Sum + IRS Normalization" method
+described by Huang et al., 2020. We summarize proteins as the sum of its
+features and use IRS noramlization. A potential weakness of the sum method is
+that outlier peptides can strongly influence the summary value. Median-based
+methods (median and median-polish) avoid this problem. We examined outliers in a
+method described by [xxx]
 
 Statistical inference in edgeR is built on a 
 negative binomial (NB), generalized linear model (GLM) framework. 
@@ -119,37 +199,16 @@ parameterized by a dispersion parameter, $\phi$. \footnotemark{} \\
 
 
 \footnotetext{ 
-  \begin{fullwidth}
 	The dispersion parameter can take several forms. 
 	\texttt{edgeR} supports three dispersion models: 'common',
 	'trended', and 'tagwise'. However, when using \texttt{edgeR's}
 	robust quasi-likelihood test methods, only global (i.e. 'common'
 	or 'trended') dispersion metrics are appropriate 
 	(see \texttt{edgeR::glmQLFit's} documentation).
-  \end{fullwidth}
 }
 
-Previously we used a customized workflow \footnotemark{} to preprocess
-and normalize the data prior to performing statistical testing using
-\texttt{edgeR's} flexible GLM framework. However, we failed to thoughougly
-consider the overall adequacy of the NB framework for mass spectrometry data. 
-Here we reconsider its appropriatness for our TMT proteomics dataset.  \\
 
-\footnotetext{ 
-  \begin{fullwidth} 
-	  The most important step in our normalization approach is 
-	  IRS normalization. MS2 random sampling results in identification and
-  	  quantification of proteins by different peptides in each MS experiment.
-	  To account for this source of variability, protein measurements are
-	  adjusted by a scaling factor such that the geometric mean of all
-	  internal reference standards are equal (Plubell et al., 2017).
-  	  This is essential to account for the stochasticisity of peptide
-  	  quantification in MS experiments. Phillip Wilmarth's
-  	  \href{https://github.com/pwilmart/IRS_normalization}[GitHub] offers an 
-	  excellent exploration of IRS normalization.
-  \end{fullwidth}
-}
-
+%% figure 1. 
 \begin{figure}[ht]
 	\begin{fullwidth}
 		\begin{center}
@@ -221,10 +280,22 @@ SWIP\textsuperscript{P1019R} Mutant mice.
 \begin{figure}[h]
   \begin{fullwidth}
   \begin{center}
-	  \includegraphics[width=0.9\textwidth,keepaspectratio]{design}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{design}
 	  \caption{\textbf{Experimental Design.} We utilized 16-plex
 	  TMT tags to label samples prepared from 6 mice.}
 	  \label{fig:design}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+
+\begin{figure}[h]
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{contrasts}
+	  \caption{\textbf{Contrast matrix indicating 'Intra-BioFraction' and
+	  'Mutant-Control' comparisons.}} 
+	  \label{fig:contrasts}
   \end{center}
   \end{fullwidth}
 \end{figure}
@@ -240,7 +311,26 @@ is a random effect representing both biological and technical variation,
 quantifying any remaining error. \\
 
 \begin{equation} \label{eq1}
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + \epsilon_{mcbt}
+	Y_{mcbt} = \mu + Mixture_m + TechRep/Mixture_{m/t} + Condition_c + 
+	Subject_{mcb} + \epsilon_{mcbt}
+\end{equation}
+
+%\[
+%	Mixture_m \sim \mathcal{N}(0,\,\sigma^2_T)
+%
+%\]
+
+%TechRep/Mixture_{t/m} ~ N(0,\sigma^2_T)
+%TechRepMixture the random effect of repeated measruemtns made of mixture nested
+%within Mixture. 
+%Subject_mcb ~ N(0,\sigma^2_S)
+%\epsilon_mtcb ~ N(0,\sigma^2)
+%Condition ~ N(0,\sigma^2_T)
+%asumed normally distrubted of mean zero
+
+
+\begin{equation} \label{eq2}
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + Subject_{mcb} + \epsilon_{mcbt}
 \end{equation}
 
 Where Mixture represents the random-effect of mixture and 
@@ -253,9 +343,6 @@ from each subject. Thus, we should include the term
 Subject, representing the 6 individual mice or subjects analyzed in our 
 experiment. \\
 
-\begin{equation} \label{eq2}
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + Subject_b + \epsilon_{mcbt}
-\end{equation}
 
 However, in our design \texttt{Mixture} is confounded with the
 term \texttt{Subject} -- in each mixture we analyzed all \texttt{BioFractions} 
@@ -350,16 +437,14 @@ ConditionMutant.F9 & 5.781281 & 0.1213002 & 17.24812 & 47.66093 & 0\\
 \begin{kframe}\begin{alltt}
 \hlcom{# evaluate goodness-of-fit}
 \hlstd{r2_nakagawa} \hlkwb{<-} \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm)}
-\hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{(}\hlkwd{rbind}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"marginal/fixef"}\hlstd{,} \hlstr{"conditional/total"}\hlstd{), r2_nakagawa))}
+\hlstd{r2_nakagawa} \hlopt{%>%} \hlkwd{round}\hlstd{(}\hlnum{3}\hlstd{)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
 \end{alltt}
 \end{kframe}
-\begin{tabular}{l|l}
+\begin{tabular}{r|r}
 \hline
 R2m & R2c\\
 \hline
-marginal/fixef & conditional/total\\
-\hline
-0.935142291105874 & 0.94934629533883\\
+0.935 & 0.949\\
 \hline
 \end{tabular}
 
@@ -379,5 +464,4 @@ Mutant.F4-Control.F4 & -0.9075446 & 0.5330916 & 2.5e-06 & -5.986412 & 0.1516008 
 
 \end{knitrout}
 
-\end{fullwidth}
 \end{document}

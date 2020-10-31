@@ -200,6 +200,7 @@ p <- partition
 message("\nFinal number of modules : ", length(k))
 message("\nFinal percent clustered : ", round(length(unlist(m))/length(p),3))
 message("\nFinal Median module size: ", median(sapply(modules,length)))
+message("\nWashc4 assigned to module: ", paste0("M",partition[swip]))
 
 # annotate results with module size
 module_size <- sapply(modules,length)[results_df$Module]

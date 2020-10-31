@@ -48,8 +48,10 @@ washc_prots = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
 
 ## plot protein summary --------------------------------------------------------
 ## GOAL plot a module
-#fx <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
-#fm <- lmerTest::lmer(fx, data=msstats_prot %>% filter(Protein %in% washc_prots))
+
+# e.g. for washc_prots:
+fx <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
+fm <- lmerTest::lmer(fx, data=msstats_prot %>% filter(Protein %in% washc_prots))
 
 # all modules
 modules <- split(names(partition),partition)[-1]
@@ -66,6 +68,7 @@ prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
 prot_df$Module <- paste0("M",partition[prot_df$Protein])
 
+
 ## function ------------------------------------------------------------------- 
 #plot_module_prots <- function(module,fit0_results=NULL) {
   # a function to generate a proteins summary plot
@@ -73,31 +76,26 @@ prot_df$Module <- paste0("M",partition[prot_df$Protein])
   #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
 
 
+wt_color = "#47b2a4"
+
+#partition[swip]
 module = sample(names(modules),1)
 
-#df <- msstats_prot %>% filter(Protein %in% modules[[module]]) %>% 
-#	reshape2::dcast(Protein ~ Mixture + Condition,value.var="Abundance") %>%
-#	as.data.table()
-#dm <- df %>% as.matrix(rownames="Protein")
-#x = dm[1,]
-# for each protein (all 42 samples) normalize to max
-#norm_dm <- t(apply(dm,1,function(x) x/sum(x)))
-#y = norm_dm[1,]
-#as.matrix(rowames="Protein")
-
-module = sample(names(modules),1)
-
-fit_module_plot(module,scale=TRUE)
+fit_module_plot("M2")
 
 
 fit_module_plot <- function(module,scale=TRUE,wt_color = "#47b2a4", 
 			    mut_color=module_colors[[module]]) {
-
   # fit the model
   prots <- modules[[module]]
+  subdat <- msstats_prot %>% group_by(Protein) %>% 
+	  mutate(Abundance = Abundance/max(Abundance)) %>% 
+	  filter(Protein %in% prots)
   fx <- formula("Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)")
-  fm <- lmerTest::lmer(fx,msstats_prot %>% filter(Protein %in% prots))
-  #r.squaredGLMM.merMod(fm) # fixme: add to plot
+  fm <- lmerTest::lmer(fx, subdat)
+  # gof
+  r2 <- r.squaredGLMM.merMod(fm) # fixme: add to plot
+  # extract coeff -- for plotting fitted line
   coeff <- lme4::fixef(fm)
   fit_df <- data.table(coefficient=names(coeff),pred_y=coeff)
   geno <- sapply(strsplit(gsub("Condition","",fit_df$coefficient),"\\."),"[",1)
@@ -106,23 +104,19 @@ fit_module_plot <- function(module,scale=TRUE,wt_color = "#47b2a4",
   fit_df$BioFraction <- biof
   # prepare the data
   df <- prot_df %>% group_by(Protein) %>% 
-	  mutate(scale_Abundance = Abundance/max(Abundance)) %>% 
+	  mutate(Abundance = Abundance/max(Abundance)) %>%
 	  filter(Protein %in% prots) %>% 
 	  left_join(fit_df, by=intersect(colnames(prot_df),colnames(fit_df))) %>%
 	  group_by(Condition,Protein) %>%
   # calculate the average of the three mixtures
   summarize(mean_Abundance = mean(Abundance),
-  #summarize(mean_Abundance = mean(scale_Abundance),
 	    SD = sd(Abundance),
 	    SE = unique(SE),
 	    N = length(Abundance),
 	    pred_y = unique(pred_y),
 	    .groups="drop") %>%
   # calculate coefficient of variation
-  mutate(CV = SD/mean_Abundance) %>%
-  # scale profile
-  mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
-
+  mutate(CV = SD/mean_Abundance)
   # munge to annotate with Genotype and BioFraction
   condition <- as.character(df$Condition)
   df$Genotype <- factor(sapply(strsplit(condition,"\\."),"[",1),
@@ -134,20 +128,20 @@ fit_module_plot <- function(module,scale=TRUE,wt_color = "#47b2a4",
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
   # Generate the plot.
+  teal = "#47b2a4"
+  purple = col2hex(c("R"=148,"G"=33,"B"=146))
   plot <- ggplot(df)
-  plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = mean_Abundance)
-  plot <- plot + aes(group = interaction(Protein,Genotype))
-  plot <- plot + aes(fill= Genotype)
-  plot <- plot + aes(colour= Genotype)
-  plot <- plot + aes(shade= Genotype)
-  #plot <- plot + aes(ymin=norm_Abundance - CV)
-  #plot <- plot + aes(ymax=norm_Abundance + CV)
-  plot <- plot + geom_line()
-  #plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
-  plot <- plot + geom_point(size=2)
-  #plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-  plot <- plot + ylab("Normalized Abundance")
+  plot <- plot + aes(x=BioFraction)
+  plot <- plot + aes(y=mean_Abundance)
+  plot <- plot + aes(group=interaction(Protein,Genotype))
+  plot <- plot + aes(fill=Genotype)
+  plot <- plot + aes(colour=Genotype)
+  plot <- plot + aes(shade=Genotype)
+  plot <- plot + aes(ymin=mean_Abundance - CV)
+  plot <- plot + aes(ymax=mean_Abundance + CV)
+  #plot <- plot + geom_line()
+  plot <- plot + geom_ribbon(alpha=0.2, linetype="blank")
+  plot <- plot + ylab("Abundance/max(Abundance)")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11)) 
   plot <- plot + theme(axis.text.x = element_text(angle=0, hjust=1)) 
@@ -158,18 +152,14 @@ fit_module_plot <- function(module,scale=TRUE,wt_color = "#47b2a4",
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-
+  #plot <- plot + scale_colour_manual(values=c("gray",module_colors[[module]]))
   # add fitted lines
-  #plot <- plot + geom_line(aes(y=pred_y,
-#		       group=interaction("fit",Genotype),
-#		       colour=interaction("fit",Genotype)),linetype="dashed")
-  # order: Control, fit.Control, fit.Mutant, Mutant
-  plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
- # plot <- plot + scale_colour_manual(values=c(wt_color,
-#					      wt_color,
-#					      mut_color,
-#					      mut_color))
-  plot <- plot + theme(legend.position = "none")
+  plot <- plot + geom_line(aes(y=pred_y, 
+			       group=interaction("fit",Genotype)),
+			   linetype="dashed")
+  plot <- plot + scale_fill_manual(values=c(teal,"purple"))
+  plot <- plot + scale_color_manual(values=c(teal,"red"))
+  #plot <- plot + theme(legend.position = "none")
   return(plot)
 } #EOF
 
@@ -194,7 +184,6 @@ for (module in names(modules)) {
 
   # Get the modules color
   wt_color = "#47b2a4"
-  #mut_color <- col2hex("purple")
   mut_color <- module_colors[module]
 
   # 1. Generate all the plots for a given module using plot_protein_summary
@@ -244,6 +233,7 @@ for (module in names(modules)) {
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+
   plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
   plot <- plot + theme(legend.position = "none")
 
