@@ -47,14 +47,13 @@ washc_prots = gene_map$uniprot[grep("Washc*",gene_map$symbol)]
 
 
 ## plot protein summary --------------------------------------------------------
-
 ## GOAL plot a module
-fx <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
-fm <- lmerTest::lmer(fx, data = msstats_prot %>% filter(Protein %in% washc_prots))
+#fx <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
+#fm <- lmerTest::lmer(fx, data=msstats_prot %>% filter(Protein %in% washc_prots))
 
+# all modules
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
-
 
 # combine protein data and statistical results
 # we will use stats to annotate plots with stars
@@ -66,50 +65,70 @@ prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 # annotate with module membership
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
 prot_df$Module <- paste0("M",partition[prot_df$Protein])
-prot_df <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
-	  mutate(Module = paste0("M",names(partition[Protein])))
 
+## function ------------------------------------------------------------------- 
 #plot_module_prots <- function(module,fit0_results=NULL) {
   # a function to generate a proteins summary plot
   # requires SwipProteomics for col2hex and data
   #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
 
-module = "M25"
 
-  # defaults
-  wt_color = "#47b2a4"
-  mut_color <- module_colors[[module]]
+module = sample(names(modules),1)
 
+#df <- msstats_prot %>% filter(Protein %in% modules[[module]]) %>% 
+#	reshape2::dcast(Protein ~ Mixture + Condition,value.var="Abundance") %>%
+#	as.data.table()
+#dm <- df %>% as.matrix(rownames="Protein")
+#x = dm[1,]
+# for each protein (all 42 samples) normalize to max
+#norm_dm <- t(apply(dm,1,function(x) x/sum(x)))
+#y = norm_dm[1,]
+#as.matrix(rowames="Protein")
+
+module = sample(names(modules),1)
+
+fit_module_plot(module,scale=TRUE)
+
+
+fit_module_plot <- function(module,scale=TRUE,wt_color = "#47b2a4", 
+			    mut_color=module_colors[[module]]) {
+
+  # fit the model
+  prots <- modules[[module]]
+  fx <- formula("Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)")
+  fm <- lmerTest::lmer(fx,msstats_prot %>% filter(Protein %in% prots))
+  #r.squaredGLMM.merMod(fm) # fixme: add to plot
+  coeff <- lme4::fixef(fm)
+  fit_df <- data.table(coefficient=names(coeff),pred_y=coeff)
+  geno <- sapply(strsplit(gsub("Condition","",fit_df$coefficient),"\\."),"[",1)
+  biof <- sapply(strsplit(gsub("Condition","",fit_df$coefficient),"\\."),"[",2)
+  fit_df$Genotype <- geno
+  fit_df$BioFraction <- biof
   # prepare the data
-  df <- prot_df %>% filter(Protein %in% modules[[module]]) %>% 
-  # group by Genotype.BioFraction.Protein
-  group_by(Condition,Protein)  %>%
+  df <- prot_df %>% group_by(Protein) %>% 
+	  mutate(scale_Abundance = Abundance/max(Abundance)) %>% 
+	  filter(Protein %in% prots) %>% 
+	  left_join(fit_df, by=intersect(colnames(prot_df),colnames(fit_df))) %>%
+	  group_by(Condition,Protein) %>%
   # calculate the average of the three mixtures
   summarize(mean_Abundance = mean(Abundance),
+  #summarize(mean_Abundance = mean(scale_Abundance),
 	    SD = sd(Abundance),
 	    SE = unique(SE),
 	    N = length(Abundance),
-	    .groups="drop")
- 
-  %>%
+	    pred_y = unique(pred_y),
+	    .groups="drop") %>%
   # calculate coefficient of variation
   mutate(CV = SD/mean_Abundance) %>%
   # scale profile
   mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
+
   # munge to annotate with Genotype and BioFraction
   condition <- as.character(df$Condition)
   df$Genotype <- factor(sapply(strsplit(condition,"\\."),"[",1),
 		        levels=c("Control","Mutant"))
   df$BioFraction <- factor(sapply(strsplit(condition,"\\."),"[",2),
 		        levels=c("F4","F5","F6","F7","F8","F9","F10"))
-
-  n <- length(unique(df$Protein))
-
-
-	group_by(Condition,Protein) %>% 
-	summarize(mean_Abundance = mean(Abundance),
-  df <- df %>% mutate(CV = SD/mean_Abundance)
-  df <- df %>% mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
   df$BioFraction <- sapply(strsplit(as.character(df$Condition),"\\."),"[",2)
   df$Genotype <- sapply(strsplit(as.character(df$Condition),"\\."),"[",1)
   df$BioFraction <- factor(df$BioFraction,
@@ -117,28 +136,39 @@ module = "M25"
   # Generate the plot.
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = norm_Abundance)
-  plot <- plot + aes(group = Genotype, colour = Genotype, 
-		     shape=Genotype, fill=Genotype,shade=Genotype)
-  plot <- plot + aes(ymin=norm_Abundance - CV)
-  plot <- plot + aes(ymax=norm_Abundance + CV)
+  plot <- plot + aes(y = mean_Abundance)
+  plot <- plot + aes(group = interaction(Protein,Genotype))
+  plot <- plot + aes(fill= Genotype)
+  plot <- plot + aes(colour= Genotype)
+  plot <- plot + aes(shade= Genotype)
+  #plot <- plot + aes(ymin=norm_Abundance - CV)
+  #plot <- plot + aes(ymax=norm_Abundance + CV)
   plot <- plot + geom_line()
-  plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
+  #plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
   plot <- plot + geom_point(size=2)
-  plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
+  #plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
   plot <- plot + ylab("Normalized Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-  plot <- plot + theme(axis.text.x = element_text(color="black", size=11, 
-						  angle = 0, hjust = 1, 
-						  family = "Arial"))
-  plot <- plot + theme(axis.text.y = element_text(color="black",size=11, 
-						  angle = 0, hjust = 1, 
-						  family = "Arial"))
+  plot <- plot + theme(axis.text.x = element_text(color="black", size=11)) 
+  plot <- plot + theme(axis.text.x = element_text(angle=0, hjust=1)) 
+  plot <- plot + theme(axis.text.x = element_text(family="Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black",size=11)) 
+  plot <- plot + theme(axis.text.y = element_text(angle = 0, hjust = 1))
+  plot <- plot + theme(axis.text.y = element_text(family = "Arial"))
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
+
+  # add fitted lines
+  #plot <- plot + geom_line(aes(y=pred_y,
+#		       group=interaction("fit",Genotype),
+#		       colour=interaction("fit",Genotype)),linetype="dashed")
+  # order: Control, fit.Control, fit.Mutant, Mutant
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
-  plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
+ # plot <- plot + scale_colour_manual(values=c(wt_color,
+#					      wt_color,
+#					      mut_color,
+#					      mut_color))
   plot <- plot + theme(legend.position = "none")
   return(plot)
 } #EOF

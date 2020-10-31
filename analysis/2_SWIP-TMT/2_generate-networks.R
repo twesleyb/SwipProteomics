@@ -92,9 +92,11 @@ out <- apply(dm, 2, function(x) any(is.na(x)))
 subdm <- dm[, !out]
 warning(formatC(sum(out), big.mark = ","), " proteins with any missing values were removed.")
 
+# perform protein-wise (col-wise for how the data is here) sum(rows)==1
+norm_dm <- t(apply(subdm,2,function(x) x*(1/sum(x))))
+
 # status
 knitr::kable(cbind(samples = dim(subdm)[1], proteins = dim(subdm)[2]))
-
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")

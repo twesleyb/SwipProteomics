@@ -25,7 +25,7 @@ n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 ## Input data:

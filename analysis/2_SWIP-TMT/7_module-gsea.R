@@ -184,9 +184,7 @@ dt <- bind_rows(results)
 # only sig results:
 sig_dt <- dt %>% filter(Padjust < BF_alpha)
 
-# NOTE: No retriever enrichment
-#unique(sapply(strsplit(dt$Pathway,":"),"[",1)) %notin% unique(sapply(strsplit(sig_dt$Pathway,":"),"[",1))
-# NOTE: all lopitDC compartments are represented
+# all lopitDC compartments are represented
 #all(names(lopitDCpredictions) %in% sig_dt$Pathway)
 
 # Status:
@@ -243,3 +241,13 @@ myfile <- file.path(root,"tables","S4_Module_GSEA_Results.xlsx")
 write_excel(tmp_list,myfile)
 
 # DONE!
+
+subdt <- dt %>% filter(Module %notin% sig_modules) %>%
+	group_by(Module) %>% 
+	arrange(Padjust) %>% 
+	summarize(TopPathway = head(Pathway,1),
+		  FE = head(`Fold enrichment`,1),
+		  Padjust = head(Padjust,1),
+		  .groups="drop")
+
+knitr::kable(subdt)

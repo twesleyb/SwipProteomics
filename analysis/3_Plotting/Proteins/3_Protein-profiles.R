@@ -152,33 +152,39 @@ plot_profile <- function(prot_df, protein,
 } #EOF
 
 
+
 ## get swip's fit
 
 # save plots for a subset of proteins indivually
 washc_prots <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
+washc_plots <- list()
 
+fm_list <- list()
 for (protein in washc_prots) {
   gene = gene_map$symbol[match(protein,gene_map$uniprot)]
   wt_color = "#47b2a4"
-
   plot <- plot_profile(prot_df,protein)
   fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
   fm0 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == protein))
+  fm_list[[protein]] <- fm0
   fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
   fm1 <- lmerTest::lmer(fx1,msstats_prot %>% filter(Protein == protein))
   wt_yint <- lme4::fixef(fm1)["GenotypeControl"]
   mut_yint <- lme4::fixef(fm1)["GenotypeMutant"]
-  plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
-  plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=prot_colors[protein])
-
+  #plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
+  #plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=prot_colors[protein])
   (summary(fm1,ddf="Satterthwait"))
+  washc_plots[[protein]] <- plot
   myfile <- file.path(figsdir,paste(protein,gene,"profile.pdf",sep="_"))
   ggsave(myfile,plot)
 } # EOL
 
 
-quit()
-stop()
+#for (protein in prots) {
+#  fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
+#  fm1 <- lmerTest::lmer(fx1,msstats_prot %>% filter(Protein == protein))
+#prot = names(p
+
 
 ## generate plots -------------------------------------------------------------
 
