@@ -80,6 +80,7 @@ plot_profile <- function(prot_df, protein,
 			 gene = gene_map$symbol[match(protein,gene_map$uniprot)],
 			 wt_color = "#47b2a4",
 			 mut_color = prot_colors[protein]) {
+
   # prepare stats for labeling
   stats_df <- prot_df %>% filter(Protein == protein) %>% 
   	select(Protein,BioFraction,FDR) %>% unique()
@@ -87,6 +88,7 @@ plot_profile <- function(prot_df, protein,
   stats_df$stars[stats_df$FDR < 0.05] <- "*"
   stats_df$stars[stats_df$FDR < 0.005] <- "**"
   stats_df$stars[stats_df$FDR < 0.0005] <- "***"
+
   # prepare the data 
   df <- prot_df %>% 
   # subset -- keep data from single protein
@@ -94,39 +96,39 @@ plot_profile <- function(prot_df, protein,
   # group by Genotype.BioFraction.Protein
   group_by(Condition,Protein) %>%
   # calculate the average of the three mixtures
-  summarize(mean_Abundance = mean(Abundance),
-	    SD = sd(Abundance),
+  summarize(mean_Abundance = mean(norm_Abundance), # using batch corrected norm_Abundance!
+	    SD = sd(norm_Abundance),
 	    SE = unique(SE),
 	    N = length(Abundance),
 	    .groups="drop") %>%
   # calculate coefficient of variation
   mutate(CV = SD/mean_Abundance) %>%
   # scale profile
-  mutate(norm_Abundance = mean_Abundance/max(mean_Abundance))
+  mutate(scale_Abundance = mean_Abundance/max(mean_Abundance))
+
   # munge to annotate with Genotype and BioFraction
   condition <- as.character(df$Condition)
   df$Genotype <- factor(sapply(strsplit(condition,"\\."),"[",1),
 		        levels=c("Control","Mutant"))
   df$BioFraction <- factor(sapply(strsplit(condition,"\\."),"[",2),
 		        levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = mean_Abundance)
+  plot <- plot + aes(y = scale_Abundance)
   plot <- plot + aes(group = Genotype)
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  #plot <- plot + aes(ymin=norm_Abundance - CV)
-  #plot <- plot + aes(ymax=norm_Abundance + CV)
-  plot <- plot + aes(ymin=mean_Abundance - mean_Abundance * CV)
-  plot <- plot + aes(ymax=mean_Abundance + mean_Abundance * CV)
+  plot <- plot + aes(ymin=scale_Abundance - CV)
+  plot <- plot + aes(ymax=scale_Abundance + CV)
   plot <- plot + geom_line()
   plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
   plot <- plot + geom_point(size=2)
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-  plot <- plot + ylab("Scaled Protein Abundance")
+  plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
@@ -141,7 +143,7 @@ plot_profile <- function(prot_df, protein,
   plot <- plot + scale_fill_manual(values=c(wt_color,prot_colors[protein]))
   plot <- plot + theme(legend.position = "none")
   # annotate with module membership and significance stars
-  yrange <- setNames(range(df$mean_Abundance),nm=c("min","max"))
+  yrange <- setNames(range(df$scale_Abundance),nm=c("min","max"))
   ypos1 <- yrange["min"]  + 0.05 * diff(yrange) # Module#
   ypos2 <- yrange["max"] + 0.05 * diff(yrange) # stars
   module_label <- paste0("M",partition[protein])
@@ -150,40 +152,6 @@ plot_profile <- function(prot_df, protein,
 		label=stats_df$stars,size=7)
   return(plot)
 } #EOF
-
-
-
-## get swip's fit
-
-# save plots for a subset of proteins indivually
-washc_prots <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
-washc_plots <- list()
-
-fm_list <- list()
-for (protein in washc_prots) {
-  gene = gene_map$symbol[match(protein,gene_map$uniprot)]
-  wt_color = "#47b2a4"
-  plot <- plot_profile(prot_df,protein)
-  fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-  fm0 <- lmerTest::lmer(fx0,msstats_prot %>% filter(Protein == protein))
-  fm_list[[protein]] <- fm0
-  fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
-  fm1 <- lmerTest::lmer(fx1,msstats_prot %>% filter(Protein == protein))
-  wt_yint <- lme4::fixef(fm1)["GenotypeControl"]
-  mut_yint <- lme4::fixef(fm1)["GenotypeMutant"]
-  #plot <- plot + geom_hline(yintercept = wt_yint,linetype="dashed",color=wt_color)
-  #plot <- plot + geom_hline(yintercept = mut_yint,linetype="dashed",color=prot_colors[protein])
-  (summary(fm1,ddf="Satterthwait"))
-  washc_plots[[protein]] <- plot
-  myfile <- file.path(figsdir,paste(protein,gene,"profile.pdf",sep="_"))
-  ggsave(myfile,plot)
-} # EOL
-
-
-#for (protein in prots) {
-#  fx1 <- formula("Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)")
-#  fm1 <- lmerTest::lmer(fx1,msstats_prot %>% filter(Protein == protein))
-#prot = names(p
 
 
 ## generate plots -------------------------------------------------------------
