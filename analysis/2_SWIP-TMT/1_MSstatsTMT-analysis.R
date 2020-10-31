@@ -156,9 +156,18 @@ message("\nPerforming normalization and protein summarization using MSstatsTMT."
 
 t0 <- Sys.time()
 
+# NOTE: Don't remove normalization channel!
+# MSstats does not perform any batch (aka Mixture or Experiment) normalization.
+# The variance due to random variability of Mixture is dealt with by the
+# mixed-models used to assess protein differential abundance. However,
+# we wish to contruct a covariation matrix from proteins that covary together in
+# subcellular space. We should remove any variability that can be explained by
+# Mixture effects before we do this.
+
 suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(msstats_psm,
     method = "msstats",
+    remove_norm_channel=TRUE,
     global_norm = TRUE,
     MBimpute = TRUE,
     reference_norm = TRUE,
@@ -174,7 +183,7 @@ message(
 )
 
 
-## [3] perform intrafraction statistical comparisons ----------------------------------------
+## [3] perform intrafraction statistical comparisons --------------------------
 
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
 # lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)

@@ -38,6 +38,15 @@ fx <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
 # loop to fit model to every protein, extract coeff (fixed-effects)
 proteins <- unique(as.character(msstats_prot$Protein))
 
+# seems resonable:
+fm <- lmerFit(fx,msstats_prot,swip)
+contrast <- lme4::fixef(fm)
+contrast[] <- 0
+contrast[grepl("Control",names(contrast))] <- -1/sum(grepl("Control",names(contrast)))
+contrast[grepl("Mutant",names(contrast))] <- +1/sum(grepl("Mutant",names(contrast)))
+lmerTestContrast(fm,contrast) %>% mutate(Contrast = 'Mutant-Control') %>% unique() %>% knitr::kable()
+
+# register parallel backend
 n <- parallel::detectCores() -1 
 doParallel::registerDoParallel(n)
 
@@ -68,29 +77,36 @@ message("Removed ", sum(!idx), " incomplete (rank-deficient) models.")
 
 ## gof ------------------------------------------------------------------------
 
-# calculate goodness of fit
+# calculate goodness of fit for all proteins
 df <- as.data.table(t(sapply(fm_list, r.squaredGLMM.merMod)),
 		    keep.rownames="Protein")
 colnames(df)[colnames(df)=="V1"] <- "R2m" # fixed effects
 colnames(df)[colnames(df)=="V2"] <- "R2c" # total
 
 # remove proteins with poor fits 
-# (percent var explained by fixef Geno:BioF < 0.5)
+# (percent var explained by fixef Geno:BioF < 0.5) -- we really dont care to
+# make any inference about proteins whose variation is from Mixture.
 out <- df %>% filter(R2m<0.5) %>% select(Protein) %>% unlist() %>% unique()
 keep <- names(fm_list)[names(fm_list) %notin% out]
 message("Removed ", length(out), " models with poor fit.")
 
+message("Final number of fit models: ",length(keep))
+
 
 ## create covariation networks ------------------------------------------------
 
-# create data matrix
+# create data matrix from coefficients
 dm <- do.call(rbind,fixef_list[keep])
+
+# use control data only?
+#idy <- grepl("Control",colnames(dm))
 
 # calculate pearson correlation
 adjm <- cor(t(dm))
 
 # perform network enhancement
 ne_adjm <- neten::neten(adjm)
+# another way to put it: enhancment makes the network sparse
 
 
 ## save the data --------------------------------------------------------------

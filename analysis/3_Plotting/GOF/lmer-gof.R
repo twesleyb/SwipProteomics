@@ -19,12 +19,28 @@ ggtheme(); set_font("Arial", font_path=fontdir)
 
 # load the data
 data(swip)
+data(swip_tmt)
 data(msstats_prot)
 
 # imports
 library(dplyr)
 library(ggplot2)
 library(doParallel)
+
+
+# fit the model to swip
+df <- swip_tmt %>% filter(Accession == swip)
+df$Abundance <- log2(df$Intensity)
+
+# BECAUSE WE HAVE ALREADY DEALT WITH MIXTURE IT SHOULD NOT BE IN THE MODEL
+fx <- formula("Abundance ~ 0 + Genotype:Fraction + (1|DOB)")
+fm = lmerTest::lmer(fx,df)
+contrast<-lme4::fixef(fm)
+contrast[] <- 0
+contrast[grepl("WT",names(contrast))] <- -1/sum(grepl("WT",names(contrast)))
+contrast[grepl("MUT",names(contrast))] <- +1/sum(grepl("MUT",names(contrast)))
+lmerTestContrast(fm,contrast) %>% mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
+
 
 
 # functions -------------------------------------------------------------------

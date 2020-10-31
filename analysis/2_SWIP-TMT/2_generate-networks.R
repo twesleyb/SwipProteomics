@@ -76,6 +76,50 @@ if (!dir.exists(tabsdir)) {
 }
 
 
+## remove batch effect (effect of Mixture) BEFORE creating covariation network!
+
+dm <- msstats_prot %>% 
+	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
+			value.var="Abundance") %>% na.omit() %>%
+        as.data.table() %>% as.matrix(rownames="Protein")
+
+# use column names to construct sample metadata matrix
+namen <- colnames(dm)
+samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
+colnames(samples) <- c("Mixture","Channel","Condition")
+samples$sample <- namen
+
+# use limma to remove batch effect
+# preserve the effect of Condition!
+norm_dm <- limma::removeBatchEffect(dm,
+			 batch=samples$Mixture,
+			 design=model.matrix(~Condition,data=samples))
+
+# collect data
+norm_df <- as.data.table(norm_dm,keep.rownames="Protein") %>% 
+	reshape2::melt(id.var="Protein",variable.name="sample",
+		       value.name="norm_Abundance")
+
+# combine with sample annotations
+anno_df <- left_join(norm_df,samples,by=intersect(colnames(samples),colnames(norm_df)))
+anno_df$sample <- NULL
+
+# combine with msstats_prot
+msstats_prot <- msstats_prot %>% 
+	left_join(anno_df,by=intersect(colnames(anno_df),colnames(msstats_prot)))
+
+# now we have norm_Abundance(no batch effect)
+
+# NOTE: norm_Abundance is not used for downstream linear modeling!
+
+# save the data
+myfile <- file.path(root,"data","msstats_prot.rda")
+save(msstats_prot,file=myfile,version=2)
+
+
+## [3] perform intrafraction statistical comparisons --------------------------
+
+# NOTE: for the pairwise contrasts, MSstats fits the lmer model:
 ## Create protein covariation network -----------------------------------------
 
 # Cast protein data into a data.matrix. No need to log2 transform.
@@ -83,7 +127,7 @@ if (!dir.exists(tabsdir)) {
 dm <- msstats_prot %>%
   as.data.table() %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
-    value.var = "Abundance"
+    value.var = "norm_Abundance"
   ) %>%
   as.matrix(rownames = TRUE)
 
@@ -93,7 +137,7 @@ subdm <- dm[, !out]
 warning(formatC(sum(out), big.mark = ","), " proteins with any missing values were removed.")
 
 # perform protein-wise (col-wise for how the data is here) sum(rows)==1
-norm_dm <- t(apply(subdm,2,function(x) x*(1/sum(x))))
+#norm_dm <- t(apply(subdm,2,function(x) x*(1/sum(x))))
 
 # status
 knitr::kable(cbind(samples = dim(subdm)[1], proteins = dim(subdm)[2]))
@@ -175,9 +219,10 @@ data.table(
 ## cast data into a matrix for permutation testing -----------------------------------
 
 # load the data and save as norm protein for permutation testing
+# NOTE: we use normalized Abundance!
 norm_prot <- msstats_prot %>%
   as.data.table() %>%
-  dcast(Protein ~ interaction(Mixture, Channel, Genotype), value.var = "Abundance") %>%
+  dcast(Protein ~ interaction(Mixture, Channel, Genotype), value.var = "norm_Abundance") %>%
   na.omit() %>%
   as.matrix(rownames = "Protein")
 

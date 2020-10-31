@@ -13,6 +13,9 @@ output_partition <- file.path(root, "data", "leidenalg_partition.rda")
 
 ## prepare env
 renv::load(root)
+devtools::load_all(root)
+
+data(swip)
 
 # imports
 suppressPackageStartupMessages({
@@ -23,4 +26,7 @@ suppressPackageStartupMessages({
 # load partition and save as named vector
 part <- data.table::fread(part_file, drop = 1)
 partition <- unlist(part) # coerce to named numeric
+
+# which module is swip in?
+message("WASHC4 (SWIP) module: ", paste0("M",partition[swip]))
 save(partition, file = output_partition, version = 2)

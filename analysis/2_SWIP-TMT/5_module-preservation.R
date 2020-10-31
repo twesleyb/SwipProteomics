@@ -7,6 +7,7 @@
 ## INPUT data:
 # specify the partition to be used:
 part_file <- "leidenalg_partition.rda" # in root/data
+#part_file <- "alt_partition.rda" # in root/data
 # NOTE: other inputs are defined below.
 
 ## OPTIONS:
