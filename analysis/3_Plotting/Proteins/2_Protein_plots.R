@@ -48,7 +48,7 @@ plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
   			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
   # Collect FDR stats.
   stats <- df %>% group_by(Genotype,BioFraction) %>% 
-  		summarize(`Max Abundance` = max(Abundance),
+  		summarize(`Max Abundance` = max(norm_Abundance),
   			  FDR = unique(FDR),.groups="drop")
   stats$ypos <- 1.02 * max(stats$`Max Abundance`)
   stats <- stats %>% filter(Genotype == "Control")
@@ -59,7 +59,7 @@ plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
   stats$symbol[stats$FDR<0.0005] <- "***"
   # Generate the plot.
   plot <- ggplot(df)
-  plot <- plot + aes(x = BioFraction, y = Abundance)
+  plot <- plot + aes(x = BioFraction, y = norm_Abundance)
   plot <- plot + aes(group = interaction(Mixture,Genotype))
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
   plot <- plot + aes(shape=Mixture)
@@ -167,7 +167,7 @@ for (protein in sorted_prots) {
 	# annotate with module assignment
 	plot_label <- paste("Module:", partition[protein])
 	yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
-		select(Abundance) %>% range()
+		select(norm_Abundance) %>% range()
 	ypos <- yrange[1] - 0.1* diff(yrange)
 	plots[[protein]] <- plot + annotate(geom="label",x=7, y=ypos, label=plot_label)
 	setTxtProgressBar(pbar,value=match(protein,sorted_prots))
