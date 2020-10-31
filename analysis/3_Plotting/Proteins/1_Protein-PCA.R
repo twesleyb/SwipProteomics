@@ -71,7 +71,7 @@ dm <- msstats_prot %>%
 	filter(Protein %in% names(partition)) %>%
 	as.data.table() %>%
 	reshape2::dcast(Protein ~ interaction(Mixture, BioFraction, 
-					      Condition), value.var= "Abundance") %>%
+					      Condition), value.var= "norm_Abundance") %>%
 		as.data.table() %>% as.matrix(rownames="Protein")
 
 # Scale rows (proteins).
