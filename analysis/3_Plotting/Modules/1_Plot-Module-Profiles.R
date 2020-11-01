@@ -33,6 +33,7 @@ suppressPackageStartupMessages({
 	library(doParallel)
 })
 
+# we will plot protein abundance adjusted for Batch effect (Mixture)
 stopifnot("norm_Abundance" %in% colnames(msstats_prot))
 
 # project dirs
@@ -49,13 +50,14 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 ## Function ------------------------------------------------------------------
 
 
-# a function to generate protein profile plot:
 plot_profile <- function(module, msstats_prot, partition,
 			 module_colors, wt_color = "#47b2a4") {
   # Subset
   subdat <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
 	  mutate(Module=paste0("M",partition[Protein])) %>% 
 	  filter(Module == module)
+  # number of proteins in module
+  nprots <- length(unique(subdat$Protein))
   # set factor order (levels)
   subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
   subdat$BioFraction <- factor(subdat$BioFraction,
@@ -96,7 +98,7 @@ plot_profile <- function(module, msstats_prot, partition,
   plot <- plot + aes(ymax=scale_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(module)
+  plot <- plot + ggtitle(paste0(module," (n =",nprots,")"))
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -119,7 +121,6 @@ plot_profile <- function(module, msstats_prot, partition,
 
 ## generate plots -------------------------------------------------------------
 
-
 # loop to generate plots for all modules
 modules <- split(partition,partition)[-1]
 names(modules) <- paste0("M",names(modules))
@@ -128,6 +129,8 @@ names(modules) <- paste0("M",names(modules))
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
+message("\nGenerating profile plots of ", length(modules), " modules.")
+
 plot_list <- foreach(module = names(modules)) %dopar% {
 	plot_profile(module,msstats_prot,partition,module_colors)
 }
@@ -136,5 +139,6 @@ names(plot_list) <- modules
 # FIXME: annotate with lmer info and r2 and pve?
 
 # save plots as a single pdf
+message("\nSaving plots as a single pdf.")
 myfile <- file.path(figsdir,"Module_Profiles.pdf")
 ggsavePDF(plot_list,myfile)

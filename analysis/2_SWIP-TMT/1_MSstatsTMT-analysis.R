@@ -307,11 +307,6 @@ if (save_rda) {
   save(fx0,file=myfile,version=2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
-  # save contrast matrix for 'Mutant-Control' Comparison
-  myfile <- file.path(root, "data", "alt_contrast.rda")
-  save(alt_contrast,file=myfile,version=2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-
   # save msstats_prot -- the normalized protein data
   myfile <- file.path(root, "data", "msstats_prot.rda")
   save(msstats_prot, file = myfile, version = 2)
