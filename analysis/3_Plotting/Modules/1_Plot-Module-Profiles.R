@@ -131,7 +131,10 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 plot_list <- foreach(module = names(modules)) %dopar% {
 	plot_profile(module,msstats_prot,partition,module_colors)
 }
+names(plot_list) <- modules
+
+# FIXME: annotate with lmer info and r2 and pve?
 
 # save plots as a single pdf
-myfile <- file.path(figsdir,"Modules","Module_Profiles.pdf")
+myfile <- file.path(figsdir,"Module_Profiles.pdf")
 ggsavePDF(plot_list,myfile)
