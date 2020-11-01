@@ -12,6 +12,10 @@ root <- "~/projects/SwipProteomics"
 # * data(msstats_prot)
 # * data(musInteractome) from twesleyb/getPPIs
 
+## HELLO ## 
+# this script seems to be a hub. it generates adjm, ne_adjm, and norm_prot --
+# all used in the network building process
+
 ## OPTIONs ---------------------------------------------------------------------
 # species to keep when building the ppi graph:
 os_keep <- as.character(c(9606, 10116, 1090)) # human, rat, and mus.
@@ -69,6 +73,8 @@ data(gene_map)
 data(msstats_prot)
 data(musInteractome)
 
+data(poor_prots) # proteins with poor fits (R2overall<threshold)
+
 # data for output tables
 tabsdir <- file.path(root, "tables")
 if (!dir.exists(tabsdir)) {
@@ -82,7 +88,9 @@ if (!dir.exists(tabsdir)) {
 # protein abundance for effect of Mixture. Here we call this norm_Abundance, but
 # it is the adjusted (for Batch) normalized protein data.
 
-dm <- msstats_prot %>% 
+dm <- msstats_prot %>%  
+	# drop proteins with poor fit # NOTE: THIS IS A KEY SWITCH
+	filter(Protein %notin% poor_prots) %>%
 	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
 			value.var="Abundance") %>% na.omit() %>%
         as.data.table() %>% as.matrix(rownames="Protein")
@@ -148,6 +156,7 @@ adjm <- cor(subdm, method = "pearson")
 
 # Enhanced network
 # NOTE: this can take a couple minutes
+# NOTE: we really need to generate a visualization...
 message("\nPerforming network enhancement.")
 ne_adjm <- neten::neten(adjm)
 
@@ -156,6 +165,7 @@ ne_adjm <- neten::neten(adjm)
 message("\nCreating protein-protein interaction network.")
 
 # NOTE: the PPI network is not used in the clustering of the data.
+# But it can be.
 
 # Collect all entrez cooresponding to proteins in our network.
 proteins <- colnames(adjm)

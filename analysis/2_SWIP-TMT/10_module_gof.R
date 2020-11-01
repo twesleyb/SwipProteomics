@@ -2,7 +2,7 @@
 
 # title: SwipProteomics
 # author: twab
-# description: generate some gof statistics for protein and module-level models
+# description: generate some gof statistics for module-level models
 
 # prepare the env
 root = "~/projects/SwipProteomics"

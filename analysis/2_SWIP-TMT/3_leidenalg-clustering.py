@@ -129,6 +129,8 @@ else:
     parameters['graph'] = g
 #EIS
 
+## Print the number of vertices.
+## FIXME: ADD
 
 ## Community detection with the Leiden algorithm -----------------------------
 
