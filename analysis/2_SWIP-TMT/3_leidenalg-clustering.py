@@ -20,6 +20,7 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
+output_name = 'leidenalg' # Prefix out output partition, saved as .csv.
 optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
@@ -35,7 +36,6 @@ adjm_file = 'ne_adjm.csv'
 ## Output:
 # Saved in root/rdata/
 # [output_name]_partitions.csv
-output_name = 'leidenalg' # Prefix out output partition, saved as .csv.
 
 
 ## Prepare the workspace ------------------------------------------------------

@@ -1,5 +1,4 @@
-#!/usr/bin/env Rscript
-
+#!/usr/bin/env Rscript 
 # title: MSstatsTMT
 # description: analysis of intrafraction comparisons with MSstats
 # author: twab
@@ -316,6 +315,14 @@ if (save_rda) {
   msstats_results <- cleanResults(rbind(msstats_results, res2))
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
+  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+
+  # quick, save sigprots
+  sigprots <- msstats_results %>% 
+	filter(Contrast == 'Mutant-Control' & FDR < 0.05) %>%
+	select(Protein) %>% unlist() %>% as.character() %>% unique()
+  myfile <- file.path(root,"data","sigprots.rda")
+  save(sigprots,file=myfile,version=2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
 }

@@ -182,6 +182,12 @@ results_df <- results_df %>%
 
 results_df$isSingular <- NULL
 
+# save final modules -- the modules we have fitted models for
+final_modules <- unique(results_df$Module)
+myfile <- file.path(root,"data","final_modules.rda")
+save(final_modules,file=myfile,version=2)
+
+# examine the results
 k <- unique(results_df$Module)
 m <- modules[k]
 p <- partition

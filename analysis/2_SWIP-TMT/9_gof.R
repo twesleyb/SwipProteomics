@@ -14,18 +14,11 @@ data(fx0) # protein model
 data(fx1) # module model
 data(swip)
 data(gene_map)
+data(sigprots)
 data(partition)
 data(msstats_prot)
 data(pd_annotation)
 
-# get sigprots
-data(msstats_results)
-myfile <- file.path(root,"data","sigprots.rda")
-sigprots <- msstats_results %>% 
-	filter(Contrast == 'Mutant-Control' & FDR < 0.05) %>%
-	select(Protein) %>% unlist() %>% as.character() %>% unique()
-save(sigprots,file=myfile,version=2)
-## FIXME: move to a more appropriate place.
 
 # imports
 suppressPackageStartupMessages({
@@ -64,12 +57,16 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
 ## variancePartition -----------------------------------------------------------
 
-# calculate variance explained by major covariates
+# protein stuff
+
+# calculate protein-wise variance explained by major covariates
 form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
 prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
 
 
 ## parse the response ----------------------------------------------------------
+
+# protein stuff
 
 # collect results
 df <- as.data.frame(prot_varpart)
@@ -87,6 +84,7 @@ varpart_df <- varpart_df %>%
 
 ## fit all protein models -----------------------------------------------------
 
+# protein-level stuff
 
 # evaluate gof of all protein-wise models
 proteins <- names(partition)
@@ -94,7 +92,6 @@ proteins <- names(partition)
 # register parallel backend
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(n_cores)
-
 
 message("\nEvaluating Nakagawa goodness-of-fit, refitting modules...")
 
@@ -125,13 +122,13 @@ gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
 # gof_df -- the overall R2 for total and fixed effects
 results_df <- left_join(varpart_df,gof_df,by="Protein")
 
+
 ## identify proteins with poor fit ---------------------------------------------
 
-
-for i
-R2_threshold <- 0.9
+# protein level stuff
 
 loss <- function(R2_threshold,results_df,as_char=FALSE) {
+	# a function that determines the number of proteins remove at a given r2
 	idx <- results_df$R2.total< R2_threshold
 	poor_prots <- results_df$Protein[idx]
 	if (as_char) {
@@ -149,13 +146,16 @@ r2_threshold <- thresh_range[head(which(x>100),1)]
 
 # proteins with poor fit
 poor_prots = loss(r2_threshold,results_df,as_char=TRUE)
+message("\nnumber of proteins with poor fits: ", length(poor_prots))
 
 # save as rda
-myfile <- file.path(root,"data","poor_prots.rda")
-save(poor_prots,file=myfile,version=2)
+#myfile <- file.path(root,"data","poor_prots.rda")
+#save(poor_prots,file=myfile,version=2)
 
 
 ## save results -----------------------------------------------------------------
+
+## save protein-level results
 
 # save as rda
 protein_gof <- results_df
@@ -168,11 +168,14 @@ fwrite(protein_gof,file.path(root,"rdata","protein_gof.csv"))
 
 ## fit all module models -------------------------------------------------------
 
+# analysis of intra-module variance
+
 modules = split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
 # a function the evaluates gof of modules with variancePartition
 moduleGOF <- function(module,msstats_prot){
+  ## Variance partition expects all factors to be modeled as mixed effects
   form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
   fm1 <- lmer(form1,msstats_prot %>% filter(Module==module))
   vpart <- variancePartition::calcVarPart(fm1)
@@ -187,6 +190,7 @@ moduleGOF <- function(module,msstats_prot){
   return(rho) # gof stats
 }
 
+
 # loop to evaluate gof
 results_list <- list()
 pbar <- txtProgressBar(max=length(modules),style=3)
@@ -200,6 +204,8 @@ for (module in names(modules)) {
 close(pbar)
 
 # lot o boundary -- seems to be coming from variancePartition side of things
+# lme4 doesnt like to fit the variance partition formula... that means that 
+# protein does explain much var within module -- this might be good or bad... 
 
 # drop null results
 idx <- sapply(results_list,is.null)
@@ -216,3 +222,15 @@ fwrite(df,file.path(root,"rdata","module_gof.csv"))
 module_gof <- df
 myfile <- file.path(root,"data","module_gof.rda")
 save(module_gof, file=myfile, version=2)
+
+#------------------------------------------------------------------------------
+# above we calculated the R2 for fixed and total affects, but we also are
+# curious to know how much variation is explained by our clustering
+
+# how much variation is explained by partition?
+#form <- formula(Abundance ~ (1|Mixture) + (1|Module))
+#fm <- lmer(form, data=msstats_prot %>% filter(Module != "M0"))
+#rho <- calcVarPart(fm)
+#rho["Module"] # this is the quantity we want to maximize!
+# 0.121 or 11 percent
+# NOTE decrases to 0.08 with without recursive split
