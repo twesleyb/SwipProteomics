@@ -52,6 +52,7 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
 prot_varpart <- fitExtractVarPartModel(dm, form, info)
 
+
 # collect results
 df <- as.data.frame(prot_varpart)
 varpart_df <- as.data.table(df,keep.rownames="Protein")
@@ -65,169 +66,97 @@ varpart_df <- varpart_df %>%
 	select(Protein,Symbol,Entrez,Mixture,Genotype,BioFraction,Residuals) %>%
 	arrange(desc(Genotype))
 
+
 ## fit all protein models -----------------------------------------------------
 
-## ----------------------------------------------------------------------------
+
+# evaluate gof of all protein-wise models
+proteins <- names(partition)
+
+# register parallel backend
+n_cores <- parallel::detectCores() - 1
+doParallel::registerDoParallel(n_cores)
+
+gof_list <- foreach (protein = proteins) %dopar% {
+	# fit model
+	fx0 <- Abundance ~ 0 + Condition + (1 | Mixture)
+	fm <- suppressMessages({
+		try({
+		  lmerTest::lmer(fx0, msstats_prot %>% filter(Protein==protein))
+		}) 
+	})
+	if (inherits(fm,"try-error")) { 
+             return(NULL)
+	} else {
+		# evaluate goodness-of-fit
+		r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
+				       c("R2.fixef","R2.total"))
+		return(r2)
+	}
+} #EOL
+names(gof_list) <- proteins
+
+# collect results
+idx <- !sapply(gof_list,is.null)
+gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
+
+# combine varpart -- the precent variance explained for each covariate and
+# gof_df -- the overall R2 for total and fixed effects
+results_df <- left_join(varpart_df,gof_df,by="Protein")
 
 
-# Combine varpart_df with R2.mermod for each model -- save as goodness of fit in
-# module results
+## save results -----------------------------------------------------------------
 
-# examine the overall goodness-of-fit in the sense of how much variation we can
-# attribute to each of the major covariates in the data in  the full model:
-fx1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Module) + (1|Protein)
-fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Module != "M0"))
+# save as rda
+prot_gof <- results_df
+myfile <- file.path(root,"data","prot_gof.rda")
+save(prot_gof, file=myfile, version=2)
 
-rho <- calcVarPart(fm1)
-knitr::kable(round(rho,3))
-
-
-## save ------------------------------------------------------------------------
-
-myfile <- file.path(root,"data","prot_varpart.rda")
-save(prot_varpart, file=myfile, version=2)
-#!/usr/bin/env Rscript
-
-# title: SwipProteomics
-# author: twab
-# description: fit protein-wise lmer models and perform statistical inference
-# with lmerTest.
-
-## formulae to be fit:
-# [1] fx0: Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)
-# [2] fx1: Aundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
-
-# To assess intra-BioFraction comparisons we should fit formula 1.
-# This is equivalent to MSstatsTMT formula:
-# [0] fx0: Abundance ~ 0 + Condition + (1|Mixture)
-# When Condition is interaction(Genotype,BioFraction)
-
-# To assess 'Mutant-Control' comparisons we should fit formula 1 as well.
-# As Subject and Mixture are confounded we choose to model mixture and not
-# subject. Thus, we can actually perform the contrast of interest using 
-# MSstatsTMT, provided the correct contrast matrix.
+# save the data
+fwrite(prot_gof,file.path(root,"rdata","protein_gof.csv"))
 
 
-## prepare the env ------------------------------------------------------------
+## fit all module models -------------------------------------------------------
 
-## input
-FDR_alpha <- 0.05 # threshold for significance
+modules = split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
 
-## prepare the environment
-root <- "~/projects/SwipProteomics"
-renv::load(root)
-devtools::load_all(root)
+moduleGOF <- function(module,msstats_prot){
+  form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
+  fm1 <- lmer(form1,msstats_prot %>% filter(Module==module))
+  vpart <- calcVarPart(fm1)
+  form2 <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
+  fm2 <- lmer(form2,msstats_prot %>% filter(Module==module))
+  r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
+		 nm=c("R2.fixef","R2.total"))
+  rho <- c(vpart,r2)
+  return(rho)
+}
 
-## load SwipProteomics data
-data(swip)
-data(gene_map)
-data(msstats_prot)
-data(alt_contrast)
-data(msstats_contrasts)
+# loop to evaluate gof
+results_list <- list()
+pbar <- txtProgressBar(max=length(modules),style=3)
+for (module in names(modules)) {
+	gof <- tryCatch(expr = { moduleGOF(module,msstats_prot) },
+			error = function(e) {}, # return null if error or 
+			warning = function(w) {}) # warning
+	results_list[[module]] <- gof
+	setTxtProgressBar(pbar,value=match(module,names(modules)))
+}
+close(pbar)
 
-# contrast matrix for 'Mutant-Control' comparison
-msstats_alt_contrast <- alt_contrast
+# drop null results
+idx <- sapply(results_list,is.null)
+message("There were problems fitting ", sum(idx), " models.")
 
-## other imports
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(data.table)
-  library(doParallel)
-  library(microbenchmark)
-  ## other requirements:
-  # require(lme4)
-  # require(knitr)
-  # require(tibble)
-  # require(lmerTest)
-  # requre(data.table)
-})
+# collect results
+df <- as.data.table(do.call(rbind,results_list[idx]),keep.rownames="Module")
+df <- df %>% arrange(desc(Genotype))
 
+# save the data
+fwrite(df,file.path(root,"rdata","module_gof.csv"))
 
-## functions ------------------------------------------------------------------
-
-getContrast <- function(fm, negative_index, positive_index) {
-  # build a contrast matrix from model coefficients
-  contrast_matrix <- lme4::fixef(fm)
-  contrast_matrix[] <- 0
-  contrast_matrix[positive_index] <- +1
-  contrast_matrix[negative_index] <- -1
-  return(contrast_matrix)
-} # EOF
-
-
-expandGroups <- function(conditions, biofractions) {
-  # munge to create contrast matrix for fm1
-  groups <- apply(expand.grid(conditions, biofractions), 1, paste, collapse = ".")
-  idx <- rep(c(1:length(biofraction)), each = length(condition))
-  contrast_list <- split(groups, idx)
-  return(contrast_list)
-} # EOF
-
-
-## illustrate analysis with lmerTest ------------------------------------------
-
-## formula to be fit:
-fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
-
-# status
-gene <- gene_map$symbol[which(gene_map$uniprot == swip)]
-message(
-  "\nlmer: ", as.character(fx0)[2],
-  "(", gene, ") ~ ", as.character(fx0)[3]
-)
-
-## fit the model
-idx <- msstats_prot$Protein == swip
-fm <- lmerTest::lmer(fx0, msstats_prot[idx,])
-
-model_summary <- summary(fm,ddf="Satterthwaite")
-
-df <- model_summary$coefficients
-df %>% as.data.table(keep.rownames="Coefficient") %>% mutate(Coeffi
-
-
-## evaluate goodness-of-fit
-r2_nakagawa <- r.squaredGLMM.merMod(fm)
-knitr::kable(rbind(c("marginal/fixef", "conditional/total"), r2_nakagawa))
-
-## munge to create contrast matrices for intrafraction comparisons:
-condition <- c("ConditionControl", "ConditionMutant")
-biofraction <- c("F4", "F5", "F6", "F7", "F8", "F9", "F10")
-contrasts <- lapply(expandGroups(condition, biofraction), function(x) {
-  getContrast(fm, x[1], x[2])
-})
-names(contrasts) <- sapply(contrasts, function(x) {
-  paste(names(x)[x == +1], names(x)[x == -1], sep = "-")
-})
-
-## create contrast for Mutant-Control comparison
-alt_contrast <- lme4::fixef(fm)
-alt_contrast[] <- 0
-idx <- which(grepl("Control", names(alt_contrast)))
-alt_contrast[idx] <- -1 / length(idx)
-idx <- which(grepl("Mutant", names(alt_contrast)))
-alt_contrast[idx] <- +1 / length(idx)
-
-# combine contrasts
-all_contrasts <- c(contrasts, "Mutant-Control" = list(alt_contrast))
-
-## assess multiple contrasts with lmerTestProtein
-df <- lmerTestProtein(swip, fx0, msstats_prot, all_contrasts)
-df %>% as.data.table() %>% unique() %>% knitr::kable()
-
-
-## Check MSstatsTMT results for Swip ------------------------------------------
-
-# Msstats generates the same results:
-message("\nMSstatsTMT intra-fraction results:")
-idx <- msstats_prot$Protein == swip
-MSstatsTMT::groupComparisonTMT(msstats_prot[idx,], msstats_contrasts, moderated=FALSE) %>% 
-  knitr::kable()
-
-message("\nMSstatsTMT intra-fraction results:")
-MSstatsTMT::groupComparisonTMT(msstats_prot[idx,], 
-			       msstats_alt_contrast, moderated=FALSE) %>% 
-  knitr::kable()
-
-# NOTE: MSstatsTMT could do both contrasts simultaneously if we defined the 
-# contrast matrix correctly
+# save as rda
+module_gof <- df
+myfile <- file.path(root,"data","module_gof.rda")
+save(module_gof, file=myfile, version=2)
