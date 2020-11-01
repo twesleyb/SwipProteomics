@@ -7,7 +7,7 @@
 #' ---
 
 ## Analysis options:
-file_prefix  = "alt"
+file_prefix  = ""
 
 #--------------------------------------------------------------------
 ## Misc function - getrd

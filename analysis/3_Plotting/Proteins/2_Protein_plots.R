@@ -33,15 +33,21 @@ getrd <- function(here=getwd(), dpat= ".git") {
 }
 
 
-plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
+plot_protein <- function(prot_df, gene_map, protein, 
+			 sigprots, protein_gof, legend=FALSE) {
   # a function that generates the plot
   #wt_color = "#47b2a4"
   #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
+  title_colors <- c("red"=TRUE,"black"=FALSE)
   colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
   	    "#942192","#B847B4","#DC6AD7") # Swip Purples
+  r2 <- protein_gof %>% filter(Protein == protein) %>% 
+	select(R2.total) %>% as.numeric()
+  title_anno <- paste0("(R2 = ",round(r2,3),")")
   # function to generate a proteins plot
   # Subset the data.
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
+  title_color <- names(which(title_colors == (protein %in% sigprots)))
   df <- subset(prot_df,prot_df$Protein == protein)
   # Insure Fraction is a factor, and levels are in correct order.
   df$BioFraction <- factor(df$BioFraction,
@@ -68,7 +74,8 @@ plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
   plot <- plot + geom_point(size=2)
   plot <- plot + geom_line()
-  plot <- plot + ggtitle(protein)
+  plot <- plot + ggtitle(paste(gene,"|",protein,title_anno))
+  plot <- plot + theme(plot.title=element_text(color=title_color))
   # Annotate with significance stars.
   if (any(stats$FDR<0.1)) {
     plot <- plot + annotate("text", 
@@ -78,7 +85,7 @@ plot_protein <- function(prot_df, gene_map, protein, legend=FALSE) {
   }
   # Add Custom colors and modify legend title and labels.
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
-  plot <- plot + scale_colour_manual(name="Subject", values=colors, labels=mylabs) 
+  plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
   #plot <- plot + scale_x_discrete(labels=stats$Cfg.Force)
   #plot <- plot + xlab("Force (xg)")
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
@@ -114,6 +121,7 @@ devtools::load_all()
 data(swip)
 data(gene_map)
 data(partition)
+data(protein_gof)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
@@ -148,6 +156,12 @@ prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
 prot_df$Module <- paste0("M",partition[prot_df$Protein])
 
+# collect vector of sigprots. annotate title in red if protein has overall 
+# sig change in 'Mutant-Control' comparison
+sigprots <- msstats_results %>% filter(Contrast == 'Mutant-Control') %>% 
+	filter(FDR<0.05) %>% select(Protein) %>% 
+	unlist() %>% as.character() %>% unique()
+
 
 ## Generate the plots ---------------------------------------------------------
 
@@ -163,13 +177,14 @@ pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 
 for (protein in sorted_prots) {
 	# generate a proteins plot
-	plot <- plot_protein(prot_df,gene_map,protein)
+	plot <- plot_protein(prot_df,gene_map,protein,sigprots,protein_gof)
 	# annotate with module assignment
 	plot_label <- paste("Module:", partition[protein])
 	yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
 		select(norm_Abundance) %>% range()
 	ypos <- yrange[1] - 0.1* diff(yrange)
-	plots[[protein]] <- plot + annotate(geom="label",x=7, y=ypos, label=plot_label)
+	plots[[protein]] <- plot + annotate(geom="label",x=7, y=ypos, 
+					    label=plot_label)
 	setTxtProgressBar(pbar,value=match(protein,sorted_prots))
 }
 close(pbar)

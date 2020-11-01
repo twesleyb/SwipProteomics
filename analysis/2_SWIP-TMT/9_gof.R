@@ -108,12 +108,12 @@ results_df <- left_join(varpart_df,gof_df,by="Protein")
 ## save results -----------------------------------------------------------------
 
 # save as rda
-prot_gof <- results_df
-myfile <- file.path(root,"data","prot_gof.rda")
-save(prot_gof, file=myfile, version=2)
+protein_gof <- results_df
+myfile <- file.path(root,"data","protein_gof.rda")
+save(protein_gof, file=myfile, version=2)
 
 # save the data
-fwrite(prot_gof,file.path(root,"rdata","protein_gof.csv"))
+fwrite(protein_gof,file.path(root,"rdata","protein_gof.csv"))
 
 
 ## fit all module models -------------------------------------------------------

@@ -91,9 +91,6 @@ message("\nlmer fit to WASH complex (", paste(washc_genes,collapse=", "),") prot
 fm1 <- lmerTest::lmer(fx1, 
 		      data = msstats_filt %>% filter(Protein %in% washc_prots))
 
-#plot_profiles(washc_prots)
-
-
 ## examine the model
 p = "Pr(>|t|)"
 dm <- summary(fm1, ddf = "Satterthwaite")[["coefficients"]]
@@ -106,7 +103,6 @@ colnames(df)[colnames(df) == "Std. Error"] <- "SE"
 colnames(df)[colnames(df) == "df"] <- "DF"
 colnames(df)[colnames(df) == "t value"] <- "Tvalue"
 colnames(df)[colnames(df) == p ] <- "Pvalue"
-
 df %>% knitr::kable(format="markdown")
 
 
@@ -132,12 +128,6 @@ lmerTestContrast(fm1, contrast) %>%
   mutate("nProteins" = length(washc_prots)) %>%
   unique() %>%
   knitr::kable()
-
-
-## goodness of fit!
-df <- data.table(x=residuals(fm1))
-plot <- ggplot(df, aes(sample = x)) + stat_qq() + stat_qq_line(col = "red")
-# FIXME: touch up plot
 
 
 ## module level analysis for all modules --------------------------------------
@@ -207,7 +197,11 @@ module_size <- sapply(modules,length)[results_df$Module]
 results_df <- tibble::add_column(results_df,Size=module_size,.after="Module")
 
 ## examine top results
-knitr::kable(head(results_df))
+results_df %>% filter(Padjust<0.05) %>% knitr::kable()
+
+message("\nModules with greater than 10% change:")
+idx <- abs(results_df$log2FC) > log2(1.1)  
+results_df[idx,] %>% knitr::kable()
 
 message("Number of significant modules (Bonferroni<0.05): ",
 	sum(results_df$Padjust<0.05))
@@ -223,7 +217,7 @@ results_df$Symbols <- sapply(modules[results_df$Module], function(x) {
 # sort columns
 results_df <- results_df %>% 
 	select(Module,Size,Contrast,log2FC,percentControl,
-	       Pvalue,FDR,Padjust,Tstatistic,SE,DF)
+	       Pvalue,FDR,Padjust,Tstatistic,SE,DF,Symbols)
 
 # save results as an excel workbook
 results_list <- list("Partition" = part_df, "Mutant-Control" = results_df)
