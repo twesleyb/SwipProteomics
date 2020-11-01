@@ -49,6 +49,8 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## Function ------------------------------------------------------------------
 
+#plot_profile("M1",msstats_prot,partition,module_colors)
+
 
 plot_profile <- function(module, msstats_prot, partition,
 			 module_colors, wt_color = "#47b2a4") {
@@ -125,6 +127,8 @@ plot_profile <- function(module, msstats_prot, partition,
 modules <- split(partition,partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
+stopifnot(length(module_colors) >= length(modules)) # insufficient colors
+
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
@@ -132,7 +136,7 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 message("\nGenerating profile plots of ", length(modules), " modules.")
 
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plot_profile(module,msstats_prot,partition,module_colors)
+	plot_profile(module, msstats_prot, partition, module_colors)
 }
 names(plot_list) <- modules
 

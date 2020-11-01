@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+# title: SwipProteomics
+# author: twab
+# description: generate some gof statistics for protein and module-level models
+
 # prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
@@ -18,6 +22,7 @@ data(pd_annotation)
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
+  library(doParallel)
   library(variancePartition)
 })
 
@@ -48,10 +53,14 @@ dm <- msstats_prot %>%
 info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
 colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
+## variancePartition -----------------------------------------------------------
+
 # calculate variance explained by major covariates
 form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
-prot_varpart <- fitExtractVarPartModel(dm, form, info)
+prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
 
+
+## parse the response ----------------------------------------------------------
 
 # collect results
 df <- as.data.frame(prot_varpart)
@@ -76,6 +85,7 @@ proteins <- names(partition)
 # register parallel backend
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(n_cores)
+
 
 gof_list <- foreach (protein = proteins) %dopar% {
 	# fit model
@@ -121,16 +131,20 @@ fwrite(protein_gof,file.path(root,"rdata","protein_gof.csv"))
 modules = split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
+# a function the evaluates gof of modules with variancePartition
 moduleGOF <- function(module,msstats_prot){
   form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
   fm1 <- lmer(form1,msstats_prot %>% filter(Module==module))
-  vpart <- calcVarPart(fm1)
+  vpart <- variancePartition::calcVarPart(fm1)
   form2 <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
   fm2 <- lmer(form2,msstats_prot %>% filter(Module==module))
   r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
 		 nm=c("R2.fixef","R2.total"))
   rho <- c(vpart,r2)
-  return(rho)
+  # fit 1 is the model for variancePartition; fit2 is the fit used for stats
+  rho[["fit1.isSingular"]] = lme4::isSingular(fm1)
+  rho[["fit2.isSingular"]] = lme4::isSingular(fm2)
+  return(rho) # gof stats
 }
 
 # loop to evaluate gof
@@ -145,12 +159,14 @@ for (module in names(modules)) {
 }
 close(pbar)
 
+# lot o boundary -- seems to be coming from variancePartition side of things
+
 # drop null results
 idx <- sapply(results_list,is.null)
 message("There were problems fitting ", sum(idx), " models.")
 
 # collect results
-df <- as.data.table(do.call(rbind,results_list[idx]),keep.rownames="Module")
+df <- as.data.table(do.call(rbind,results_list[!idx]),keep.rownames="Module")
 df <- df %>% arrange(desc(Genotype))
 
 # save the data

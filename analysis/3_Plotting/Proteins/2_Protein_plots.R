@@ -191,7 +191,7 @@ close(pbar)
 
 
 # Generate a plot with a legend.
-plot <- plot_protein(prot_df,gene_map, swip, legend = TRUE)
+plot <- plot_protein(prot_df,gene_map, swip, sigprots, protein_gof, legend = TRUE)
 plot_legend <- cowplot::get_legend(plot) 
 
 

@@ -366,4 +366,7 @@ lmerTestContrast(fm,contrast) %>% knitr::kable()
 
 @
 
+% re recursive clustering: necessary to resolve significant heterogenity which
+% exists in large modules -- also improves recovery of biological signal.
+
 \end{document}
