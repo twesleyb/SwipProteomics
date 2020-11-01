@@ -21,6 +21,7 @@ suppressWarnings({ devtools::load_all() })
 data(swip)
 data(gene_map)
 data(partition)
+data(module_gof)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
@@ -49,11 +50,10 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## Function ------------------------------------------------------------------
 
-#plot_profile("M1",msstats_prot,partition,module_colors)
-
+#plot_profile("M1",msstats_prot,partition,module_colors,module_gof)
 
 plot_profile <- function(module, msstats_prot, partition,
-			 module_colors, wt_color = "#47b2a4") {
+			 module_colors, module_gof, wt_color = "#47b2a4") {
   # Subset
   subdat <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
 	  mutate(Module=paste0("M",partition[Protein])) %>% 
@@ -70,12 +70,12 @@ plot_profile <- function(module, msstats_prot, partition,
 	          SD = sd(norm_Abundance),
 	          N = length(norm_Abundance),
 	          .groups="drop")
-  # calculate coefficient of variation (CV == unitless error)
+  # calculate coefficient of variation (CV == unitless error) and scale to max
   df <- df %>% mutate(CV = SD/mean_Abundance)
-  # scale protein profiles to maximum
   df <- df %>% group_by(Protein) %>%
 	mutate(scale_Abundance = mean_Abundance/max(mean_Abundance))
   # get module fitted data by fitting linear model to scaled Abundance
+  # we do it this way because we want to plot the data w/o batch effect
   fm <- lm(scale_Abundance ~ 0 + Genotype:BioFraction, df)
   fit_df <- data.table("coef" = names(stats::coef(fm)),
 		       "fit_y" = stats::coef(fm)) %>%
@@ -87,6 +87,8 @@ plot_profile <- function(module, msstats_prot, partition,
   df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
+  # get r2 for annot plot title
+  r2 <- module_gof %>% filter(Module == module) %>% select(R2.total) %>% as.numeric() 
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
@@ -100,7 +102,7 @@ plot_profile <- function(module, msstats_prot, partition,
   plot <- plot + aes(ymax=scale_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(module," (n =",nprots,")"))
+  plot <- plot + ggtitle(paste0(module," (n = ",nprots,"; R2 = ",round(r2,3),")"))
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -136,11 +138,10 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 message("\nGenerating profile plots of ", length(modules), " modules.")
 
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plot_profile(module, msstats_prot, partition, module_colors)
+	plot_profile(module, msstats_prot, partition, module_colors, module_gof)
 }
 names(plot_list) <- modules
 
-# FIXME: annotate with lmer info and r2 and pve?
 
 # save plots as a single pdf
 message("\nSaving plots as a single pdf.")
