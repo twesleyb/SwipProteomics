@@ -4,6 +4,9 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
+# save rda? overwrites poor_prots
+save_rda = FALSE 
+
 # prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
@@ -19,6 +22,7 @@ data(partition)
 data(msstats_prot)
 data(pd_annotation)
 
+tryCatch(data(poor_prots), warning=function(w) { stop("Data does not exist.") })
 
 # imports
 suppressPackageStartupMessages({
@@ -27,6 +31,37 @@ suppressPackageStartupMessages({
   library(doParallel)
   library(variancePartition)
 })
+
+## functions ------------------------------------------------------------------
+
+moduleGOF <- function(module,msstats_prot){
+  # a function the evaluates gof of modules with variancePartition
+  # Variance partition expects all factors to be modeled as mixed effects
+  form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
+  fm1 <- lmer(form1,msstats_prot %>% filter(Module==module))
+  vpart <- variancePartition::calcVarPart(fm1)
+  form2 <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
+  fm2 <- lmer(form2,msstats_prot %>% filter(Module==module))
+  r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
+		 nm=c("R2.fixef","R2.total"))
+  rho <- c(vpart,r2)
+  # fit 1 is the model for variancePartition; fit2 is the fit used for stats
+  rho[["fit1.isSingular"]] = lme4::isSingular(fm1)
+  rho[["fit2.isSingular"]] = lme4::isSingular(fm2)
+  return(rho) # gof stats
+} #EOF
+
+
+loss <- function(R2_threshold,results_df,as_char=FALSE) {
+	# a function that determines the number of proteins remove at a given r2
+	idx <- results_df$R2.total< R2_threshold
+	poor_prots <- results_df$Protein[idx]
+	if (as_char) {
+	  return(poor_prots)
+	} else {
+	  return(sum(idx))
+	}
+} #EOF
 
 
 ## prepare the data -----------------------------------------------------------
@@ -45,11 +80,15 @@ samples$Subject <- as.numeric(interaction(samples$Genotype,samples$Experiment))
 # munge to annotate msstats_prot with Subject (1-6)
 msstats_prot$Subject <- as.numeric(interaction(msstats_prot$Genotype,msstats_prot$Mixture))
 
+# removal of poor prots has already been done?
+sum(msstats_prot$Protein %in% poor_prots)
+
 # cast the data into a matrix.
 fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
 dm <- msstats_prot %>%
 	reshape2::dcast(fx, value.var= "Abundance") %>% 
-	as.data.table() %>% na.omit() %>% as.data.table() %>% as.matrix(rownames="Protein")
+	as.data.table() %>% na.omit() %>% 
+	as.data.table() %>% as.matrix(rownames="Protein")
 
 # munge to create sample info from the dcast fx
 info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
@@ -84,9 +123,9 @@ varpart_df <- varpart_df %>%
 
 # examine the top results
 varpart_df %>% head() %>% knitr::kable()
-# A1bg is interesting -- overall sig effect, but R2total is modest at 0.7
-# this protein would have been flagged for poor fit and discarded before
-# clustering
+
+#Hmnm, i dont see mpz or Prx in module plots... these may have missing values...
+#are we missing some interesting proteins still?
 
 
 ## fit all protein models -----------------------------------------------------
@@ -100,7 +139,7 @@ proteins <- names(partition)
 n_cores <- parallel::detectCores() - 1
 doParallel::registerDoParallel(n_cores)
 
-# FIXME: double check name, add ref
+# REF: Nakagawa and Schielzeth 2013 and 2017
 message("\nEvaluating Nakagawa goodness-of-fit, refitting modules...")
 
 gof_list <- foreach (protein = proteins) %dopar% {
@@ -132,21 +171,13 @@ gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
 # variance explained by our models).
 results_df <- left_join(varpart_df,gof_df,by="Protein")
 
+results_df %>% head() %>% knitr::kable()
+# go find mpz... why does it have missing values or something?
+
 
 ## identify proteins with poor fit ---------------------------------------------
 
 # protein level stuff
-
-loss <- function(R2_threshold,results_df,as_char=FALSE) {
-	# a function that determines the number of proteins remove at a given r2
-	idx <- results_df$R2.total< R2_threshold
-	poor_prots <- results_df$Protein[idx]
-	if (as_char) {
-	  return(poor_prots)
-	} else {
-	  return(sum(idx))
-	}
-}
 
 # how many removed at various thresh
 thresh_range <- seq(0,1,length.out=100) # 12.78% loss
@@ -158,6 +189,7 @@ r2_threshold <- thresh_range[head(which(x>100),1)]
 poor_prots = loss(r2_threshold,results_df,as_char=TRUE)
 message("\nnumber of proteins with poor fits: ", length(poor_prots))
 
+
 ## fit all module models -------------------------------------------------------
 
 # analysis of intra-module variance
@@ -165,23 +197,8 @@ message("\nnumber of proteins with poor fits: ", length(poor_prots))
 modules = split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-# a function the evaluates gof of modules with variancePartition
-moduleGOF <- function(module,msstats_prot){
-  ## Variance partition expects all factors to be modeled as mixed effects
-  form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
-  fm1 <- lmer(form1,msstats_prot %>% filter(Module==module))
-  vpart <- variancePartition::calcVarPart(fm1)
-  form2 <- Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)
-  fm2 <- lmer(form2,msstats_prot %>% filter(Module==module))
-  r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
-		 nm=c("R2.fixef","R2.total"))
-  rho <- c(vpart,r2)
-  # fit 1 is the model for variancePartition; fit2 is the fit used for stats
-  rho[["fit1.isSingular"]] = lme4::isSingular(fm1)
-  rho[["fit2.isSingular"]] = lme4::isSingular(fm2)
-  return(rho) # gof stats
-}
-
+message("\nNumber of proteins with poor fit in data: " , 
+	sum(poor_prots %in% msstats_prot$Protein))
 
 # loop to evaluate gof
 results_list <- list()
@@ -197,8 +214,8 @@ close(pbar)
 
 # lot o boundary -- seems to be coming from variancePartition side of things
 # lme4 doesnt like to fit the variance partition formula... that means that 
-# protein does explain much var within module -- this might be good or bad... 
-# OR mixture more likely 
+# a factor in the model does not explain much or 0 var within module
+# inspection suggests that Mixture may not contribute much var.
 
 # drop null results
 idx <- sapply(results_list,is.null)
@@ -222,47 +239,30 @@ fm1 <- lmer(form1, data=msstats_prot %>% filter(Module != "M0"))
 rho0 <- calcVarPart(fm0)
 rho1 <- calcVarPart(fm1)
 
-#knitr::kable(t(round(rho0,3))) # protein explains .647 of variance
-
-#knitr::kable(t(round(rho1,3))) # module explains .123 of variance 
-
-x = rho0["Protein"] # observed (experimental maximum)
-
-y = rho1["Module"] # captured by module 
-
-y/x # we capture about 20% of the variance with our partition?
-
-# this criterion is maximized when every protein is its own module
-# it would be interesting to see how this criterior looks across resolutions
-# i.e. with cpm method 
-
-#rho["Module"] # this is the quantity we want to maximize!
-# 0.121 or 11 percent
-# NOTE decrases to 0.08 with without recursive split
-
 
 ## save results -----------------------------------------------------------------
 
-# save as rda
-
-#myfile <- file.path(root,"data","poor_prots.rda")
-#save(poor_prots,file=myfile,version=2)
-
-## save protein-level results
-
-# save as rda
 protein_gof <- results_df
-myfile <- file.path(root,"data","protein_gof.rda")
-save(protein_gof, file=myfile, version=2)
+module_gof <- df
+
+if (save_rda) {
+
+  # save poor prots
+  myfile <- file.path(root,"data","poor_prots.rda")
+  save(poor_prots,file=myfile,version=2)
+  
+  # save as rda
+  myfile <- file.path(root,"data","protein_gof.rda")
+  save(protein_gof, file=myfile, version=2)
+  
+  # save as rda
+  myfile <- file.path(root,"data","module_gof.rda")
+  save(module_gof, file=myfile, version=2)
+
+}
 
 # save the data
 fwrite(protein_gof,file.path(root,"rdata","protein_gof.csv"))
 
-
 # save the data
-fwrite(df,file.path(root,"rdata","module_gof.csv"))
-
-# save as rda
-module_gof <- df
-myfile <- file.path(root,"data","module_gof.rda")
-save(module_gof, file=myfile, version=2)
+fwrite(module_gof,file.path(root,"rdata","module_gof.csv"))

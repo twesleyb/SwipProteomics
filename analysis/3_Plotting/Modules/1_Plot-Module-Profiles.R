@@ -21,10 +21,11 @@ suppressWarnings({ devtools::load_all() })
 data(swip)
 data(gene_map)
 data(partition)
-data(module_gof)
+data(module_gof) # module gof stats!
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
+
 
 # imports
 suppressPackageStartupMessages({
@@ -101,9 +102,8 @@ plot_profile <- function(module, msstats_prot, partition,
 
   # get r2 for annot plot title
   # need to regen stats
-  r2 <- module_gof %>% filter(Module == module) 
-  
-  select(R2.total) %>% as.numeric() 
+  r2 <- module_gof %>% filter(Module == module) %>% select(R2.total,R2.fixef) %>% as.numeric() 
+  r2_anno <- paste("(",paste(paste(c("R2.Total =","R2.Fixef = "),round(r2,3)),collapse=" | "),")")
 
   # Generate the plot
   plot <- ggplot(df)
@@ -118,7 +118,7 @@ plot_profile <- function(module, msstats_prot, partition,
   plot <- plot + aes(ymax=scale_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(module," (n = ",nprots,"; R2 = ",round(r2,3),")"))
+  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -161,13 +161,6 @@ plot_list <- foreach(module = names(modules)) %dopar% {
 	plot_profile(module, msstats_prot, partition, module_colors, module_gof)
 }
 names(plot_list) <- names(modules)
-
-
-######################
-# FIXME: why is R2 not there?
-m = sample(names(modules),1)
-plot_list[[m]]
-###############
 
 
 # save plots as a single pdf

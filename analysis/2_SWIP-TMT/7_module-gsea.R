@@ -4,6 +4,8 @@
 #' description: analysis of modules for enrichment of WASH proteome
 #' authors: Tyler W Bradshaw
 
+# FIXME: are depleted modules reported by knitr?
+
 ## Optional parameters:
 BF_alpha <- 0.05 # Significance threshold for enrichment
 
@@ -181,11 +183,14 @@ close(pbar)
 # Collect the results in a single data.table.
 dt <- bind_rows(results)
 
-# only sig results:
-sig_dt <- dt %>% filter(Padjust < BF_alpha)
+# only sig + enriched results:
+sig_dt <- dt %>% filter(Padjust < BF_alpha) %>% 
+	filter(`Fold enrichment` > 1) 
 
 # all lopitDC compartments are represented
 #all(names(lopitDCpredictions) %in% sig_dt$Pathway)
+#idx <- names(lopitDCpredictions) %in% sig_dt$Pathway
+#names(lopitDCpredictions)[!idx] # only unknown is not represented
 
 # Status:
 n_mods <- length(unique(sig_dt$Module))
@@ -213,6 +218,7 @@ message("\nSignificant Modules with significant gse:")
 message("(",sum(sig_modules %in% sig_dt$Module)," of ",
 	length(sig_modules)," significant modules.)")
 
+# summary of sig modules with sig enrichment:
 sig_dt %>% 
 	group_by(Module) %>% 
 	filter(Module %in% sig_modules) %>% 
@@ -240,14 +246,13 @@ tmp_list <- list("Pathways" = tmp_df,"Module GSEA" = sig_dt)
 myfile <- file.path(root,"tables","S4_Module_GSEA_Results.xlsx")
 write_excel(tmp_list,myfile)
 
-# DONE!
-
-subdt <- dt %>% filter(Module %notin% sig_modules) %>%
+# examine NS modules with sig GSE enrichment
+subdt <- dt %>% filter(`Fold enrichment` > 1) %>% filter(FDR < 0.05) %>%
+	filter(Module %notin% sig_modules) %>%
 	group_by(Module) %>% 
 	arrange(Padjust) %>% 
 	summarize(TopPathway = head(Pathway,1),
 		  FE = head(`Fold enrichment`,1),
-		  Padjust = head(Padjust,1),
-		  .groups="drop")
-
+		  FDR = head(FDR,1),
+		  .groups="drop") %>% arrange(desc(FE))
 knitr::kable(subdt)
