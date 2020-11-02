@@ -73,6 +73,7 @@ data(gene_map)
 data(msstats_prot)
 data(musInteractome)
 
+# NOTE: We will remove proteins with poor fit before creating network
 data(poor_prots) # proteins with poor fits (R2overall<threshold)
 
 # data for output tables
@@ -83,10 +84,14 @@ if (!dir.exists(tabsdir)) {
 
 
 ## remove batch effect (effect of Mixture) BEFORE creating covariation network!
+
 # NOTE: MSstats does not deal with BATCH in anyway before linear modeling. This
 # is fine, but in order to properly visualize the final data we need to adjust 
 # protein abundance for effect of Mixture. Here we call this norm_Abundance, but
 # it is the adjusted (for Batch) normalized protein data.
+
+# NOTE: we also drop proteins with poor models!
+message("\nRemoving proteins with poor fit from  data.")
 
 dm <- msstats_prot %>%  
 	# drop proteins with poor fit # NOTE: THIS IS A KEY SWITCH
@@ -103,6 +108,7 @@ samples$sample <- namen
 
 # use limma to remove batch effect
 # preserve the effect of Condition!
+# NOTE: this is saved as rda for module preservation script
 norm_dm <- limma::removeBatchEffect(dm,
 			 batch=samples$Mixture,
 			 design=model.matrix(~Condition,data=samples))
@@ -125,6 +131,8 @@ msstats_prot <- msstats_prot %>%
 # NOTE: norm_Abundance is not used for downstream linear modeling!
 # We use the adjusted data for ploting only!
 
+# NOTE: we save over previous protein data -- we have added column
+# norm_Abundance which is probably more aptly called adjusted_Abundance
 # save the data
 myfile <- file.path(root,"data","msstats_prot.rda")
 save(msstats_prot,file=myfile,version=2)
@@ -135,7 +143,13 @@ save(msstats_prot,file=myfile,version=2)
 # Cast protein data into a data.matrix. No need to log2 transform.
 # MSstats has done this already. Rownames are unique for each Sample.
 # Use norm_Abundance (the adjusted protein-level data)
-dm <- msstats_prot %>%
+
+# NOTE: we also drop proteins with poor fit
+# this is the data used to create adjm, ne_adjm, and ppi_adjm
+
+message("\nProteins with poor fit are not used to build network.")
+
+dm <- msstats_prot %>% filter(Protein %notin% poor_prots) %>%
   as.data.table() %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
     value.var = "norm_Abundance"

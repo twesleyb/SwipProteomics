@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
 #' ---
-#' title:
-#' description:
+#' title: SwipProteomics
+#' description: generate an overview graph of the network
 #' authors: Tyler W Bradshaw
 #' ---
 

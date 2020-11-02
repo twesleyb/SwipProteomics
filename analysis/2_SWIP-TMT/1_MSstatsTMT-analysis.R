@@ -360,15 +360,22 @@ write_excel(results_list, myfile)
 
 ## summarize significant results ----------------------------------------------
 
+# Same with/without outlier psm
 message("\nTotal instances of significant change: ",
 	sum(sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha))))
 
-message("\nSummary of significant proteins:")
+message("\nSummary of significant proteins for 'Intra-BioFraction' comparisons:")
 sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha)) %>% t() %>% knitr::kable()
 
+# +2
+message("\nSummary of significant proteins for 'Mutant-Control' comparison:")
 results_list[["Mutant-Control"]] %>% 
 	summarize(Contrast = unique(Contrast), nSig = sum(FDR<FDR_alpha)) %>% 
 	knitr::kable()
+
+# examine a marginally significant protein
+#results_list[["Mutant-Control"]] %>% filter(FDR>0.045 & FDR < 0.05) %>% 
+#	filter(Symbol == sample(Symbol,1)) %>% knitr::kable()
 
 
 ## save results ---------------------------------------------------------------
