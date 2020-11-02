@@ -287,7 +287,7 @@ message(
 
 ## [4] perform statistical comparisons for 'Control-Mutant' comparison ---------
 
-# create a contrast for assessing difference between Control and Mutant
+# create a contrast for assessing difference between 'Control' and 'Mutant' coef:
 alt_contrast <- matrix(c(
   -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
   1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7

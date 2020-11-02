@@ -51,6 +51,7 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 ## Function ------------------------------------------------------------------
 
 #plot_profile("M1",msstats_prot,partition,module_colors,module_gof)
+#module_gof %>% filter(Module == "M1") %>% select(BioFraction,Genotype,Mixture,Protein,Residuals)
 
 plot_profile <- function(module, msstats_prot, partition,
 			 module_colors, module_gof, wt_color = "#47b2a4") {
@@ -123,6 +124,7 @@ plot_profile <- function(module, msstats_prot, partition,
 } #EOF
 
 
+
 ## generate plots -------------------------------------------------------------
 
 # loop to generate plots for all modules
@@ -141,6 +143,11 @@ plot_list <- foreach(module = names(modules)) %dopar% {
 	plot_profile(module, msstats_prot, partition, module_colors, module_gof)
 }
 names(plot_list) <- modules
+
+
+m = sample(names(modules),1)
+plot_list[[m]]
+
 
 
 # save plots as a single pdf
