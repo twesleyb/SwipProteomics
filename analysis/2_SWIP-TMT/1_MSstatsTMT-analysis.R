@@ -47,6 +47,7 @@ data(msstats_contrasts)
 # NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
 # BioFraction.Control and BioFraction.Mutant
 
+
 ## Functions ------------------------------------------------------------------
 
 cleanProt <- function(df) {
@@ -95,6 +96,41 @@ cleanResults <- function(df) {
 }
 
 
+detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
+  psm_df <- psm_df %>% dplyr::filter(Mixture == mixture & Condition == "Norm") %>%
+	  group_by(PSM) %>% mutate(nObs=length(PSM)) %>% ungroup() %>%
+          # drop PSM with missing features
+	  filter(nObs == nComplete) %>% 
+	  # calculate mean of log2 Intensity for binning psm
+	  group_by(Mixture,PSM) %>% mutate(meanQC=mean(log2(Intensity))) %>% 
+	  ungroup()
+  # Group ratio data into intensity bins.
+  breaks <- stats::quantile(psm_df$meanQC, seq(0, 1, length.out=nbins+1),
+  		   names=FALSE,na.rm=TRUE)
+  psm_df <- psm_df %>% 
+  	mutate(bin = cut(meanQC, breaks, labels=FALSE, include.lowest=TRUE))
+  # compute log ratio (difference) of QC measurments
+  psm_df <- psm_df %>% group_by(Mixture,PSM) %>% 
+  	mutate(ratioQC = diff(log2(Intensity))) %>% ungroup()
+  # summarize mean and SD of each bin
+  psm_df <- psm_df %>% group_by(bin) %>% 
+  	mutate(meanRatio = mean(ratioQC,na.rm=TRUE),
+  	       binSD = sd(ratioQC), .groups="drop") %>% ungroup()
+  # flag outliers
+  psm_df <- psm_df %>% mutate(isLow = ratioQC < meanRatio - nSD*binSD)
+  psm_df <- psm_df %>% mutate(isHigh = ratioQC > meanRatio + nSD*binSD)
+  psm_df <- psm_df %>% mutate(isOutlier = isLow | isHigh)
+  # summary
+  summary_df <- psm_df %>% group_by(bin) %>%
+  	summarize(meanIntensity = mean(Intensity),
+  		  meanRatio = mean(ratioQC,na.rm=TRUE),
+  		  binSD = sd(ratioQC), 
+  		  nOut = sum(isOutlier), .groups="drop")
+  out_df <- psm_df %>% select(Mixture,PSM, bin, meanQC, ratioQC, binSD, isOutlier)
+  return(out_df %>% filter(isOutlier))
+} # EOF
+
+
 ## [0] subset the data ------------------------------------------------------------
 # NOTE: we have previously made sure Master.Protein.Accessions is a column of
 # (single) Uniprot Identifiers. NOTE: Only run once!
@@ -121,7 +157,7 @@ if (nprot > length(proteins) | nprot == "all") {
 
 
 ## [1] convert to msstats format -----------------------------------------------
-# Proteins with a single feature are removed.
+# Proteins with a single feature (i.e. peptide) are removed.
 
 message("\nConverting PD PSM-level data into MSstatsTMT format.")
 
@@ -140,6 +176,44 @@ message(
   "\nTime to pre-process ", nprot, " proteins: ",
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
+
+## [added] QC-based PSM filtering ----------------------------------------------------
+
+# Assess reproducibility of QC measurements and remove QC samples
+# that are irreproducible.
+# This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
+# For each experiment, the ratio of QC measurments is calculated.
+# These ratios are then binned based on average Intensity into
+# 5 bins. For each bin, measuremnts that are outside
+# +/- nSD x standard deviations from the bin's mean are removed.
+
+# This is essential because our normalization strategy depends upon the SPQC
+# samples. We cannot perform normalization to SPQC PSM that are highly variable.
+
+# collect all psm outliers for each Mixture
+mix <- c("M1","M2","M3")
+outlier_list <- lapply(mix, detectOutliers, msstats_psm, nbins=5, nSD=4)
+names(outlier_list) <- mix
+
+# all psm outliers
+psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
+
+sapply(psm_outliers,length)
+
+# loop to remove outlier psm from each mixture
+filt_list <- list()
+
+psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
+names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
+
+for (mixture in names(psm_list)) {
+	filt_psm <- psm_list[[mixture]] %>% filter(PSM %notin% psm_outliers[[mixture]])
+	filt_list[[mixture]] <- filt_psm
+}
+
+
+# collect results--outliers removed from each mixture
+filt_msstats_psm <- do.call(rbind,filt_list)
 
 
 ## [2] summarize protein level data ----------------------------------------------
@@ -164,9 +238,9 @@ t0 <- Sys.time()
 # Mixture effects before we do this.
 
 suppressMessages({ # verbosity
-  msstats_prot <- proteinSummarization(msstats_psm,
+  msstats_prot <- proteinSummarization(filt_msstats_psm, #  or msstats_psm
     method = "msstats",
-    remove_norm_channel=TRUE,
+    remove_norm_channel = TRUE,
     global_norm = TRUE,
     MBimpute = TRUE,
     reference_norm = TRUE,
