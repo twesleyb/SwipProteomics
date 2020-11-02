@@ -2,7 +2,8 @@
 
 ## inputs 
 root = "~/projects/SwipProteomics"
-wt_color = "#47b2a4"
+
+# explore ne params
 
 ## functions ------------------------------------------------------------------
 
@@ -24,11 +25,13 @@ devtools::load_all(quiet=TRUE)
 
 # dir for output
 figsdir <- file.path(root,"figs","Heatmaps")
-if (!dir.exists(figsdir)) { dir.create(figsdir); message("mkdir ",figsdir) }
+if (!dir.exists(figsdir)) { dir.create(figsdir) }
 
 # load the required data
 data(swip)
 data(gene_map)
+data(wt_color)
+data(mut_color)
 data(partition)
 data(msstats_prot)
 data(module_colors)
@@ -36,40 +39,42 @@ data(msstats_results)
 
 # load data in root rdata -- to big to be stored in root/data
 load(file.path(root,"rdata","adjm.rda"))
-#load(file.path(root,"rdata","ne_adjm.rda"))
-#load(file.path(root,"rdata","ppi_adjm.rda"))
+load(file.path(root,"rdata","ne_adjm.rda"))
+load(file.path(root,"rdata","ppi_adjm.rda"))
 
-# collect list of modules
-modules = split(names(partition),partition)[-1]
-names(modules) <- paste0("M",names(modules))
+# prepare the data
+x = adjm[prots,prots]
+y = ne_adjm[prots,prots]
+z = y*(1/max(y)) # scale such that max is 1
 
-#for (module in modules){
-module = "M25"
-prots <- modules[[module]]
-prots <- prots[prots %in% colnames(adjm)]
-
-
-p0 <- ggcorrplot(ne_adjm[prots,prots], 
-		   hc.order = TRUE, 
+## explore neten params
+# alpha = small ==> super sparse
+# diffusion = 2 == most sparse
+# use alpha to adjust the overall connectivity -- smaller then sparser
+y = neten::neten(adjm,alpha=0.9,diffusion=1.0) 
+x = y[prots,prots]
+p0 <- ggcorrplot(x, hc.order = TRUE, 
 		   outline.col = "white", 
-		   colors = c(module_colors[[module]],"gray",wt_color),
-		   type = "lower")
+		   colors = c("gray","gray",mut_color),
+		   type = "upper")
+p0
 
-p1 <- ggcorrplot(adjm[prots,prots], 
-		   hc.order = TRUE, 
+colnames(x) <- colnames(z) <- mapID(prots,"uniprot","symbol")
+
+p0 <- ggcorrplot(x, hc.order = TRUE, 
 		   outline.col = "white", 
-		   colors = c(module_colors[[module]],"gray",wt_color),
+		   colors = c(wt_color,"gray",mut_color),
 		   type = "upper")
 
-p0 <- p0 + ggtitle(paste(module,"mean(bicor) =",mean(subadjm0)))
+p1 <- ggcorrplot(z, hc.order = TRUE, 
+		   outline.col = "white", 
+		   colors = c("gray","gray",mut_color),
+		   type = "lower")
 
-# Customize x-axis label color
-build <- ggplot_build(p0)
-x_labels <- build$layout$panel_params[[1]]$x$get_labels()
-sig_prots <- msstats_results %>% filter(Protein %in% prots) %>%
-	filter(adj.pvalue < 0.05) %>% select(Protein) %>% unique() %>% unlist()
-x_colors <- rep("black",ncol(subadjm0))
-x_colors[x_labels %in% sig_prots] <- "dark red"
-p0 <- p0 + theme(axis.text.x = element_text(color = x_colors))
 
-# need to specify type both and then  edit data?
+# save figures
+myfile <- file.path(figsdir,"adjm.pdf")
+ggsave(myfile,p0,width=5,height=5)
+
+myfile <- file.path(figsdir,"ne_adjm.pdf")
+ggsave(myfile,p1,width=5,height=5)

@@ -254,6 +254,7 @@ check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
 if (!check) { stop() }
 
 # Create igraph graph objects.
+# NOTE: graph edge weight is enhanced(cor)
 netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
 ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,

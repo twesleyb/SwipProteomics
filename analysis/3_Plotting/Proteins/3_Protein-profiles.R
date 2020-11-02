@@ -84,7 +84,7 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 	r2 <- protein_gof %>% filter(Protein == protein) %>% 
 		select(R2.total) %>% as.numeric()
 	title_anno <- paste0("(R2 = ",round(r2,3),")")
-	title_colors <- c("red"=TRUE,"black"=FALSE)
+	title_colors <- c("darkred"=TRUE,"black"=FALSE)
 	title_color <- names(which(title_colors==protein %in% sigprots))
   # prepare stats for labeling
   stats_df <- prot_df %>% filter(Protein == protein) %>% 
@@ -130,7 +130,7 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
   plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
   plot <- plot + geom_point(size=2)
   plot <- plot + ggtitle(paste(gene," | ",protein,title_anno))
-  plot <- plot + ylab("Scaled Abundance")
+  plot <- plot + ylab("Scaled Protein Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 

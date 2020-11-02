@@ -153,7 +153,7 @@ plot_list <- foreach(module = names(modules)) %dopar% {
 }
 names(plot_list) <- names(modules)
 
-
+# drop null
 bad_modules <- names(which(sapply(plot_list,is.null)))
 idx <- names(plot_list) %notin% bad_modules
 

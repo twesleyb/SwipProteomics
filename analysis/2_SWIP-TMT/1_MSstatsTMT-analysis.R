@@ -198,13 +198,15 @@ names(outlier_list) <- mix
 # all psm outliers
 psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
 
-sapply(psm_outliers,length)
+message("\nSummary of PSM outliers:")
+sapply(psm_outliers,length) %>% knitr::kable()
+
+# psm data for each mix in a list
+psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
+names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
 
 # loop to remove outlier psm from each mixture
 filt_list <- list()
-
-psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
-names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
 
 for (mixture in names(psm_list)) {
 	filt_psm <- psm_list[[mixture]] %>% filter(PSM %notin% psm_outliers[[mixture]])
@@ -376,6 +378,48 @@ results_list[["Mutant-Control"]] %>%
 # examine a marginally significant protein
 #results_list[["Mutant-Control"]] %>% filter(FDR>0.045 & FDR < 0.05) %>% 
 #	filter(Symbol == sample(Symbol,1)) %>% knitr::kable()
+
+## remove batch effect ---------------------------------------------------------
+
+message("\nUsing limma to remove batch effect!")
+
+# cast data into a matrix
+dm <- msstats_prot %>%  
+	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
+			value.var="Abundance") %>% na.omit() %>%
+        as.data.table() %>% as.matrix(rownames="Protein")
+
+# use column names to construct sample metadata matrix
+namen <- colnames(dm)
+samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
+colnames(samples) <- c("Mixture","Channel","Condition")
+samples$sample <- namen
+
+# use limma to remove batch effect
+# preserve the effect of Condition!
+# NOTE: this is saved as rda for module preservation script
+norm_dm <- limma::removeBatchEffect(dm,
+			 batch=samples$Mixture,
+			 design=model.matrix(~Condition,data=samples))
+
+# collect data
+norm_df <- as.data.table(norm_dm,keep.rownames="Protein") %>% 
+	reshape2::melt(id.var="Protein",variable.name="sample",
+		       value.name="norm_Abundance")
+
+# combine with sample annotations
+anno_df <- left_join(norm_df,samples,
+		     by=intersect(colnames(samples),colnames(norm_df)))
+anno_df$sample <- NULL
+
+# combine with msstats_prot
+msstats_prot <- msstats_prot %>% 
+	left_join(anno_df,by=intersect(colnames(anno_df),colnames(msstats_prot)))
+
+# now we have norm_Abundance(no batch effect)
+
+# NOTE: norm_Abundance is not used for downstream linear modeling!
+# We use the adjusted data for ploting only!
 
 
 ## save results ---------------------------------------------------------------

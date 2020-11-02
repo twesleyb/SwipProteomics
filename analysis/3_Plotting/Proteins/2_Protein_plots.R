@@ -36,9 +36,7 @@ getrd <- function(here=getwd(), dpat= ".git") {
 plot_protein <- function(prot_df, gene_map, protein, 
 			 sigprots, protein_gof, legend=FALSE) {
   # a function that generates the plot
-  #wt_color = "#47b2a4"
-  #mut_color <- col2hex(c("R"=148,"G"=33,"B"=146))
-  title_colors <- c("red"=TRUE,"black"=FALSE)
+  title_colors <- c("darkred"=TRUE,"black"=FALSE)
   colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
   	    "#942192","#B847B4","#DC6AD7") # Swip Purples
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
@@ -65,6 +63,7 @@ plot_protein <- function(prot_df, gene_map, protein,
   stats$symbol[stats$FDR<0.0005] <- "***"
   # Generate the plot.
   plot <- ggplot(df)
+  # NOTE: we use the adjusted (norm_Abundance) protein data for plotting!
   plot <- plot + aes(x = BioFraction, y = norm_Abundance)
   plot <- plot + aes(group = interaction(Mixture,Genotype))
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
@@ -76,6 +75,7 @@ plot_protein <- function(prot_df, gene_map, protein,
   plot <- plot + geom_line()
   plot <- plot + ggtitle(paste(gene,"|",protein,title_anno))
   plot <- plot + theme(plot.title=element_text(color=title_color))
+  plot <- plot + ylab("Normalized Protein Abundance")
   # Annotate with significance stars.
   if (any(stats$FDR<0.1)) {
     plot <- plot + annotate("text", 
@@ -121,6 +121,7 @@ devtools::load_all()
 data(swip)
 data(gene_map)
 data(partition)
+data(poor_prots)
 data(protein_gof)
 data(msstats_prot)
 data(module_colors)
@@ -167,6 +168,8 @@ sigprots <- msstats_results %>% filter(Contrast == 'Mutant-Control') %>%
 
 # sort proteins by module membership, drop M0
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
+
+stopifnot(!any(poor_prots %in% sorted_prots))
 
 # Loop to generate plots for all_proteins.
 message("\nGenerating plots for ", 

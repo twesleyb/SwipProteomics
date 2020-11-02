@@ -5,8 +5,7 @@
 # authors: Tyler W Bradshaw
 
 ## OPTIONS --------------------------------------------------------------------
-swip = "Q3UMB9" # uniprot accession of swip 
-swip_color = "#B86FAD" # color of swip/wash module
+NC_color = "#BEBEBE" # not clustered
 
 
 ## OUTPUT ---------------------------------------------------------------------
@@ -54,7 +53,9 @@ suppressPackageStartupMessages({
 suppressMessages({ devtools::load_all() })
 
 # Load TMT data and partition.
+data(swip)
 data(partition)
+data(mut_color)
 
 ## Generate Module colors ------------------------------------------------------
 
@@ -74,7 +75,7 @@ response <- system(cmd, intern = TRUE)
 #  Parse the response.
 colors <- toupper(str_to_vec(response))
 
-if (swip_color %in% colors) { stop("Duplicate colors.") }
+if (mut_color %in% colors) { stop("Duplicate colors.") }
 
 # Module color assignments.
 # Initialize a vector for the module colors.
@@ -82,9 +83,9 @@ module_colors <- rep(NA,length(modules))
 names(module_colors) <- names(modules)
 
 # Insure that M0 is gray and WASH community/module is #B86FAD.
-module_colors["M0"] <- col2hex("gray")
+module_colors["M0"] <- NC_color
 wash_module <- names(which(sapply(modules, function(x) swip %in% x)))
-module_colors[wash_module] <- swip_color
+module_colors[wash_module] <- mut_color
 
 # The reamining colors are random.
 idx <- is.na(module_colors)

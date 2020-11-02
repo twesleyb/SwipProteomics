@@ -4,7 +4,7 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-# save rda? overwrites poor_prots
+# save rda? overwrites poor_prots which can affect whic proteins are clustered
 save_rda = FALSE 
 
 # prepare the env
@@ -81,7 +81,7 @@ samples$Subject <- as.numeric(interaction(samples$Genotype,samples$Experiment))
 msstats_prot$Subject <- as.numeric(interaction(msstats_prot$Genotype,msstats_prot$Mixture))
 
 # removal of poor prots has already been done?
-sum(msstats_prot$Protein %in% poor_prots)
+#sum(msstats_prot$Protein %in% poor_prots)
 
 # cast the data into a matrix.
 fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
@@ -94,12 +94,14 @@ dm <- msstats_prot %>%
 info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
 colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
+
 ## variancePartition -----------------------------------------------------------
 
 # protein stuff
 
 # calculate protein-wise variance explained by major covariates
 form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
+#form <- formula(~ (1|Mixture) + (1|Genotype:BioFraction))
 prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
 
 
@@ -118,7 +120,9 @@ varpart_df$Entrez <- gene_map$entrez[idx]
 # sort cols
 varpart_df <- varpart_df %>%
 	select(Protein,Symbol,Entrez,Mixture,Genotype,BioFraction,Residuals) %>%
+	#select(Protein,Symbol,Entrez,Mixture,`Genotype:BioFraction`,Residuals) %>%
 	arrange(desc(Genotype))
+	#arrange(desc(`Genotype:BioFraction`))
 
 
 # examine the top results
@@ -232,12 +236,12 @@ module_gof <- df
 # curious to know how much variation is explained by our clustering
 
 # how much variation is explained by partition?
-form0 <- formula(Abundance ~ (1|Mixture) + (1|Protein)) # what is the percent variance explained by each protein -- Genotype:BioFraction
-form1 <- formula(Abundance ~ (1|Mixture) + (1|Module)) # how close do we get with modules -- if every protein is its own cluster then should be the same.
-fm0 <- lmer(form0, data=msstats_prot %>% filter(Module != "M0"))
-fm1 <- lmer(form1, data=msstats_prot %>% filter(Module != "M0"))
-rho0 <- calcVarPart(fm0)
-rho1 <- calcVarPart(fm1)
+#form0 <- formula(Abundance ~ (1|Mixture) + (1|Protein)) # what is the percent variance explained by each protein -- Genotype:BioFraction
+#form1 <- formula(Abundance ~ (1|Mixture) + (1|Module)) # how close do we get with modules -- if every protein is its own cluster then should be the same.
+#fm0 <- lmer(form0, data=msstats_prot %>% filter(Module != "M0"))
+#fm1 <- lmer(form1, data=msstats_prot %>% filter(Module != "M0"))
+#rho0 <- calcVarPart(fm0)
+#rho1 <- calcVarPart(fm1)
 
 
 ## save results -----------------------------------------------------------------
