@@ -1,0 +1,180 @@
+#!/usr/bin/env Rscript
+
+# title: SwipProteomics
+# author: twab
+# description: generate some gof statistics for protein and module-level models
+
+save_rda = FALSE 
+
+# prepare the env
+root = "~/projects/SwipProteomics"
+renv::load(root)
+devtools::load_all(root)
+
+# load the data
+data(fx0) # protein model
+data(swip)
+data(gene_map)
+data(msstats_prot)
+data(pd_annotation)
+
+# imports
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(data.table)
+  library(doParallel)
+  library(variancePartition)
+})
+
+## functions ------------------------------------------------------------------
+
+#loss <- function(R2_threshold,results_df,as_char=FALSE) {
+#	# a function that determines the number of proteins remove at a given r2
+#	idx <- results_df$R2.total< R2_threshold
+#	poor_prots <- results_df$Protein[idx]
+#	if (as_char) {
+#	  return(poor_prots)
+#	} else {
+#	  return(sum(idx))
+#	}
+#} #EOF
+
+
+## prepare the data -----------------------------------------------------------
+
+# munge to split Condition (Geno.BioFrac) into geno annotation
+samples <- pd_annotation
+samples$Genotype <- sapply(strsplit(samples$Condition,"\\."),"[",1)
+
+# cast the data into a matrix
+# NOTE: using Abundance and not norm_Abundance!
+fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
+dm <- msstats_prot %>%
+	reshape2::dcast(fx, value.var= "Abundance") %>% 
+	as.data.table() %>% as.matrix(rownames="Protein")
+
+# NOTE: we must remove rows with missing values!
+# I thought MSstatsTMT imputed missing values...
+# NOTE: I thought msstats imputed these, but there are proteins with 0-21
+# missing values. We should be able to impute many of these.
+idx = apply(dm,1,function(x) any(is.na(x)))
+warning(sum(idx), " rows with missing values will be removed.")
+dm <- dm[!idx,]
+
+# munge to create sample info from the dcast fx
+info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
+colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
+
+
+## variancePartition -----------------------------------------------------------
+
+# calculate protein-wise variance explained by major covariates
+form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
+prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
+
+
+## parse the response ----------------------------------------------------------
+
+# collect results
+df <- as.data.frame(prot_varpart)
+varpart_df <- as.data.table(df,keep.rownames="Protein")
+
+# annotate with gene ids
+idx <- match(varpart_df$Protein,gene_map$uniprot)
+varpart_df$Symbol <- gene_map$symbol[idx]
+varpart_df$Entrez <- gene_map$entrez[idx]
+# sort cols
+varpart_df <- varpart_df %>%
+	select(Protein,Symbol,Entrez,Mixture,Genotype,BioFraction,Residuals) %>%
+	arrange(desc(Genotype))
+
+# examine the top results
+varpart_df %>% head() %>% knitr::kable()
+
+
+## fit all protein models -----------------------------------------------------
+# calculate Nakagawa coefficient of determination
+
+# evaluate gof of all protein-wise models
+# use proteins from varpart -- all proteins (-any with missing vals)
+proteins <- unique(varpart_df$Protein)
+
+# register parallel backend
+n_cores <- parallel::detectCores() - 1
+doParallel::registerDoParallel(n_cores)
+
+# REF: Nakagawa and Schielzeth 2013 and 2017
+message("\nEvaluating Nakagawa goodness-of-fit, refitting modules...")
+
+gof_list <- foreach (protein = proteins) %dopar% {
+	# fit model
+	fx0 <- Abundance ~ 0 + Condition + (1 | Mixture)
+	fm <- suppressMessages({
+		try({
+		  lmerTest::lmer(fx0, msstats_prot %>% filter(Protein==protein))
+		}) 
+	})
+	# if error, return null
+	if (inherits(fm,"try-error")) { 
+             return(NULL)
+	} else {
+		# else, evaluate goodness-of-fit
+		r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
+				       c("R2.fixef","R2.total"))
+		return(r2)
+	}
+} #EOL
+names(gof_list) <- proteins
+
+# collect results
+idx <- !sapply(gof_list,is.null)
+if (any(!idx)) { 
+	warning("There were problems fitting ",sum(idx)," models.")
+}
+
+gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
+
+# combine varpart -- the precent variance explained for each covariate and
+# gof_df -- the overall R2 for total and fixed effects (which is the percent
+# variance explained by our models).
+results_df <- left_join(varpart_df,gof_df,by="Protein")
+
+# examine results
+results_df %>% head() %>% knitr::kable()
+
+
+## identify proteins with poor fit ---------------------------------------------
+
+# how many removed at various thresh
+#thresh_range <- seq(0,1,length.out=100) # 12.78% loss
+#mylist = sapply(thresh_range,loss,results_df,as_char=TRUE)
+#n_out = setNames(sapply(mylist,function(x) sum(x %in% sigprots)),thresh_range)
+#sum(results_df$R2.total < 0.909090909090909,na.rm=TRUE)
+#r2_threshold <- thresh_range[head(which(n_out>100),1)]
+
+r2_threshold = 0.75
+total = length(unique(results_df$Protein))
+out = sum(results_df$R2.total < r2_threshold)
+percent=round(out/total,3)
+cbind(out,percent,total,r2_threshold) %>% knitr::kable()
+poor_prots <- results_df$Protein[results_df$R2.total<r2_threshold]
+message("\nNumber of proteins with poor fit: ", length(poor_prots))
+
+# wash prots
+results_df %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
+
+## save results -----------------------------------------------------------------
+
+protein_gof <- results_df
+
+if (save_rda) {
+
+  # save poor prots
+  myfile <- file.path(root,"data","poor_prots.rda")
+  save(poor_prots,file=myfile,version=2)
+  
+  # save as rda
+  myfile <- file.path(root,"data","protein_gof.rda")
+  save(protein_gof, file=myfile, version=2)
+  
+}

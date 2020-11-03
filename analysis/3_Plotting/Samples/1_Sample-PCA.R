@@ -55,7 +55,7 @@ data(msstats_prot)
 # cast into a matrix
 dm <- msstats_prot %>%
 	reshape2::dcast(Protein ~ interaction(Mixture, BioFraction, Genotype), 
-			value.var= "Abundance") %>%
+			value.var= "norm_Abundance") %>%
 		as.data.table() %>% as.matrix(rownames="Protein")
 to_drop <- apply(dm,1,function(x) any(is.na(x)))
 subdm <- dm[!to_drop,]
