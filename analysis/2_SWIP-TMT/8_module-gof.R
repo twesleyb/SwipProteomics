@@ -64,6 +64,7 @@ if (any(poor_prots %in% names(partition))) {
 }
 
 # loop to evaluate gof
+message("\nEvaluating goodness-of-fit of modules.")
 results_list <- list()
 pbar <- txtProgressBar(max=length(modules),style=3)
 for (module in names(modules)) {
