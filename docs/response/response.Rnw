@@ -119,24 +119,18 @@ concerns and provide additional description of our stastical approach.
 
 \section{Reanalysis of SWIP\textsuperscript{P1019R} TMT Proteomics}
 
-The issue at question is whether or not the R package \texttt{edgeR}
-is an appropriate tool for analysis of protein mass spectrometry data.\\
+Previously, we our analysis relied upon the use of the R package \texttt{edgeR}
+to perform statistical inference at the level of proteins and protein groups or
+modules. In the review of this manuscript, concerns were raised about the
+appropriatness of \texttt{edgeR} for TMT protein mass spectrometry data.\\
 
-Previous we analyzed the data
-IRS: Plubell et al., 2017
-Several tools for analysis of Proteomics data exist.
-At least one prior publicTwo previous publications describe the use of edgeR for analysis of TMT
-
-Previously we used a customized workflow \footnotemark{} to preprocess
-and normalize the data prior to performing statistical testing using
-\texttt{edgeR's} flexible GLM framework. 
 
 At the core of our normalization appraoch is the use of common quality control
 (QC) samples, analyzed in technical duplicate in each TMT mixture. The sample 
 pool QC sample was formed by combining aliquots of all biological replicates.
 This sample therefore is representative biological and technical variation.
-Our normalization appraoch, termed IRS normalization, is essential to correct
-for 
+We utilzize the IRS or internal reference standard normalization described
+by Plubell et al., 2017.
 
 The most important step in our normalization approach is 
 IRS normalization. MS2 random sampling results in identification and
@@ -145,34 +139,30 @@ To account for this source of variability, protein measurements are
 adjusted by a scaling factor such that the geometric mean of all
 internal reference standards are equal (Plubell et al., 2017).
 This is essential to account for the stochasticisity of peptide
-quantification in MS experiments. Phillip Wilmarth's
-\href{https://github.com/pwilmart/IRS_normalization}[GitHub] offers an 
-excellent exploration of IRS normalization. \\
+quantification in MS experiments. 
 
-However, we failed to thoughougly
-consider the overall adequacy of the NB framework for mass spectrometry data. 
-Here we reconsider its appropriatness for our TMT proteomics dataset.  \\
+However, we failed to thoughougly consider the overall adequacy of the NB
+framework for mass spectrometry data. Here we reconsider its appropriatness 
+for our TMT proteomics dataset.  \\
+
 Our previous appraoch can be sumamrized as the "Sum + IRS Normalization" method
 described by Huang et al., 2020. We summarize proteins as the sum of its
 features and use IRS noramlization. A potential weakness of the sum method is
 that outlier peptides can strongly influence the summary value. Median-based
 methods (median and median-polish) avoid this problem. We examined outliers in a
-method described by [xxx]
+method described by Ping et al., (20xx).
 
-Statistical inference in edgeR is built on a 
+Statistical inference in \texttt{edgeR} is built on a 
 negative binomial (NB), generalized linear model (GLM) framework. 
 Therefore, the data are assumed to be adequately described by a NB distribution 
-parameterized by a dispersion parameter, $\phi$. \footnotemark{} \\
+parameterized by a dispersion parameter, $\phi$. \\
 
-
-\footnotetext{ 
-	The dispersion parameter can take several forms. 
-	\texttt{edgeR} supports three dispersion models: 'common',
-	'trended', and 'tagwise'. However, when using \texttt{edgeR's}
-	robust quasi-likelihood test methods, only global (i.e. 'common'
-	or 'trended') dispersion metrics are appropriate 
-	(see \texttt{edgeR::glmQLFit's} documentation).
-}
+The dispersion parameter can take several forms. 
+\texttt{edgeR} supports three dispersion models: 'common',
+'trended', and 'tagwise'. However, when using \texttt{edgeR's}
+robust quasi-likelihood test methods, only global (i.e. 'common'
+or 'trended') dispersion metrics are appropriate 
+(see \texttt{edgeR::glmQLFit's} documentation).
 
 
 %% figure 1 
@@ -232,18 +222,74 @@ variation in an experimental design.
 	model.
 \end{displayquote}
 
-A TMT proteomics experiment consists of \texttt{m = 1...M} concatensions of 
-isobaric-TMT labeled samples or \texttt{Mixtures}. 
-Each TMT channel is dedicated to the analysis of \texttt{c = 1...C}
-individual biological or treatment \texttt{Conditions} prepared from one
-\texttt{b = 1...B} biological replicates or \texttt{Subjects}. 
-A single mixture may be profiled in \texttt{t = 1...T} technical replicate 
+Huang et al., describe a general statistical framework for TMT mass spectrometry
+experiments. A TMT proteomics experiment consists of the analysis of 
+\texttt{m =1} ... \texttt{M} concatensions of isobarically labeled samples or \texttt{Mixtures}. 
+Within a mixture, each TMT channel is dedicated to the analysis of
+\texttt{c = 1} ... \texttt{C} individual biological or treatment \texttt{Conditions} 
+prepared from \texttt{b = 1} ... \texttt{B} biological replicates or \texttt{Subjects}. 
+A single mixture may be profiled in \texttt{t = 1} ... \texttt{T} technical replicate 
 mass spectrometry runs. 
 
-We prepared 7 subcellular fractions (BioFraction) from 2 Conditions: 
-Control and SWIP\textsuperscript{P1019R} Mutant mice. 
-There were 6 Subjects, three bioreplicate Control and 
+The following mixed-effects model describes protein abundance measured in an
+in an experiment composed of M mixtures, T technical replicates of Mixture, C
+conditions, and B biological Subjects. 
+
+%% Full model
+\begin{equation} \label{eq1}
+	Y_{mcbt} = \mu + Mixture_m + TechRep(Mixture)_{m(t)} + Condition_c + \epsilon_{mcbt}
+\end{equation}
+
+Mixture a variation between
+mixtures, and 
+nd TechRep(Mixture) distinguish technical
+between replicate mass spectrometry runs of a same mixtureo
+
+If a component of the model is not estimable, it is removed. Thus, if there is
+no technical replication of Mixture, the model is reduced to: \\
+
+%% Reduced model - no technical replication of mixture
+\begin{equation} \label{eq2}
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + Subject_{mcb} + \epsilon_{mcb}
+\end{equation}
+
+Control and Mutant mouse.
+
+
+Where Mixture is a mixed-effect and represents variation between TMT mixtures.
+Subject is a mixed-effect and represents variation between biological Subjects
+Condition is a fixed effect. The term $\epsilon$ 
+is a random effect representing both biological and technical variation, 
+quantifying any remaining error ($\sigma^2$). \\
+
+The constraints distinguish the fixed and
+the random components of variation. Comparisons of interest (i.e., conditions),
+are at the level of the subplot. Their
+standard errors are derived from the subplot components of variatio
+Subject represetnts biological replicates using the convention taht each
+biological replicate has a unique identifier across Mixtures and Conditions. 
+
+
+To distinguish between Mixtures which may be fractionated, and these
+\texttt{Fractions} analyzed to increase the depth of coverage in an MS
+experiment, we refer to fractions as \texttt{BioFraction}.
+
+In our experiment, the fixed effect term Condition 
+represents interaction of Genotype and BioFraction--the 14 combinations 
+of 7 BioFractions fractions from Control and Mutant mice. 
+
+We prepared 7 \texttt{BioFractions} from 'Control' and SWIP\textsuperscript{P1019R} 'Mutant' mice. 
+14 conditions
+We analyzed data from 6 Subjects, three bioreplicate Control and 
 SWIP\textsuperscript{P1019R} Mutant mice.
+
+%% reduced model - no repeated measures of Subject
+\begin{equation} \label{eq3}
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + \epsilon_{mc}
+\end{equation}
+
+
+
 
 \begin{figure}[h]
   \begin{fullwidth}
@@ -260,6 +306,11 @@ SWIP\textsuperscript{P1019R} Mutant mice.
   \end{center}
   \end{fullwidth}
 \end{figure}
+
+In our experimental design, we made measurments from seven BioFractions 
+from each subject. Thus, we should include the term 
+Subject, representing the 6 individual mice or subjects analyzed in our 
+experiment. \\
 
 
 \begin{figure}[h]
@@ -278,44 +329,6 @@ SWIP\textsuperscript{P1019R} Mutant mice.
   \end{center}
   \end{fullwidth}
 \end{figure}
-
-In an experiment such as ours with multiple mixtures and biological replicates, 
-but no technical replication of mixture (T = 1) \texttt{MSstatsTMT} fits a
-linear mixed model of the following form to each protein:
-
-Where Mixture is a mixed-effect and quantifies variation between TMT mixtures.
-Condition is a fixed effect (mean = 0) and in our experiment represents the
-interaction of terms \texttt{Genotype} and \texttt{BioFraction}. $\epsilon$ 
-is a random effect representing both biological and technical variation, 
-quantifying any remaining error. \\
-
-%% Full model
-\begin{equation} \label{eq1}
-	Y_{mcbt} = \mu + Mixture_m + TechRep/Mixture_{m/t} + Condition_c + 
-	Subject_{mcb} + \epsilon_{mcbt}
-\end{equation}
-
-%% Reduced model - no technical replication of mixture
-\begin{equation} \label{eq2}
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + Subject_{mcb} + \epsilon_{mcb}
-\end{equation}
-
-%% reduced model - no repeated measures of Subject
-\begin{equation} \label{eq3}
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + \epsilon_{mc}
-\end{equation}
-
-
-Where Mixture represents the random-effect of mixture and 
-Condition is a fixed-effect and in our experiment is interaction of 
-Genotype and BioFraction--the 14 combinations of 7 BioFractions fractions from 
-Control and Mutant mice. $\epsilon_{mcbt}$ is the residual error ($\sigma^2$).\\
-
-In our experimental design, we made measurments from seven BioFractions 
-from each subject. Thus, we should include the term 
-Subject, representing the 6 individual mice or subjects analyzed in our 
-experiment. \\
-
 
 However, in our design \texttt{Mixture} is confounded with the
 term \texttt{Subject} -- in each mixture we analyzed all \texttt{BioFractions} 

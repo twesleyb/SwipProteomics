@@ -8,7 +8,7 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot <- 23 # the number of random proteins to be analyzed or 'all'
+nprot <- "all" # the number of random proteins to be analyzed or 'all'
 FDR_alpha <- 0.05 # FDR threshold for significance
 save_rda <- TRUE
 
