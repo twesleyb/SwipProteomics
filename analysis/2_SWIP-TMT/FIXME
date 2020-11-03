@@ -1,6 +1,0 @@
-WORK: impute missing in 1_
-WORK: If singular fit in module analysis, 6_, this could be do to lack of
-Mixture variation, drop mixture from model, and fit reduced model.
-
-NOTE: we remove models with R2 < 0.75 
-NOTE: we changed diffusion param to 1.0 (was 2.0)

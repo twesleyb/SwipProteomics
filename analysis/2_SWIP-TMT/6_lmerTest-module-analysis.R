@@ -64,9 +64,11 @@ msstats_filt <- msstats_prot %>% filter(Protein %in% names(partition))
 msstats_filt$Module <- paste0("M", partition[msstats_filt$Protein])
 
 # summary:
-message("\nNumber of modules : ", length(modules))
-message("\nPercent clustered : ", round(sum(partition!=0)/length(partition),3))
-message("\nMedian module size: ", median(sapply(modules,length)))
+nProts <- formatC(length(names(partition)),big.mark=",")
+kModules <- length(modules)
+pClustered <- round(sum(partition!=0)/length(partition),3)
+medSize <- median(sapply(modules,length))
+knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 
 
 ## fit WASH complex as an example ----------------------------------------------
@@ -77,8 +79,7 @@ washc_prots <- mapGeneIDs("Washc*","symbol","uniprot")
 # wash complex genes
 washc_genes <- sort(mapGeneIDs(washc_prots,"uniprot","symbol"))
 
-
-## the formula to be fit:
+# the formula to be fit:
 fx1 <- formula(paste(c(
   "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
 ), collapse = " "))
@@ -107,9 +108,9 @@ df %>% knitr::kable(format="markdown")
 
 
 ## goodness of fit
-r.squaredGLMM.merMod(fm1) %>% knitr::kable(format="markdown")
 message("R2m: Marginal; variation explained by fixed effects.")
 message("R2c: Conditional; total variation explained by the model.")
+r.squaredGLMM.merMod(fm1) %>% knitr::kable(format="markdown")
 
 
 ## build a contrast for assessing 'Mutant-Control' comparison
@@ -140,19 +141,33 @@ message("\nAssessing module-level contrasts with lmerTest.")
 
 t0 <- Sys.time()
 
+# the reduced model, to be fit if singular
+fx0 <- Abundance ~ 0 + Genotype:BioFraction + (1 | Protein)
+
 # loop through all modules
 results_list <- foreach(module = names(modules)) %dopar% {
+  # fit full model
   input <- list(fx1, data = msstats_filt %>% filter(Module == module))
   suppressMessages({ # about boundary fits
     fm <- try(do.call(lmerTest::lmer, input), silent = TRUE)
   })
+  # if singular, fit reduced model
+  if (lme4::isSingular(fm)) {
+    input <- list(fx0, data = msstats_filt %>% filter(Module == module))
+    suppressMessages({
+      fm <- try(do.call(lmerTest::lmer, input), silent = TRUE)
+    })
+  }
+  # test the contrast
   df <- lmerTestContrast(fm, contrast) %>%
 	  mutate(Contrast = "Mutant-Control") %>%
 	  unique()
+  # return the results
   return(df)
 }
 names(results_list) <- names(modules)
 
+# summary
 t1 <- Sys.time()
 message("\nTime to analyze ", length(results_list)," modules:")
 difftime(t1,t0)
@@ -218,13 +233,11 @@ results_df[idx,] %>% knitr::kable()
 message("Number of significant modules (Bonferroni<0.05): ",
 	sum(results_df$Padjust<0.05))
 
-
 # annotate results with protein identifiers
 results_df$Proteins <- sapply(modules[results_df$Module],paste,collapse=";")
 results_df$Symbols <- sapply(modules[results_df$Module], function(x) {
 	       paste(gene_map$symbol[match(x,gene_map$uniprot)],collapse=";")
 	})
-
 
 # sort columns
 results_df <- results_df %>% 

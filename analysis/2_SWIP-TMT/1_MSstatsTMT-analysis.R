@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript 
+
 # title: MSstatsTMT
 # description: analysis of intrafraction comparisons with MSstats
 # author: twab
@@ -46,7 +47,7 @@ data(pd_psm) # 46 mb
 data(gene_map)
 data(pd_annotation)
 data(msstats_contrasts)
-# NOTE: msstats_contrasts is a matrix indicating pairwise contrasts between all
+# NOTE: msstats_contrasts is a matrix specifying pairwise contrasts between all
 # 'BioFraction.Control' and 'BioFraction.Mutant' Conditions.
 
 
@@ -102,12 +103,10 @@ detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
   # this function identifies QC PSM-level outliers
   # NOTE: PSM with incomplete (n != nComplete) features are removed
   # We cannot assess reproducibility of a PSM if it was only quantified once
-
   # collect psm with incomplete (missing) data
   is_incomplete <- psm_df %>% dplyr::filter(Mixture == mixture & Condition == "Norm") %>%
 	  group_by(PSM) %>% mutate(nObs=length(PSM)) %>% ungroup() %>% filter(nObs != nComplete) %>%
 	  select(PSM) %>% unlist() %>% unique()
-
   # subset, keep psm with complete features
   filt_df <- psm_df %>% dplyr::filter(Mixture == mixture & Condition == "Norm") %>%
 	  group_by(PSM) %>% mutate(nObs=length(PSM)) %>% ungroup()  %>%
@@ -116,42 +115,38 @@ detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
 	  # calculate mean of log2 Intensity for binning psm
 	  group_by(Mixture,PSM) %>% mutate(meanQC=mean(log2(Intensity))) %>% 
 	  ungroup()
-
   # group ratio data into intensity bins
   breaks <- stats::quantile(filt_df$meanQC, seq(0, 1, length.out=nbins+1),
   		   names=FALSE,na.rm=TRUE)
   filt_df <- filt_df %>% 
   	mutate(bin = cut(meanQC, breaks, labels=FALSE, include.lowest=TRUE))
-
   # compute log ratio (difference) of QC measurments
   filt_df <- filt_df %>% group_by(Mixture,PSM) %>% 
   	mutate(ratioQC = diff(log2(Intensity))) %>% ungroup()
-
   # summarize mean and SD of each bin
   filt_df <- filt_df %>% group_by(bin) %>% 
   	mutate(meanRatio = mean(ratioQC,na.rm=TRUE),
   	       binSD = sd(ratioQC), .groups="drop") %>% ungroup()
-
   # flag outliers
   filt_df <- filt_df %>% mutate(isLow = ratioQC < meanRatio - nSD*binSD)
   filt_df <- filt_df %>% mutate(isHigh = ratioQC > meanRatio + nSD*binSD)
   filt_df <- filt_df %>% mutate(isOutlier = isLow | isHigh)
-
   # summary
   summary_df <- filt_df %>% group_by(bin) %>%
   	summarize(meanIntensity = mean(Intensity),
   		  meanRatio = mean(ratioQC,na.rm=TRUE),
   		  binSD = sd(ratioQC), 
   		  nOut = sum(isOutlier), .groups="drop")
-
   # status
   if (length(is_incomplete) > 0) {
-    warning(length(is_incomplete)," PSM with incomplete features were removed.")
+    warning(length(is_incomplete),
+	    " PSM with incomplete features in mixture ", mixture,
+	    " were removed.", call.=FALSE)
   }
-
   out_df <- filt_df %>% select(Mixture,PSM, bin, meanQC, ratioQC, binSD, isOutlier)
   return(out_df %>% filter(isOutlier))
 } # EOF
+
 
 
 ## [0] subset the data ------------------------------------------------------------
@@ -213,7 +208,7 @@ message(
 # This is essential because our normalization strategy depends upon the SPQC
 # samples. We cannot perform normalization to SPQC PSM that are highly variable.
 
-# collect all psm outliers for each Mixture
+# identify psm outliers for each Mixture
 mix <- c("M1","M2","M3")
 outlier_list <- lapply(mix, detectOutliers, msstats_psm, nbins=5, nSD=4)
 names(outlier_list) <- mix
@@ -229,8 +224,8 @@ psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
 names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
 
 # loop to remove outlier psm from each mixture
+# NOTE: PSM with incomplete observations within a mixture (n=2) are removed
 filt_list <- list()
-
 for (mixture in names(psm_list)) {
 	filt_psm <- psm_list[[mixture]] %>% filter(PSM %notin% psm_outliers[[mixture]])
 	filt_list[[mixture]] <- filt_psm
@@ -263,11 +258,11 @@ t0 <- Sys.time()
 # Mixture effects before we do this.
 
 suppressMessages({ # verbosity
-  msstats_prot <- proteinSummarization(filt_msstats_psm, #  or msstats_psm
+  msstats_prot <- proteinSummarization(filt_msstats_psm,
     method = "msstats",
     remove_norm_channel = TRUE,
     global_norm = TRUE,
-    MBimpute = TRUE,
+    MBimpute = TRUE, # FIXME: why do missing values remain?
     reference_norm = TRUE,
     clusters = n_cores
   )
@@ -280,6 +275,64 @@ message(
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
+
+## impute missing values within mixtures --------------------------------------
+
+# There are multiple levels of missingness:
+# * missingness within a Run -- handled by MSstats during protein processing
+# * missingness within a mixture
+# * missingness within an experiment -- between mixtures
+
+# there are proteins with only a couple missing values that we have to discard
+# because missing values are not tolerated in a number of the subsequent steps
+# MSstats should have imputed these (I thought), but here we do so with KNN for
+# MNAR data.
+
+# FIXME: need to visualize this
+
+# cast the data into a matrix
+dm <- msstats_prot %>% 
+  reshape2::dcast(Protein ~ Mixture + Channel + Condition,
+		value.var="Abundance") %>%
+  as.data.table() %>% as.matrix(rownames="Protein")
+
+# we can impute up to 50% missingness
+idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
+warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
+
+# subset
+subdm <- dm[!idx,]
+
+# impute, suppress output from cat with sing()
+sink(tempfile())
+data_knn <- impute::impute.knn(subdm,k=10,colmax=0.8,rowmax=0.5)$data
+sink()
+
+stopifnot(!any(is.na(data_knn)))
+
+# tidy the imputed data
+knn_df <- reshape2::melt(data_knn)
+colnames(knn_df) <- c("Protein","Sample","Abundance")
+knn_df$Mixture <- sapply(strsplit(as.character(knn_df$Sample),"_"),"[",1)
+knn_df$Channel <- sapply(strsplit(as.character(knn_df$Sample),"_"),"[",2)
+knn_df$Condition <-sapply(strsplit(as.character(knn_df$Sample),"_"),"[",3)
+knn_df$Sample <- NULL
+
+# merge with msstats_prot, write over Abundance, keep proteins with complete obs
+temp_prot <- msstats_prot %>% filter(Protein %in% knn_df$Protein)
+temp_prot$Abundance <- NULL
+impute_prot <- temp_prot %>% 
+       left_join(knn_df, by=intersect(colnames(temp_prot),colnames(knn_df)))
+
+# proceed with imputed data -- there should be no missing observations
+# proteins with missingness have been imputed or removed
+msstats_prot <- impute_prot
+
+# status
+nprots <- length(unique(msstats_prot$Protein))
+message("Final number of proteins: ",nprots)
+
+stopifnot(!(any(is.na(msstats_prot$Abundance))))
 
 ## [3] perform intrafraction statistical comparisons --------------------------
 
@@ -402,27 +455,6 @@ results_list[["Mutant-Control"]] %>%
 #results_list[["Mutant-Control"]] %>% filter(FDR>0.045 & FDR < 0.05) %>% 
 #	filter(Symbol == sample(Symbol,1)) %>% knitr::kable()
 
-## impute missing values -------------------------------------------------------
-
-# there are proteins with only a couple missing values that we have to discard
-# because missing values are not tolerated in a number of the subsequent steps
-# msstats should have imputed these (i thought), but here we do so with KNN for
-# MNAR data.
-
-dm <- msstats_prot %>%  
-	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-			value.var="Abundance") %>%
-        as.data.table() %>% as.matrix(rownames="Protein")
-
-# we cannot impute proteins that have too many missing values
-idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
-warning(sum(idx),"rows with > 50% missingness cannot be imputed.")
-subdm <- dm[!idx,]
-data_knn <- impute::impute.knn(subdm,k=10,colmax=0.8,rowmax=0.5)$data
-df_knn <- reshape2::melt(data_knn)
-
-# 
-foo <- left_join(msstats_prot,df_knn,by="")
 
 
 
