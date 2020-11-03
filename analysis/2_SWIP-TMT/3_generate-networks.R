@@ -8,6 +8,8 @@
 ## INPUTs ----------------------------------------------------------------------
 root <- "~/projects/SwipProteomics"
 
+rm_poor = TRUE
+
 # * data(gene_map)
 # * data(msstats_prot)
 # * data(musInteractome) from twesleyb/getPPIs
@@ -91,17 +93,23 @@ if (!dir.exists(tabsdir)) {
 
 # NOTE: we also drop proteins with poor fit
 # this is the data used to create adjm, ne_adjm, and ppi_adjm
+any(is.na(msstats_prot$Abundance))
+any(is.na(msstats_prot$norm_Abundance)) # why?
 
-message("\nProteins with poor fit are not used to build network.")
+# drop poor prots?
+if (rm_poor) {
+	warning("Removing ",length(poor_prots)," proteins with poor fit.")
+	prot_df <- msstats_prot %>% filter(Protein %notin% poor_prots)
+} else {
+	prot_df <- msstats_prot
+}
 
-dm <- msstats_prot %>% 
-  # rm poor fits
-  filter(Protein %notin% poor_prots) %>%
-  as.data.table() %>%
+# cast the data into a matrix
+# NOTE: we use the batch corrected Abundance to construct the network!
+dm <- prot_df %>% as.data.table() %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
     value.var = "norm_Abundance"
-  ) %>%
-  as.matrix(rownames = TRUE)
+  ) %>% as.matrix(rownames = TRUE)
 
 # drop rows with any missing values
 out <- apply(dm, 2, function(x) any(is.na(x)))

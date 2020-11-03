@@ -4,7 +4,7 @@
 # author: twab
 # description: generate some gof statistics for protein models
 
-save_rda = FALSE 
+save_rda = TRUE 
 
 # prepare the env
 root = "~/projects/SwipProteomics"
@@ -48,6 +48,8 @@ dm <- msstats_prot %>%
 idx = apply(dm,1,function(x) any(is.na(x)))
 warning(sum(idx), " rows with missing values will be removed.")
 dm <- dm[!idx,]
+
+stopifnot(!any(is.na(dm)))
 
 # munge to create sample info from the dcast fx
 info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
@@ -125,44 +127,45 @@ gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
 # combine varpart -- the precent variance explained for each covariate and
 # gof_df -- the overall R2 for total and fixed effects (which is the percent
 # variance explained by our models).
-results_df <- left_join(varpart_df,gof_df,by="Protein")
+protein_gof <- left_join(varpart_df,gof_df,by="Protein")
 
 # examine results
-results_df %>% head() %>% knitr::kable()
+protein_gof %>% head() %>% knitr::kable()
 
 
 ## identify proteins with poor fit ---------------------------------------------
 
-# how many removed at various thresh
-#thresh_range <- seq(0,1,length.out=100) # 12.78% loss
-#mylist = sapply(thresh_range,loss,results_df,as_char=TRUE)
-#n_out = setNames(sapply(mylist,function(x) sum(x %in% sigprots)),thresh_range)
-#sum(results_df$R2.total < 0.909090909090909,na.rm=TRUE)
-#r2_threshold <- thresh_range[head(which(n_out>100),1)]
-
 r2_threshold = 0.75
-total = length(unique(results_df$Protein))
-out = sum(results_df$R2.total < r2_threshold)
-percent=round(out/total,3)
-cbind(out,percent,total,r2_threshold) %>% knitr::kable()
-poor_prots <- results_df$Protein[results_df$R2.total<r2_threshold]
+message("\nR2 threshold: ", r2_threshold)
+
+total <- length(unique(protein_gof$Protein))
+out <- sum(protein_gof$R2.total < r2_threshold)
+percent <- round(out/total,3)
+cbind(out, percent, total, r2_threshold) %>% knitr::kable()
+
+poor_prots <- protein_gof$Protein[protein_gof$R2.total < r2_threshold]
 message("\nNumber of proteins with poor fit: ", length(poor_prots))
 
 # wash prots
-results_df %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
+message("\nWASHC* protein goodness-of-fit statistics:")
+protein_gof %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
+
 
 ## save results -----------------------------------------------------------------
 
-protein_gof <- results_df
 
 if (save_rda) {
 
-  # save poor prots
+  # save character vector of poor_prots
   myfile <- file.path(root,"data","poor_prots.rda")
   save(poor_prots,file=myfile,version=2)
   
-  # save as rda
+  # save protein_gof data.table as rda
   myfile <- file.path(root,"data","protein_gof.rda")
   save(protein_gof, file=myfile, version=2)
   
+  myfile <- file.path(root,"rdata","protein_gof.csv")
+  fwrite(protein_gof,file=myfile)
+  
 }
+

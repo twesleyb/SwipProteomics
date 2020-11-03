@@ -8,8 +8,7 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-#nprot <- "all" # the number of random proteins to be analyzed or 'all'
-nprot = 23
+nprot <- 23 # the number of random proteins to be analyzed or 'all'
 FDR_alpha <- 0.05 # FDR threshold for significance
 save_rda <- TRUE
 
@@ -218,7 +217,8 @@ names(outlier_list) <- mix
 psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
 
 message("\nSummary of PSM outliers:")
-sapply(psm_outliers,length) %>% knitr::kable()
+x <- sapply(psm_outliers,length)
+data.table(Mixture=names(x), nOutliers=x) %>% knitr::kable()
 
 # psm data for each mix in a list
 psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
@@ -250,20 +250,12 @@ message("\nPerforming normalization and protein summarization using MSstatsTMT."
 
 t0 <- Sys.time()
 
-# NOTE: Don't remove normalization channel!
-# MSstats does not perform any batch (aka Mixture or Experiment) normalization.
-# The variance due to random variability of Mixture is dealt with by the
-# mixed-models used to assess protein differential abundance. However,
-# we wish to contruct a covariation matrix from proteins that covary together in
-# subcellular space. We should remove any variability that can be explained by
-# Mixture effects before we do this.
-
 suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(filt_msstats_psm,
     method = "msstats",
     remove_norm_channel = TRUE,
     global_norm = TRUE,
-    MBimpute = TRUE, # FIXME: why do missing values remain?
+    MBimpute = TRUE, 
     reference_norm = TRUE,
     clusters = n_cores
   )
@@ -277,9 +269,7 @@ message(
 )
 
 
-x = colnames(msstats_prot)
-
-## impute protein-level missing values --------------------------------------
+## [added] impute protein-level missing values ---------------------------------
 
 # There are multiple levels of missingness:
 # * missingness within a Run -- handled by MSstats during protein processing
@@ -292,6 +282,7 @@ x = colnames(msstats_prot)
 # MNAR data.
 
 # FIXME: need to visualize this
+message("\nImputing protein-level missing values with KNN.")
 
 # cast the data into a matrix
 dm <- msstats_prot %>% 
@@ -301,39 +292,50 @@ dm <- msstats_prot %>%
 
 # we can impute up to 50% missingness
 idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
-warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
+if (sum(idx)>0) {
+  warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
+}
 
 # subset
 subdm <- dm[!idx,]
 
 # impute, suppress output from cat with sing()
 sink(tempfile())
-data_knn <- impute::impute.knn(subdm,k=10,colmax=0.8,rowmax=0.5)$data
+dm_knn <- impute::impute.knn(subdm,k=10,colmax=0.8,rowmax=0.5)$data
 sink()
 
-stopifnot(!any(is.na(data_knn)))
+stopifnot(!any(is.na(dm_knn)))
 
 # tidy the imputed data
-knn_df <- reshape2::melt(data_knn)
-colnames(knn_df) <- c("Protein","Sample","Abundance")
-knn_df$Mixture <- sapply(strsplit(as.character(knn_df$Sample),"_"),"[",1)
-knn_df$Channel <- sapply(strsplit(as.character(knn_df$Sample),"_"),"[",2)
-knn_df$Condition <-sapply(strsplit(as.character(knn_df$Sample),"_"),"[",3)
-knn_df$Sample <- NULL
+df_knn <- reshape2::melt(dm_knn)
+colnames(df_knn) <- c("Protein","Sample","Abundance")
+df_knn$Mixture <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",1)
+df_knn$Channel <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",2)
+df_knn$Condition <-sapply(strsplit(as.character(df_knn$Sample),"_"),"[",3)
 
 # merge with msstats_prot, write over Abundance, keep proteins with complete obs
-temp_prot <- msstats_prot %>% filter(Protein %in% knn_df$Protein)
-temp_prot$Abundance <- NULL
-impute_prot <- temp_prot %>% 
-       left_join(knn_df, by=intersect(colnames(temp_prot),colnames(knn_df)))
+cols <- intersect(colnames(msstats_prot),colnames(df_knn))
+# NOTE: use right_join here!
+impute_prot <- msstats_prot %>% 
+	filter(Protein %in% df_knn$Protein) %>% 
+	right_join(df_knn,by=cols)
+
+# check
+dm <- impute_prot %>% 
+  reshape2::dcast(Protein ~ Mixture + Channel + Condition,
+		value.var="Abundance") %>% as.data.table() %>% as.matrix(rownames="Protein")
+stopifnot(!any(is.na(dm)))
+
 
 # proceed with imputed data -- there should be no missing observations
 # proteins with missingness have been imputed or removed
 msstats_prot <- impute_prot
 
+
 # status
 nprots <- length(unique(msstats_prot$Protein))
-message("Final number of proteins: ", formatC(nprots,big.mark=","))
+message("Final number of proteins with complete observations: ", 
+	formatC(nprots,big.mark=","))
 
 stopifnot(!(any(is.na(msstats_prot$Abundance))))
 
@@ -347,13 +349,13 @@ msstats_prot <- msstats_prot %>% mutate(Mixture = factor(Mixture),
 ## [3] perform intrafraction statistical comparisons --------------------------
 
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
-# lmerTest::lmer(Abundance ~ (1|Mixture) + Condition)
-fx0 <- formula(Abundance ~ 0 + Condition + (1|Mixture))
+fx0 <- formula(Abundance ~ 0 + Condition + (1|Mixture)) # lmerTest::lmer
 
 # We specify Condition as Genotype.BioFraction for all intra-fraction
 # comparisons. T-statistics are moderated using ebayes methods in limma.
 
 message("\nAssessing intrafraction comparisons with MSstatsTMT.")
+message("Moderated = TRUE")
 
 t0 <- Sys.time()
 
@@ -384,6 +386,7 @@ row.names(alt_contrast) <- "Mutant-Control"
 colnames(alt_contrast) <- levels(msstats_prot$Condition)
 
 message("\nAssessing 'Mutant-Control' comparison with MSstatsTMT.")
+message("Moderated = FALSE")
 
 t0 <- Sys.time()
 
@@ -409,7 +412,7 @@ message(
 # clean-up protein results
 msstats_prot <- cleanProt(msstats_prot)
 
-# combine results
+# create list of intrafraction results
 tmp_list <- cleanResults(msstats_results) %>%
   group_by(Contrast) %>%
   group_split()
@@ -449,28 +452,36 @@ write_excel(results_list, myfile)
 ## summarize significant results ----------------------------------------------
 
 # Same with/without outlier psm
-message("\nTotal instances of significant change: ",
+message("\nTotal instances of significant 'Intra-Fraction' change: ",
 	sum(sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha))))
 
 message("\nSummary of significant proteins for 'Intra-BioFraction' comparisons:")
 sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha)) %>% t() %>% knitr::kable()
 
-# +2
-message("\nSummary of significant proteins for 'Mutant-Control' comparison:")
+message("\nTotal number of significant proteins for overall 'Mutant-Control' comparison:")
 results_list[["Mutant-Control"]] %>% 
 	summarize(Contrast = unique(Contrast), nSig = sum(FDR<FDR_alpha)) %>% 
 	knitr::kable()
 
 
-## remove batch effect ---------------------------------------------------------
+## [added] remove batch effect ---------------------------------------------------------
 
-message("\nUsing limma to remove batch effect!")
+# MSstats does not perform any batch (aka Mixture or Experiment) normalization.
+# The variance due to random variability of Mixture is dealt with by the
+# mixed-models used to assess protein differential abundance. However,
+# we wish to contruct a covariation matrix from proteins that covary together in
+# subcellular space. We should remove any variability that can be explained by
+# Mixture effects before we do this.
+
+message("\nUsing limma::RemoveBatchEffect to remove effect of 'Mixture'!")
 
 # cast data into a matrix
 dm <- msstats_prot %>%  
 	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-			value.var="Abundance") %>% na.omit() %>%
+			value.var="Abundance") %>%
         as.data.table() %>% as.matrix(rownames="Protein")
+
+stopifnot(!any(apply(dm,1,function(x) any(is.na(x)))))
 
 # use column names to construct sample metadata matrix
 namen <- colnames(dm)
@@ -479,7 +490,7 @@ colnames(samples) <- c("Mixture","Channel","Condition")
 samples$sample <- namen
 
 # use limma to remove batch effect
-# preserve the effect of Condition!
+# NOTE: we still preserve the effect of Condition
 # NOTE: this is saved as rda for module preservation script
 norm_dm <- limma::removeBatchEffect(dm,
 			 batch=samples$Mixture,
@@ -503,6 +514,8 @@ msstats_prot <- msstats_prot %>%
 
 # NOTE: norm_Abundance is not used for downstream linear modeling!
 # We use the adjusted data for ploting only!
+
+stopifnot(!any(is.na(msstats_prot$norm_Abundance)))
 
 
 ## save results ---------------------------------------------------------------

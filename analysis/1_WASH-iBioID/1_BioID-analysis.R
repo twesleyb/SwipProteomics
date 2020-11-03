@@ -6,7 +6,7 @@
 
 ## User parameters to change:
 FDR_alpha = 0.1 # FDR significance threshold for protein enrichment.
-enrichment_threshold = log2(3.0) # enrichment threshold.
+enrichment_threshold = log2(2.5) # enrichment threshold.
 
 ## Input data in root/data/BioID.zip/
 zipfile = "BioID.zip"
@@ -577,43 +577,47 @@ df <- raw_prot %>% dplyr::filter(Accession %in% mito_prot) %>%
 	dplyr::select(Accession)
 results_list[["Mitochondrial Contaiminants"]] <- df
 
-# Write to file.
-message("\nSaving results.")
-myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
-write_excel(results_list,myfile)
+if (save_rda) {
 
-# Save significantly enriched proteins as the wash interactome in root/data
-wash_interactome <- unique(results_df$Accession[sig & up])
-myfile <- file.path(datadir, "wash_interactome.rda")
-save(wash_interactome,file=myfile,version=2)
+  # Write to file.
+  message("\nSaving results.")
+  myfile <- file.path(tabsdir,"S1_WASH_BioID_Results.xlsx")
+  write_excel(results_list,myfile)
+  
+  # Save significantly enriched proteins as the wash interactome in root/data
+  wash_interactome <- unique(results_df$Accession[sig & up])
+  myfile <- file.path(datadir, "wash_interactome.rda")
+  save(wash_interactome,file=myfile,version=2)
+  
+  # save the data:
+  # tidy_prot 
+  # SL_prot
+  # SPN_prot
+  # dep_se
+  # dep_vsn
+  # dep_results
+  
+  # coerce BioID data into DEP se objects
+  bioid_prot <- list("raw" = tidy_prot, "sl" = SL_prot, "spn" = SPN_prot)
+  se_list <- lapply(bioid_prot, reformatDEP, gene_map)
+  
+  # combine with final input dep and vsn normalized dep se objects
+  bioid_se <- c(se_list,
+  	      "dep" =  list(dep_se), 
+  	      "vsn"= list(vsn_se), 
+  	      "results" = list(dep_results))
+  
+  # save bioid  results
+  myfile <- file.path(datadir,"bioid_se.rda")
+  save(bioid_se,file=myfile,version=2)
+  
+  # save gene_map
+  myfile <- file.path(datadir,"bioid_gene_map.rda")
+  save(gene_map,file=myfile,version=2)
+  
+  # save bioid results
+  bioid_results <- results_list
+  myfile <- file.path(root,"data","bioid_results.rda")
+  save(bioid_results, file=myfile, version=2)
 
-# save the data:
-# tidy_prot 
-# SL_prot
-# SPN_prot
-# dep_se
-# dep_vsn
-# dep_results
-
-# coerce BioID data into DEP se objects
-bioid_prot <- list("raw" = tidy_prot, "sl" = SL_prot, "spn" = SPN_prot)
-se_list <- lapply(bioid_prot, reformatDEP, gene_map)
-
-# combine with final input dep and vsn normalized dep se objects
-bioid_se <- c(se_list,
-	      "dep" =  list(dep_se), 
-	      "vsn"= list(vsn_se), 
-	      "results" = list(dep_results))
-
-# save bioid  results
-myfile <- file.path(datadir,"bioid_se.rda")
-save(bioid_se,file=myfile,version=2)
-
-# save gene_map
-myfile <- file.path(datadir,"bioid_gene_map.rda")
-save(gene_map,file=myfile,version=2)
-
-# save bioid results
-bioid_results <- results_list
-myfile <- file.path(root,"data","bioid_results.rda")
-save(bioid_results, file=myfile, version=2)
+} # EIS
