@@ -5,6 +5,7 @@
 # description: generate some gof statistics for protein models
 
 save_rda = TRUE 
+r2_threshold = 0.70
 
 # prepare the env
 root = "~/projects/SwipProteomics"
@@ -131,7 +132,6 @@ protein_gof %>% arrange(desc(BioFraction)) %>% head() %>% knitr::kable()
 
 # use overall R2 -- the percent of variance explained by the model as a natural
 # description of the overall quality of the fit
-r2_threshold = 0.75
 message("\nR2 threshold: ", r2_threshold)
 
 # Summary

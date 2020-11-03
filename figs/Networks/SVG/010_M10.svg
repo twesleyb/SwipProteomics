@@ -8,1164 +8,507 @@
      xmlns:ev="http://www.w3.org/2001/xml-events"
      x="0px"
      y="0px"
-     width="877px"
-     height="477px"
-     viewBox="0 0 877 477"
+     width="1513px"
+     height="683px"
+     viewBox="0 0 1513 683"
      >
 <title></title>
-<desc>Creator: FreeHEP Graphics2D Driver Producer: org.freehep.graphicsio.svg.SVGGraphics2D Revision Source:  Date: Monday, November 2, 2020 5:21:43 PM EST</desc>
+<desc>Creator: FreeHEP Graphics2D Driver Producer: org.freehep.graphicsio.svg.SVGGraphics2D Revision Source:  Date: Tuesday, November 3, 2020 4:14:14 PM EST</desc>
 <g stroke-linejoin="miter" stroke-dashoffset="0" stroke-dasharray="none" stroke-width="1" stroke-miterlimit="10" stroke-linecap="square">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#ffffff">
-  <path d="M 0 0 L 877 0 L 877 477 L 0 477 L 0 0 z"/>
+  <path d="M 0 0 L 1513 0 L 1513 683 L 0 683 L 0 0 z"/>
 </g> <!-- drawing style -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdbbbb">
-  <path d="M -89.24173736572266 -192.8826141357422 L -82.44674682617188 -117.81471252441406"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.772549033164978" stroke="#a86d6d">
+  <path d="M -254.35450744628906 -188.63607788085938 L -267.0177001953125 -265.87811279296875"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6196078658103943" stroke="#bcb8b8">
-  <path d="M -77.40609741210938 -197.4344482421875 L 87.10848999023438 21.678930282592773"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6784313917160034" stroke="#b59b9b">
-  <path d="M -74.01238250732422 -200.55557250976562 L -13.820426940917969 -146.9418487548828"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#000000">
-  <path d="M 109.03682708740234 12.616132736206055 C 97.54560852050781 -69.04623413085938 17.308439254760742 -167.13499450683594 -70.17790222167969 -206.4712371826172"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#000000">
-  <path d="M 65.64676666259766 110.82268524169922 L -81.28973388671875 -195.0751495361328"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6117647290229797" stroke="#bebcbc">
-  <path d="M 37.1573600769043 -219.2898406982422 L -68.14556121826172 -216.57977294921875"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6313725709915161" stroke="#bbb3b3">
-  <path d="M -45.371665954589844 -90.72860717773438 L -83.34252166748047 -194.20787048339844"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b59e9e">
-  <path d="M -92.11585235595703 -55.97159194946289 L -91.44625091552734 -192.7884521484375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29292">
-  <path d="M -79.25846862792969 -153.20762634277344 L -51.20682144165039 -107.17181396484375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.658823549747467" stroke="#b7a4a4">
-  <path d="M 38.419639587402344 -212.38011169433594 L -71.84115600585938 -173.91595458984375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7333333492279053" stroke="#ae8181">
-  <path d="M -91.5392837524414 -55.9620246887207 L -88.85961151123047 -150.65879821777344"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M -125.61678314208984 -85.4712905883789 L -95.55335998535156 -152.1964874267578"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M -134.4253387451172 -22.349950790405273 L -123.03165435791016 55.12950134277344"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6235294342041016" stroke="#bcb7b7">
-  <path d="M -124.49916076660156 -25.456207275390625 L -63.085201263427734 98.32691192626953"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6196078658103943" stroke="#bcb8b8">
-  <path d="M -125.20549774169922 -25.116098403930664 L -93.95565795898438 41.79242706298828"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6274510025978088" stroke="#bcb5b5">
-  <path d="M -108.25694274902344 -43.304901123046875 L -15.71027946472168 -7.794379711151123"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdbaba">
-  <path d="M -114.82086181640625 -32.71950912475586 L -64.8230209350586 13.277557373046875"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdb9b9">
-  <path d="M -106.30683898925781 -59.29473114013672 L 25.923925399780273 -75.73023986816406"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdbaba">
-  <path d="M 17.368297576904297 -48.68215560913086 L -106.0820083618164 -53.8189697265625"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6627451181411743" stroke="#b7a4a4">
-  <path d="M -113.97389221191406 55.663307189941406 L -89.72138977050781 -34.151336669921875"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#ae8484">
-  <path d="M 31.45671844482422 26.82161521911621 L -98.62993621826172 70.14579010009766"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6823529601097107" stroke="#b49a9a">
-  <path d="M -58.337806701660156 -3.9323642253875732 L -106.32251739501953 59.41614532470703"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6078431606292725" stroke="#bebebe">
-  <path d="M -234.29150390625 173.4560089111328 L -136.8564453125 91.5421371459961"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ab7979">
-  <path d="M -63.42409896850586 163.32861328125 L -107.57715606689453 95.85204315185547"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08b8b">
-  <path d="M -86.01807403564453 -7.472804546356201 L -58.847110748291016 96.74232482910156"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7058823704719543" stroke="#b18e8e">
-  <path d="M -89.45691680908203 -6.83272647857666 L -84.24908447265625 39.05397033691406"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6823529601097107" stroke="#b49999">
-  <path d="M 36.012271881103516 -21.413436889648438 L -67.66154479980469 -29.42469596862793"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#af8585">
-  <path d="M -49.70366668701172 39.293678283691406 L -79.51940155029297 -10.209491729736328"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6509804129600525" stroke="#b8a9a9">
-  <path d="M -46.891178131103516 -46.801692962646484 L -11.385411262512207 -14.855963706970215"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M -64.99736022949219 -34.90385437011719 L -51.66010665893555 4.732021808624268"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6431372761726379" stroke="#b9acac">
-  <path d="M -35.97336196899414 -76.8785171508789 L 25.652812957763672 -79.11371612548828"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6196078658103943" stroke="#bdb9b9">
-  <path d="M -39.49567413330078 -92.37004852294922 L -21.268535614013672 -100.3113021850586"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M 18.104459762573242 -54.43914031982422 L -36.907318115234375 -66.32440948486328"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6235294342041016" stroke="#bcb6b6">
-  <path d="M 38.36235427856445 -32.15582275390625 L -38.584774017333984 -60.56047439575195"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.658823549747467" stroke="#b8a6a6">
-  <path d="M -41.43343734741211 35.47195053100586 L -65.03577423095703 -34.89094543457031"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdb9b9">
-  <path d="M 9.526605606079102 18.58293342590332 L -49.41263198852539 -44.22685623168945"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6313725709915161" stroke="#bbb2b2">
-  <path d="M 66.85479736328125 -97.2664566040039 L -36.42219543457031 -81.69279479980469"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6352941393852234" stroke="#bab1b1">
-  <path d="M -13.616592407226562 68.90409088134766 L -61.07925796508789 -36.441368103027344"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6431372761726379" stroke="#baaeae">
-  <path d="M -80.26669311523438 38.857826232910156 L -79.2233657836914 -32.6809196472168"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6274510025978088" stroke="#bbb4b4">
-  <path d="M 71.47008514404297 -141.31842041015625 L -39.55330276489258 -92.50171661376953"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6509804129600525" stroke="#b8a9a9">
-  <path d="M -49.49576187133789 68.4693832397461 L 68.17153930664062 62.22966003417969"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b59d9d">
-  <path d="M -71.0395278930664 40.39149475097656 L -43.759307861328125 -43.37705612182617"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6627451181411743" stroke="#b7a4a4">
-  <path d="M -49.100242614746094 1.609106421470642 L -67.61854553222656 41.73261642456055"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29292">
-  <path d="M -89.03958129882812 144.4017791748047 L -84.20240020751953 101.20188903808594"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#af8585">
-  <path d="M -53.080322265625 158.44151306152344 L -71.38198852539062 99.96845245361328"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#000000">
-  <path d="M -30.939836502075195 157.69711303710938 L 54.58208084106445 -197.7512969970703"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39494">
-  <path d="M -11.66242504119873 168.3321533203125 L 113.50660705566406 39.80342102050781"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.729411780834198" stroke="#ae8383">
-  <path d="M -47.13841247558594 157.0511016845703 L -49.847652435302734 139.8697052001953"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39494">
-  <path d="M -2.415970802307129 181.83253479003906 L 5.486281394958496 178.46910095214844"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#8b0000">
-  <path d="M -1.9482733011245728 182.97840881347656 L 44.35776138305664 164.87782287597656"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#000000">
-  <path d="M 101.07225036621094 17.259126663208008 C 38.82530975341797 30.489381790161133 -21.24631118774414 93.15980529785156 -33.101470947265625 157.23744201660156"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7372549176216125" stroke="#ad7f7f">
-  <path d="M 8.063530921936035 113.59814453125 L -19.901018142700195 162.10052490234375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ac7a7a">
-  <path d="M -32.37500762939453 116.65888214111328 L -36.455467224121094 156.75732421875"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29393">
-  <path d="M 18.539358139038086 82.28231048583984 L -21.74529457092285 161.09835815429688"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a8a8">
-  <path d="M -32.43711853027344 110.8814697265625 L 70.71227264404297 75.24240112304688"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7450980544090271" stroke="#ac7c7c">
-  <path d="M -31.776710510253906 122.97319793701172 L 42.48919677734375 139.85708618164062"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6470588445663452" stroke="#b9abab">
-  <path d="M 38.23090744018555 90.04005432128906 L 71.3804702758789 77.05607604980469"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08a8a">
-  <path d="M 20.04532814025879 138.42897033691406 L 19.943586349487305 138.2328338623047"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7450980544090271" stroke="#ac7b7b">
-  <path d="M 3.4678680896759033 65.51285552978516 L 4.801074981689453 23.07259750366211"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ac7a7a">
-  <path d="M -18.365339279174805 71.45612335205078 L -24.747968673706055 61.34205627441406"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7372549176216125" stroke="#ad7f7f">
-  <path d="M 36.08188247680664 122.8011474609375 L 46.74425506591797 128.6859588623047"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39494">
-  <path d="M 43.17879867553711 42.09610366821289 L 23.53090476989746 71.87950897216797"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#af8484">
-  <path d="M 55.25261688232422 15.864419937133789 L 22.143922805786133 71.00617218017578"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M -18.08138656616211 5.1872758865356445 L -5.52388334274292 66.284912109375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6901960968971252" stroke="#b39797">
-  <path d="M -70.97779846191406 155.1525115966797 L -29.44725227355957 126.2180404663086"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6784313917160034" stroke="#b59c9c">
-  <path d="M -66.4166030883789 168.99327087402344 L 2.9864907264709473 167.03762817382812"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29393">
-  <path d="M -82.98849487304688 145.8437957763672 L -52.60574722290039 64.22962951660156"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29393">
-  <path d="M -5.061593532562256 102.17184448242188 L -71.77312469482422 154.07272338867188"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08a8a">
-  <path d="M -51.48695755004883 109.74592590332031 L -77.64708709716797 148.5876922607422"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7098039388656616" stroke="#b18d8d">
-  <path d="M 64.21701049804688 156.06961059570312 L 43.68055725097656 163.01959228515625"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6352941393852234" stroke="#bab0b0">
-  <path d="M -13.865882873535156 4.127981185913086 L 25.44183349609375 136.01068115234375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7215686440467834" stroke="#af8686">
-  <path d="M 32.52992630004883 119.61528015136719 L 33.145416259765625 134.7264404296875"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6705882549285889" stroke="#b69f9f">
-  <path d="M 119.11650085449219 44.43373489379883 L 52.38869094848633 140.3349151611328"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6274510025978088" stroke="#bbb5b5">
-  <path d="M 86.80936431884766 97.51705169677734 L 53.50722885131836 141.15028381347656"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M 155.4876251220703 -56.00331115722656 L 151.9754638671875 -35.64674377441406"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8941176533699036" stroke="#993232">
-  <path d="M 128.34693908691406 -131.16970825195312 L 125.8492431640625 -133.3032684326172"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7058823704719543" stroke="#b18e8e">
-  <path d="M 118.31380462646484 -91.84593963623047 L 102.48870086669922 -88.51744079589844"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6705882549285889" stroke="#b6a0a0">
-  <path d="M 117.62651824951172 -106.52715301513672 L 62.40916061401367 -112.83534240722656"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M 78.77601623535156 -4.647531986236572 L 133.03982543945312 -66.70026397705078"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.615686297416687" stroke="#bdbaba">
-  <path d="M 19.737943649291992 -58.175697326660156 L 119.27367401123047 -88.08023834228516"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b59d9d">
-  <path d="M 61.97795486450195 17.353721618652344 L 133.44956970214844 -66.34618377685547"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39494">
-  <path d="M 138.11248779296875 -78.19464111328125 L 129.42825317382812 -70.22660827636719"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.9019607901573181" stroke="#982f2f">
-  <path d="M 145.0232391357422 -101.88658905029297 L 117.35234832763672 -102.76113891601562"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7058823704719543" stroke="#b18f8f">
-  <path d="M 127.03578186035156 48.818172454833984 L 100.90856170654297 110.03916931152344"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.9137254953384399" stroke="#962929">
-  <path d="M 113.126220703125 -23.344457626342773 L 49.82551956176758 -86.7966079711914"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7019608020782471" stroke="#b29090">
-  <path d="M 80.4693832397461 -29.940757751464844 L 106.31717681884766 -14.593006134033203"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7215686440467834" stroke="#af8888">
-  <path d="M 69.81502532958984 51.54783248901367 L 106.13741302490234 30.37151336669922"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6823529601097107" stroke="#b59b9b">
-  <path d="M 73.40576171875 33.83768844604492 L 102.76632690429688 23.175235748291016"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.9647058844566345" stroke="#901212">
-  <path d="M 128.05165100097656 -26.253047943115234 L 125.3245849609375 -31.960613250732422"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.686274528503418" stroke="#b49898">
-  <path d="M 118.6565933227539 -66.0009765625 L 129.85939025878906 -33.8267707824707"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6627451181411743" stroke="#b7a3a3">
-  <path d="M 73.79749298095703 37.148616790771484 L 25.527694702148438 11.135088920593262"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6509804129600525" stroke="#b9aaaa">
-  <path d="M 68.69755554199219 52.22595977783203 L -10.422221183776855 39.616249084472656"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a8a8">
-  <path d="M 99.35569763183594 15.035627365112305 L 77.79450988769531 -44.03041076660156"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6470588445663452" stroke="#b9acac">
-  <path d="M 68.78516387939453 -18.187314987182617 L 91.1412582397461 18.96190643310547"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6313725709915161" stroke="#bbb2b2">
-  <path d="M 93.94017791748047 17.188560485839844 L 94.0271987915039 17.358896255493164"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M 75.32100677490234 66.6657485961914 L 68.79609680175781 67.7905502319336"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6666666865348816" stroke="#b6a1a1">
-  <path d="M 13.403926849365234 70.64544677734375 L 68.37437438964844 64.76768493652344"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6274510025978088" stroke="#bcb5b5">
-  <path d="M 75.29121398925781 53.367393493652344 L 68.68128204345703 52.328765869140625"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6431372761726379" stroke="#b9acac">
-  <path d="M 114.37626647949219 -23.041757583618164 L 114.92395782470703 12.15790843963623"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6313725709915161" stroke="#bbb2b2">
-  <path d="M 103.36653137207031 -122.00370025634766 L 112.45270538330078 12.260683059692383"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6196078658103943" stroke="#bcb8b8">
-  <path d="M 72.65495300292969 -58.11237716674805 L 61.69314956665039 -197.19029235839844"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6470588445663452" stroke="#b9acac">
-  <path d="M 37.03840255737305 -27.82803726196289 L 20.417816162109375 -31.897624969482422"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7372549176216125" stroke="#ad7f7f">
-  <path d="M 58.334739685058594 17.535337448120117 L 50.50275421142578 33.63230895996094"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08b8b">
-  <path d="M 55.267364501953125 15.873269081115723 L 56.66956329345703 13.53565502166748"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M 40.68517303466797 -37.29658126831055 L -1.711778998374939 -60.19144821166992"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7176470756530762" stroke="#b08989">
-  <path d="M 77.7746810913086 21.506948471069336 L 82.01670837402344 106.66390228271484"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7529411911964417" stroke="#ab7777">
-  <path d="M 56.98244857788086 111.23772430419922 L 59.34233093261719 114.5472640991211"/>
+  <path d="M -165.81101989746094 -260.0146484375 L -248.79795837402344 -282.3536682128906"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7647058963775635" stroke="#aa7373">
-  <path d="M 6.711376190185547 98.13323974609375 L 48.50997543334961 125.7684555053711"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8980392217636108" stroke="#983131">
+  <path d="M -109.74761962890625 -240.04209899902344 L -83.82592010498047 -228.4192657470703"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08c8c">
-  <path d="M 53.091495513916016 82.89205169677734 L 66.05533599853516 110.62908172607422"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7176470756530762" stroke="#b08888">
+  <path d="M -126.07109069824219 -131.97390747070312 L -134.28823852539062 -222.5263214111328"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.9607843160629272" stroke="#901212">
-  <path d="M 102.24984741210938 -142.2880401611328 L 104.04733276367188 -122.05697631835938"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="1" stroke="#8b0000">
+  <path d="M -47.41583251953125 -276.8697204589844 L -46.307987213134766 -254.02459716796875"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.658823549747467" stroke="#b7a5a5">
-  <path d="M 67.09700775146484 -95.83905029296875 L 1.9204659461975098 -83.54093933105469"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ab7979">
+  <path d="M -230.75857543945312 -155.5424041748047 L -153.48574829101562 -113.87913513183594"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6980392336845398" stroke="#b29191">
-  <path d="M 66.96517181396484 -109.68082427978516 L 62.07957458496094 -110.50663757324219"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8705882430076599" stroke="#9c3f3f">
+  <path d="M -7.265261173248291 -233.47747802734375 L 16.860565185546875 -248.3839874267578"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6274510025978088" stroke="#bcb5b5">
-  <path d="M 68.21929168701172 -198.69317626953125 L 91.36500549316406 -139.72422790527344"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8313725590705872" stroke="#a15151">
+  <path d="M -12.248777389526367 -112.93412780761719 L -30.708459854125977 -169.38284301757812"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6470588445663452" stroke="#b9abab">
-  <path d="M 17.563417434692383 -64.04991912841797 L 69.78765106201172 -87.19780731201172"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ac7a7a">
+  <path d="M 187.65525817871094 -134.23216247558594 L 243.05197143554688 -67.59364318847656"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6784313917160034" stroke="#b59d9d">
+  <path d="M 158.33273315429688 -136.82383728027344 L 31.751367568969727 -30.000993728637695"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6705882549285889" stroke="#b6a0a0">
-  <path d="M 81.28929138183594 -60.61906051635742 L 2.1752331256866455 -71.96782684326172"/>
+  <path d="M -98.67399597167969 -122.22945404052734 L 20.355697631835938 -244.01878356933594"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#af8585">
-  <path d="M 86.28926849365234 -73.90687561035156 L 55.59309387207031 -93.90042877197266"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b59d9d">
+  <path d="M -85.2086410522461 268.5672912597656 L -11.367046356201172 136.59326171875"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M 67.01983642578125 -198.26075744628906 L 103.57515716552734 -87.20484161376953"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6235294342041016" stroke="#bcb7b7">
+  <path d="M -99.81676483154297 265.25103759765625 L -120.72625732421875 -62.767730712890625"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6549019813537598" stroke="#b8a7a7">
-  <path d="M 21.67022132873535 -48.05373764038086 L 81.07576751708984 -53.1392936706543"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6352941393852234" stroke="#bab0b0">
+  <path d="M -89.6273422241211 266.60125732421875 L -9.51104736328125 30.5068416595459"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7254902124404907" stroke="#af8585">
-  <path d="M 60.03997802734375 15.801920890808105 L 94.11611938476562 -29.621795654296875"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.658823549747467" stroke="#b7a5a5">
+  <path d="M -81.14350128173828 271.3694763183594 L 34.91568374633789 132.7163848876953"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7137255072593689" stroke="#b08a8a">
-  <path d="M -29.9536075592041 5.30828857421875 L 2.7359442710876465 -77.09099578857422"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.686274528503418" stroke="#b49797">
+  <path d="M 68.33244323730469 275.6692199707031 L 58.78852844238281 140.4486541748047"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.686274528503418" stroke="#b49999">
+  <path d="M 108.18989562988281 117.20238494873047 L 73.93193817138672 276.0672607421875"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8039215803146362" stroke="#a56060">
+  <path d="M 56.260231018066406 67.8070068359375 L 114.05796813964844 34.166202545166016"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7058823704719543" stroke="#b18f8f">
+  <path d="M 8.99514102935791 43.1234130859375 L 2.106579542160034 -41.60090637207031"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.800000011920929" stroke="#a56262">
+  <path d="M 49.77309799194336 126.88826751708984 L 92.95858001708984 166.78512573242188"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7960784435272217" stroke="#a56262">
+  <path d="M -33.83941650390625 110.32730865478516 L -82.31893157958984 128.28578186035156"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8823529481887817" stroke="#9a3939">
+  <path d="M 7.822189807891846 43.232704162597656 L 6.675004482269287 32.314666748046875"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.929411768913269" stroke="#942222">
+  <path d="M 180.96771240234375 237.45394897460938 L 152.91986083984375 216.5697479248047"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.9019607901573181" stroke="#982f2f">
+  <path d="M 264.7243957519531 294.9938049316406 L 226.2698974609375 269.3764953613281"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7882353067398071" stroke="#a66666">
+  <path d="M 98.09136962890625 162.135009765625 L 76.63880920410156 133.753173828125"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.800000011920929" stroke="#a56060">
+  <path d="M 117.01504516601562 117.8716049194336 L 119.24154663085938 154.31549072265625"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7568627595901489" stroke="#ab7575">
+  <path d="M -188.01722717285156 67.77877807617188 L -122.12557220458984 121.64585876464844"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6078431606292725" stroke="#bebebe">
+  <path d="M -416.5963134765625 -34.562355041503906 L 24.319528579711914 97.40483093261719"/>
+</g> <!-- drawing style -->
+</g> <!-- transform -->
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7019608020782471" stroke="#b29090">
-  <path d="M 30.362871170043945 22.442163467407227 L -10.473393440246582 29.369348526000977"/>
+  <path d="M 9.96801471710205 -43.11788558959961 L 46.52021408081055 74.99671173095703"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6627451181411743" stroke="#b7a3a3">
-  <path d="M -36.595428466796875 5.4922027587890625 L -36.26035690307617 3.537532091140747"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6666666865348816" stroke="#b6a1a1">
+  <path d="M -31.551542282104492 -58.108978271484375 L -186.68331909179688 43.017189025878906"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6666666865348816" stroke="#b7a2a2">
-  <path d="M -5.859742641448975 0.9687515497207642 L 10.497121810913086 33.81611251831055"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6784313917160034" stroke="#b59c9c">
-  <path d="M -28.1463623046875 6.211035251617432 L -28.145713806152344 33.302581787109375"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6352941393852234" stroke="#bab0b0">
-  <path d="M 0.7806218862533569 -3.007103443145752 L 13.6843900680542 15.184144973754883"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6431372761726379" stroke="#b9adad">
-  <path d="M 9.852630615234375 -76.2848892211914 L 76.51326751708984 -133.28985595703125"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6627451181411743" stroke="#b7a4a4">
-  <path d="M 18.330711364746094 -62.2218132019043 L 28.363426208496094 -66.20069885253906"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.658823549747467" stroke="#b8a6a6">
-  <path d="M 17.371517181396484 -45.784385681152344 L 21.804462432861328 -45.97871398925781"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7764706015586853" stroke="#a86c6c">
-  <path d="M -10.985821723937988 36.98820877075195 L -3.820664167404175 21.078588485717773"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b69e9e">
-  <path d="M 19.27823829650879 -58.57994842529297 L 0.513927161693573 -65.21041107177734"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6784313917160034" stroke="#b59b9b">
-  <path d="M 13.16313648223877 32.594581604003906 L -19.138198852539062 -44.39240264892578"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39595">
-  <path d="M -29.427043914794922 33.322261810302734 L -31.729101181030273 -41.656349182128906"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6470588445663452" stroke="#b9aaaa">
-  <path d="M 17.291318893432617 12.909069061279297 L -15.604965209960938 -46.1116828918457"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6745098233222961" stroke="#b59e9e">
-  <path d="M 25.652902603149414 -79.11125946044922 L 2.5100831985473633 -78.27039337158203"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7568627595901489" stroke="#ab7676">
-  <path d="M 40.340145111083984 30.108078002929688 L 56.19426727294922 -42.56776428222656"/>
+  <path d="M 147.0457763671875 80.00679779052734 L 213.31689453125 68.71720886230469"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7568627595901489" stroke="#aa7575">
-  <path d="M 45.615692138671875 -13.80348014831543 L 38.248565673828125 29.70308494567871"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7098039388656616" stroke="#b18d8d">
+  <path d="M 96.26205444335938 58.96443557739258 L 20.316843032836914 -48.22293472290039"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7215686440467834" stroke="#af8787">
-  <path d="M 34.791664123535156 33.69709777832031 L 6.767295837402344 52.127708435058594"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.8705882430076599" stroke="#9c3f3f">
+  <path d="M 178.7588348388672 33.02495574951172 L 215.89157104492188 52.918853759765625"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7058823704719543" stroke="#b18e8e">
-  <path d="M 60.916927337646484 -11.887685775756836 L 62.463356018066406 -41.727230072021484"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.800000011920929" stroke="#a56161">
+  <path d="M 178.06524658203125 -3.2173264026641846 L 237.91433715820312 -38.29261779785156"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6705882549285889" stroke="#b69f9f">
-  <path d="M 50.949951171875 -10.690703392028809 L 31.449146270751953 -75.84329223632812"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7450980544090271" stroke="#ac7b7b">
+  <path d="M 109.41881561279297 10.149290084838867 L 40.31127166748047 0.023479215800762177"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6352941393852234" stroke="#bab0b0">
-  <path d="M 52.97638702392578 -81.17259216308594 L 58.76986312866211 -197.1482696533203"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7490196228027344" stroke="#ac7a7a">
+  <path d="M -94.92180633544922 -76.91197967529297 L -27.973087310791016 -27.93048667907715"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7176470756530762" stroke="#b08a8a">
-  <path d="M 37.116554260253906 -78.117431640625 L 37.17000961303711 -78.00102996826172"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6941176652908325" stroke="#b39595">
-  <path d="M 71.52229309082031 -141.2003173828125 L 58.9167594909668 -135.59774780273438"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.6392157077789307" stroke="#baafaf">
-  <path d="M 60.65080642700195 -197.1321563720703 L 63.20097351074219 -119.3475112915039"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.7176470756530762" stroke="#b08989">
-  <path d="M 34.40460968017578 -105.11642456054688 L 52.794952392578125 -90.07434844970703"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -70.13788604736328 -215.9830322265625 C -70.13788604736328 -204.27743718080953 -79.62714232214213 -194.78817749023438 -91.33273315429688 -194.78817749023438 C -103.03832398645162 -194.78817749023438 -112.52758026123047 -204.27743718080953 -112.52758026123047 -215.9830322265625 C -112.52758026123047 -227.68862727231547 -103.03832398645162 -237.17788696289062 -91.33273315429688 -237.17788696289062 C -79.62714232214213 -237.17788696289062 -70.13788604736328 -227.68862727231547 -70.13788604736328 -215.9830322265625 z"/>
+  <path d="M -250.01885986328125 -288.2452697753906 C -250.01885986328125 -276.8318961954752 -259.2712272501627 -267.57952880859375 -270.6846008300781 -267.57952880859375 C -282.0979744099935 -267.57952880859375 -291.350341796875 -276.8318961954752 -291.350341796875 -288.2452697753906 C -291.350341796875 -299.658643355306 -282.0979744099935 -308.9110107421875 -270.6846008300781 -308.9110107421875 C -259.2712272501627 -308.9110107421875 -250.01885986328125 -299.658643355306 -250.01885986328125 -288.2452697753906 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -70.13788604736328 -215.9830322265625 C -70.13788604736328 -204.27743718080953 -79.62714232214213 -194.78817749023438 -91.33273315429688 -194.78817749023438 C -103.03832398645162 -194.78817749023438 -112.52758026123047 -204.27743718080953 -112.52758026123047 -215.9830322265625 C -112.52758026123047 -227.68862727231547 -103.03832398645162 -237.17788696289062 -91.33273315429688 -237.17788696289062 C -79.62714232214213 -237.17788696289062 -70.13788604736328 -227.68862727231547 -70.13788604736328 -215.9830322265625 z"/>
+  <path d="M -250.01885986328125 -288.2452697753906 C -250.01885986328125 -276.8318961954752 -259.2712272501627 -267.57952880859375 -270.6846008300781 -267.57952880859375 C -282.0979744099935 -267.57952880859375 -291.350341796875 -276.8318961954752 -291.350341796875 -288.2452697753906 C -291.350341796875 -299.658643355306 -282.0979744099935 -308.9110107421875 -270.6846008300781 -308.9110107421875 C -259.2712272501627 -308.9110107421875 -250.01885986328125 -299.658643355306 -250.01885986328125 -288.2452697753906 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 379.1719730268052, 34.97556301025088)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CRK</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 516.3381240307452, 43.13912272628729)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">GABARAPL2</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -72.86460876464844 -168.15179443359375 C -72.86460876464844 -159.59138081121645 -79.80419514227114 -152.65179443359375 -88.36460876464844 -152.65179443359375 C -96.92502238702573 -152.65179443359375 -103.86460876464844 -159.59138081121645 -103.86460876464844 -168.15179443359375 C -103.86460876464844 -176.71220805597105 -96.92502238702573 -183.65179443359375 -88.36460876464844 -183.65179443359375 C -79.80419514227114 -183.65179443359375 -72.86460876464844 -176.71220805597105 -72.86460876464844 -168.15179443359375 z"/>
+  <path d="M -109.13483428955078 -252.25531005859375 C -109.13483428955078 -236.87355279238653 -121.60421398514796 -224.4041748046875 -136.9859733581543 -224.4041748046875 C -152.36773273116063 -224.4041748046875 -164.8371124267578 -236.87355279238653 -164.8371124267578 -252.25531005859375 C -164.8371124267578 -267.63706732480097 -152.36773273116063 -280.1064453125 -136.9859733581543 -280.1064453125 C -121.60421398514796 -280.1064453125 -109.13483428955078 -267.63706732480097 -109.13483428955078 -252.25531005859375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -72.86460876464844 -168.15179443359375 C -72.86460876464844 -159.59138081121645 -79.80419514227114 -152.65179443359375 -88.36460876464844 -152.65179443359375 C -96.92502238702573 -152.65179443359375 -103.86460876464844 -159.59138081121645 -103.86460876464844 -168.15179443359375 C -103.86460876464844 -176.71220805597105 -96.92502238702573 -183.65179443359375 -88.36460876464844 -183.65179443359375 C -79.80419514227114 -183.65179443359375 -72.86460876464844 -176.71220805597105 -72.86460876464844 -168.15179443359375 z"/>
+  <path d="M -109.13483428955078 -252.25531005859375 C -109.13483428955078 -236.87355279238653 -121.60421398514796 -224.4041748046875 -136.9859733581543 -224.4041748046875 C -152.36773273116063 -224.4041748046875 -164.8371124267578 -236.87355279238653 -164.8371124267578 -252.25531005859375 C -164.8371124267578 -267.63706732480097 -152.36773273116063 -280.1064453125 -136.9859733581543 -280.1064453125 C -121.60421398514796 -280.1064453125 -109.13483428955078 -267.63706732480097 -109.13483428955078 -252.25531005859375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 370.41535599708357, 81.33404198158772)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SERGEF</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 667.5659703503909, 80.57845506558978)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">RNASEL</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -108.05329895019531 -55.19934844970703 C -108.05329895019531 -37.966582753841564 -122.02321233365075 -23.996665954589844 -139.25597381591797 -23.996665954589844 C -156.4887352981852 -23.996665954589844 -170.45864868164062 -37.966582753841564 -170.45864868164062 -55.19934844970703 C -170.45864868164062 -72.4321141455725 -156.4887352981852 -86.40203094482422 -139.25597381591797 -86.40203094482422 C -122.02321233365075 -86.40203094482422 -108.05329895019531 -72.4321141455725 -108.05329895019531 -55.19934844970703 z"/>
+  <path d="M -29.534820556640625 -297.7381896972656 C -29.534820556640625 -287.30387095233925 -37.99350718280803 -278.8451843261719 -48.427825927734375 -278.8451843261719 C -58.86214467266072 -278.8451843261719 -67.32083129882812 -287.30387095233925 -67.32083129882812 -297.7381896972656 C -67.32083129882812 -308.172508442192 -58.86214467266072 -316.6311950683594 -48.427825927734375 -316.6311950683594 C -37.99350718280803 -316.6311950683594 -29.534820556640625 -308.172508442192 -29.534820556640625 -297.7381896972656 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -108.05329895019531 -55.19934844970703 C -108.05329895019531 -37.966582753841564 -122.02321233365075 -23.996665954589844 -139.25597381591797 -23.996665954589844 C -156.4887352981852 -23.996665954589844 -170.45864868164062 -37.966582753841564 -170.45864868164062 -55.19934844970703 C -170.45864868164062 -72.4321141455725 -156.4887352981852 -86.40203094482422 -139.25597381591797 -86.40203094482422 C -122.02321233365075 -86.40203094482422 -108.05329895019531 -72.4321141455725 -108.05329895019531 -55.19934844970703 z"/>
+  <path d="M -29.534820556640625 -297.7381896972656 C -29.534820556640625 -287.30387095233925 -37.99350718280803 -278.8451843261719 -48.427825927734375 -278.8451843261719 C -58.86214467266072 -278.8451843261719 -67.32083129882812 -287.30387095233925 -67.32083129882812 -297.7381896972656 C -67.32083129882812 -308.172508442192 -58.86214467266072 -316.6311950683594 -48.427825927734375 -316.6311950683594 C -37.99350718280803 -316.6311950683594 -29.534820556640625 -308.172508442192 -29.534820556640625 -297.7381896972656 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 329.16644784030126, 190.80859947829575)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">AARS</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 760.037932920515, 33.26390789909228)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">TOPBP1</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -99.48744201660156 77.19204711914062 C -99.48744201660156 88.40332809978702 -108.57598098224423 97.49186706542969 -119.78726196289062 97.49186706542969 C -130.99854294353702 97.49186706542969 -140.0870819091797 88.40332809978702 -140.0870819091797 77.19204711914062 C -140.0870819091797 65.98076613849422 -130.99854294353702 56.89222717285156 -119.78726196289062 56.89222717285156 C -108.57598098224423 56.89222717285156 -99.48744201660156 65.98076613849422 -99.48744201660156 77.19204711914062 z"/>
+  <path d="M -230.04592895507812 -166.28936767578125 C -230.04592895507812 -154.887438228713 -239.28901903925987 -145.64434814453125 -250.69094848632812 -145.64434814453125 C -262.0928779333964 -145.64434814453125 -271.3359680175781 -154.887438228713 -271.3359680175781 -166.28936767578125 C -271.3359680175781 -177.6912971228495 -262.0928779333964 -186.93438720703125 -250.69094848632812 -186.93438720703125 C -239.28901903925987 -186.93438720703125 -230.04592895507812 -177.6912971228495 -230.04592895507812 -166.28936767578125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -99.48744201660156 77.19204711914062 C -99.48744201660156 88.40332809978702 -108.57598098224423 97.49186706542969 -119.78726196289062 97.49186706542969 C -130.99854294353702 97.49186706542969 -140.0870819091797 88.40332809978702 -140.0870819091797 77.19204711914062 C -140.0870819091797 65.98076613849422 -130.99854294353702 56.89222717285156 -119.78726196289062 56.89222717285156 C -108.57598098224423 56.89222717285156 -99.48744201660156 65.98076613849422 -99.48744201660156 77.19204711914062 z"/>
+  <path d="M -230.04592895507812 -166.28936767578125 C -230.04592895507812 -154.887438228713 -239.28901903925987 -145.64434814453125 -250.69094848632812 -145.64434814453125 C -262.0928779333964 -145.64434814453125 -271.3359680175781 -154.887438228713 -271.3359680175781 -166.28936767578125 C -271.3359680175781 -177.6912971228495 -262.0928779333964 -186.93438720703125 -250.69094848632812 -186.93438720703125 C -239.28901903925987 -186.93438720703125 -230.04592895507812 -177.6912971228495 -230.04592895507812 -166.28936767578125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 344.80154316369845, 319.1235670739404)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">ACAP2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 557.9525429360563, 170.00638196680657)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">BRK1</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -69.5882797241211 -31.323692321777344 C -69.5882797241211 -18.815440518175492 -79.72822469569053 -8.675498962402344 -92.23648071289062 -8.675498962402344 C -104.74473673009074 -8.675498962402344 -114.88468170166016 -18.815440518175492 -114.88468170166016 -31.323692321777344 C -114.88468170166016 -43.8319441253792 -104.74473673009074 -53.971885681152344 -92.23648071289062 -53.971885681152344 C -79.72822469569053 -53.971885681152344 -69.5882797241211 -43.8319441253792 -69.5882797241211 -31.323692321777344 z"/>
+  <path d="M -2.783050537109375 -210.65383911132812 C -2.783050537109375 -187.77725351139574 -21.328187349286367 -169.23211669921875 -44.20477294921875 -169.23211669921875 C -67.08135854915113 -169.23211669921875 -85.62649536132812 -187.77725351139574 -85.62649536132812 -210.65383911132812 C -85.62649536132812 -233.5304247112605 -67.08135854915113 -252.0755615234375 -44.20477294921875 -252.0755615234375 C -21.328187349286367 -252.0755615234375 -2.783050537109375 -233.5304247112605 -2.783050537109375 -210.65383911132812 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -69.5882797241211 -31.323692321777344 C -69.5882797241211 -18.815440518175492 -79.72822469569053 -8.675498962402344 -92.23648071289062 -8.675498962402344 C -104.74473673009074 -8.675498962402344 -114.88468170166016 -18.815440518175492 -114.88468170166016 -31.323692321777344 C -114.88468170166016 -43.8319441253792 -104.74473673009074 -53.971885681152344 -92.23648071289062 -53.971885681152344 C -79.72822469569053 -53.971885681152344 -69.5882797241211 -43.8319441253792 -69.5882797241211 -31.323692321777344 z"/>
+  <path d="M -2.783050537109375 -210.65383911132812 C -2.783050537109375 -187.77725351139574 -21.328187349286367 -169.23211669921875 -44.20477294921875 -169.23211669921875 C -67.08135854915113 -169.23211669921875 -85.62649536132812 -187.77725351139574 -85.62649536132812 -210.65383911132812 C -85.62649536132812 -233.5304247112605 -67.08135854915113 -252.0755615234375 -44.20477294921875 -252.0755615234375 C -21.328187349286367 -252.0755615234375 -2.783050537109375 -233.5304247112605 -2.783050537109375 -210.65383911132812 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 366.65986233985984, 213.94910667830396)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CAMKK1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 756.1078663762264, 123.85528307136273)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">ARHGEF28</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -37.945335388183594 -75.33238983154297 C -37.945335388183594 -52.87869780637878 -56.147649222394406 -34.67638397216797 -78.6013412475586 -34.67638397216797 C -101.05503327272278 -34.67638397216797 -119.2573471069336 -52.87869780637878 -119.2573471069336 -75.33238983154297 C -119.2573471069336 -97.78608185670716 -101.05503327272278 -115.98839569091797 -78.6013412475586 -115.98839569091797 C -56.147649222394406 -115.98839569091797 -37.945335388183594 -97.78608185670716 -37.945335388183594 -75.33238983154297 z"/>
+  <path d="M 193.19198608398438 -150.29827880859375 C 193.19198608398438 -139.8642297339554 184.73351806877898 -131.40576171875 174.29946899414062 -131.40576171875 C 163.86541991950227 -131.40576171875 155.40695190429688 -139.8642297339554 155.40695190429688 -150.29827880859375 C 155.40695190429688 -160.7323278832321 163.86541991950227 -169.1907958984375 174.29946899414062 -169.1907958984375 C 184.73351806877898 -169.1907958984375 193.19198608398438 -160.7323278832321 193.19198608398438 -150.29827880859375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -37.945335388183594 -75.33238983154297 C -37.945335388183594 -52.87869780637878 -56.147649222394406 -34.67638397216797 -78.6013412475586 -34.67638397216797 C -101.05503327272278 -34.67638397216797 -119.2573471069336 -52.87869780637878 -119.2573471069336 -75.33238983154297 C -119.2573471069336 -97.78608185670716 -101.05503327272278 -115.98839569091797 -78.6013412475586 -115.98839569091797 C -56.147649222394406 -115.98839569091797 -37.945335388183594 -97.78608185670716 -37.945335388183594 -75.33238983154297 z"/>
+  <path d="M 193.19198608398438 -150.29827880859375 C 193.19198608398438 -139.8642297339554 184.73351806877898 -131.40576171875 174.29946899414062 -131.40576171875 C 163.86541991950227 -131.40576171875 155.40695190429688 -139.8642297339554 155.40695190429688 -150.29827880859375 C 155.40695190429688 -160.7323278832321 163.86541991950227 -169.1907958984375 174.29946899414062 -169.1907958984375 C 184.73351806877898 -169.1907958984375 193.19198608398438 -160.7323278832321 193.19198608398438 -150.29827880859375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 387.9534872703141, 171.2954691769491)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PEPD</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 996.5867000931945, 186.64145728439678)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">USP43</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -51.45188903808594 70.12529754638672 C -51.45188903808594 86.29111274776706 -64.55687498199407 99.3960952758789 -80.72269439697266 99.3960952758789 C -96.88851381195126 99.3960952758789 -109.99349975585938 86.29111274776706 -109.99349975585938 70.12529754638672 C -109.99349975585938 53.95948234500637 -96.88851381195126 40.85449981689453 -80.72269439697266 40.85449981689453 C -64.55687498199407 40.85449981689453 -51.45188903808594 53.95948234500637 -51.45188903808594 70.12529754638672 z"/>
+  <path d="M 57.48453140258789 -260.48974609375 C 57.48453140258789 -248.87460857522913 48.068595194984944 -239.45867919921875 36.45344924926758 -239.45867919921875 C 24.838303303550205 -239.45867919921875 15.422367095947266 -248.87460857522913 15.422367095947266 -260.48974609375 C 15.422367095947266 -272.1048836122709 24.838303303550205 -281.52081298828125 36.45344924926758 -281.52081298828125 C 48.068595194984944 -281.52081298828125 57.48453140258789 -272.1048836122709 57.48453140258789 -260.48974609375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -51.45188903808594 70.12529754638672 C -51.45188903808594 86.29111274776706 -64.55687498199407 99.3960952758789 -80.72269439697266 99.3960952758789 C -96.88851381195126 99.3960952758789 -109.99349975585938 86.29111274776706 -109.99349975585938 70.12529754638672 C -109.99349975585938 53.95948234500637 -96.88851381195126 40.85449981689453 -80.72269439697266 40.85449981689453 C -64.55687498199407 40.85449981689453 -51.45188903808594 53.95948234500637 -51.45188903808594 70.12529754638672 z"/>
+  <path d="M 57.48453140258789 -260.48974609375 C 57.48453140258789 -248.87460857522913 48.068595194984944 -239.45867919921875 36.45344924926758 -239.45867919921875 C 24.838303303550205 -239.45867919921875 15.422367095947266 -248.87460857522913 15.422367095947266 -260.48974609375 C 15.422367095947266 -272.1048836122709 24.838303303550205 -281.52081298828125 36.45344924926758 -281.52081298828125 C 48.068595194984944 -281.52081298828125 57.48453140258789 -272.1048836122709 57.48453140258789 -260.48974609375 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 381.7007002869525, 312.2744078930259)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">HDHD2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 851.8057605522813, 72.0124052624537)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PSMB8</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -1.0955963134765625 198.11192321777344 C -1.0955963134765625 219.96481512285573 -18.810865419136455 237.68008422851562 -40.66375732421875 237.68008422851562 C -62.51664922930105 237.68008422851562 -80.23191833496094 219.96481512285573 -80.23191833496094 198.11192321777344 C -80.23191833496094 176.25903131269115 -62.51664922930105 158.54376220703125 -40.66375732421875 158.54376220703125 C -18.810865419136455 158.54376220703125 -1.0955963134765625 176.25903131269115 -1.0955963134765625 198.11192321777344 z"/>
+  <path d="M -73.66402435302734 291.66632080078125 C -73.66402435302734 305.1801225451685 -84.61912519653075 316.1352233886719 -98.13292694091797 316.1352233886719 C -111.64672868530519 316.1352233886719 -122.6018295288086 305.1801225451685 -122.6018295288086 291.66632080078125 C -122.6018295288086 278.152519056394 -111.64672868530519 267.1974182128906 -98.13292694091797 267.1974182128906 C -84.61912519653075 267.1974182128906 -73.66402435302734 278.152519056394 -73.66402435302734 291.66632080078125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#a5e88b">
-  <path d="M -1.0955963134765625 198.11192321777344 C -1.0955963134765625 219.96481512285573 -18.810865419136455 237.68008422851562 -40.66375732421875 237.68008422851562 C -62.51664922930105 237.68008422851562 -80.23191833496094 219.96481512285573 -80.23191833496094 198.11192321777344 C -80.23191833496094 176.25903131269115 -62.51664922930105 158.54376220703125 -40.66375732421875 158.54376220703125 C -18.810865419136455 158.54376220703125 -1.0955963134765625 176.25903131269115 -1.0955963134765625 198.11192321777344 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 417.9337478728176, 436.32023168041576)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">AHCYL1</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -33.227935791015625 118.08389282226562 C -33.227935791015625 129.15995943506786 -42.20686526979092 138.13888549804688 -53.282936096191406 138.13888549804688 C -64.3590069225919 138.13888549804688 -73.33793640136719 129.15995943506786 -73.33793640136719 118.08389282226562 C -73.33793640136719 107.00782620946339 -64.3590069225919 98.02890014648438 -53.282936096191406 98.02890014648438 C -42.20686526979092 98.02890014648438 -33.227935791015625 107.00782620946339 -33.227935791015625 118.08389282226562 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -33.227935791015625 118.08389282226562 C -33.227935791015625 129.15995943506786 -42.20686526979092 138.13888549804688 -53.282936096191406 138.13888549804688 C -64.3590069225919 138.13888549804688 -73.33793640136719 129.15995943506786 -73.33793640136719 118.08389282226562 C -73.33793640136719 107.00782620946339 -64.3590069225919 98.02890014648438 -53.282936096191406 98.02890014648438 C -42.20686526979092 98.02890014648438 -33.227935791015625 107.00782620946339 -33.227935791015625 118.08389282226562 z"/>
+  <path d="M -73.66402435302734 291.66632080078125 C -73.66402435302734 305.1801225451685 -84.61912519653075 316.1352233886719 -98.13292694091797 316.1352233886719 C -111.64672868530519 316.1352233886719 -122.6018295288086 305.1801225451685 -122.6018295288086 291.66632080078125 C -122.6018295288086 278.152519056394 -111.64672868530519 267.1974182128906 -98.13292694091797 267.1974182128906 C -84.61912519653075 267.1974182128906 -73.66402435302734 278.152519056394 -73.66402435302734 291.66632080078125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 409.26383111979817, 358.75632291715505)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">FSCN1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 716.3099306087458, 646.4046706135734)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">NEU2</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 38.89207458496094 104.13116455078125 C 38.89207458496094 124.36541954249913 22.48897337333448 140.76852416992188 2.2547225952148438 140.76852416992188 C -17.979528182904797 140.76852416992188 -34.38262939453125 124.36541954249913 -34.38262939453125 104.13116455078125 C -34.38262939453125 83.89690955906336 -17.979528182904797 67.49380493164062 2.2547225952148438 67.49380493164062 C 22.48897337333448 67.49380493164062 38.89207458496094 83.89690955906336 38.89207458496094 104.13116455078125 z"/>
+  <path d="M 87.64712524414062 295.53253173828125 C 87.64712524414062 305.42545367125496 79.6273274505518 313.44525146484375 69.73440551757812 313.44525146484375 C 59.84148358460444 313.44525146484375 51.821685791015625 305.42545367125496 51.821685791015625 295.53253173828125 C 51.821685791015625 285.63960980530754 59.84148358460444 277.61981201171875 69.73440551757812 277.61981201171875 C 79.6273274505518 277.61981201171875 87.64712524414062 285.63960980530754 87.64712524414062 295.53253173828125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 38.89207458496094 104.13116455078125 C 38.89207458496094 124.36541954249913 22.48897337333448 140.76852416992188 2.2547225952148438 140.76852416992188 C -17.979528182904797 140.76852416992188 -34.38262939453125 124.36541954249913 -34.38262939453125 104.13116455078125 C -34.38262939453125 83.89690955906336 -17.979528182904797 67.49380493164062 2.2547225952148438 67.49380493164062 C 22.48897337333448 67.49380493164062 38.89207458496094 83.89690955906336 38.89207458496094 104.13116455078125 z"/>
+  <path d="M 87.64712524414062 295.53253173828125 C 87.64712524414062 305.42545367125496 79.6273274505518 313.44525146484375 69.73440551757812 313.44525146484375 C 59.84148358460444 313.44525146484375 51.821685791015625 305.42545367125496 51.821685791015625 295.53253173828125 C 51.821685791015625 285.63960980530754 59.84148358460444 277.61981201171875 69.73440551757812 277.61981201171875 C 79.6273274505518 277.61981201171875 87.64712524414062 285.63960980530754 87.64712524414062 295.53253173828125 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 467.6118972511821, 345.23320936182347)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SAT2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 888.1550228471048, 650.4265799827954)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">VPS25</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -68.40650177001953 169.71058654785156 C -68.40650177001953 182.67103328845246 -78.91301633530202 193.17755126953125 -91.87345886230469 193.17755126953125 C -104.83390138930736 193.17755126953125 -115.34041595458984 182.67103328845246 -115.34041595458984 169.71058654785156 C -115.34041595458984 156.75013980725063 -104.83390138930736 146.24362182617188 -91.87345886230469 146.24362182617188 C -78.91301633530202 146.24362182617188 -68.40650177001953 156.75013980725063 -68.40650177001953 169.71058654785156 z"/>
+  <path d="M 61.04705047607422 92.95896530151367 C 61.04705047607422 119.46863540019088 39.556718467952294 140.95896911621094 13.047050476074219 140.95896911621094 C -13.462617515803863 140.95896911621094 -34.95294952392578 119.46863540019088 -34.95294952392578 92.95896530151367 C -34.95294952392578 66.44929520283647 -13.462617515803863 44.958961486816406 13.047050476074219 44.958961486816406 C 39.556718467952294 44.958961486816406 61.04705047607422 66.44929520283647 61.04705047607422 92.95896530151367 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#a5e88b">
-  <path d="M -68.40650177001953 169.71058654785156 C -68.40650177001953 182.67103328845246 -78.91301633530202 193.17755126953125 -91.87345886230469 193.17755126953125 C -104.83390138930736 193.17755126953125 -115.34041595458984 182.67103328845246 -115.34041595458984 169.71058654785156 C -115.34041595458984 156.75013980725063 -104.83390138930736 146.24362182617188 -91.87345886230469 146.24362182617188 C -78.91301633530202 146.24362182617188 -68.40650177001953 156.75013980725063 -68.40650177001953 169.71058654785156 z"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#fcb5db">
+  <path d="M 61.04705047607422 92.95896530151367 C 61.04705047607422 119.46863540019088 39.556718467952294 140.95896911621094 13.047050476074219 140.95896911621094 C -13.462617515803863 140.95896911621094 -34.95294952392578 119.46863540019088 -34.95294952392578 92.95896530151367 C -34.95294952392578 66.44929520283647 -13.462617515803863 44.958961486816406 13.047050476074219 44.958961486816406 C 39.556718467952294 44.958961486816406 61.04705047607422 66.44929520283647 61.04705047607422 92.95896530151367 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 365.3932027237805, 408.7933929548668)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">TBC1D17</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 824.6803211028364, 439.6950594741862)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SPATA2</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 63.87678337097168 166.15174865722656 C 63.87678337097168 182.41729130198914 50.69094894488387 195.60311889648438 34.425397872924805 195.60311889648438 C 18.15984680096573 195.60311889648438 4.97401237487793 182.41729130198914 4.97401237487793 166.15174865722656 C 4.97401237487793 149.886206012464 18.15984680096573 136.70037841796875 34.425397872924805 136.70037841796875 C 50.69094894488387 136.70037841796875 63.87678337097168 149.886206012464 63.87678337097168 166.15174865722656 z"/>
+  <path d="M 228.9200897216797 254.00849151611328 C 228.9200897216797 268.21288094569275 217.40515353087304 279.7278137207031 203.2007598876953 279.7278137207031 C 188.9963662445176 279.7278137207031 177.48143005371094 268.21288094569275 177.48143005371094 254.00849151611328 C 177.48143005371094 239.80410208653382 188.9963662445176 228.28916931152344 203.2007598876953 228.28916931152344 C 217.40515353087304 228.28916931152344 228.9200897216797 239.80410208653382 228.9200897216797 254.00849151611328 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#a5e88b">
-  <path d="M 63.87678337097168 166.15174865722656 C 63.87678337097168 182.41729130198914 50.69094894488387 195.60311889648438 34.425397872924805 195.60311889648438 C 18.15984680096573 195.60311889648438 4.97401237487793 182.41729130198914 4.97401237487793 166.15174865722656 C 4.97401237487793 149.886206012464 18.15984680096573 136.70037841796875 34.425397872924805 136.70037841796875 C 50.69094894488387 136.70037841796875 63.87678337097168 149.886206012464 63.87678337097168 166.15174865722656 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 492.6558988587767, 405.34413428777896)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PRKCG</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -228.24493408203125 195.53150939941406 C -228.24493408203125 213.3730473432505 -242.70836512799048 227.8364715576172 -260.54991149902344 227.8364715576172 C -278.3914578700564 227.8364715576172 -292.8548889160156 213.3730473432505 -292.8548889160156 195.53150939941406 C -292.8548889160156 177.6899714555776 -278.3914578700564 163.22654724121094 -260.54991149902344 163.22654724121094 C -242.70836512799048 163.22654724121094 -228.24493408203125 177.6899714555776 -228.24493408203125 195.53150939941406 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -228.24493408203125 195.53150939941406 C -228.24493408203125 213.3730473432505 -242.70836512799048 227.8364715576172 -260.54991149902344 227.8364715576172 C -278.3914578700564 227.8364715576172 -292.8548889160156 213.3730473432505 -292.8548889160156 195.53150939941406 C -292.8548889160156 177.6899714555776 -278.3914578700564 163.22654724121094 -260.54991149902344 163.22654724121094 C -242.70836512799048 163.22654724121094 -228.24493408203125 177.6899714555776 -228.24493408203125 195.53150939941406 z"/>
+  <path d="M 228.9200897216797 254.00849151611328 C 228.9200897216797 268.21288094569275 217.40515353087304 279.7278137207031 203.2007598876953 279.7278137207031 C 188.9963662445176 279.7278137207031 177.48143005371094 268.21288094569275 177.48143005371094 254.00849151611328 C 177.48143005371094 239.80410208653382 188.9963662445176 228.28916931152344 203.2007598876953 228.28916931152344 C 217.40515353087304 228.28916931152344 228.9200897216797 239.80410208653382 228.9200897216797 254.00849151611328 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 212.2517939078445, 433.81927069225276)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">UBA3</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 1030.8150098091653, 607.2302930232913)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">DVL3</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 207.27911376953125 -101.30880355834961 C 207.27911376953125 -77.02216047882776 187.590901226629 -57.333946228027344 163.30426025390625 -57.333946228027344 C 139.0176192811835 -57.333946228027344 119.32940673828125 -77.02216047882776 119.32940673828125 -101.30880355834961 C 119.32940673828125 -125.59544663787148 139.0176192811835 -145.28366088867188 163.30426025390625 -145.28366088867188 C 187.590901226629 -145.28366088867188 207.27911376953125 -125.59544663787148 207.27911376953125 -101.30880355834961 z"/>
+  <path d="M 158.64321899414062 193.2649688720703 C 158.64321899414062 213.71170719634182 142.06786259184963 230.2870635986328 121.62112426757812 230.2870635986328 C 101.17438594330662 230.2870635986328 84.59902954101562 213.71170719634182 84.59902954101562 193.2649688720703 C 84.59902954101562 172.8182305477988 101.17438594330662 156.2428741455078 121.62112426757812 156.2428741455078 C 142.06786259184963 156.2428741455078 158.64321899414062 172.8182305477988 158.64321899414062 193.2649688720703 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 207.27911376953125 -101.30880355834961 C 207.27911376953125 -77.02216047882776 187.590901226629 -57.333946228027344 163.30426025390625 -57.333946228027344 C 139.0176192811835 -57.333946228027344 119.32940673828125 -77.02216047882776 119.32940673828125 -101.30880355834961 C 119.32940673828125 -125.59544663787148 139.0176192811835 -145.28366088867188 163.30426025390625 -145.28366088867188 C 187.590901226629 -145.28366088867188 207.27911376953125 -125.59544663787148 207.27911376953125 -101.30880355834961 z"/>
+  <path d="M 158.64321899414062 193.2649688720703 C 158.64321899414062 213.71170719634182 142.06786259184963 230.2870635986328 121.62112426757812 230.2870635986328 C 101.17438594330662 230.2870635986328 84.59902954101562 213.71170719634182 84.59902954101562 193.2649688720703 C 84.59902954101562 172.8182305477988 101.17438594330662 156.2428741455078 121.62112426757812 156.2428741455078 C 142.06786259184963 156.2428741455078 158.64321899414062 172.8182305477988 158.64321899414062 193.2649688720703 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 614.9768788727058, 146.11888454493908)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CPPED1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 936.5875889440132, 544.0405405482575)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PPP3CC</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 186.77200317382812 8.042015075683594 C 186.77200317382812 31.422568094313434 167.81832346323472 50.376251220703125 144.43777465820312 50.376251220703125 C 121.05722585317153 50.376251220703125 102.10354614257812 31.422568094313434 102.10354614257812 8.042015075683594 C 102.10354614257812 -15.338537942946246 121.05722585317153 -34.29222106933594 144.43777465820312 -34.29222106933594 C 167.81832346323472 -34.29222106933594 186.77200317382812 -15.338537942946246 186.77200317382812 8.042015075683594 z"/>
+  <path d="M -82.8709945678711 136.3628692626953 C -82.8709945678711 148.1002095576642 -92.38598886762878 157.61520385742188 -104.12332916259766 157.61520385742188 C -115.86066945756653 157.61520385742188 -125.37566375732422 148.1002095576642 -125.37566375732422 136.3628692626953 C -125.37566375732422 124.62552896772644 -115.86066945756653 115.11053466796875 -104.12332916259766 115.11053466796875 C -92.38598886762878 115.11053466796875 -82.8709945678711 124.62552896772644 -82.8709945678711 136.3628692626953 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 186.77200317382812 8.042015075683594 C 186.77200317382812 31.422568094313434 167.81832346323472 50.376251220703125 144.43777465820312 50.376251220703125 C 121.05722585317153 50.376251220703125 102.10354614257812 31.422568094313434 102.10354614257812 8.042015075683594 C 102.10354614257812 -15.338537942946246 121.05722585317153 -34.29222106933594 144.43777465820312 -34.29222106933594 C 167.81832346323472 -34.29222106933594 186.77200317382812 -15.338537942946246 186.77200317382812 8.042015075683594 z"/>
+  <path d="M -82.8709945678711 136.3628692626953 C -82.8709945678711 148.1002095576642 -92.38598886762878 157.61520385742188 -104.12332916259766 157.61520385742188 C -115.86066945756653 157.61520385742188 -125.37566375732422 148.1002095576642 -125.37566375732422 136.3628692626953 C -125.37566375732422 124.62552896772644 -115.86066945756653 115.11053466796875 -104.12332916259766 115.11053466796875 C -92.38598886762878 115.11053466796875 -82.8709945678711 124.62552896772644 -82.8709945678711 136.3628692626953 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 597.3358682007753, 252.10271513134003)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">AHCYL2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 709.383416502904, 484.8469033549039)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">KIF5A</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 161.22291564941406 59.71121120452881 C 161.22291564941406 84.87278478588355 140.8254335034987 105.27027034759521 115.66386413574219 105.27027034759521 C 90.50229476798569 105.27027034759521 70.10481262207031 84.87278478588355 70.10481262207031 59.71121120452881 C 70.10481262207031 34.549637623174064 90.50229476798569 14.152152061462402 115.66386413574219 14.152152061462402 C 140.8254335034987 14.152152061462402 161.22291564941406 34.549637623174064 161.22291564941406 59.71121120452881 z"/>
+  <path d="M 87.94539642333984 107.01520919799805 C 87.94539642333984 124.42135814145577 73.83492729265845 138.53182983398438 56.428781509399414 138.53182983398438 C 39.02263572614037 138.53182983398438 24.912166595458984 124.42135814145577 24.912166595458984 107.01520919799805 C 24.912166595458984 89.60906025454032 39.02263572614037 75.49858856201172 56.428781509399414 75.49858856201172 C 73.83492729265845 75.49858856201172 87.94539642333984 89.60906025454032 87.94539642333984 107.01520919799805 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 161.22291564941406 59.71121120452881 C 161.22291564941406 84.87278478588355 140.8254335034987 105.27027034759521 115.66386413574219 105.27027034759521 C 90.50229476798569 105.27027034759521 70.10481262207031 84.87278478588355 70.10481262207031 59.71121120452881 C 70.10481262207031 34.549637623174064 90.50229476798569 14.152152061462402 115.66386413574219 14.152152061462402 C 140.8254335034987 14.152152061462402 161.22291564941406 34.549637623174064 161.22291564941406 59.71121120452881 z"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#fcb5db">
+  <path d="M 87.94539642333984 107.01520919799805 C 87.94539642333984 124.42135814145577 73.83492729265845 138.53182983398438 56.428781509399414 138.53182983398438 C 39.02263572614037 138.53182983398438 24.912166595458984 124.42135814145577 24.912166595458984 107.01520919799805 C 24.912166595458984 89.60906025454032 39.02263572614037 75.49858856201172 56.428781509399414 75.49858856201172 C 73.83492729265845 75.49858856201172 87.94539642333984 89.60906025454032 87.94539642333984 107.01520919799805 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 573.3294969836483, 302.18097981651516)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">TUBB5</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 871.549321042743, 454.31737055271634)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">MOCS3</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 113.6858024597168 -18.339683532714844 C 113.6858024597168 2.589722471100096 96.71915976182198 19.556358337402344 75.78974533081055 19.556358337402344 C 54.86033089979911 19.556358337402344 37.8936882019043 2.589722471100096 37.8936882019043 -18.339683532714844 C 37.8936882019043 -39.26908953652978 54.86033089979911 -56.23572540283203 75.78974533081055 -56.23572540283203 C 96.71915976182198 -56.23572540283203 113.6858024597168 -39.26908953652978 113.6858024597168 -18.339683532714844 z"/>
+  <path d="M -185.2752685546875 54.48612976074219 C -185.2752685546875 64.98059340708977 -193.78270542538016 73.488037109375 -204.27716064453125 73.488037109375 C -214.77161586368234 73.488037109375 -223.279052734375 64.98059340708977 -223.279052734375 54.48612976074219 C -223.279052734375 43.991666114394604 -214.77161586368234 35.484222412109375 -204.27716064453125 35.484222412109375 C -193.78270542538016 35.484222412109375 -185.2752685546875 43.991666114394604 -185.2752685546875 54.48612976074219 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 113.6858024597168 -18.339683532714844 C 113.6858024597168 2.589722471100096 96.71915976182198 19.556358337402344 75.78974533081055 19.556358337402344 C 54.86033089979911 19.556358337402344 37.8936882019043 2.589722471100096 37.8936882019043 -18.339683532714844 C 37.8936882019043 -39.26908953652978 54.86033089979911 -56.23572540283203 75.78974533081055 -56.23572540283203 C 96.71915976182198 -56.23572540283203 113.6858024597168 -39.26908953652978 113.6858024597168 -18.339683532714844 z"/>
+  <path d="M -185.2752685546875 54.48612976074219 C -185.2752685546875 64.98059340708977 -193.78270542538016 73.488037109375 -204.27716064453125 73.488037109375 C -214.77161586368234 73.488037109375 -223.279052734375 64.98059340708977 -223.279052734375 54.48612976074219 C -223.279052734375 43.991666114394604 -214.77161586368234 35.484222412109375 -204.27716064453125 35.484222412109375 C -193.78270542538016 35.484222412109375 -185.2752685546875 43.991666114394604 -185.2752685546875 54.48612976074219 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 536.9462009609123, 226.5333283331299)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PGM3</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 606.9303563603863, 399.6728580046541)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">LYST</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 124.85749435424805 149.32658004760742 C 124.85749435424805 171.81317395470714 106.62850998267363 190.0421600341797 84.14191818237305 190.0421600341797 C 61.65532638207245 190.0421600341797 43.42634201049805 171.81317395470714 43.42634201049805 149.32658004760742 C 43.42634201049805 126.8399861405077 61.65532638207245 108.61100006103516 84.14191818237305 108.61100006103516 C 106.62850998267363 108.61100006103516 124.85749435424805 126.8399861405077 124.85749435424805 149.32658004760742 z"/>
+  <path d="M 145.50694274902344 85.45999145507812 C 145.50694274902344 102.28923770092914 131.8641413885388 115.93203735351562 115.03489303588867 115.93203735351562 C 98.20564468323855 115.93203735351562 84.5628433227539 102.28923770092914 84.5628433227539 85.45999145507812 C 84.5628433227539 68.63074520922711 98.20564468323855 54.987945556640625 115.03489303588867 54.987945556640625 C 131.8641413885388 54.987945556640625 145.50694274902344 68.63074520922711 145.50694274902344 85.45999145507812 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 124.85749435424805 149.32658004760742 C 124.85749435424805 171.81317395470714 106.62850998267363 190.0421600341797 84.14191818237305 190.0421600341797 C 61.65532638207245 190.0421600341797 43.42634201049805 171.81317395470714 43.42634201049805 149.32658004760742 C 43.42634201049805 126.8399861405077 61.65532638207245 108.61100006103516 84.14191818237305 108.61100006103516 C 106.62850998267363 108.61100006103516 124.85749435424805 126.8399861405077 124.85749435424805 149.32658004760742 z"/>
+  <path d="M 145.50694274902344 85.45999145507812 C 145.50694274902344 102.28923770092914 131.8641413885388 115.93203735351562 115.03489303588867 115.93203735351562 C 98.20564468323855 115.93203735351562 84.5628433227539 102.28923770092914 84.5628433227539 85.45999145507812 C 84.5628433227539 68.63074520922711 98.20564468323855 54.987945556640625 115.03489303588867 54.987945556640625 C 131.8641413885388 54.987945556640625 145.50694274902344 68.63074520922711 145.50694274902344 85.45999145507812 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 545.6857663200092, 389.03702863204114)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">RGS7</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 930.7784270906271, 431.8940861174663)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PDZD11</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 143.04286193847656 -103.12850189208984 C 143.04286193847656 -82.5206650659241 126.33691281276279 -65.81471252441406 105.72908020019531 -65.81471252441406 C 85.12124758762783 -65.81471252441406 68.41529846191406 -82.5206650659241 68.41529846191406 -103.12850189208984 C 68.41529846191406 -123.73633871825558 85.12124758762783 -140.44229125976562 105.72908020019531 -140.44229125976562 C 126.33691281276279 -140.44229125976562 143.04286193847656 -123.73633871825558 143.04286193847656 -103.12850189208984 z"/>
+  <path d="M 297.8542785644531 305.62371826171875 C 297.8542785644531 315.1082245435114 290.1655807359934 322.79693603515625 280.68109130859375 322.79693603515625 C 271.1966018811941 322.79693603515625 263.5079040527344 315.1082245435114 263.5079040527344 305.62371826171875 C 263.5079040527344 296.1392119799261 271.1966018811941 288.45050048828125 280.68109130859375 288.45050048828125 C 290.1655807359934 288.45050048828125 297.8542785644531 296.1392119799261 297.8542785644531 305.62371826171875 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 143.04286193847656 -103.12850189208984 C 143.04286193847656 -82.5206650659241 126.33691281276279 -65.81471252441406 105.72908020019531 -65.81471252441406 C 85.12124758762783 -65.81471252441406 68.41529846191406 -82.5206650659241 68.41529846191406 -103.12850189208984 C 68.41529846191406 -123.73633871825558 85.12124758762783 -140.44229125976562 105.72908020019531 -140.44229125976562 C 126.33691281276279 -140.44229125976562 143.04286193847656 -123.73633871825558 143.04286193847656 -103.12850189208984 z"/>
+  <path d="M 297.8542785644531 305.62371826171875 C 297.8542785644531 315.1082245435114 290.1655807359934 322.79693603515625 280.68109130859375 322.79693603515625 C 271.1966018811941 322.79693603515625 263.5079040527344 315.1082245435114 263.5079040527344 305.62371826171875 C 263.5079040527344 296.1392119799261 271.1966018811941 288.45050048828125 280.68109130859375 288.45050048828125 C 290.1655807359934 288.45050048828125 297.8542785644531 296.1392119799261 297.8542785644531 305.62371826171875 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 552.0615826597691, 144.3552197520595)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SH3BGRL2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 1107.2524786593797, 660.9241545541985)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">N4BP3</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 144.77273559570312 -55.94623565673828 C 144.77273559570312 -38.875963163787816 130.9345523958321 -25.03777313232422 113.86428833007812 -25.03777313232422 C 96.79402426432415 -25.03777313232422 82.95584106445312 -38.875963163787816 82.95584106445312 -55.94623565673828 C 82.95584106445312 -73.01650814968875 96.79402426432415 -86.85469818115234 113.86428833007812 -86.85469818115234 C 130.9345523958321 -86.85469818115234 144.77273559570312 -73.01650814968875 144.77273559570312 -55.94623565673828 z"/>
+  <path d="M 260.322265625 64.57291984558105 C 260.322265625 77.09759730856118 250.16901271111902 87.2508544921875 237.64434051513672 87.2508544921875 C 225.1196683191544 87.2508544921875 214.96641540527344 77.09759730856118 214.96641540527344 64.57291984558105 C 214.96641540527344 52.04824238260093 225.1196683191544 41.89498519897461 237.64434051513672 41.89498519897461 C 250.16901271111902 41.89498519897461 260.322265625 52.04824238260093 260.322265625 64.57291984558105 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 144.77273559570312 -55.94623565673828 C 144.77273559570312 -38.875963163787816 130.9345523958321 -25.03777313232422 113.86428833007812 -25.03777313232422 C 96.79402426432415 -25.03777313232422 82.95584106445312 -38.875963163787816 82.95584106445312 -55.94623565673828 C 82.95584106445312 -73.01650814968875 96.79402426432415 -86.85469818115234 113.86428833007812 -86.85469818115234 C 130.9345523958321 -86.85469818115234 144.77273559570312 -73.01650814968875 144.77273559570312 -55.94623565673828 z"/>
+  <path d="M 260.322265625 64.57291984558105 C 260.322265625 77.09759730856118 250.16901271111902 87.2508544921875 237.64434051513672 87.2508544921875 C 225.1196683191544 87.2508544921875 214.96641540527344 77.09759730856118 214.96641540527344 64.57291984558105 C 214.96641540527344 52.04824238260093 225.1196683191544 41.89498519897461 237.64434051513672 41.89498519897461 C 250.16901271111902 41.89498519897461 260.322265625 52.04824238260093 260.322265625 64.57291984558105 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 563.8250318358412, 190.0847094750517)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">RPS6KC1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 1065.2651010581415, 410.1658610700805)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CHN2</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M -12.028823852539062 34.64833736419678 C -12.028823852539062 50.976414020588365 -25.265348695439847 64.21293544769287 -41.59342956542969 64.21293544769287 C -57.92151043541953 64.21293544769287 -71.15803527832031 50.976414020588365 -71.15803527832031 34.64833736419678 C -71.15803527832031 18.320260707805183 -57.92151043541953 5.083739280700684 -41.59342956542969 5.083739280700684 C -25.265348695439847 5.083739280700684 -12.028823852539062 18.320260707805183 -12.028823852539062 34.64833736419678 z"/>
+  <path d="M 181.15196228027344 15.52238655090332 C 181.15196228027344 34.88680317427351 165.45401463714126 50.58476448059082 146.08961486816406 50.58476448059082 C 126.72521509918687 50.58476448059082 111.02726745605469 34.88680317427351 111.02726745605469 15.52238655090332 C 111.02726745605469 -3.842030072466871 126.72521509918687 -19.53999137878418 146.08961486816406 -19.53999137878418 C 165.45401463714126 -19.53999137878418 181.15196228027344 -3.842030072466871 181.15196228027344 15.52238655090332 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M -12.028823852539062 34.64833736419678 C -12.028823852539062 50.976414020588365 -25.265348695439847 64.21293544769287 -41.59342956542969 64.21293544769287 C -57.92151043541953 64.21293544769287 -71.15803527832031 50.976414020588365 -71.15803527832031 34.64833736419678 C -71.15803527832031 18.320260707805183 -57.92151043541953 5.083739280700684 -41.59342956542969 5.083739280700684 C -25.265348695439847 5.083739280700684 -12.028823852539062 18.320260707805183 -12.028823852539062 34.64833736419678 z"/>
+  <path d="M 181.15196228027344 15.52238655090332 C 181.15196228027344 34.88680317427351 165.45401463714126 50.58476448059082 146.08961486816406 50.58476448059082 C 126.72521509918687 50.58476448059082 111.02726745605469 34.88680317427351 111.02726745605469 15.52238655090332 C 111.02726745605469 -3.842030072466871 126.72521509918687 -19.53999137878418 146.08961486816406 -19.53999137878418 C 165.45401463714126 -19.53999137878418 181.15196228027344 -3.842030072466871 181.15196228027344 15.52238655090332 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 422.850796008974, 277.8898102064513)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">LIMK1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 967.2438381774906, 359.1399841978895)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">AFAP1</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 19.852432250976562 -43.788963317871094 C 19.852432250976562 -17.27929532599302 -1.6378963413490766 4.211036682128906 -28.147560119628906 4.211036682128906 C -54.657223897908736 4.211036682128906 -76.14755249023438 -17.27929532599302 -76.14755249023438 -43.788963317871094 C -76.14755249023438 -70.29863130974917 -54.657223897908736 -91.7889633178711 -28.147560119628906 -91.7889633178711 C -1.6378963413490766 -91.7889633178711 19.852432250976562 -70.29863130974917 19.852432250976562 -43.788963317871094 z"/>
+  <path d="M 278.73553466796875 -49.91603088378906 C 278.73553466796875 -38.32461592341598 269.33882597763267 -28.92791748046875 257.74739837646484 -28.92791748046875 C 246.15597077529702 -28.92791748046875 236.75926208496094 -38.32461592341598 236.75926208496094 -49.91603088378906 C 236.75926208496094 -61.50744584416214 246.15597077529702 -70.90414428710938 257.74739837646484 -70.90414428710938 C 269.33882597763267 -70.90414428710938 278.73553466796875 -61.50744584416214 278.73553466796875 -49.91603088378906 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 19.852432250976562 -43.788963317871094 C 19.852432250976562 -17.27929532599302 -1.6378963413490766 4.211036682128906 -28.147560119628906 4.211036682128906 C -54.657223897908736 4.211036682128906 -76.14755249023438 -17.27929532599302 -76.14755249023438 -43.788963317871094 C -76.14755249023438 -70.29863130974917 -54.657223897908736 -91.7889633178711 -28.147560119628906 -91.7889633178711 C -1.6378963413490766 -91.7889633178711 19.852432250976562 -70.29863130974917 19.852432250976562 -43.788963317871094 z"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#fcb5db">
+  <path d="M 278.73553466796875 -49.91603088378906 C 278.73553466796875 -38.32461592341598 269.33882597763267 -28.92791748046875 257.74739837646484 -28.92791748046875 C 246.15597077529702 -28.92791748046875 236.75926208496094 -38.32461592341598 236.75926208496094 -49.91603088378906 C 236.75926208496094 -61.50744584416214 246.15597077529702 -70.90414428710938 257.74739837646484 -70.90414428710938 C 269.33882597763267 -70.90414428710938 278.73553466796875 -61.50744584416214 278.73553466796875 -49.91603088378906 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 436.53573960530315, 201.86765050011206)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">MTAP</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 1074.7276422312373, 291.0662571618195)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CCDC177</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 26.248891830444336 0.34979820251464844 C 26.248891830444336 11.800875059571503 16.96595989843869 21.08380699157715 5.514883041381836 21.08380699157715 C -5.936193815675017 21.08380699157715 -15.219125747680664 11.800875059571503 -15.219125747680664 0.34979820251464844 C -15.219125747680664 -11.101278654542204 -5.936193815675017 -20.38421058654785 5.514883041381836 -20.38421058654785 C 16.96595989843869 -20.38421058654785 26.248891830444336 -11.101278654542204 26.248891830444336 0.34979820251464844 z"/>
+  <path d="M 38.71282958984375 -5.486965179443359 C 38.71282958984375 14.400658152234016 22.590722027697495 30.522762298583984 2.703094482421875 30.522762298583984 C -17.184533062853752 30.522762298583984 -33.306640625 14.400658152234016 -33.306640625 -5.486965179443359 C -33.306640625 -25.374588511120734 -17.184533062853752 -41.4966926574707 2.703094482421875 -41.4966926574707 C 22.590722027697495 -41.4966926574707 38.71282958984375 -25.374588511120734 38.71282958984375 -5.486965179443359 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 26.248891830444336 0.34979820251464844 C 26.248891830444336 11.800875059571503 16.96595989843869 21.08380699157715 5.514883041381836 21.08380699157715 C -5.936193815675017 21.08380699157715 -15.219125747680664 11.800875059571503 -15.219125747680664 0.34979820251464844 C -15.219125747680664 -11.101278654542204 -5.936193815675017 -20.38421058654785 5.514883041381836 -20.38421058654785 C 16.96595989843869 -20.38421058654785 26.248891830444336 -11.101278654542204 26.248891830444336 0.34979820251464844 z"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#fcb5db">
+  <path d="M 38.71282958984375 -5.486965179443359 C 38.71282958984375 14.400658152234016 22.590722027697495 30.522762298583984 2.703094482421875 30.522762298583984 C -17.184533062853752 30.522762298583984 -33.306640625 14.400658152234016 -33.306640625 -5.486965179443359 C -33.306640625 -25.374588511120734 -17.184533062853752 -41.4966926574707 2.703094482421875 -41.4966926574707 C 22.590722027697495 -41.4966926574707 38.71282958984375 -25.374588511120734 38.71282958984375 -5.486965179443359 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 470.12427346767413, 244.64734724599992)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">USP5</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 812.5331074884651, 337.2845516394703)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">VWA5B1</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 0.5333938598632812 -76.98694610595703 C 0.5333938598632812 -58.569771650788 -14.396675947662999 -43.63970184326172 -32.81385040283203 -43.63970184326172 C -51.23102485800107 -43.63970184326172 -66.16109466552734 -58.569771650788 -66.16109466552734 -76.98694610595703 C -66.16109466552734 -95.40412056112606 -51.23102485800107 -110.33419036865234 -32.81385040283203 -110.33419036865234 C -14.396675947662999 -110.33419036865234 0.5333938598632812 -95.40412056112606 0.5333938598632812 -76.98694610595703 z"/>
+  <path d="M -417.8614807128906 -39.580214500427246 C -417.8614807128906 -31.01980035135017 -424.80106709051336 -24.08021354675293 -433.3614807128906 -24.08021354675293 C -441.9218943352679 -24.08021354675293 -448.8614807128906 -31.01980035135017 -448.8614807128906 -39.580214500427246 C -448.8614807128906 -48.14062864950432 -441.9218943352679 -55.08021545410156 -433.3614807128906 -55.08021545410156 C -424.80106709051336 -55.08021545410156 -417.8614807128906 -48.14062864950432 -417.8614807128906 -39.580214500427246 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 0.5333938598632812 -76.98694610595703 C 0.5333938598632812 -58.569771650788 -14.396675947662999 -43.63970184326172 -32.81385040283203 -43.63970184326172 C -51.23102485800107 -43.63970184326172 -66.16109466552734 -58.569771650788 -66.16109466552734 -76.98694610595703 C -66.16109466552734 -95.40412056112606 -51.23102485800107 -110.33419036865234 -32.81385040283203 -110.33419036865234 C -14.396675947662999 -110.33419036865234 0.5333938598632812 -95.40412056112606 0.5333938598632812 -76.98694610595703 z"/>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
+<g fill-opacity="0.7843137383460999" fill-rule="nonzero" stroke="none" fill="#fcb5db">
+  <path d="M -417.8614807128906 -39.580214500427246 C -417.8614807128906 -31.01980035135017 -424.80106709051336 -24.08021354675293 -433.3614807128906 -24.08021354675293 C -441.9218943352679 -24.08021354675293 -448.8614807128906 -31.01980035135017 -448.8614807128906 -39.580214500427246 C -448.8614807128906 -48.14062864950432 -441.9218943352679 -55.08021545410156 -433.3614807128906 -55.08021545410156 C -424.80106709051336 -55.08021545410156 -417.8614807128906 -48.14062864950432 -417.8614807128906 -39.580214500427246 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 433.946812035757, 169.69185790127366)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">CFL2</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 359.2549563459772, 301.8183122325886)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SAMD14</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 73.97934532165527 74.36008262634277 C 73.97934532165527 98.26998999312661 54.59653912425493 117.65279960632324 30.686635971069336 117.65279960632324 C 6.776732817883733 117.65279960632324 -12.606073379516602 98.26998999312661 -12.606073379516602 74.36008262634277 C -12.606073379516602 50.45017525955892 6.776732817883733 31.067365646362305 30.686635971069336 31.067365646362305 C 54.59653912425493 31.067365646362305 73.97934532165527 50.45017525955892 73.97934532165527 74.36008262634277 z"/>
+  <path d="M 33.771942138671875 -78.11453247070312 C 33.771942138671875 -58.9866377579031 18.26571630921078 -43.48041534423828 -0.8621826171875 -43.48041534423828 C -19.99008154358578 -43.48041534423828 -35.496307373046875 -58.9866377579031 -35.496307373046875 -78.11453247070312 C -35.496307373046875 -97.24242718350315 -19.99008154358578 -112.74864959716797 -0.8621826171875 -112.74864959716797 C 18.26571630921078 -112.74864959716797 33.771942138671875 -97.24242718350315 33.771942138671875 -78.11453247070312 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 73.97934532165527 74.36008262634277 C 73.97934532165527 98.26998999312661 54.59653912425493 117.65279960632324 30.686635971069336 117.65279960632324 C 6.776732817883733 117.65279960632324 -12.606073379516602 98.26998999312661 -12.606073379516602 74.36008262634277 C -12.606073379516602 50.45017525955892 6.776732817883733 31.067365646362305 30.686635971069336 31.067365646362305 C 54.59653912425493 31.067365646362305 73.97934532165527 50.45017525955892 73.97934532165527 74.36008262634277 z"/>
+  <path d="M 33.771942138671875 -78.11453247070312 C 33.771942138671875 -58.9866377579031 18.26571630921078 -43.48041534423828 -0.8621826171875 -43.48041534423828 C -19.99008154358578 -43.48041534423828 -35.496307373046875 -58.9866377579031 -35.496307373046875 -78.11453247070312 C -35.496307373046875 -97.24242718350315 -19.99008154358578 -112.74864959716797 -0.8621826171875 -112.74864959716797 C 18.26571630921078 -112.74864959716797 33.771942138671875 -97.24242718350315 33.771942138671875 -78.11453247070312 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 496.7897162905773, 316.37880268934697)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">DDO</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 818.5432727452614, 261.7321572992375)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">TTC9</text>
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 73.76792693138123 47.26244926452637 C 73.76792693138123 67.87875963677295 57.05510522354969 84.59158134460449 36.4387948513031 84.59158134460449 C 15.82248447905651 84.59158134460449 -0.8903372287750244 67.87875963677295 -0.8903372287750244 47.26244926452637 C -0.8903372287750244 26.646138892279776 15.82248447905651 9.933317184448242 36.4387948513031 9.933317184448242 C 57.05510522354969 9.933317184448242 73.76792693138123 26.646138892279776 73.76792693138123 47.26244926452637 z"/>
+  <path d="M -90.22504425048828 -97.40668106079102 C -90.22504425048828 -79.34185822528694 -104.86948004928635 -64.69742584228516 -122.93430709838867 -64.69742584228516 C -140.999134147491 -64.69742584228516 -155.64356994628906 -79.34185822528694 -155.64356994628906 -97.40668106079102 C -155.64356994628906 -115.47150389629509 -140.999134147491 -130.11593627929688 -122.93430709838867 -130.11593627929688 C -104.86948004928635 -130.11593627929688 -90.22504425048828 -115.47150389629509 -90.22504425048828 -97.40668106079102 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 835.0442505542037, 338.2929774443979)">
 <g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 73.76792693138123 47.26244926452637 C 73.76792693138123 67.87875963677295 57.05510522354969 84.59158134460449 36.4387948513031 84.59158134460449 C 15.82248447905651 84.59158134460449 -0.8903372287750244 67.87875963677295 -0.8903372287750244 47.26244926452637 C -0.8903372287750244 26.646138892279776 15.82248447905651 9.933317184448242 36.4387948513031 9.933317184448242 C 57.05510522354969 9.933317184448242 73.76792693138123 26.646138892279776 73.76792693138123 47.26244926452637 z"/>
+  <path d="M -90.22504425048828 -97.40668106079102 C -90.22504425048828 -79.34185822528694 -104.86948004928635 -64.69742584228516 -122.93430709838867 -64.69742584228516 C -140.999134147491 -64.69742584228516 -155.64356994628906 -79.34185822528694 -155.64356994628906 -97.40668106079102 C -155.64356994628906 -115.47150389629509 -140.999134147491 -130.11593627929688 -122.93430709838867 -130.11593627929688 C -104.86948004928635 -130.11593627929688 -90.22504425048828 -115.47150389629509 -90.22504425048828 -97.40668106079102 z"/>
 </g> <!-- drawing style -->
 </g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 498.49171112118, 290.11552529280374)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">HNMT</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 86.83783531188965 17.517691612243652 C 86.83783531188965 32.67505791724259 74.55036213934952 44.962531089782715 59.392995834350586 44.962531089782715 C 44.23562952935164 44.962531089782715 31.948156356811523 32.67505791724259 31.948156356811523 17.517691612243652 C 31.948156356811523 2.360325307244711 44.23562952935164 -9.92714786529541 59.392995834350586 -9.92714786529541 C 74.55036213934952 -9.92714786529541 86.83783531188965 2.360325307244711 86.83783531188965 17.517691612243652 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 86.83783531188965 17.517691612243652 C 86.83783531188965 32.67505791724259 74.55036213934952 44.962531089782715 59.392995834350586 44.962531089782715 C 44.23562952935164 44.962531089782715 31.948156356811523 32.67505791724259 31.948156356811523 17.517691612243652 C 31.948156356811523 2.360325307244711 44.23562952935164 -9.92714786529541 59.392995834350586 -9.92714786529541 C 74.55036213934952 -9.92714786529541 86.83783531188965 2.360325307244711 86.83783531188965 17.517691612243652 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 518.1438502499659, 261.2866295759454)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">RBCK1</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 83.22676658630371 -47.270957946777344 C 83.22676658630371 -29.628824326526342 68.92499151514846 -15.327049255371094 51.28285789489746 -15.327049255371094 C 33.64072427464646 -15.327049255371094 19.33894920349121 -29.628824326526342 19.33894920349121 -47.270957946777344 C 19.33894920349121 -64.91309156702835 33.64072427464646 -79.2148666381836 51.28285789489746 -79.2148666381836 C 68.92499151514846 -79.2148666381836 83.22676658630371 -64.91309156702835 83.22676658630371 -47.270957946777344 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 83.22676658630371 -47.270957946777344 C 83.22676658630371 -29.628824326526342 68.92499151514846 -15.327049255371094 51.28285789489746 -15.327049255371094 C 33.64072427464646 -15.327049255371094 19.33894920349121 -29.628824326526342 19.33894920349121 -47.270957946777344 C 19.33894920349121 -64.91309156702835 33.64072427464646 -79.2148666381836 51.28285789489746 -79.2148666381836 C 68.92499151514846 -79.2148666381836 83.22676658630371 -64.91309156702835 83.22676658630371 -47.270957946777344 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 503.49707153065447, 198.4928690344694)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">STARD10</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 11.640769958496094 75.08807373046875 C 11.640769958496094 97.06099419530202 -6.17179810423373 114.87356567382812 -28.14471435546875 114.87356567382812 C -50.11763060670378 114.87356567382812 -67.9301986694336 97.06099419530202 -67.9301986694336 75.08807373046875 C -67.9301986694336 53.11515326563547 -50.11763060670378 35.302581787109375 -28.14471435546875 35.302581787109375 C -6.17179810423373 35.302581787109375 11.640769958496094 53.11515326563547 11.640769958496094 75.08807373046875 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 11.640769958496094 75.08807373046875 C 11.640769958496094 97.06099419530202 -6.17179810423373 114.87356567382812 -28.14471435546875 114.87356567382812 C -50.11763060670378 114.87356567382812 -67.9301986694336 97.06099419530202 -67.9301986694336 75.08807373046875 C -67.9301986694336 53.11515326563547 -50.11763060670378 35.302581787109375 -28.14471435546875 35.302581787109375 C -6.17179810423373 35.302581787109375 11.640769958496094 53.11515326563547 11.640769958496094 75.08807373046875 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 431.69150306399683, 317.0843765659052)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">GRHPR</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 131.6256866455078 -154.37981796264648 C 131.6256866455078 -137.56265420977752 117.99268349665579 -123.92964935302734 101.17552185058594 -123.92964935302734 C 84.35836020451607 -123.92964935302734 70.72535705566406 -137.56265420977752 70.72535705566406 -154.37981796264648 C 70.72535705566406 -171.19698171551548 84.35836020451607 -184.82998657226562 101.17552185058594 -184.82998657226562 C 117.99268349665579 -184.82998657226562 131.6256866455078 -171.19698171551548 131.6256866455078 -154.37981796264648 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 131.6256866455078 -154.37981796264648 C 131.6256866455078 -137.56265420977752 117.99268349665579 -123.92964935302734 101.17552185058594 -123.92964935302734 C 84.35836020451607 -123.92964935302734 70.72535705566406 -137.56265420977752 70.72535705566406 -154.37981796264648 C 70.72535705566406 -171.19698171551548 84.35836020451607 -184.82998657226562 101.17552185058594 -184.82998657226562 C 117.99268349665579 -184.82998657226562 131.6256866455078 -171.19698171551548 131.6256866455078 -154.37981796264648 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 557.995297835907, 94.68196551938175)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">SMYD5</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 80.66051483154297 -219.87527465820312 C 80.66051483154297 -208.41241658043913 71.36803147918602 -199.11993408203125 59.90517234802246 -199.11993408203125 C 48.4423132168589 -199.11993408203125 39.14982986450195 -208.41241658043913 39.14982986450195 -219.87527465820312 C 39.14982986450195 -231.33813273596712 48.4423132168589 -240.630615234375 59.90517234802246 -240.630615234375 C 71.36803147918602 -240.630615234375 80.66051483154297 -231.33813273596712 80.66051483154297 -219.87527465820312 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 80.66051483154297 -219.87527465820312 C 80.66051483154297 -208.41241658043913 71.36803147918602 -199.11993408203125 59.90517234802246 -199.11993408203125 C 48.4423132168589 -199.11993408203125 39.14982986450195 -208.41241658043913 39.14982986450195 -219.87527465820312 C 39.14982986450195 -231.33813273596712 48.4423132168589 -240.630615234375 59.90517234802246 -240.630615234375 C 71.36803147918602 -240.630615234375 80.66051483154297 -231.33813273596712 80.66051483154297 -219.87527465820312 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 517.9956944509037, 31.203165572000163)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PSMD9</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 101.32046318054199 -80.52176666259766 C 101.32046318054199 -60.171949525273845 84.82368375590367 -43.67516326904297 64.47387504577637 -43.67516326904297 C 44.124066335649054 -43.67516326904297 27.627286911010742 -60.171949525273845 27.627286911010742 -80.52176666259766 C 27.627286911010742 -100.87158379992147 44.124066335649054 -117.36837005615234 64.47387504577637 -117.36837005615234 C 84.82368375590367 -117.36837005615234 101.32046318054199 -100.87158379992147 101.32046318054199 -80.52176666259766 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 101.32046318054199 -80.52176666259766 C 101.32046318054199 -60.171949525273845 84.82368375590367 -43.67516326904297 64.47387504577637 -43.67516326904297 C 44.124066335649054 -43.67516326904297 27.627286911010742 -60.171949525273845 27.627286911010742 -80.52176666259766 C 27.627286911010742 -100.87158379992147 44.124066335649054 -117.36837005615234 64.47387504577637 -117.36837005615234 C 84.82368375590367 -117.36837005615234 101.32046318054199 -100.87158379992147 101.32046318054199 -80.52176666259766 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 522.7445847198971, 166.2658770568774)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">PPM1A</text>
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g stroke-linejoin="round" stroke-width="4" stroke-linecap="round" fill="none" stroke-opacity="0.7843137383460999" stroke="#000000">
-  <path d="M 60.692243576049805 -117.80721282958984 C 60.692243576049805 -94.71988411318111 41.976265712868695 -76.00390625 18.88893699645996 -76.00390625 C -4.1983917199487735 -76.00390625 -22.914369583129883 -94.71988411318111 -22.914369583129883 -117.80721282958984 C -22.914369583129883 -140.89454154599858 -4.1983917199487735 -159.6105194091797 18.88893699645996 -159.6105194091797 C 41.976265712868695 -159.6105194091797 60.692243576049805 -140.89454154599858 60.692243576049805 -117.80721282958984 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.97041719634655, 239.9298409982766)">
-<g fill-opacity="1" fill-rule="nonzero" stroke="none" fill="#bebebe">
-  <path d="M 60.692243576049805 -117.80721282958984 C 60.692243576049805 -94.71988411318111 41.976265712868695 -76.00390625 18.88893699645996 -76.00390625 C -4.1983917199487735 -76.00390625 -22.914369583129883 -94.71988411318111 -22.914369583129883 -117.80721282958984 C -22.914369583129883 -140.89454154599858 -4.1983917199487735 -159.6105194091797 18.88893699645996 -159.6105194091797 C 41.976265712868695 -159.6105194091797 60.692243576049805 -140.89454154599858 60.692243576049805 -117.80721282958984 z"/>
-</g> <!-- drawing style -->
-</g> <!-- transform -->
-<g transform="matrix(0.9692092680518417, 0, 0, 0.9692092680518417, 479.5286598760392, 130.12847706838056)">
-<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">APBA1</text>
+<g transform="matrix(1.0402715822387871, 0, 0, 1.0402715822387871, 686.6940720071422, 241.66308732896218)">
+<text fill-opacity="1" font-style="normal" font-family="Helvetica" font-weight="normal" stroke="none" fill="#000000" font-size="12" x="0" y="0">LRCH3</text>
 </g> <!-- transform -->
 </g> <!-- default stroke -->
 </svg> <!-- bounding box -->
