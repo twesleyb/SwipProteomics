@@ -8,7 +8,8 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot <- "all" # the number of random proteins to be analyzed or 'all'
+#nprot <- "all" # the number of random proteins to be analyzed or 'all'
+nprot = 23
 FDR_alpha <- 0.05 # FDR threshold for significance
 save_rda <- TRUE
 
@@ -276,7 +277,9 @@ message(
 )
 
 
-## impute missing values within mixtures --------------------------------------
+x = colnames(msstats_prot)
+
+## impute protein-level missing values --------------------------------------
 
 # There are multiple levels of missingness:
 # * missingness within a Run -- handled by MSstats during protein processing
@@ -330,9 +333,16 @@ msstats_prot <- impute_prot
 
 # status
 nprots <- length(unique(msstats_prot$Protein))
-message("Final number of proteins: ",nprots)
+message("Final number of proteins: ", formatC(nprots,big.mark=","))
 
 stopifnot(!(any(is.na(msstats_prot$Abundance))))
+
+
+# insure that the following cols are factors for MSstatsTMT to work
+msstats_prot <- msstats_prot %>% mutate(Mixture = factor(Mixture), 
+					Channel = factor(Channel), 
+					Condition = factor(Condition))
+
 
 ## [3] perform intrafraction statistical comparisons --------------------------
 
@@ -450,12 +460,6 @@ message("\nSummary of significant proteins for 'Mutant-Control' comparison:")
 results_list[["Mutant-Control"]] %>% 
 	summarize(Contrast = unique(Contrast), nSig = sum(FDR<FDR_alpha)) %>% 
 	knitr::kable()
-
-# examine a marginally significant protein
-#results_list[["Mutant-Control"]] %>% filter(FDR>0.045 & FDR < 0.05) %>% 
-#	filter(Symbol == sample(Symbol,1)) %>% knitr::kable()
-
-
 
 
 ## remove batch effect ---------------------------------------------------------

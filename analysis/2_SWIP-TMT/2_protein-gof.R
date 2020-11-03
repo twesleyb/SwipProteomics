@@ -2,7 +2,7 @@
 
 # title: SwipProteomics
 # author: twab
-# description: generate some gof statistics for protein and module-level models
+# description: generate some gof statistics for protein models
 
 save_rda = FALSE 
 
@@ -27,18 +27,6 @@ suppressPackageStartupMessages({
 })
 
 ## functions ------------------------------------------------------------------
-
-#loss <- function(R2_threshold,results_df,as_char=FALSE) {
-#	# a function that determines the number of proteins remove at a given r2
-#	idx <- results_df$R2.total< R2_threshold
-#	poor_prots <- results_df$Protein[idx]
-#	if (as_char) {
-#	  return(poor_prots)
-#	} else {
-#	  return(sum(idx))
-#	}
-#} #EOF
-
 
 ## prepare the data -----------------------------------------------------------
 
