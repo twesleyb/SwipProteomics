@@ -7,7 +7,7 @@
 
 ## INPUTs ----------------------------------------------------------------------
 root <- "~/projects/SwipProteomics"
-
+# remove proteins with poor fit prior to building networks?
 rm_poor = TRUE
 
 # * data(gene_map)
@@ -18,9 +18,11 @@ rm_poor = TRUE
 # this script seems to be a hub. it generates adjm, ne_adjm, and norm_prot --
 # all used in the network building process
 
+
 ## OPTIONs ---------------------------------------------------------------------
 # species to keep when building the ppi graph:
 os_keep <- as.character(c(9606, 10116, 1090)) # human, rat, and mus.
+# NOTE: ppi graph is not used to detect modules
 
 ## OUTPUT
 
@@ -93,12 +95,11 @@ if (!dir.exists(tabsdir)) {
 
 # NOTE: we also drop proteins with poor fit
 # this is the data used to create adjm, ne_adjm, and ppi_adjm
-any(is.na(msstats_prot$Abundance))
-any(is.na(msstats_prot$norm_Abundance)) # why?
 
 # drop poor prots?
 if (rm_poor) {
-	warning("Removing ",length(poor_prots)," proteins with poor fit.")
+	warning("Removing ",formatC(length(poor_prots),big.mark=","),
+		" proteins with poor fit before building network.")
 	prot_df <- msstats_prot %>% filter(Protein %notin% poor_prots)
 } else {
 	prot_df <- msstats_prot
@@ -110,11 +111,6 @@ dm <- prot_df %>% as.data.table() %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
     value.var = "norm_Abundance"
   ) %>% as.matrix(rownames = TRUE)
-
-# drop rows with any missing values
-out <- apply(dm, 2, function(x) any(is.na(x)))
-subdm <- dm[, !out]
-warning(formatC(sum(out), big.mark = ","), " proteins with any missing values were removed.")
 
 # status
 knitr::kable(cbind(samples = dim(subdm)[1], proteins = dim(subdm)[2]))
@@ -198,10 +194,7 @@ data.table(
 
 # load the data and save as norm protein for permutation testing
 # NOTE: we use normalized Abundance!
-# NOTE: we rm poor fits
-# NOTE: prots with missing vals are dropped!
-norm_prot <- msstats_prot %>% as.data.table() %>% 
-  filter(Protein %notin% poor_prots) %>%
+norm_prot <- prot_df %>% as.data.table() %>% 
   dcast(Protein ~ interaction(Mixture, Channel, Genotype), value.var = "norm_Abundance") %>%
   na.omit() %>%
   as.matrix(rownames = "Protein")

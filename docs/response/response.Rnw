@@ -255,6 +255,9 @@ no technical replication of Mixture, the model is reduced to: \\
 
 Control and Mutant mouse.
 
+It is assumed that error at the level of protein summaries are independent and
+non-systematic (no mean variance) errors at the level of protein summaries εmtcb can be assumed
+independent and non-systematic.
 
 Where Mixture is a mixed-effect and represents variation between TMT mixtures.
 Subject is a mixed-effect and represents variation between biological Subjects

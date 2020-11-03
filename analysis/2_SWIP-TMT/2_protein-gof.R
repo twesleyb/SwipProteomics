@@ -26,13 +26,11 @@ suppressPackageStartupMessages({
   library(variancePartition)
 })
 
+
 ## functions ------------------------------------------------------------------
 
-## prepare the data -----------------------------------------------------------
 
-# munge to split Condition (Geno.BioFrac) into geno annotation
-samples <- pd_annotation
-samples$Genotype <- sapply(strsplit(samples$Condition,"\\."),"[",1)
+## prepare the data -----------------------------------------------------------
 
 # cast the data into a matrix
 # NOTE: using Abundance and not norm_Abundance!
@@ -40,14 +38,6 @@ fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
 dm <- msstats_prot %>%
 	reshape2::dcast(fx, value.var= "Abundance") %>% 
 	as.data.table() %>% as.matrix(rownames="Protein")
-
-# NOTE: we must remove rows with missing values!
-# I thought MSstatsTMT imputed missing values...
-# NOTE: I thought msstats imputed these, but there are proteins with 0-21
-# missing values. We should be able to impute many of these.
-idx = apply(dm,1,function(x) any(is.na(x)))
-warning(sum(idx), " rows with missing values will be removed.")
-dm <- dm[!idx,]
 
 stopifnot(!any(is.na(dm)))
 
@@ -73,7 +63,8 @@ varpart_df <- as.data.table(df,keep.rownames="Protein")
 idx <- match(varpart_df$Protein,gene_map$uniprot)
 varpart_df$Symbol <- gene_map$symbol[idx]
 varpart_df$Entrez <- gene_map$entrez[idx]
-# sort cols
+
+# sort cols and rows
 varpart_df <- varpart_df %>%
 	select(Protein,Symbol,Entrez,Mixture,Genotype,BioFraction,Residuals) %>%
 	arrange(desc(Genotype))
@@ -111,6 +102,7 @@ gof_list <- foreach (protein = proteins) %dopar% {
 		# else, evaluate goodness-of-fit
 		r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
 				       c("R2.fixef","R2.total"))
+		# return coefficient of determination
 		return(r2)
 	}
 } #EOL
@@ -132,19 +124,28 @@ protein_gof <- left_join(varpart_df,gof_df,by="Protein")
 # examine results
 protein_gof %>% head() %>% knitr::kable()
 
+protein_gof %>% arrange(desc(BioFraction)) %>% head() %>% knitr::kable()
+
 
 ## identify proteins with poor fit ---------------------------------------------
 
+# use overall R2 -- the percent of variance explained by the model as a natural
+# description of the overall quality of the fit
 r2_threshold = 0.75
 message("\nR2 threshold: ", r2_threshold)
 
+# Summary
 total <- length(unique(protein_gof$Protein))
 out <- sum(protein_gof$R2.total < r2_threshold)
 percent <- round(out/total,3)
-cbind(out, percent, total, r2_threshold) %>% knitr::kable()
+final <- total-out
+cbind(r2_threshold, out, percent, total,final) %>% knitr::kable()
 
+
+# proteins with R2 less than threshold are poor_prots
 poor_prots <- protein_gof$Protein[protein_gof$R2.total < r2_threshold]
-message("\nNumber of proteins with poor fit: ", length(poor_prots))
+message("\nNumber of proteins with poor fit: ", 
+	formatC(length(poor_prots),big.mark=","))
 
 # wash prots
 message("\nWASHC* protein goodness-of-fit statistics:")
