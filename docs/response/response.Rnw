@@ -210,6 +210,11 @@ experiments. \\
 linear mixed models (LMMs) is in their ability to account for complex sources of 
 variation in an experimental design. 
 
+Mixed models use both fixed and random effects. These correspond
+to a hierarchy of levels with the repeated, correlated measurement
+occurring among all of the lower level units for each particular upper
+level unit.
+
 \begin{displayquote}
 	In a mixed model one or more covariates 
 	are a categorical variable  representing experimental or 

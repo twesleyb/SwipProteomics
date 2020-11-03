@@ -164,6 +164,9 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 # protein names sorted by module membership
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
 
+message("\nGenerating plots for ",
+	formatC(length(sorted_plots),big.mark=",")," proteins.")
+
 # loop for all proteins
 plots <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
@@ -174,5 +177,6 @@ for (protein in sorted_prots) {
 close(pbar)
 
 # save
+message("\nSaving plots as a single pdf, this will take several minutes.")
 myfile = file.path(figsdir,"Protein_profiles.pdf")
 ggsavePDF(plots, file=myfile)

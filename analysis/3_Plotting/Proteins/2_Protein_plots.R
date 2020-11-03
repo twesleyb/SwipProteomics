@@ -205,6 +205,6 @@ myfile <- file.path(figsdir,"Protein_plots_legend.pdf")
 ggsave(plot_legend,file=myfile,width=4.5,height=4.5)
 
 # plot list
-message("\nSaving ",length(plots), " plots as a single PDF.")
+message("\nSaving plots as a single pdf, this will take several minutes.")
 myfile <- file.path(figsdir,"Protein_plots.pdf")
 ggsavePDF(plots,myfile)
