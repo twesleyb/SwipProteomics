@@ -115,6 +115,7 @@ Q <- sum(q[which(names(q)!="M0")])/k
 ## loop to evaluate goodness of fit for all modules defined at each resolution
 ###############################################################################
 
+# parallelized nested loop: dopar + do
 t1 <- Sys.time()
 results <- foreach(i = seq(part_list)) %dopar% {
   # for a given partition...
@@ -135,36 +136,8 @@ results <- foreach(i = seq(part_list)) %dopar% {
   q <- unlist(q_list[!idx])
   Q <- sum(q[which(names(q)!="M0")])/k
   results[[i]] <- Q
-  # update pbar
 }
-
-difftime(Sys.time(),t1)
-
-pbar <- txtProgressBar(max=length(part_list),style=3)
-results <- list()
-for (i in seq(part_list)) {
-  # for a given partition...
-  partition <- part_list[[i]]
-  # ... remove modules < 5 nodes
-  partition[partition %in% which(table(partition) < 5)] <- 0
-  # for every module in that partition...
-  modules <- split(names(partition),partition)
-  k <- sum(names(modules) != "M0")
-  modules <- setNames(modules,nm=paste0("M",names(modules)))
-  # ... evaluate its quality
-  q_list <- foreach(module = names(modules)) %dopar% { 
- 	moduleQuality(module, partition,msstats_prot) }
-  names(q_list) <- names(modules)
-  # collect module gof results, exlude NA
-  # FIXME: what about NULL
-  idx <- sapply(q_list,function(x) any(is.na(x))) # drop NA
-  q <- unlist(q_list[!idx])
-  Q <- sum(q[which(names(q)!="M0")])/k
-  results[[i]] <- Q
-  # update pbar
-  setTxtProgressBar(pbar,value=i)
-}
-close(pbar)
+difftime(Sys.time(),t1) # 47 seconds to analyze 5 resolutions
 
 ## does this statistic make sense???
 x = unlist(results) # i think it might... basically we want to minimize the 
