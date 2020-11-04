@@ -6,6 +6,8 @@
 
 save_rda = TRUE 
 r2_threshold = 0.70
+# NOTE: proteins with r2 < r2_threshold are considered to have a poor fit and 
+# not used in downstream analysis
 
 # prepare the env
 root = "~/projects/SwipProteomics"

@@ -8,6 +8,8 @@
 
 ## Optional parameters:
 BF_alpha <- 0.05 # Significance threshold for enrichment
+Padjust_alpha <- 0.05 
+
 
 ## Misc function - getrd() ----------------------------------------------------
 
@@ -112,9 +114,10 @@ gene_lists <- c(
 )
 
 # Remove lists with less than 3 proteins.
-drop <- which(sapply(gene_lists,length) < 3)
-gene_lists <- gene_lists[-drop]
-
+part_entrez <- setNames(partition,
+			nm=mapID(names(partition),"uniprot","entrez"))
+idx <- which(sapply(gene_lists, function(x) sum(x %in% names(part_entrez))<3))
+gene_lists <- gene_lists[-idx]
 
 # Loop to perform GSE for each pathway.
 message("\nPerforming GSE analysis for all modules:")
@@ -184,7 +187,7 @@ close(pbar)
 dt <- bind_rows(results)
 
 # only sig + enriched results:
-sig_dt <- dt %>% filter(Padjust < BF_alpha) %>% 
+sig_dt <- dt %>% filter(Padjust < Padjust_alpha) %>% 
 	filter(`Fold enrichment` > 1) 
 
 # all lopitDC compartments are represented
@@ -224,9 +227,12 @@ sig_dt %>%
 	filter(Module %in% sig_modules) %>% 
 	arrange(Padjust) %>% 
 	summarize(TopPathway = head(Pathway,1),
+		  moduleSize = head(`Module Size`,1),
+		  n = head(`n Pathway Genes in Module`,1),
+		  N = head(`Total Pathway Genes`,1),
 		  FE = head(`Fold enrichment`,1),
 		  Padjust = head(Padjust,1),
-		  .groups="drop") %>%
+		  .groups="drop") %>% arrange(desc(FE)) %>%
 	knitr::kable()
 
 ## summarize top LopitDC predictions:
@@ -247,12 +253,14 @@ myfile <- file.path(root,"tables","S4_Module_GSEA_Results.xlsx")
 write_excel(tmp_list,myfile)
 
 # examine NS modules with sig GSE enrichment
-subdt <- dt %>% filter(`Fold enrichment` > 1) %>% filter(FDR < 0.05) %>%
-	filter(Module %notin% sig_modules) %>%
+dt %>% filter(`Fold enrichment` > 1) %>% filter(Padjust < 0.05) %>%
+	filter(Module %notin% sig_modules) %>% 
 	group_by(Module) %>% 
-	arrange(Padjust) %>% 
 	summarize(TopPathway = head(Pathway,1),
+		  moduleSize = head(`Module Size`,1),
+		  n = head(`n Pathway Genes in Module`,1),
+		  N = head(`Total Pathway Genes`,1),
 		  FE = head(`Fold enrichment`,1),
-		  FDR = head(FDR,1),
-		  .groups="drop") %>% arrange(desc(FE))
-knitr::kable(subdt)
+		  Padjust = head(Padjust,1),
+		  .groups="drop") %>%
+	arrange(as.numeric(gsub("M","",Module))) %>% knitr::kable()

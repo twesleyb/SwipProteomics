@@ -165,7 +165,7 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
 
 message("\nGenerating plots for ",
-	formatC(length(sorted_plots),big.mark=",")," proteins.")
+	formatC(length(sorted_prots),big.mark=",")," proteins.")
 
 # loop for all proteins
 plots <- list()

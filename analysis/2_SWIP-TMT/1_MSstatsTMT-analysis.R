@@ -11,7 +11,11 @@ root <- "~/projects/SwipProteomics"
 nprot <- "all" # the number of random proteins to be analyzed or 'all'
 FDR_alpha <- 0.05 # FDR threshold for significance
 save_rda <- TRUE
-
+# moderated = TRUE # intra-BioFraction comparisons
+# moderated = FALSE # 'Mutant-Control' comparison
+# NOTE: we remove outlier PSM (4xSD outside mean of Intensity bin)
+# NOTE: we impute protein-level missingness with KNN
+# NOTE: we use limma to account for batch effect (1|mixture)
 
 ## prepare the working environment ---------------------------------------------
 

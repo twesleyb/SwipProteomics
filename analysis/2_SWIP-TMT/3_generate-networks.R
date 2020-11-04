@@ -7,8 +7,13 @@
 
 ## INPUTs ----------------------------------------------------------------------
 root <- "~/projects/SwipProteomics"
-# remove proteins with poor fit prior to building networks?
+
+# NOTE: we remove poorly fit proteins before building the network
 rm_poor = TRUE
+
+# NOTE: network enhancment uses the following params:
+# alpha=0.9 
+# diffusion=1.0
 
 # * data(gene_map)
 # * data(msstats_prot)
@@ -65,7 +70,8 @@ renv::load(root, quiet = TRUE)
 suppressPackageStartupMessages({
   library(dplyr) # for manipulating data
   library(neten) # for network enhancement
-  library(getPPIs) # for PPI data
+  suppressWarnings({ # about replacing dplyr imports
+	  library(getPPIs)}) # for PPI data
   library(data.table) # for working with tables
 })
 
@@ -113,17 +119,17 @@ dm <- prot_df %>% as.data.table() %>%
   ) %>% as.matrix(rownames = TRUE)
 
 # status
-knitr::kable(cbind(samples = dim(subdm)[1], proteins = dim(subdm)[2]))
+knitr::kable(cbind(samples = dim(dm)[1], proteins = dim(dm)[2]))
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
-adjm <- cor(subdm, method = "pearson")
+adjm <- cor(dm, method = "pearson")
 
 # Enhanced network
 # NOTE: this can take a couple minutes
 # NOTE: we really need to generate a visualization...
 message("\nPerforming network enhancement.")
-ne_adjm <- neten::neten(adjm,alpha=0.9,diffusion=1) 
+ne_adjm <- neten::neten(adjm,alpha=0.9,diffusion=1.0)
 
 
 ## Create PPI network ---------------------------------------------------------
