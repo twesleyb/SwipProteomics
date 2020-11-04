@@ -86,14 +86,22 @@ idx <- sapply(results_list,is.null)
 message("There were problems fitting ", sum(idx), " models.")
 
 # collect results
+module_sizes <- sapply(modules,length)
 df <- as.data.table(do.call(rbind,results_list[!idx]),keep.rownames="Module")
 df <- df %>% arrange(desc(Genotype))
-df <- df %>% mutate(Size = paste0("M",partition[Module ]))
+df <- df %>% mutate(Size = module_sizes[Module])
 df$"vp.isSingular" <- NULL
 df$"lmer.isSingular" <- NULL
 module_gof <- df %>% 
-	select(Module,Size,BioFraction,Genotype,Mixture,Protein,Residuals,R2.fixef,R2.total)
+	select(Module, Size, BioFraction, Genotype,
+	       Mixture, Protein, Residuals, R2.fixef, R2.total)
 
+module_gof$Quality <- module_gof$R2.total/module_gof$Protein
+
+q <- sum(module_gof$Quality)/length(modules)
+message("Partition Quality: ", round(q,5))
+
+module_gof %>% knitr::kable()
 
 ## save results -----------------------------------------------------------------
 
@@ -109,3 +117,6 @@ if (save_rda) {
 
 }
 
+
+
+hea

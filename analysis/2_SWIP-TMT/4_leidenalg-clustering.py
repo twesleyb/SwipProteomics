@@ -31,7 +31,9 @@ recursive_method = 'Surprise'
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-adjm_file = 'ne_adjm.csv'
+#adjm_file = 'ne_adjm.csv'
+adjm_file = 'adjm.csv' # only cpm is applicable bc we have negative and positive
+# edges
 
 ## Output:
 # Saved in root/rdata/
@@ -158,82 +160,82 @@ for key in out: del parameters[key]
 ## Perform Leidenalg module detection -----------------------------------------
 
 ## MULTIRESOLUTION METHODS
-profile = list()
 
 if parameters.pop('multi_resolution') is True:
+  # collect clustering params
+  profile = list()
+  pbar = ProgressBar()
+  res_range = linspace(**parameters.get('resolution_parameter'))
+  #n_iter = parameters.pop(n_iterations)
+  # for res in pbar(linespace(**p.pop('resolution_range'))):
+  for resolution in pbar(res_range):
+        parameters['resolution_parameter'] = resolution
+        partition = find_partition(**parameters)
+        optimiser = Optimiser()
+        diff = optimiser.optimise_partition(partition,parameters['n_iterations'])
+        profile.append(partition)
+  # EOL
 
-        # multi-resolution methods:
+ # else:
 
-        p.update({'resolution_parameter' : 1})
-        partition = leidenalg.find_partition(**p)
-        optimiser = leidenalg.Optimiser()
-        diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
-    else:
-
-        # single resolution methods:
-        partition = leidenalg.find_partition(**p)
-        optimiser = leidenalg.Optimiser()
-        diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
-
-        partition.summary()
-
-
-## SINGLE RESOLUTION METHODS
-
-# Single resolution methods: first iteration if recursive
-profile = list()
-partition = find_partition(**parameters)
-optimiser = Optimiser()
-diff = optimiser.optimise_partition(partition,n_iterations=-1)
-profile.append(partition)
-
-if not recursive:
-    print("... Final partition: " + partition.summary() + ".", file=stderr)
-# Recursively split modules that are too big.
-if recursive:
-        print("... Initial partition: " + partition.summary() + ".", file=stderr)
-        # Update optimization method.
-        method = methods.get(recursive_method).get('partition_type')
-        if type(method) is str:
-          parameters['partition_type'] = getattr(import_module('leidenalg'),
-                  method)
-        elif type(method) == 'type':
-                parameters['partition_type'] = method
-        # Initial module membership.
-        initial_membership = partition.membership
-        subgraphs = partition.subgraphs()
-        too_big = [subg.vcount() > max_size for subg in subgraphs]
-        n_big = sum(too_big)
-        msg = "\nSplitting {} modules that contain more than {} nodes."
-        print(msg.format(n_big,max_size),file=stderr)
-        while any(too_big):
-            # Perform clustering for any subgraphs that are too big.
-            idx = [i for i, too_big in enumerate(too_big) if too_big]
-            parameters['graph'] = subgraphs.pop(idx[0])
-            part = find_partition(**parameters)
-            optimiser = Optimiser()
-            diff = optimiser.optimise_partition(part,n_iterations=-1)
-            # Add to list.
-            subgraphs.extend(part.subgraphs())
-            too_big = [subg.vcount() > max_size for subg in subgraphs]
-        #EOL to split modules
-        # Collect subgraph membership as a single partition.
-        nodes = [subg.vs['name'] for subg in subgraphs]
-        parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
-        new_part = {k: v for d in parts for k, v in d.items()}
-        # Set membership of initial graph.
-        membership = [new_part.get(node) for node in partition.graph.vs['name']]
-        partition.set_membership(membership)
-        # Replace partition in profile list.
-        profile[0] = partition
-        print("... Final partition: " + partition.summary() + ".", file=stderr)
-# Ends loop.
+ # ## SINGLE RESOLUTION METHODS
+ # # Single resolution methods: first iteration if recursive
+ # profile = list()
+ # partition = find_partition(**parameters)
+ # optimiser = Optimiser()
+ # diff = optimiser.optimise_partition(partition,n_iterations=-1)
+ # profile.append(partition)
+ # if not recursive:
+ #   print("... Final partition: " + partition.summary() + ".", file=stderr)
+ # # Recursively split modules that are too big.
+ # if recursive:
+ #    print("... Initial partition: " + partition.summary() + ".", file=stderr)
+ #    # Update optimization method.
+ #    method = methods.get(recursive_method).get('partition_type')
+ #    if type(method) is str:
+ #       parameters['partition_type'] = getattr(import_module('leidenalg'),
+ #               method)
+ #    elif type(method) == 'type':
+ #            parameters['partition_type'] = method
+ #    # Initial module membership.
+ #    initial_membership = partition.membership
+ #    subgraphs = partition.subgraphs()
+ #    too_big = [subg.vcount() > max_size for subg in subgraphs]
+ #    n_big = sum(too_big)
+ #    msg = "\nSplitting {} modules that contain more than {} nodes."
+ #    print(msg.format(n_big,max_size),file=stderr)
+ #    while any(too_big):
+ #        # Perform clustering for any subgraphs that are too big.
+ #        idx = [i for i, too_big in enumerate(too_big) if too_big]
+ #        parameters['graph'] = subgraphs.pop(idx[0])
+ #        part = find_partition(**parameters)
+ #        optimiser = Optimiser()
+ #        diff = optimiser.optimise_partition(part,n_iterations=-1)
+ #        # Add to list.
+ #        subgraphs.extend(part.subgraphs())
+ #        too_big = [subg.vcount() > max_size for subg in subgraphs]
+ #    #EOL to split modules
+ #    # Collect subgraph membership as a single partition.
+ #    nodes = [subg.vs['name'] for subg in subgraphs]
+ #    parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
+ #    new_part = {k: v for d in parts for k, v in d.items()}
+ #    # Set membership of initial graph.
+ #    membership = [new_part.get(node) for node in partition.graph.vs['name']]
+ #    partition.set_membership(membership)
+ #    # Replace partition in profile list.
+ #    profile[0] = partition
+ #    print("... Final partition: " + partition.summary() + ".", file=stderr)
+# EIS
 
 
 ## Save Leidenalg clustering results ------------------------------------------
 
-# Save final partition
+# collect matrix in which each row is a partition (nrow = nRes)
 df = DataFrame(columns = profile[0].graph.vs['name'])
-df.loc['Membership'] = profile[0].membership
+for i in range(len(profile)):
+    df.loc[i] = profile[i].membership
+#EOL
+
+# save the data as csv
 myfile = os.path.join(rdatdir, output_name + "_partition.csv")
 df.to_csv(myfile)
