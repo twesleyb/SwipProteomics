@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# FIXME: if CPM only one resolution is anlyzed -- add capability to loop through
+# resolution range
+
 '''
 title: multi-leiden.py
 

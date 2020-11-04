@@ -20,13 +20,13 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'leidenalg' # Prefix out output partition, saved as .csv.
-optimization_method = 'Surprise'
+output_name = 'cpm' # Prefix out output partition, saved as .csv.
+optimization_method = 'CPM'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 ## Input data:
@@ -72,33 +72,39 @@ methods = {
         # Modularity
         "Modularity": {'partition_type' : 'ModularityVertexPartition',
             'weights' : True, 'signed' : False,
-            'resolution_parameter' : None, 'n_iterations' : n_iterations},
+            'resolution_parameter' : None, 'n_iterations' : n_iterations,
+            'multi_resolution' : False },
         # Surprise
         "Surprise": {'partition_type' : 'SurpriseVertexPartition',
             'weights' : True, 'signed' : False,
-            'resolution_parameter' : None, 'n_iterations' : n_iterations},
+            'resolution_parameter' : None, 'n_iterations' : n_iterations,
+            'multi_resolution' : False },
         # RBConfiguration
         "RBConfiguration": {'partition_type' : 'RBConfigurationVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
-            'n_iterations' : n_iterations},
+            'n_iterations' : n_iterations,
+            'multi_resolution' : True },
         # RBER
         "RBER": {'partition_type' : 'RBERVertexPartition',
             'weights' : True, 'signed' : False,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
-            'n_iterations' : n_iterations},
+            'n_iterations' : n_iterations,
+            'multi_resolution' : True },
         # CPM
         "CPM": {'partition_type' : 'CPMVertexPartition',
             'weights' : True, 'signed' : True,
             'resolution_parameter' : {'start':rmin,'stop':rmax,'num':nsteps},
-            'n_iterations' : n_iterations},
+            'n_iterations' : n_iterations,
+            'multi_resolution' : True },
         # Significance
         # FIXME: Significance method doesn't seem to be working.
         "Significance":
         {'partition_type' : 'SignificanceVertexPartition',
             'weights': None, 'signed' : False,
             'resolution_parameter' : None,
-            'n_iterations' : n_iterations}
+            'n_iterations' : n_iterations,
+            'multi_resolution' : False }
         }
 
 # Get method specific parameters for clustering.
@@ -129,21 +135,50 @@ else:
     parameters['graph'] = g
 #EIS
 
-## Print the number of vertices.
-## FIXME: ADD
+# the input graph
+print(g.summary()) # NOTE: UNW is UNdirected and Weighted!
+
 
 ## Community detection with the Leiden algorithm -----------------------------
+
+# FIXME: really we need two functions:
+# * single-resolution (+/- recursive)
+# * multi-resolution methods
 
 # Update partition type parameter.
 # Dynamically load the partition_type class.
 # This is the method to be used to optimize the clustering.
-parameters['partition_type'] = getattr(import_module('leidenalg'),method)
+parameters['partition_type'] = getattr(import_module('leidenalg'), method)
 
 # Remove any None type parameters.
 out = [key for key in parameters if parameters.get(key) is None]
 for key in out: del parameters[key]
 
+
 ## Perform Leidenalg module detection -----------------------------------------
+
+## MULTIRESOLUTION METHODS
+profile = list()
+
+if parameters.pop('multi_resolution') is True:
+
+        # multi-resolution methods:
+
+        p.update({'resolution_parameter' : 1})
+        partition = leidenalg.find_partition(**p)
+        optimiser = leidenalg.Optimiser()
+        diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
+    else:
+
+        # single resolution methods:
+        partition = leidenalg.find_partition(**p)
+        optimiser = leidenalg.Optimiser()
+        diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
+
+        partition.summary()
+
+
+## SINGLE RESOLUTION METHODS
 
 # Single resolution methods: first iteration if recursive
 profile = list()
@@ -154,7 +189,6 @@ profile.append(partition)
 
 if not recursive:
     print("... Final partition: " + partition.summary() + ".", file=stderr)
-
 # Recursively split modules that are too big.
 if recursive:
         print("... Initial partition: " + partition.summary() + ".", file=stderr)

@@ -88,9 +88,11 @@ message("There were problems fitting ", sum(idx), " models.")
 # collect results
 df <- as.data.table(do.call(rbind,results_list[!idx]),keep.rownames="Module")
 df <- df %>% arrange(desc(Genotype))
-module_gof <- df %>% mutate(Size = paste0("M",partition[Module ]))
-module_gof$"vp.isSingular" <- NULL
-module_gof$"lmer.isSingular" <- NULL
+df <- df %>% mutate(Size = paste0("M",partition[Module ]))
+df$"vp.isSingular" <- NULL
+df$"lmer.isSingular" <- NULL
+module_gof <- df %>% 
+	select(Module,Size,BioFraction,Genotype,Mixture,Protein,Residuals,R2.fixef,R2.total)
 
 
 ## save results -----------------------------------------------------------------
