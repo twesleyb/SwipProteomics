@@ -20,14 +20,14 @@ nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'cpm' # Prefix out output partition, saved as .csv.
-optimization_method = 'CPM'
+output_name = 'surprise' # Prefix out output partition, saved as .csv.
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
 recursive = False # If module_size > max_size, then cluster recursively.
-recursive_method = 'Surprise'
+recursive_method = 'CPM'
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
@@ -138,7 +138,7 @@ else:
 #EIS
 
 # the input graph
-print(g.summary()) # NOTE: UNW is UNdirected and Weighted!
+print(g.summary()) # NOTE: UNW is UNdirected and Weighted graph!
 
 
 ## Community detection with the Leiden algorithm -----------------------------
@@ -173,59 +173,89 @@ if parameters.pop('multi_resolution') is True:
         partition = find_partition(**parameters)
         optimiser = Optimiser()
         diff = optimiser.optimise_partition(partition,parameters['n_iterations'])
+        if recursive:
+            # Initial module membership.
+            initial_membership = partition.membership
+            # update params
+            new_params = parameters.copy()
+            new_method = methods.get(recursive_method).get('partition_type')
+            new_params['partition_type'] = new_method
+            new_params.pop('resolution_parameter')
+            subgraphs = partition.subgraphs()
+            too_big = [subg.vcount() > max_size for subg in subgraphs]
+            n_big = sum(too_big)
+            while any(too_big):
+                # Perform clustering for any subgraphs that are too big.
+                idx = [i for i, too_big in enumerate(too_big) if too_big]
+                new_graph = subgraphs.pop(idx[0])
+                # mask negative edges
+                edge_weights = new_graph.es['weight']
+                new_weights = [e if e > 0 else 0 for e in edge_weights]
+                new_graph.es['weight'] = new_weights
+                new_params['graph'] = new_graph
+                # find optimal partition of subgraph
+                part = find_partition(**new_params)
+                optimiser = Optimiser()
+                diff = optimiser.optimise_partition(part,n_iterations=-1)
+                subgraphs.extend(part.subgraphs())
+                too_big = [subg.vcount() > max_size for subg in subgraphs]
+            #EOL to split modules
+            # Collect subgraph membership as a single partition.
+            nodes = [subg.vs['name'] for subg in subgraphs]
+            parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
+            new_part = {k: v for d in parts for k, v in d.items()}
+            # Set membership of initial graph.
+            membership = [new_part.get(node) for node in partition.graph.vs['name']]
+            partition.set_membership(membership)
+        # EIS if recursive
         profile.append(partition)
-  # EOL
+    # EOL through resolutions
+else:
+    ## SINGLE RESOLUTION METHODS
+    # Single resolution methods: first iteration if recursive
+    profile = list()
+    partition = find_partition(**parameters)
+    optimiser = Optimiser()
+    diff = optimiser.optimise_partition(partition,n_iterations=-1)
+    profile.append(partition)
+    if recursive:
+        initial_membership = partition.membership
+        # update params
+        new_params = parameters.copy()
+        new_method = methods.get(recursive_method).get('partition_type')
+        new_params['partition_type'] = new_method
+        new_params.pop('resolution_parameter')
+        subgraphs = partition.subgraphs()
+        too_big = [subg.vcount() > max_size for subg in subgraphs]
+        n_big = sum(too_big)
+        while any(too_big):
+            # Perform clustering for any subgraphs that are too big.
+            idx = [i for i, too_big in enumerate(too_big) if too_big]
+            new_graph = subgraphs.pop(idx[0])
+            # mask negative edges
+            edge_weights = new_graph.es['weight']
+            new_weights = [e if e > 0 else 0 for e in edge_weights]
+            new_graph.es['weight'] = new_weights
+            new_params['graph'] = new_graph
+            # find optimal partition of subgraph
+            part = find_partition(**new_params)
+            optimiser = Optimiser()
+            diff = optimiser.optimise_partition(part,n_iterations=-1)
+            subgraphs.extend(part.subgraphs())
+            too_big = [subg.vcount() > max_size for subg in subgraphs]
+        #EOL to split modules
+        # Collect subgraph membership as a single partition.
+        nodes = [subg.vs['name'] for subg in subgraphs]
+        parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
+        new_part = {k: v for d in parts for k, v in d.items()}
+        # Set membership of initial graph.
+        membership = [new_part.get(node) for node in partition.graph.vs['name']]
+        partition.set_membership(membership)
+        profile[0] = partition
+    # EIS if recursive
+#EIS if multi_resolution else single resolution
 
- # else:
-
- # ## SINGLE RESOLUTION METHODS
- # # Single resolution methods: first iteration if recursive
- # profile = list()
- # partition = find_partition(**parameters)
- # optimiser = Optimiser()
- # diff = optimiser.optimise_partition(partition,n_iterations=-1)
- # profile.append(partition)
- # if not recursive:
- #   print("... Final partition: " + partition.summary() + ".", file=stderr)
- # # Recursively split modules that are too big.
- # if recursive:
- #    print("... Initial partition: " + partition.summary() + ".", file=stderr)
- #    # Update optimization method.
- #    method = methods.get(recursive_method).get('partition_type')
- #    if type(method) is str:
- #       parameters['partition_type'] = getattr(import_module('leidenalg'),
- #               method)
- #    elif type(method) == 'type':
- #            parameters['partition_type'] = method
- #    # Initial module membership.
- #    initial_membership = partition.membership
- #    subgraphs = partition.subgraphs()
- #    too_big = [subg.vcount() > max_size for subg in subgraphs]
- #    n_big = sum(too_big)
- #    msg = "\nSplitting {} modules that contain more than {} nodes."
- #    print(msg.format(n_big,max_size),file=stderr)
- #    while any(too_big):
- #        # Perform clustering for any subgraphs that are too big.
- #        idx = [i for i, too_big in enumerate(too_big) if too_big]
- #        parameters['graph'] = subgraphs.pop(idx[0])
- #        part = find_partition(**parameters)
- #        optimiser = Optimiser()
- #        diff = optimiser.optimise_partition(part,n_iterations=-1)
- #        # Add to list.
- #        subgraphs.extend(part.subgraphs())
- #        too_big = [subg.vcount() > max_size for subg in subgraphs]
- #    #EOL to split modules
- #    # Collect subgraph membership as a single partition.
- #    nodes = [subg.vs['name'] for subg in subgraphs]
- #    parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
- #    new_part = {k: v for d in parts for k, v in d.items()}
- #    # Set membership of initial graph.
- #    membership = [new_part.get(node) for node in partition.graph.vs['name']]
- #    partition.set_membership(membership)
- #    # Replace partition in profile list.
- #    profile[0] = partition
- #    print("... Final partition: " + partition.summary() + ".", file=stderr)
-# EIS
+print(partition.summary(), file = stderr)
 
 
 ## Save Leidenalg clustering results ------------------------------------------

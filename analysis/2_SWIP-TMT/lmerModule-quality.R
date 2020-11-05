@@ -60,6 +60,11 @@ moduleQuality <- function(module,partition,msstats_prot){
 		  error = function(e) {}, 
 		  # warning
 		  warning = function(w) {} ) 
+  # if error or warning, return NULL
+  if (is.null(fm2)) { 
+    return(NULL) 
+  }
+  # otherwise, calc nakagawa coeff of determination for fixed effects
   r2_fixef <- as.numeric(r.squaredGLMM.merMod(fm2)[,"R2m"])
   q <- r2_fixef/r2_protein
   return(q) 
@@ -121,6 +126,9 @@ doParallel::registerDoParallel(n_cores)
 # loop args
 min_size <- 5
 
+message("\nAnalyzing partition quality at ", 
+	length(part_list), " resolutions.")
+
 # parallelized nested loop: dopar + do
 t1 <- Sys.time()
 results <- foreach(i = seq(part_list)) %dopar% {
@@ -149,4 +157,13 @@ difftime(Sys.time(),t1)
 ## does this statistic make sense???
 # contribution of protein to a modules variance and maximize the variance
 # attributable to the fixed effects (genotype and biofraction).
-unlist(results) # i think it might... basically we want to minimize the 
+Q <- unlist(results) # i think it might... basically we want to minimize the 
+
+rbest <- seq(Q)[Q==max(Q)] # best resolution
+pbest <- part_list[[rbest]]
+pbest[pbest %in% which(table(pbest) < min_size)] <- 0
+modules <- split(pbest,pbest)
+message("\nPartition that maximizes quality:")
+t(sapply(modules,length)) %>% knitr::kable()
+
+save(Q,file="Q.rda",version=2)
