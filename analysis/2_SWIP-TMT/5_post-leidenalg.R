@@ -7,8 +7,9 @@
 
 ## inputs:
 root <- "~/projects/SwipProteomics"
-#part_file <- file.path(root, "rdata", "leidenalg_partition.csv")
-part_file <- file.path(root,"rdata", "ne_rber_surprise_partition.csv")
+
+# input partition
+part_file <- file.path(root,"rdata", "ne_surprise_surprise_partition.csv")
 resolution <- 1
 
 ## output:

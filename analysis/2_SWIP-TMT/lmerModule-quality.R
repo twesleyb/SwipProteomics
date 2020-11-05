@@ -5,28 +5,8 @@
 # description: generate some gof statistics for protein and module-level models
 
 # input partition csv file
-# NE + RBER/RBConfig + Surprise
+part_file <- "ne_surprise_surprise_partition.csv" 
 
-#part_file <- "ne_recursive_surprise_partition.csv" # Q = 0.872 | k = 335/545 | NA
-#part_file <- "ne_modularity_surprise_partition.csv" # Q =0.695 | k = 240/375 | NA
-#part_file <- "ne_rbconfig_partition.csv"          #Q = 0.465 | k = 3   | rbest = 15
-#part_file <- "recursive_surprise.csv"              # Q = 0.465 | k = 3 | rbest = 15
-#part_file <- "ne_surprise_partition.csv"          #Q = 0.308 | k = 38  | NA
-#part_file <- "recursive_modularity_partition.csv" #Q = 0.216 | k = 124 | NA
-#part_file <- "rbconfig_partition.csv"              #Q = 0.000 | k =     | rbest = 
-#part_file <- "surprise_partition.csv"             #Q = NA    | k = NA  | NA
-#part_file <- "ne_modularity_partition.csv"        #Q = NA    | k =     | NA
-#part_file <- "ne_modularity_partition.csv"
-#part_file <- "modularity_partition.csv"
-#part_file <- "ne_surprise_partition.csv" # all single?
-#part_file <- "ne_modularity_surprise_partition.csv" # 0.8 but one res????
-#part_file <- "ne_rber_surprise_partition.csv" # Qbest = 0.9091828
-#part_file <- "ne_rbconfig_surprise_partition.csv" # Qbest = 0.9091828
-#part_file <- "ne1.2_surprise_surprise_partition.csv" # Qbest =  0.864
-#part_file <- "ne_rber_surprise_partition.csv" # Qbest = 0.9091828
-
-# note turning diffusion up to 2 seems to result in less modules as the network
-# is more sparse
 
 # prepare the env
 root <- "~/projects/SwipProteomics"

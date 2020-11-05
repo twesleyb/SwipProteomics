@@ -14,14 +14,14 @@ root = "~/projects/SwipProteomics"
 ## Parameters for multiresolution methods:
 ## NOTE: some parameters are not used if they are not required by the set 
 ## optimization method
-rmin = 0 # Min resolution for multi-resolution methods.
+rmin = 1 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 2 # Number of steps to take between rmin and rmax.
+nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'ne1.2_rber_surprise' # Prefix out output partition, saved as .csv.
-optimization_method = 'RBER'
+output_name = 'ne_surprise_surprise' # Prefix out output partition, saved as .csv.
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
@@ -189,6 +189,8 @@ if parameters.pop('multi_resolution') is True:
         # if recursive, split modules that are larger than min size
         if recursive:
             # update params
+            print("Initial partition: {}".format(partition.summary()),
+                    file=stderr)
             initial_membership = partition.membership
             new_params = parameters.copy()
             new_method = methods.get(recursive_method).get('partition_type')

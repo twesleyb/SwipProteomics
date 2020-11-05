@@ -13,7 +13,7 @@ rm_poor = TRUE
 
 # NOTE: network enhancment uses the following params:
 ne_alpha=0.9  
-ne_diffusion=1.2
+ne_diffusion=0.4
 
 # NOTE: Alpha is the regularization param  -- a cost function which controls ...
 # NOTE: Diffusion is the extent of diffusion. Turn this parameter up to 
