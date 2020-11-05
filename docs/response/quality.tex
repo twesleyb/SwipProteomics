@@ -1,0 +1,20 @@
+Quality Metric
+
+
+We aim to cluster the protein-covariation network in order to identify modules
+which cohesive protein abundance profiles.
+
+R2(fixef) aka R2c (conditional) -- interpretation: the total variance explained
+by fixed effects (Genotype:BioFraction). We wish to maximize this quantity.
+
+PVE(protein) -- the percent of the modules variation explained by protein
+variability. An ideal module is a perfect summary of its constituent proteins
+and this quantity is 0. We aim to minimize the PVE(protein).
+
+This ratio just becomes:
+for k = 1 ... K
+q_k = var(fixef) / var(protein)
+
+The overall quality of a partition is the average quality of its modules.
+All other things being equal, an increase in K cooresponds to a decrease in
+quality. We want to identify the ideal number of clusters.

@@ -12,8 +12,12 @@ root <- "~/projects/SwipProteomics"
 rm_poor = TRUE
 
 # NOTE: network enhancment uses the following params:
-# alpha=0.9 
-# diffusion=1.0
+ne_alpha=0.9  
+ne_diffusion=1.2
+
+# NOTE: Alpha is the regularization param  -- a cost function which controls ...
+# NOTE: Diffusion is the extent of diffusion. Turn this parameter up to 
+# diffusion up to make the enhanced network more sparse.
 
 # * data(gene_map)
 # * data(msstats_prot)
@@ -129,7 +133,7 @@ adjm <- cor(dm, method = "pearson")
 # NOTE: this can take a couple minutes
 # NOTE: we really need to generate a visualization...
 message("\nPerforming network enhancement.")
-ne_adjm <- neten::neten(adjm,alpha=0.9,diffusion=1.0)
+ne_adjm <- neten::neten(adjm,alpha=ne_alpha,diffusion=ne_diffusion)
 
 
 ## Create PPI network ---------------------------------------------------------

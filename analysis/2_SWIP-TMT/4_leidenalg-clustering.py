@@ -16,24 +16,22 @@ root = "~/projects/SwipProteomics"
 ## optimization method
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 100 # Number of steps to take between rmin and rmax.
+nsteps = 2 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'surprise' # Prefix out output partition, saved as .csv.
-optimization_method = 'Surprise'
+output_name = 'ne1.2_rber_surprise' # Prefix out output partition, saved as .csv.
+optimization_method = 'RBER'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = False # If module_size > max_size, then cluster recursively.
-recursive_method = 'CPM'
+recursive = True # If module_size > max_size, then cluster recursively.
+recursive_method = 'Surprise'
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-#adjm_file = 'ne_adjm.csv'
-adjm_file = 'adjm.csv' # only cpm is applicable bc we have negative and positive
-# edges
+adjm_file = 'ne_adjm.csv' 
 
 ## Output:
 # Saved in root/rdata/
@@ -117,6 +115,18 @@ method = parameters.get('partition_type')
 print("Performing Leidenalg clustering utilizing the {}".format(method),
         "method to find optimal partition(s).", file=stderr)
 
+if recursive:
+    msg = "Recursively splitting modules larger than {} nodes with '{}'."
+    print(msg.format(max_size,recursive_method))
+#EIS
+
+if parameters.get('multi_resolution') is True:
+    msg = "Analyzing graph at {} resolutions."
+    R = len(linspace(**parameters.get('resolution_parameter')))
+    print(msg.format(R), file=stderr)
+#EIS
+
+
 
 ## Load input adjacency matrix and create an igraph object --------------------
 
@@ -126,7 +136,7 @@ adjm = read_csv(myfile, header = 0, index_col = 0)
 
 # Create igraph graph object and add to parameters dictionary.
 # Note, this can take several minutes.
-if parameters.get('weights') is not None:
+if parameters.get('weights') is True:
     # Create a weighted graph.
     g = graph_from_adjm(adjm,weighted=True,signed=parameters.pop('signed'))
     parameters['weights'] = 'weight'
@@ -138,7 +148,9 @@ else:
 #EIS
 
 # the input graph
-print(g.summary()) # NOTE: UNW is UNdirected and Weighted graph!
+print("Input graph: {}".format(g.summary()),file=stderr)
+
+# NOTE: UNW is UNdirected and Weighted graph!
 
 
 ## Community detection with the Leiden algorithm -----------------------------
@@ -164,28 +176,34 @@ for key in out: del parameters[key]
 if parameters.pop('multi_resolution') is True:
   # collect clustering params
   profile = list()
-  pbar = ProgressBar()
   res_range = linspace(**parameters.get('resolution_parameter'))
+  pbar = ProgressBar()
   #n_iter = parameters.pop(n_iterations)
   # for res in pbar(linespace(**p.pop('resolution_range'))):
   for resolution in pbar(res_range):
+        # optimize partition
         parameters['resolution_parameter'] = resolution
         partition = find_partition(**parameters)
         optimiser = Optimiser()
         diff = optimiser.optimise_partition(partition,parameters['n_iterations'])
+        # if recursive, split modules that are larger than min size
         if recursive:
-            # Initial module membership.
-            initial_membership = partition.membership
             # update params
+            initial_membership = partition.membership
             new_params = parameters.copy()
             new_method = methods.get(recursive_method).get('partition_type')
-            new_params['partition_type'] = new_method
-            new_params.pop('resolution_parameter')
+            if type(new_method) is str:
+              new_params['partition_type'] = getattr(import_module('leidenalg'), new_method)
+            else:
+              new_params['partition_type'] = new_method
+            if 'resolution_parameter' in new_params.keys(): 
+              new_params.pop('resolution_parameter')
+            # get modules to be split
             subgraphs = partition.subgraphs()
             too_big = [subg.vcount() > max_size for subg in subgraphs]
             n_big = sum(too_big)
+            # recursively split modules that are too big
             while any(too_big):
-                # Perform clustering for any subgraphs that are too big.
                 idx = [i for i, too_big in enumerate(too_big) if too_big]
                 new_graph = subgraphs.pop(idx[0])
                 # mask negative edges
@@ -204,7 +222,7 @@ if parameters.pop('multi_resolution') is True:
             nodes = [subg.vs['name'] for subg in subgraphs]
             parts = [dict(zip(n,[i]*len(n))) for i, n in enumerate(nodes)]
             new_part = {k: v for d in parts for k, v in d.items()}
-            # Set membership of initial graph.
+            # Set membership as partition after recursive splitting
             membership = [new_part.get(node) for node in partition.graph.vs['name']]
             partition.set_membership(membership)
         # EIS if recursive
@@ -219,12 +237,16 @@ else:
     diff = optimiser.optimise_partition(partition,n_iterations=-1)
     profile.append(partition)
     if recursive:
+        # update clustering params
         initial_membership = partition.membership
-        # update params
         new_params = parameters.copy()
         new_method = methods.get(recursive_method).get('partition_type')
-        new_params['partition_type'] = new_method
-        new_params.pop('resolution_parameter')
+        if type(new_method) is str:
+            new_params['partition_type'] = getattr(import_module('leidenalg'), new_method)
+        else:
+            new_params['partition_type'] = new_method
+        if 'resolution_parameter' in new_params.keys():
+            new_params.pop('resolution_parameter')
         subgraphs = partition.subgraphs()
         too_big = [subg.vcount() > max_size for subg in subgraphs]
         n_big = sum(too_big)
@@ -255,7 +277,7 @@ else:
     # EIS if recursive
 #EIS if multi_resolution else single resolution
 
-print(partition.summary(), file = stderr)
+print("Final partition:  {}".format(partition.summary()), file=stderr)
 
 
 ## Save Leidenalg clustering results ------------------------------------------
