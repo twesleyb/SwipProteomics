@@ -1,5 +1,84 @@
 ## Report
 
+Loading SwipProteomics
+
+We reanalyzed the data with MSstatsTMT starting with PSM-level data exported
+from ProteomeDiscoverer. (N=8,590) proteins.
+
+Converting PD PSM-level data into MSstatsTMT format.
+The data are converted into MSstatsTMT's format (~7.2 minutes). 
+
+Normalization is performed using common QC samples. Reprodcible quantification
+of these samples is essential. Thus we examined PSM features for potential
+outliers, accounting for the mean-variance relationship in PSM quantification
+using the method described by Plubell et al.
+
+We removed PSM with incomplete observations from each experiment 
+(186, 132, and 174 from each mixture).
+
+We removed a small number of outliers from each mixture,
+(M1=259; M2=169; M3=159)
+
+
+Performing normalization and protein summarization using MSstatsTMT.
+There were 46 warnings (use warnings() to see them)
+We performed protein-level normalization and sumamrization using
+\texttt{MSstatsTMT}. This step is computationally expensive as each protein is
+fit with a linear model. We increased the efficiency of this computation by
+employing 23 parallel processors, analyzing all proteins in t=11.094 minutes.
+
+MSstatsTMT takes care to impute missing values within each Run. But missing
+values still exist at the protein level. In order to avoid discarding a large
+number or proteins we impute these missing values using the KNN algorithm for
+MNAR data. This does not affect the statistical testing, but helps retain
+proteins used to build the covariation network.
+Porieins with more than 50% missingness cannot be reliably imputed and are
+removed (66 rows). In all we retained 6,910 of 8,590 proteins in the final
+normalized dataset. 
+
+We assess comparisons at two different levels using MSStatsTMT.
+We asses 'intra-BioFraction' comparisions using MSstatsTMT and moderated test
+statistics for small sample size (n=3 for each condition).
+This step is computationally expensive as a linear-mixed model is fit to each
+protein in the data. The time to perform intra-Biofraction comparisons for all 
+proteins was approximately 17.834 minutes.
+
+We assed overall differnces between 'Mutant' and 'Control' conditions using
+MSstatsTMT (Moderated=FALSE).
+
+There were 163 instances of signficant differential abundance for 
+'intra-BioFraction' comparisons (FDR\lessthan 0.05).
+
+The following table summarizes the number of significantly differential abundant
+proteins for each of the seven intra-BioFraction comparisons. 
+```
+| F4| F5| F6| F7| F8| F9| F10|
+|--:|--:|--:|--:|--:|--:|---:|
+| 17| 22| 20| 27| 28| 27|  22|
+```
+
+Total number of significant proteins for overall 'Mutant-Control' comparison:
+
+There were 785 proteins with an overall significant change for the
+'Mutant-Control' comparison.
+
+
+Prior to building the protein covariation network, we removed the effect of
+Mixture using limma::RemoveBatchEffect. This is necessary as we wish to identify
+modules that covary together across subcellular space (BioFraction) and not
+batch or Mixture.  These adjusted data are used for network construction and
+plotting but not statistical modeling. It is preferable to include these factors
+in the statistical model.
+
+The final, tidy normalized protein data is avaialbe as an R object, msstats_prot. 
+in `SwipProteomics/data`.
+
+We extracted MSstatsTMT's core model-fitting and statistical testing steps. It
+is usefull to allow investiagors flexiblity and transparency. 
+
+We evaluate the percent variance explained by each factor in the LMM using the
+`variancePartition` package.
+
 ## Protein goodness of fit--sorted by PVE(Genotype)
 |Protein |Symbol | Entrez|   Mixture|  Genotype| BioFraction| Residuals|
 |:-------|:------|------:|---------:|---------:|-----------:|---------:|
@@ -31,14 +110,20 @@ Evaluating Nakagawa goodness-of-fit, refitting modules...
 |P62281  |Rps11  |  27207| 0.0001360| 0.0001584|   0.9968025| 0.0029032| 0.9970040| 0.9971343|
 |Q6ZQ08  |Cnot1  | 234594| 0.0001539| 0.0001600|   0.9967507| 0.0029354| 0.9964280| 0.9965353|
 
-R2 threshold: 0.7
+We assessed the goodness-of-fit of each protein-wise LMM using Nagagawa's
+coefficient of determination, as implemented by the `MuMin` package.
+We forked this code.
 
+Prior to network construction, we removed models with poor fit. We removed
+proteins whose model explained less than 0.7 of the variation for that protein. 
 
 | r2_threshold| out| percent| total| final|
 |------------:|---:|-------:|-----:|-----:|
 |          0.7| 791|   0.114|  6910|  6119|
 
 Number of proteins with poor fit: 791
+
+Removing this small number of proteins facilitates clustering.
 
 WASHC* protein goodness-of-fit statistics:
 
@@ -50,10 +135,14 @@ WASHC* protein goodness-of-fit statistics:
 |Q3UMB9  |Washc4 | 319277| 0.0133109| 0.8722170|   0.0489876| 0.0654845| 0.9353344| 0.9494330|
 |Q6PGL7  |Washc2 |  28006| 0.0000000| 0.7646015|   0.1685491| 0.0668494| 0.9409087| 0.9409087|
 |Q9CR27  |Washc3 |  67282| 0.0205066| 0.6701031|   0.0640885| 0.2453017| 0.7341464| 0.7521275|
-Loading SwipProteomics
+
 Warning message:
 Removing 791 proteins with poor fit before building network. 
 
+The final network was constructed using both 'Control' and 'Mutant' samples. The
+data adjsuted for batch (Mixture). It contained 42 samples and 6,119 proteins.
+We found that the pearson correlatioin statistic outperformed the bicor
+statistic we previously used.
 
 | samples| proteins|
 |-------:|--------:|
@@ -61,39 +150,42 @@ Removing 791 proteins with poor fit before building network.
 
 Generating protein co-variation network.
 
-Performing network enhancement.
+We performed network enhancement to remove biological noise from the datset.
+This step is essential for module detection. Our approach borrows many of the
+conceptual ideas utilized in the WGCNA or WPCNA analysis workflows. Network
+enhancement is analogous to the weighting step performed by WGCNA and analogous
+emthods in which the network correlation network is transformed by a power in
+order to re-weight the network. Network enhancment has the effect of making the
+network sparse and facilitates the identification of network structure.
 
-Creating protein-protein interaction network.
+We constructed a protein-protein interaction graph which was not used to guide
+clukstering, but as an additional layer of information in the final network
+graphs. The PPI graph for all proteins contained 93,573 edges.
 
-PPI graph:
+Performing Leidenalg clustering utilizing the 
+SurpriseVertexPartition method to find optimal partition(s).
 
-
-|Edges  |Nodes |
-|:------|:-----|
-|93,573 |6,119 |
-
-
-Performing Leidenalg clustering utilizing the SurpriseVertexPartition method to find optimal partition(s).
-
-Input graph: IGRAPH UNW- 6119 18350456 -- 
-+ attr: name (v), weight (e)
 Recursively splitting modules larger than 100 nodes with 'Surprise'.
 
-Final partition:  Clustering with 6119 elements and 502 clusters
+We split modules with more than 100 nodes. While this threshold is arbitrary, we
+found that recursively spliting large modules resulted in higher quality
+modules. and facilitates biological indference.
 
-Removing modules that contain less than 5 nodes.
+Final partition:  Clustering with 6119 elements and 502 clusters
+We removed small mdoules of less than 5 nodes.
 
 Module statistic(s) used to evaluate module  preservation:
 avg.weight, avg.cor, avg.contrib.
-
 Criterion for module preservation: strong.
+
+We enforced module quality by module preservation using a permutation appraoch.
+Modules with random toplogy we discarded. 
 
 
 Evaluating  preservation of Swip modules in the Swip network...
 ... 296 of 329 Swip modules are preserved in the Swip network.
 
-Loading SwipProteomics
-
+In all there were 296 modules.
 
 |nProts |kModules |pClustered |medSize |
 |:------|:--------|:----------|:-------|
@@ -119,6 +211,9 @@ lmer fit to WASH complex (Washc1, Washc2, Washc3, Washc4, Washc5) proteins:
 |Mutant:BioFractionF8   |    5.927| 0.151| 6.891| 39.299|6.424e-10 |
 |Mutant:BioFractionF9   |    5.897| 0.151| 6.891| 39.101|1.991e-09 |
 |Mutant:BioFractionF10  |    6.054| 0.151| 6.891| 40.142|3.631e-10 |
+
+
+Nakagawa coefficient of determination
 R2m: Marginal; variation explained by fixed effects.
 R2c: Conditional; total variation explained by the model.
 
@@ -136,8 +231,6 @@ Assessing module-level contrasts with lmerTest.
 
 Time to analyze 296 modules:
 Time difference of 5.151603 secs
-Warning message:
-0 modules with singular fits will be removed. 
 
 Final number of modules : 296
 
