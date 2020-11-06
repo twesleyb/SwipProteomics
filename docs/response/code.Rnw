@@ -1,0 +1,39 @@
+#!/usr/bin/env Rscript
+
+## Illustrate the Module-level analysis
+
+<<fit the model, eval=TRUE, echo=TRUE>>=
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(data.table)
+})
+
+## load SwipProteomics data
+data(swip)
+data(gene_map)
+data(msstats_prot)
+data(alt_contrast)
+data(msstats_contrasts)
+
+## formula to be fit:
+fx0 <- formula("Abundance ~ 0 + Condition + (1|Mixture)")
+
+# fit the model
+idx <- msstats_prot$Protein == swip
+fm <- lmerTest::lmer(fx0, msstats_prot[idx,])
+
+# calculate model statistics
+model_summary <- summary(fm,ddf="Satterthwaite")
+
+df <- model_summary$coefficients
+df %>% as.data.table(keep.rownames="Coefficient") %>% knitr::kable()
+
+# evaluate goodness-of-fit
+r2_nakagawa <- r.squaredGLMM.merMod(fm)
+r2_nakagawa %>% round(3) %>% knitr::kable()
+
+contrast <- msstats_contrasts[1,]
+lmerTestContrast(fm,contrast) %>% knitr::kable()
+
+@
