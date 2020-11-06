@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
 })
 
 ## load SwipProteomics data
+library(SwipProteomics)
 data(swip)
 data(gene_map)
 data(msstats_prot)
