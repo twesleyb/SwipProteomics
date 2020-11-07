@@ -8,11 +8,18 @@ devtools::load_all(root)
 myfile <- file.path(root,"rdata","msstats_psm.rda")
 load(myfile)
 
-library(grid)
-library(dplyr)
-library(gtable)
-library(ggplot2)
-library(data.table)
+suppressPackageStartupMessages({
+  library(grid)
+  library(dplyr)
+  library(gtable)
+  library(ggplot2)
+  library(gridExtra)
+  library(data.table)
+})
+
+fontdir <- file.path(root, "fonts") 
+ggtheme(); set_font("Arial",font_path=fontdir)
+
 
 ## functions -------------------------------------------------------------------
 
@@ -112,8 +119,8 @@ p1 <- plot_corQC(msstats_prot,"M1")
 p2 <- plot_corQC(msstats_prot,"M2")
 p3 <- plot_corQC(msstats_prot,"M3")
 
-myfile <- file.path(root,"figs","Outliers")
-if (!dir.exists(basename(myfile))) { dir.create(basename(myfile)) }
+myfile <- file.path(root,"figs","Outliers","psm_outliers.pdf")
+if (!dir.exists(dirname(myfile))) { dir.create(dirname(myfile)) }
 
 pdf(myfile,onefile=TRUE)
 p1
