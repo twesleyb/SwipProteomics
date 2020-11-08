@@ -7,7 +7,8 @@
 
 ## INPUT ----------------------------------------------------------------------
 # specify project's root directory
-root <- "~/projects/SwipProteomics"
+#root <- "~/projects/SwipProteomics"
+root <- "~/projects/SynaptopathyProteomics" # need DEP... cant get it installed
 
 ## OPTIONS --------------------------------------------------------------------
 ##FDR_alpha <- 0.05 # BH significance threshold for protein DA
@@ -59,14 +60,15 @@ suppressPackageStartupMessages({
 })
 
 # load functions in root/R
-devtools::load_all(root)
+proot <- "~/projects/SwipProteomics"
+devtools::load_all(project)
 
 # load the data in root/data
 data(gene_map)
 data(msstats_prot)
 
 # load the raw data
-myfile <- file.path(root,"rdata","msstats_psm.rda")
+myfile <- file.path(proot,"rdata","msstats_psm.rda")
 load(myfile) # msstats_psm
 
 
@@ -74,14 +76,14 @@ load(myfile) # msstats_psm
 # NOTE: do not log transform the data
 
 # cast tidy data into a data.table
-
-norm_df <- msstats_prot %>%
+dm <- msstats_prot %>% filter(Abundance > 0) %>%
 	group_by(Protein,Mixture,Channel,Condition) %>% 
 	reshape2::dcast(Protein ~ Mixture + Channel + Condition, 
-			value.var = "Abundance") %>% 
-	as.data.table() %>% 
-	as.matrix(rownames="Protein") %>%
-	as.data.table(keep.rownames="ID") # coerce back to dt with "ID" column
+			value.var = "Abundance") %>%
+	as.data.table() %>%  na.omit() %>%
+	as.matrix(rownames="Protein")
+norm_df <- as.data.table(2^dm,keep.rownames="ID") # coerce back to dt with "ID" column
+
 
 raw_df <- msstats_psm %>%  mutate(Condition = as.character(Condition)) %>%
 	filter(Condition != "Norm") %>%  # drop QC
@@ -112,13 +114,13 @@ raw_df$name <- make.unique(raw_df$name,sep="-")
 norm_df$name <- make.unique(norm_df$name,sep="-")
 
 # check for duplicates
-#stopifnot(!any(duplicated(prot_df$name))) # there should be no duplicate names
+stopifnot(!any(duplicated(norm_df$name))) # there should be no duplicate names
 
 
 ## create exp_design -------------------------------------------
 
 # create experimental design
-namen <- colnames(norm_df)[grep("M",colnames(prot_df))]
+namen <- colnames(norm_df)[grep("M",colnames(norm_df))]
 exp_design <- data.table(label = namen,
 			 Mixture = sapply(strsplit(namen,"_"),"[",1),
 			 Channel = sapply(strsplit(namen,"_"),"[",2),
@@ -129,7 +131,7 @@ exp_design$replicate <-  interaction(exp_design$Mixture,exp_design$treatment)
 
 
 # check for required columns in input
-#stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
+stopifnot(all(c("label","condition","replicate") %in% colnames(exp_design)))
 
 
 ## build SummarizedExperiment (se) object -------------------------------------
@@ -138,6 +140,9 @@ exp_design$replicate <-  interaction(exp_design$Mixture,exp_design$treatment)
 # specify the column indices containing the numeric data (idy)
 idy <- grep("M",colnames(raw_df))
 raw_se <- DEP::make_se(raw_df,columns=idy,exp_design)
+
+# THE DATA SHOULD NOT BE LOGGED!
+idy <- grep("M",colnames(norm_df))
 norm_se <- DEP::make_se(norm_df,columns=idy,exp_design)
 
 
@@ -147,18 +152,19 @@ norm_se <- DEP::make_se(norm_df,columns=idy,exp_design)
 # NOTE: the se in se_list differ only in their rowData
 
 # save as pdf
+figsdir <- file.path("~/projects/SwipProteomics","figs")
 myfile <- file.path(figsdir,"DEP_Plots.pdf")
 
 # DEP preprocessing plots
-#pdf(file=myfile,onefile=TRUE)
+pdf(file=myfile,onefile=TRUE)
 
 #print(plot_frequency(raw_se))
 
-plot_numbers(raw_se)
+#plot_numbers(raw_se)
 
-plot_coverage(raw_se)
+#plot_coverage(raw_se)
 
-#plot_normalization(raw_se,norm_se)
+plot_normalization(norm_se)
 
 #plot_missval(raw_se)
 

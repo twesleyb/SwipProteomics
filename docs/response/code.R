@@ -1,95 +1,99 @@
 #!/usr/bin/env Rscript
 
-## Illustrate the Module-level analysis
+## Illustrate the Protein-level analysis
 
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-<<fit the model, eval=TRUE, echo=TRUE>>=
+#<<fit the model, eval=TRUE, echo=TRUE>>=
 
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(data.table)
-})
+library(dplyr)
+library(data.table)
+
 
 ## load SwipProteomics data
 # devtools::install_github("twesleyb/SwipProteomics")
 library(SwipProteomics)
 
 data(swip)
-data(gene_map)
-data(partition)
 data(msstats_prot)
 
 ## formula to be fit:
-fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)")
+fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
 
-wash_prots <- mapID("Washc")
+# fit the model for WASHC4
+fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 
-#wash_module <- partition[swip] # M17
-#prots <- names(partition[partition==wash_module])
-
-# fit the model
-fm <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein %in% wash_prots))
-
-# create contrast
+# create a contrast
+coeff <- lme4::fixef(fm0)
+contrast0 <- setNames(rep(0,length(coeff)), nm = names(coeff))
+contrast0["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
+contrast0["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
 
 # evaluate contrast
-lmerTestContrast(fm,contrast) %>% knitr::kable()
+lmerTestContrast(fm0,contrast0) %>% knitr::kable()
 
-@
+#@
 
-#########################################
+#<<fit the model, eval=TRUE, echo=TRUE>>=
+
+## assess 'Mutant-Control' comparison
+
+## create a contrast
+contrast1 <- setNames(rep(0,length(coeff)), nm = names(coeff))
+contrast1[grepl("Mutant",names(contrast1))] <- +1/7
+contrast1[grepl("Control",names(contrast1))] <- -1/7
+
+lmerTestContrast(fm0, contrast1) %>% mutate(Contrast='Mutant-Control') %>% 
+	unique() %>% knitr::kable()
+
+#@
+
+#<<fit the model, eval=TRUE, echo=TRUE>>=
+
+## create a contrast
+contrast1 <- setNames(rep(0,length(coeff)), nm = names(coeff))
+contrast1[grepl("Mutant",names(contrast1))] <- +1/7
+contrast1[grepl("Control",names(contrast1))] <- -1/7
+
+lmerTestContrast(fm0, contrast1) %>% mutate(Contrast='Mutant-Control') %>% 
+	unique() %>% knitr::kable()
+
+#@
+
+#<<fit the model, eval=TRUE, echo=TRUE>>=
+
+## illustrate module-level analysis
+
+data(washc_prots) # "Q8C2E7" "Q6PGL7" "Q3UMB9" "Q9CR27" "Q8VDD8"
+
+# the module-level formula:
+fx1 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)")
+
+# fit the model
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% filter(Protein %in% washc_prots))
+
+# assess contrast
+lmerTestContrast(fm1, contrast1) %>% mutate(Contrast='Mutant-Control') %>% 
+	unique() %>% knitr::kable()
+
+#@
 
 
+#<<fit the model, eval=TRUE, echo=TRUE>>=
 
-library(doParallel)
-
-lmerGOF <- function(fm) {
-  dev <- setNames(as.numeric(stats::deviance(fm,REML=FALSE)),"deviance")
-  ddf <- setNames(as.numeric(stats::df.residual(fm)),"residual.DF")
-  return(c(dev,ddf))
-}
-
-myfile <- file.path(root,"rdata","ne_surprise_partition.csv")
-part_df <- fread(myfile,drop=1)
-partition <- unlist(part_df) + 1
-partition[partition %in% as.numeric(names(which(table(partition)<5)))] <- 0
-
-modules <- split(names(partition),partition)[-1]
-names(modules) <- paste0("M",names(modules))
-proteins = unlist(modules)
-
-n = parallel::detectCores() - 1
-doParallel::registerDoParallel(n)
-
-stats_list <- foreach(module = names(modules)) %dopar% {
-	subdat <- msstats_prot %>% filter(Protein %in% modules[[module]])
-	lmer_args <- list(fx0,subdat)
-	fm <- do.call(lmerTest::lmer,lmer_args)
-	return(lmerGOF(fm))
-} #EOL
-names(stats_list) <- names(modules)
-
-df <- data.table(do.call(rbind,stats_list))
-
-# yikes
-x <- df$deviance
-n <- length(x)
-col <- rep_len("black",n)
-z <- (x-mean(x))/sd(x)
-pch <- rep_len(1,n)
-qqnorm(z,col=col,pch=pch)
-abline(0,1)
+## assess gof with Nakagawa coefficient of determination
+r.squaredGLMM.merMod(fm1) %>% knitr::kable()
 
 
-dm <- msstats_prot %>% reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-				       value.var = "Abundance") %>% 
-                       as.data.table() %>% as.matrix(rownames="Protein")
-plot_data <- vsn::meanSdPlot(dm)
-plot <- plot_data$gg
+## calculate the variance components with variancePartition
 
-library(ggplot2)
+# variancePartition expects all factors to be mixed effects
+form <- formula(Abundance ~ (1|Genotype) + (1|BioFraction) + 
+		(1|Mixture) + (1|Protein))
 
-plot <- plot + ggtitle("vsn::meanSdPlot")
-plot <- plot + theme(title = element_text(colour="red"))
+fit <- lme4::lmer(form, msstats_prot %>% filter(Protein %in% washc_prots))
+
+variancePartition::calcVarPart(fit)
+
+#@

@@ -37,40 +37,34 @@ data(msstats_prot)
 data(module_colors)
 data(msstats_results)
 
-# load data in root rdata -- to big to be stored in root/data
+# load the adjm (correlation matrix)
 load(file.path(root,"rdata","adjm.rda"))
-load(file.path(root,"rdata","ne_adjm.rda"))
-load(file.path(root,"rdata","ppi_adjm.rda"))
 
-# prepare the data
-x = adjm[prots,prots]
-y = ne_adjm[prots,prots]
-z = y*(1/max(y)) # scale such that max is 1
+# network enhancment
+ne_adjm <- neten::neten(adjm,alpha=0.9,diffusion=0.4)
 
-## explore neten params
-# alpha = small ==> super sparse
-# diffusion = 2 == most sparse
-# use alpha to adjust the overall connectivity -- smaller then sparser
-y = neten::neten(adjm,alpha=0.9,diffusion=1.0) 
-x = y[prots,prots]
-p0 <- ggcorrplot(x, hc.order = TRUE, 
-		   outline.col = "white", 
-		   colors = c("gray","gray",mut_color),
-		   type = "upper")
-p0
+# all modules
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
 
-colnames(x) <- colnames(z) <- mapID(prots,"uniprot","symbol")
-
-p0 <- ggcorrplot(x, hc.order = TRUE, 
+# examine a random module
+m <- sample(names(modules),1)
+m = "M4"
+prots <- modules[[m]]
+sub_adjm <- adjm[prots,prots]
+sub_ne_adjm <- ne_adjm[prots,prots]
+colnames(sub_adjm) <- colnames(sub_ne_adjm) <- mapID(prots,"uniprot","symbol")
+p0 <- ggcorrplot(sub_adjm, hc.order = TRUE, 
 		   outline.col = "white", 
 		   colors = c(wt_color,"gray",mut_color),
 		   type = "upper")
-
-p1 <- ggcorrplot(z, hc.order = TRUE, 
+# generate plots
+p1 <- ggcorrplot(sub_ne_adjm, hc.order = TRUE, 
 		   outline.col = "white", 
 		   colors = c("gray","gray",mut_color),
 		   type = "lower")
-
+p0 <- p0 + ggtitle(m)
+cowplot::plot_grid(p0,p1)
 
 # save figures
 myfile <- file.path(figsdir,"adjm.pdf")
