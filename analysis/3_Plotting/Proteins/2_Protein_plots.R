@@ -35,6 +35,7 @@ getrd <- function(here=getwd(), dpat= ".git") {
 
 plot_protein <- function(prot_df, gene_map, protein, 
 			 sigprots, protein_gof, legend=FALSE) {
+
   # a function that generates the plot
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
   colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
@@ -42,14 +43,17 @@ plot_protein <- function(prot_df, gene_map, protein,
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
 	select(R2.total) %>% as.numeric()
   title_anno <- paste0("(R2 = ",round(r2,3),")")
+
   # function to generate a proteins plot
   # Subset the data.
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   title_color <- names(which(title_colors == (protein %in% sigprots)))
   df <- subset(prot_df,prot_df$Protein == protein)
+
   # Insure Fraction is a factor, and levels are in correct order.
   df$BioFraction <- factor(df$BioFraction,
   			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
   # Collect FDR stats.
   stats <- df %>% group_by(Genotype,BioFraction) %>% 
   		summarize(`Max Abundance` = max(norm_Abundance),
@@ -61,6 +65,11 @@ plot_protein <- function(prot_df, gene_map, protein,
   stats$symbol[stats$FDR<0.05] <- "*"
   stats$symbol[stats$FDR<0.005] <- "**"
   stats$symbol[stats$FDR<0.0005] <- "***"
+
+  # insure factor order is set correctly.
+  df$Mixture <- factor(df$Mixture, levels=c("M1","M2","M3"))
+  df$Genotype <- factor(df$Genotype, levels=c("Control","Mutant"))
+
   # Generate the plot.
   plot <- ggplot(df)
   # NOTE: we use the adjusted (norm_Abundance) protein data for plotting!
@@ -76,6 +85,7 @@ plot_protein <- function(prot_df, gene_map, protein,
   plot <- plot + ggtitle(paste(gene,"|",protein,title_anno))
   plot <- plot + theme(plot.title=element_text(color=title_color))
   plot <- plot + ylab("Normalized Protein Abundance")
+
   # Annotate with significance stars.
   if (any(stats$FDR<0.1)) {
     plot <- plot + annotate("text", 
@@ -83,9 +93,11 @@ plot_protein <- function(prot_df, gene_map, protein,
 			    y=max(stats$ypos), 
 			    label=stats$symbol,size=7)
   }
+
   # Add Custom colors and modify legend title and labels.
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
   plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
+
   #plot <- plot + scale_x_discrete(labels=stats$Cfg.Force)
   #plot <- plot + xlab("Force (xg)")
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
@@ -99,6 +111,7 @@ plot_protein <- function(prot_df, gene_map, protein,
   # Add x and y axes.
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
+
   # Remove legend.
   if (!legend) {
 	  plot <- plot + theme(legend.position = "none")
@@ -166,10 +179,12 @@ sigprots <- msstats_results %>% filter(Contrast == 'Mutant-Control') %>%
 
 ## Generate the plots ---------------------------------------------------------
 
+protein <- mapID("Grn")
+
+plot <- plot_protein(prot_df,gene_map,protein,sigprots,protein_gof)
+
 # sort proteins by module membership, drop M0
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
-
-stopifnot(!any(poor_prots %in% sorted_prots))
 
 # Loop to generate plots for all_proteins.
 message("\nGenerating plots for ", 
