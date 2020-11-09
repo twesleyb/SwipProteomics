@@ -183,7 +183,7 @@ These plots emphasize the overall lack of fit of proteomics data
 fit by the \texttt{edgeR} model.\\ 
 
 
-\section{Reanalysis of SWIP\textsuperscript{P1019R} Spatial Proteomics with MSstatsTMT}
+\section{Reanalysis of SWIP\textsuperscript{P1019R} TMT Proteomics}
 
 Of note, most tools for analysis of protein mass spectromety data are derived
 from tools originally developed for analysis of genomics and transcriptomics
@@ -272,7 +272,8 @@ is a random-effect representing both biological and technical variation,
 quantifying any remaining error, assumed to be be independent 
 and identically distributed.\\
 
-If a component of the model is not estimable, it is removed. For example, if there is
+If a component of the model is not estimable, it is removed. 
+For example, if there is
 no technical replication of mixture (T=0), the model is reduced to: \\
 
 %% Reduced model - no technical replication of mixture
@@ -289,7 +290,7 @@ captured by the term \texttt{Condition} and is thus ommited.\\
 Model based testing of differential abundance between pairs of conditions
 is obtained by comparing the estimates of coefficients of interest. 
 We are interested in tested the null hypothesis of 
-equality of conditioned means $\H0 : l\beta = 0$ (lmerTest, Kutzenova2017).
+equality of conditioned means $\H0 : l^T\beta = 0$ (lmerTest, Kutzenova2017).
 Kutzenova et al derive a test statistic for such contrasts as:\\
 
 %% T-statistic Equation
@@ -346,7 +347,7 @@ model is equivalent  to equation (EQ) when condition is
 the proportion of variance attributable to major covariates in our TMT
 experiment for each protein. \\
 Given the LMM describing protein abundance as a respones of the experiments
-major sources of variaiton, we assessed two different types of contrasts:
+major sources of variaiton, we assessed two different types of contrasts:\\
 
 \begin{enumerate}
 	\item 'intra-BioFraction' comparisons for the difference between Mutant and
@@ -368,50 +369,50 @@ each of the subcellular fractions. Contrast 8 specifies the overall
 fit an appropriate LMM for the experimental design. 
 In order to understand and extend the function of \texttt{MSstatsTMT}, we 
 We extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing 
-steps and illustrate them here.
+steps and illustrate them here.\\
 
 Following data preprocessing, summarization, and normalization, statistical
-inference can be summarized in two steps: 
+inference can be summarized in two steps:\\
 \begin{itemize}
 	\item Fit each protein with the appropriate linear mixed-effects model
 	\item Given the fitted model, assess a contrast of interest 
+\end{itemize}
 		
 At the core of the model fitting step is the
 R package \texttt{lme4} which implements mixed-effects models with its function
 \texttt{lmer}. The package \texttt{lmerTest} extends \texttt{lme4's}
 functionality and enables the computation of the degrees of freedom via the
-Sattertwaite method.
+Sattertwaite method.\\
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%<<fit0, eval=TRUE, echo=TRUE>>=
+%
+%library(dplyr)
+%library(data.table)
+%
+%library(lmerTest)
+%
+%## load SwipProteomics data
+%# devtools::install_github("twesleyb/SwipProteomics")
+%library(SwipProteomics)
+%
+%data(swip)
+%data(msstats_prot)
+%
+%## the LMM formula to be fit:
+%fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
+%
+%# fit the model for WASHC4
+%fm0 <- lmer(fx0, msstats_prot %>% filter(Protein == swip))
+%
+%model_summary <- summary(fm0, ddf = "Satterthwaite")
+%
+%model_summary$coefficients %>% knitr::kable()
+%
+%@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-<<fit0, eval=TRUE, echo=TRUE>>=
-
-library(dplyr)
-library(data.table)
-
-library(lmerTest)
-
-## load SwipProteomics data
-# devtools::install_github("twesleyb/SwipProteomics")
-library(SwipProteomics)
-
-data(swip)
-data(msstats_prot)
-
-## the LMM formula to be fit:
-fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
-
-# fit the model for WASHC4
-fm0 <- lmer(fx0, msstats_prot %>% filter(Protein == swip))
-
-model_summary <- summary(fm0, ddf = "Satterthwaite")
-
-model_summary$coefficients %>% knitr::kable()
-
-@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-The model's estimates, $\beta$, represent our best estimate of mean protein
+The model's estimates, $\beta$, represent our best estimate of the mean protein
 abundance in the 14 conditions of Genotype:BioFraction. We define a contrast
 to compare the coefficients 'GenotypeMutant:BioFractionF7' and
 'GenotypeControl:BioFractionF7' to assess the intra-BioFraction
@@ -419,34 +420,27 @@ difference between Control and Mutant for F4. The model-based comparisons
 for a given contrast is implemented by our function \texttt{lmerTestContrast}. 
 This function takes as input a model fitted by
 \texttt{lmerTest::lmer} and a contrast vector specifying the
-comparison of interest.
+comparison of interest.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-<<contrast0, eval=TRUE, echo=TRUE>>=
-
-# create a contrast
-coeff <- lme4::fixef(fm0)
-contrast0 <- setNames(rep(0,length(coeff)), nm = names(coeff))
-contrast0["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
-contrast0["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
-
-# evaluate contrast
-lmerTestContrast(fm0,contrast0) %>% knitr::kable()
-
-@
-
+%<<contrast0, eval=TRUE, echo=TRUE>>=
+%
+%# create a contrast
+%coeff <- lme4::fixef(fm0)
+%contrast0 <- setNames(rep(0,length(coeff)), nm = names(coeff))
+%contrast0["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
+%contrast0["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
+%
+%# evaluate contrast
+%lmerTestContrast(fm0,contrast0) %>% knitr::kable()
+%
+%@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 It is useful to consider the goodness-of-fit of our model. Here we  
 assess the goodness-of-fit of each protein-wise LMM using Nagagawa's
 coefficient of determination, as implemented by the 
-\texttt{r.squaredGLMM.merMod} function forked from the \texttt{MuMin} package.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\texttt{r.squaredGLMM.merMod} function forked from the \texttt{MuMin} package.\\
 A goodness-of-fit metric is the coefficient of determination.
 Nakagawa describes a generalized description of the coefficient of determination
 for LMM. R2c, for conditional effects, quantifies the total variation explained 
@@ -460,14 +454,23 @@ explained by fixed effects Genotype and BioFraction equates to 0.935. Thus appro
 1.5\% of the remaing variance is attributable to mixed effects and
 residual variance.
 
-%%|Protein |Symbol | Entrez|   Mixture|  Genotype| BioFraction| Residuals|  R2.fixef|  R2.total|
-%%|:-------|:------|------:|---------:|---------:|-----------:|---------:|---------:|---------:|
-%%|Q3UMB9  |Washc4 | 319277| 0.0133109| 0.8722170|   0.0489876| 0.0654845| 0.9353344| 0.9494330|
+%%|Protein |Symbol | Entrez|  R2.fixef|  R2.total|
+%%|:-------|:------|------:|---------:|---------:|
+%%|Q3UMB9  |Washc4 | 319277| 0.9353344| 0.9494330|
 
-		
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Code: assess contrast  0
+%<<<contrast1, eval = TRUE, echo = TRUE >>=
+%
+%# use convenience function to contruct a contrast
+%l1 <- getContrast(fm0, "Mutant","Control")
+%
+%results <- lmerTestContrast(fm0, l1)
+%
+%results %>% mutate(Contrast - 'Mutant-Control') %>% 
+%	unique() %>% knitr::kable()
+%
+%@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Module-level analysis}
@@ -507,8 +510,21 @@ We model protein groups or modules by adding the mixed effect term
   \end{gathered}
 \end{equation}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Code: fit model 0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%<<<>>=
+%## the module-level model to be fit:
+%washc_prots = mapID("Washc*")
+%form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
+%
+%# warnings because our module is too perfect
+%fit <- suppressWarnings({ lmerTest::lmer(form, msstats_prot %>% filter(Protein %in% washc_prots)) })
+%
+%# calculate partitioned variance
+%mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
+%x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
+%PVE_washc = x/sum(x)
+%PVE_washc %>% knitr::kable()
+%@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Again, we consider the variance explained by the model as a measure of its
@@ -520,21 +536,24 @@ percent variance attributable to that term for the mixed-effect model fit to
 each module. 
 For each model fit the module-level data, we asses the proprotion of variance
 explained by \texttt{BioFraction}, \texttt{Genotype}, \texttt{Mixture}, and
-\texttt{Protein}, and \texttt{Residual} variance 
+\texttt{Protein}, and \texttt{Residual} variance.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%<<<>>=
+%# calculate partitioned variance
+%mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
+%x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
+%PVE_washc = x/sum(x)
+%PVE_washc %>% knitr::kable()
+%@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Code: swip module variance partition
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Inspection of these variance explained by the components of our model we 
-realize a natural description of a modules quality. 
-
-
-
-An intuitive measure of module quality is the ratio of variance explained by
-fixed effects and Protein. We wish to maximize the variance explained by fixed
-effects and minimize the random effect of Protein. An ideal module is a perfect
-summary of its protein constituents and thus PVE(Protein) = 0. 
+%Inspection of these variance explained by the components of our model we 
+%realize a natural description of a modules quality. 
+%An intuitive measure of module quality is the ratio of variance explained by
+%fixed effects and Protein. We wish to maximize the variance explained by fixed
+%effects and minimize the random effect of Protein. An ideal module is a perfect
+%summary of its protein constituents and thus PVE(Protein) = 0. 
 
 %PVE(protein) -- the percent of the modules variation explained by protein
 %variability. An ideal module is a perfect summary of its constituent proteins
@@ -559,7 +578,7 @@ summary of its protein constituents and thus PVE(Protein) = 0.
 %variance attributable to each modules fixed effects is halved).
 
 
-
+%% Figures --------------------------------------------------------------------
 
 %% figure 1 -- nb glm and lmm GOF
 

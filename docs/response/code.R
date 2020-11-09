@@ -40,10 +40,7 @@ lmerTestContrast(fm0,contrast0) %>% knitr::kable()
 ## assess 'Mutant-Control' comparison
 
 ## create a contrast
-contrast1 <- setNames(rep(0,length(coeff)), nm = names(coeff))
-contrast1[grepl("Mutant",names(contrast1))] <- +1/7
-contrast1[grepl("Control",names(contrast1))] <- -1/7
-
+l1 <- getContrast(fm0,"Mutant","Control")
 lmerTestContrast(fm0, contrast1) %>% mutate(Contrast='Mutant-Control') %>% 
 	unique() %>% knitr::kable()
 
