@@ -1,5 +1,4 @@
 #' getContrast
-#' @import dplyr lme4
 #' @export getContrast 
 
 getContrast <- function(fm, pos_coef, neg_coef){
