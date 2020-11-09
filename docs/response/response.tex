@@ -406,44 +406,81 @@ In order to understand and extend the function of \texttt{MSstatsTMT}, we
 We extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing 
 steps and illustrate them here.\\
 
-%Following data preprocessing, summarization, and normalization, statistical
-%inference can be summarized in two steps:\\
-%\begin{itemize}
-%	\item Fit each protein with the appropriate linear mixed-effects model
-%	\item Given the fitted model, assess a contrast of interest 
-%\end{itemize}
-%		
-%At the core of the model fitting step is the
-%R package \texttt{lme4} which implements mixed-effects models with its function
-%\texttt{lmer}. The package \texttt{lmerTest} extends \texttt{lme4's}
-%functionality and enables the computation of the degrees of freedom via the
-%Sattertwaite method.\\
-%
+Following data preprocessing, summarization, and normalization, statistical
+inference can be summarized in two steps:\\
+
+\begin{itemize}
+	\item Fit each protein with the appropriate linear mixed-effects model
+	\item Given the fitted model, assess a contrast of interest 
+\end{itemize}
+		
+At the core of the model fitting step is the
+R package \texttt{lme4} which implements mixed-effects models with its function
+\texttt{lmer}. The package \texttt{lmerTest} extends \texttt{lme4's}
+functionality and enables the computation of the degrees of freedom via the
+Sattertwaite method.\\
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%<<fit0, eval=TRUE, echo=TRUE>>=
-%
-%library(lmerTest)
-%
-%library(dplyr)
-%library(data.table)
-%
-%
-%# load SwipProteomics data
-%data(swip)
-%data(msstats_prot)
-%
-%## the LMM formula to be fit:
-%fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
-%
-%# fit the model for WASHC4
-%fm0 <- lmer(fx0, msstats_prot %>% filter(Protein == swip))
-%
-%model_summary <- summary(fm0, ddf = "Satterthwaite")
-%
-%model_summary$coefficients %>% knitr::kable()
-%
-%@
-%
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(dplyr)}
+\hlkwd{library}\hlstd{(data.table)}
+
+\hlcom{#library(SwipProteomics)}
+
+\hlcom{# load the data}
+\hlkwd{data}\hlstd{(swip)}
+\hlkwd{data}\hlstd{(msstats_prot)}
+
+\hlcom{## the LMM formula to be fit:}
+\hlstd{fx0} \hlkwb{<-} \hlkwd{formula}\hlstd{(}\hlstr{"Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)"}\hlstd{)}
+
+\hlcom{# fit the model for WASHC4}
+\hlstd{fm0} \hlkwb{<-} \hlstd{lmerTest}\hlopt{::}\hlkwd{lmer}\hlstd{(fx0, msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
+
+\hlstd{model_summary} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
+
+\hlstd{model_summary}\hlopt{$}\hlstd{coefficients} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|r|r|r|r|r}
+\hline
+  & Estimate & Std. Error & df & t value & Pr(>|t|)\\
+\hline
+GenotypeMutant:BioFractionF4 & 5.404300 & 0.121126 & 17.30594 & 44.61718 & 0\\
+\hline
+GenotypeControl:BioFractionF4 & 6.710959 & 0.121126 & 17.30594 & 55.40477 & 0\\
+\hline
+GenotypeMutant:BioFractionF5 & 5.567441 & 0.121126 & 17.30594 & 45.96405 & 0\\
+\hline
+GenotypeControl:BioFractionF5 & 6.945583 & 0.121126 & 17.30594 & 57.34180 & 0\\
+\hline
+GenotypeMutant:BioFractionF6 & 5.640188 & 0.121126 & 17.30594 & 46.56463 & 0\\
+\hline
+GenotypeControl:BioFractionF6 & 7.240081 & 0.121126 & 17.30594 & 59.77313 & 0\\
+\hline
+GenotypeMutant:BioFractionF7 & 5.631680 & 0.121126 & 17.30594 & 46.49440 & 0\\
+\hline
+GenotypeControl:BioFractionF7 & 7.321074 & 0.121126 & 17.30594 & 60.44180 & 0\\
+\hline
+GenotypeMutant:BioFractionF8 & 5.492772 & 0.121126 & 17.30594 & 45.34759 & 0\\
+\hline
+GenotypeControl:BioFractionF8 & 7.129632 & 0.121126 & 17.30594 & 58.86129 & 0\\
+\hline
+GenotypeMutant:BioFractionF9 & 5.781022 & 0.121126 & 17.30594 & 47.72734 & 0\\
+\hline
+GenotypeControl:BioFractionF9 & 6.954472 & 0.121126 & 17.30594 & 57.41518 & 0\\
+\hline
+GenotypeMutant:BioFractionF10 & 5.784403 & 0.121126 & 17.30594 & 47.75525 & 0\\
+\hline
+GenotypeControl:BioFractionF10 & 7.618697 & 0.121126 & 17.30594 & 62.89894 & 0\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %%The model's estimates, $\beta$, represent our best estimate of the mean protein
