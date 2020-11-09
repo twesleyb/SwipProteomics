@@ -355,46 +355,43 @@ equation (EQ) when \texttt{Condition} is the interaction of
 
 \section{Protein level comparisions}
 
-Using \texttt{MSstatsTMT} we assesed two different types of contrasts:\\
+Using \texttt{MSstatsTMT} we assesed comparisons at two levels:
 
-\begin{enumerate}
-	\item 'intra-BioFraction' comparisons 
+\begin{itemize}
+	\item 'intra-BioFraction' contrasts 
 	\item 'Mutant-Control' contrast 
-\end{enumerate}
+\end{itemize}
 
-For each protein, we assssed the difference between Mutant and Control for all
-seven of the \texttt{BioFractions} and for the overall difference between 
-'Mutant' and 'Control' conditions
-
-Each contrast is represented bya vector, $l^T$, which specifies a
-comparison between coefficients in the LMM. Figure (FIG) shows these two
-types of contrast. Contrasts 1-7 specify 'intra-BioFraction' comparisons for
-each of the subcellular fractions. Contrast 8 specifies the overall
-'Mutant-Control' comparison.\\
+'Intra-BioFraction' comparisons are the 7 pairwise compairisons of Control and
+Mutant protein abundance for each subcellular fractions. We
+also assessed differential abundance for the overall comparison between 'Control'
+and 'Mutant' groups. Each of these contrast is represented by a vector, $l^T$, 
+which specifies a comparison between coefficients in the LMM. Figure (FIG) 
+illustrates a matrix defining all 8 contrasts. 
 
 \texttt{MSstatsTMT} attempts to automatically parse the experimental design and
-fit an appropriate LMM for the experimental design. 
+fit an appropriate LMM for the experimental design.
 In order to understand and extend the function of \texttt{MSstatsTMT}, we 
 We extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing 
 steps and illustrate them here.\\
 
 Following data preprocessing, summarization, and normalization, statistical
-inference can be summarized in two steps:\\
+inference by \texttt{MSstatsTMT} can be summarized in two steps:\\
 
 \begin{itemize}
-	\item Fit each protein with the appropriate linear mixed-effects model
-	\item Given the fitted model, assess a contrast of interest 
+	\item Fit each protein with the appropriate LMM, and then
+	\item given the fitted model, assess a contrast of interest.
 \end{itemize}
 		
 At the core of the model fitting step is the
 R package \texttt{lme4} which implements mixed-effects models with its function
 \texttt{lmer}. The package \texttt{lmerTest} extends \texttt{lme4's}
-functionality and enables the computation of the degrees of freedom via the
-Sattertwaite method.\\
+functionality and enables the computation of Sattertwaite degrees of freedom.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-<<fit0, eval=TRUE, echo=TRUE>>=
+<<fit0, eval=TRUE, echo=TRUE, results='hide'>>=
 
+# load dependencies
 library(dplyr)
 library(data.table)
 
@@ -404,123 +401,159 @@ library(data.table)
 data(swip)
 data(msstats_prot)
 
-## the LMM formula to be fit:
-fx0 <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
+# formula to be fit to WASHC4, aka SWIP:
+fx <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
 
-# fit the model for WASHC4
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
+# fit the LMM
+fm <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein == swip))
 
-model_summary <- summary(fm0, ddf = "Satterthwaite")
+# examine the model's summary
+summary(fm, ddf = "Satterthwaite")
 
-model_summary$coefficients %>% knitr::kable()
+@
+
+<<summary, eval=TRUE, echo=FALSE>>=
+
+df <- summary(fm, ddf = "Satterthwaite")$coefficients %>% 
+        as.data.table(keep.rownames="Coefficient") %>%
+	mutate(Coefficient = gsub("Genotype|BioFraction","",Coefficient)) %>% 
+	mutate("p value" = formatC(`Pr(>|t|)`, digits=3)) 
+df$`Pr(>|t|)` <- NULL
+df %>% knitr::kable()
 
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%%The model's estimates, $\beta$, represent our best estimate of the mean protein
-%%abundance in the 14 conditions of Genotype:BioFraction. We define a contrast
-%%to compare the coefficients 'GenotypeMutant:BioFractionF7' and
-%%'GenotypeControl:BioFractionF7' to assess the intra-BioFraction
-%%difference between Control and Mutant for F4. The model-based comparisons
-%%for a given contrast is implemented by our function \texttt{lmerTestContrast}. 
-%%This function takes as input a model fitted by
-%%\texttt{lmerTest::lmer} and a contrast vector specifying the
-%%comparison of interest.\\
-%%
+
+The model's estimates, $\beta$, represent our best estimate of the mean protein
+abundance in the 14 conditions of \texttt{Genotype:BioFraction}. To illustrate a
+comparison, we define a contrast comparing 'Mutant:F7' and 'Control:F7'.
+The function  \texttt{lmerTestContrast} performs model-based comparisons of
+conditions defined by a contrast matrix. While the work done by this function 
+is the same as the work done internally by \texttt{MSstatsTMT's}
+\texttt{groupComparisonsTMT} function, its strength lies in its flexibility.\\
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%<<contrast0, eval=TRUE, echo=TRUE>>=
-%%%
-%%%# create a contrast
-%%%coeff <- lme4::fixef(fm0)
-%%%contrast0 <- setNames(rep(0,length(coeff)), nm = names(coeff))
-%%%contrast0["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
-%%%contrast0["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
-%%%
-%%%# evaluate contrast
-%%%lmerTestContrast(fm0,contrast0) %>% knitr::kable()
-%%%
-%%%@
+<<contrast0, eval=TRUE, echo=TRUE, results='hide'>>=
+
+# create a contrast
+coeff <- lme4::fixef(fm)
+contrast7 <- setNames(rep(0,length(coeff)), nm = names(coeff))
+contrast7["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
+contrast7["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
+
+# evaluate contrast
+lmerTestContrast(fm, contrast7)
+
+@
+
+<<pretty-print, eval=TRUE, echo=FALSE>>=
+
+df <- lmerTestContrast(fm, contrast7) 
+df <- df %>% mutate(Contrast = gsub("Genotype|BioFraction","",Contrast))  
+df$SE <- round(df$SE,3)
+df$log2FC <- round(df$log2FC,3)
+df$percentControl <- round(df$percentControl,3)
+df$Tstatistic <- round(df$Tstatistic,3)
+df$Pvalue <- formatC(df$Pvalue,digits=3)
+df$isSingular <- NULL
+df %>% knitr::kable()
+
+
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Provided the correct contrast, we easily assess the overall comparison between 
+'Mutant' and 'Control' groups:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<<<contrast1, eval = TRUE, echo = TRUE, results='hide'>>=
+
+# use convenience function to contruct a contrast
+lT <- getContrast(fm, "Mutant","Control")
+
+# assess the comparison
+lmerTestContrast(fm, lT)
+
+@
+
+<<<pretty-print results, eval = TRUE, echo = TRUE >>=
+
+df <- lmerTestContrast(fm, lT)
+df <- df %>% mutate(Contrast = 'Mutant-Control')
+df$SE <- round(df$SE,3)
+df$log2FC <- round(df$log2FC,3)
+df$percentControl <- round(df$percentControl,3)
+df$Tstatistic <- round(df$Tstatistic,3)
+df$Pvalue <- formatC(df$Pvalue,digits=3)
+df$isSingular <- NULL
+df %>% unique() %>% knitr::kable()
+
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Goodness-of-fit}
+
+It is useful to consider the goodness-of-fit of our LMM. A straight forward
+measure of the quality of a mixed model is Nagagawa's coefficient of 
+determination. Nakagawa's conditional $R^2$ is interpreted as 
+the total variance explained by a LMM ($R^2_{total}$).
+The marginal $R^2$ is interpreted as the variance explained by the LMM's 
+fixed effects ($R^2_{fixed}$).
+
+We implment Nakagawa's coeffficient of determination using the 
+\texttt{r.squaredGLMM.merMod} function forked from the \texttt{MuMin} package.\\
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%%It is useful to consider the goodness-of-fit of our model. Here we  
-%%assess the goodness-of-fit of each protein-wise LMM using Nagagawa's
-%%coefficient of determination, as implemented by the 
-%%\texttt{r.squaredGLMM.merMod} function forked from the \texttt{MuMin} package.\\
-%%A goodness-of-fit metric is the coefficient of determination.
-%%Nakagawa describes a generalized description of the coefficient of determination
-%%for LMM. R2c, for conditional effects, quantifies the total variation explained 
-%%by the model. R2m, for marginal, quantifies the variation explained by fixed effects.
-%%We refer to R2 conditional here as $R^2_{total}$ as it quantifies the total
-%%variance explained by the LMM. $R^2_{fixed}$ is the variation
-%%explained by the models marginal parameters.
-%%
-%%We can see the total variation explained by the model is 0.949. The variance
-%%explained by fixed effects Genotype and BioFraction equates to 0.935. Thus
-%%approximately 1.5\% of the remaing variance is attributable to mixed effects and
-%%residual variance.
-%%
-%%%%|Protein |Symbol | Entrez|  R2.fixef|  R2.total|
-%%%%|:-------|:------|------:|---------:|---------:|
-%%%%|Q3UMB9  |Washc4 | 319277| 0.9353344| 0.9494330|
-%%
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%<<<contrast1, eval = TRUE, echo = TRUE >>=
-%%%
-%%%# use convenience function to contruct a contrast
-%%%l1 <- getContrast(fm0, "Mutant","Control")
-%%%
-%%%results <- lmerTestContrast(fm0, l1)
-%%%
-%%%results %>% mutate(Contrast - 'Mutant-Control') %>% 
-%%%	unique() %>% knitr::kable()
-%%%
-%%%@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%%
-%%\section{Module-level analysis}
-%%
-%%We wish to perform inference at the level of protein modules. These groups of
-%%covarying proteins represent hypothesized biological niches
-%%defined by proteins that localized together in subcellular
-%%space.\\
-%%
-%%Effects are fixed if they are interesting in themselves or random if there is
-%%interest in the underlying population. Searle, Casella, and McCulloch (1992,
-%%Section 1.4) explore this distinction in depth. morover as the sample does not
-%%We are interested in the overall affect on the group of proteins and not the
-%%Mixed effects represent a subset of the exhaust the population. A strenght of
-%%the LMM approach applied to is the partial pooling which strengthens the power
-%%of the statistical test.  Here we hypothesize that covarying protein represetnt
-%%groups of proteins that are a part of a larger groups with a common mean effect.
-%%Proteins within a module represnt correlated observations with we model as a
-%%mixed effect. We take the stance that Protein is a random effect in that we are
-%%primarily interested in makein inference about the overall distribution
-%%responses for a module rather than within between the particular sublevels of a
-%%module.\\
-%%
-%%We model protein groups or modules by adding the mixed effect term
-%%\texttt{Protein}. The protein constituents of a module.\\
-%%
-%%\begin{equation} 
-%%	% module-model (fx1)
-%%	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}
-%%\end{equation}
-%%
-%%\begin{equation}
-%%  \begin{gathered}
-%%	  % constraints:
-%%	Protein{p} \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
-%%  \end{gathered}
-%%\end{equation}
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%<<<>>=
-%%%## the module-level model to be fit:
-%%%washc_prots = mapID("Washc*")
-%%%form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
+<<rsquared, eval=TRUE, echo=TRUE>>=
+
+# assess gof with Nakagawa coefficient of determination
+r.squaredGLMM.merMod(fm) %>% knitr::kable()
+
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We can see the total variation explained by the model, $R^2_{c} is 0.949$. 
+The variance explained by fixed effects, \texttt{Genotype:BioFraction},
+equates to 0.935 ($R^2{m}$). A vast majority of the variance is attributable to 
+the fixed effects. Only about 1.5\% of the remaing variance is attributable to 
+mixed effects and the residual variance.\\
+
+\section{Module-level analysis}
+
+We wish to extend the LMM framework developed by \texttt{MSstatsTMT} to perform 
+inference at the level of protein groups or modules.
+That is, for module-level comparisons, we are interested in the overall affect 
+of Genotype on a group of proteins. Where modules are groups of covarying 
+proteins which represent biological niches defined by proteins that 
+localized together in subcellular space.\\
+
+Here we hypothesize that the proteins, within a module, which are a subset of 
+the overall proteome,  are a part of a common group with a common mean effect.
+Proteins within a module are correlated observations which we model as a
+mixed effect. We take the stance that \texttt{Protein} is a mixed-effect 
+in the view that we are primarily interested in making inference about the 
+overall distribution of responses for a module rather than within among its
+sublevels.\\
+
+We model protein groups or modules by adding the mixed-effect term
+\texttt{Protein} to the LMM equation (EQ):
+
+\begin{equation} 
+  \begin{gathered}
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}
+	Protein{p} \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
+  \end{gathered}
+\end{equation}
+
+We demonstrate an ideal module, by analyzing the 5 WASH complex proteins.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<<<>>=
+
+# the module-level formula to be fit:
+washc_prots <- mapID("Washc*")
+form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
 %%%
 %%%# warnings because our module is too perfect
 %%%fit <- suppressWarnings({ lmerTest::lmer(form, msstats_prot %>% filter(Protein %in% washc_prots)) })

@@ -80,9 +80,9 @@ lmerTestContrast <- function(fm, contrast, variance=FALSE,
     prot_stats <- data.frame(Contrast=comparison,
 			     log2FC=FC, 
 			     percentControl=2^FC, 
-			     Pvalue=p,
-			     Tstatistic=t, 
 			     SE=sqrt(se2), 
+			     Tstatistic=t, 
+			     Pvalue=p,
 			     DF=df_post, 
 			     isSingular=lme4::isSingular(fm))
 
