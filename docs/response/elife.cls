@@ -238,7 +238,7 @@
 \renewcommand{\AB@affilsepx}{; \protect\Affilfont}
 
 \newcommand{\themetadata}{%
-    \textbf{Author coorespondence:\\}  \@correspondence\par
+    \textbf{Author correspondence:\\}  \@correspondence\par
     \ifx\empty\@contribution\else
     \bigskip\@contribution\par\fi
     \ifx\empty\@presentaddress\else

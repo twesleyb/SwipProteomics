@@ -127,7 +127,7 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 % reduce space above and below equations
 \setlength{\abovedisplayskip}{1pt}
-\setlength{\belowdisplayskip}{1pt}
+\setlength{\belowdisplayskip}{3pt}
 
 
 % main
@@ -138,10 +138,11 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 
 % abstract
+\renewcommand{\abstractname}{Summary}
 \begin{abstract}
 
 In the review of this manuscript, significant concerns were raised by the
-reviewers about the validity of our statistal approach to perform protein- and 
+reviewers about the validity of our statistical approach to perform protein- and 
 module-level inference from our \textbf{WASH-iBioID} and \textbf{SWIP-TMT} 
 proteomics datasets. Our previous statistical approach was dependent upon the R 
 package \texttt{edgeR} to evaluate differential protein abundance.
@@ -151,9 +152,9 @@ generated in RNA-seq transcriptomics experiments.  Previously, we failed to full
 consider the validity of the NB GLM model used by \texttt{edgeR} for
 proteomics data. In response to this critique, we explore the goodness-of-fit of
 the NB GLM model for our \texttt{SWIP-TMT} data, and find evidence of a
-lack-of-fit.  Thus, we revised our statistical approach and reanlyzed
+lack-of-fit.  Thus, we revise our statistical approach and reanalyze
 our data making use of the recently published tool \texttt{MSstatsTMT}.
-\texttt{MSstatsTMT} uses a linear mixed model (LMM) framework to model
+\texttt{MSstatsTMT} uses a linear mixed-model (LMM) framework to model
 major sources of variation in a proteomics experiment. We extend the LMM
 framework used by \texttt{MSstatsTMT} to re-evaluate both protein- and
 module-level statistical comparisions.  Despite evidence of a
@@ -173,7 +174,7 @@ Our previous approach is summarized as the 'Sum + IRS' method by Huang
 \textit{et al.} (REF). Following protein summarization and Internal Reference
 Scaling (IRS) normalization, we applied \texttt{edgeR} to assess differential
 abundance of individual proteins and protein-groups or modules. 
-We drew precidence for the use of \texttt{edgeR} from previous work by Plubell 
+The use of \texttt{edgeR} was based on work by Plubell 
 and Khan, \textit{et al.} (REFS) who describe IRS normalization and the use of
 \texttt{edgeR} for statistical testing in TMT mass spectrometry experiments. 
 We failed however, to consider the overall adequacy of the NB GLM model for our
@@ -193,36 +194,79 @@ observed mean-variance relationship in proteomics and transcriptomics data.\\
 %estimates and improves testing power.\\
 
 As signal intensity in protein mass spectrometry is fundamentally related to the
-number of ions generated from a ioninized, fragmented protein, we incorrectly
-infered that TMT mass spectrometry data can be modeled as negative binomial
+number of ions generated from a ionized, fragmented protein, we incorrectly
+inferred that TMT mass spectrometry data can be modeled as negative binomial
 count data. Based on this assumption, we justified the use of \texttt{edgeR}.
-Here we reconsider the overall adequacy of the \texttt{edgeR} NB GLM model for
+Here, we reconsider the overall adequacy of the \texttt{edgeR} NB GLM model for
 TMT mass spectrometry data.\\
+
+
+\begin{figure}[hb!]
+	\begin{fullwidth}
+		\begin{center}
+		\includegraphics[width=0.9\paperwidth,keepaspectratio]{gof}
+		\caption{\textbf{Goodness-of-fit of \texttt{edgeR} (A), and 
+		\texttt{MSstatsTMT} (B) statistical approaches.} The overall
+		adequacy of the linear models fit to the data were assessed 
+		by plotting the residual deviance for all proteins as a 
+		quantile-quantile plot (McCarthy \textit{et al.}, (2012)). 
+		\textbf{(A)} For analysis with \texttt{edgeR}, The normalized
+		protein data from \texttt{MSstatsTMT} were fit with a negative
+		binomal generalized linear model (NBGLM) of the form: 
+		\texttt{Abundance} $\sim$ \texttt{Mixture + Condition}.
+		Where \texttt{Mixure} is an additive blocking factor that 
+		accounts for variablity between experiments. 
+		The NB framework used by edgeR utilizes a dispersion parameter 
+		to account for mean-variance relationships in the data.
+		The dispersion parameter can take several forms. 
+                \texttt{edgeR} supports three dispersion models: 'common',
+		'trended', and 'tagwise'. However, when using \texttt{edgeR's}
+		robust quasi-likelihood test methods, only global (i.e. 'common'
+		or 'trended') dispersion metrics are appropriate 
+		(see \texttt{edgeR::glmQLFit's} documentation). 
+		We plot the protein-wise deviance from the data fit withe ach of
+		the disperions parameters. Protein-wise deviance
+		statistics were transformed to normality and plotted against
+		theoretical normal quantiles using the \texttt{edgeR::gof}
+		function. \textbf{(B)} For analysis with \texttt{MSstatsTMT},
+		the normalized protein data were fit with a linear mixed-effects 
+		model (LMM) of the form: 
+		\texttt{Abundance} $\sim$ \texttt{0 + Condition + (1|Mixture)}. 
+		Where \texttt{Mixture} represents the random effect
+		of \texttt{Mixture}. The residual deviance and degrees of 
+		freedom were extracted from the fitted models, z-score
+		normalized, and plotted as in (A). Proteins with a significantly 
+		poor fit are indicated as outliers in blue 
+		(Holm-adjusted P-value $<$ 0.05).}
+		\label{fig:gof}
+	\end{center}
+	\end{fullwidth}
+\end{figure}
+
 
 To evaluate the overall adequacy of the \texttt{edgeR} model, we plot the 
 residual protein deviance statistics of all proteins against their theoretical, 
-normal quantiles in a quantile-quantile (QQ) plot \textbf{Figure}.
+normal quantiles in a quantile-quantile (QQ) plot (\FIG{gof}).
 The QQ plot addresses the question of how similar the observed data are to the
-theoretical distribution given by NB GLM fit. A linear relationship between the
+theoretical distribution given by a NB GLM fit. A linear relationship between the
 observed and theoretical values is an indicator of goodness-of-fit.
 Deviation from this linear trend is evidence of a lack-of-fit.\\
 
-Following protein summarization and normalization with \texttt{MSstatsTMT}, 
-the data were fit with a simple NB GLM of the form 
-\texttt{Abundance $\sim$ Mixture + Condition} using \texttt{edgeR's} 
-\texttt{glmFit} function which fits a NB GLM model to each
-protein or gene (the sub-subplot summaries) in the data. The dispersion
-parameter $\phi$ can take several forms, and \texttt{edgeR} supports three 
-different dispersion metrics: 'common', 'trended', and 'tagwise'. 
-\textbf{Figure} illustrates the divergence of the observed deviance statistics 
-from the theoretical distribution for our TMT data fit with the NB GLM model. 
-These plots emphasize the overall lack of fit of proteomics data 
-fit by the \texttt{edgeR} model.\\ 
+Following protein summarization and normalization with \texttt{MSstatsTMT}, the
+data were fit with a simple NB GLM of the form \texttt{Abundance $\sim$ Mixture
++ Condition} using \texttt{edgeR's} \texttt{glmFit} function which fits a NB GLM
+model to each protein or gene (the sub-subplot summaries) in the data. The
+dispersion parameter $\phi$ can take several forms, and \texttt{edgeR} supports
+three different dispersion metrics: 'common', 'trended', and 'tagwise'.
+\FIG{gof} illustrates the divergence of the observed deviance
+statistics from the theoretical distribution for our TMT data fit with the NB
+GLM model.  These plots emphasize the overall lack-of-fit for proteomics data
+with the \texttt{edgeR} model.\\ 
 
 Given our experimental design, \texttt{MSstatsTMT} fits an analagous LMM:
 \texttt{Abundance $\sim$ Condition + (1|Mixture)}. 
-The QQ plot in Figure indicates that the data are well described by
-\texttt{MSstatsTMT's} LMM framework, which 
+The QQ plot in \FIG{gof} indicates that the data are well 
+described by \texttt{MSstatsTMT's} LMM framework, which 
 does not depend upon the negative binomial assumption.
 
 
@@ -234,10 +278,10 @@ data. An exception to this norm is \texttt{MSstatsTMT}, an extension of
 \texttt{MSstats} for analysis of TMT proteomics experiments.\\
 
 \texttt{MSstatsTMT} utilizes a linear mixed-model framework. The strength of
-LMMs lies in their flexibility. In mixed models, the response variable is 
-taken to be a function of both fixed and mixed effects. Using LMMs we can 
-untagle the variance attributable to the biological effect we
-are interested in from the experimental and biological covariates which 
+LMMs lies in their flexibility. In mixed-models, the response variable is 
+taken to be a function of both fixed- and mixed-effects. Using LMMs we can 
+untangle the variance attributable to the biological effect we
+are interested in from the experimental and biological covariates
 which mask this response.\\
 
 If the set of possible levels of the covariate is
@@ -245,28 +289,28 @@ fixed and reproducible then the factor is modeled as a fixed-effect parameter.
 In contrast, if the levels of an observation reflect a sampling of the
 set of all possible levels, then the covariate is modeled as a random effect.
 Random or mixed-effects represent categorical variables
-that reflect experimental or observational "units" in the data set. (Bates)
+that reflect experimental or observational "units" in the data set (REF:Bates).
 As such, mixed-effect parameters account for the variation occurring among all 
-of the lower level units of a particular upper level unit in the data. 
-For this reason, mixed models may also be refered to as heirarchical models.\\
+of the lower level units of a particular upper level unit in the data (REF:Bates).
+For this reason, mixed-models may also be referred to as heirarchical models.\\
 
-Tandem mass tag, or TMT reagents enable the combination and simultaneous
-quantifiaction of muliple biological samples by mass spectrometry. Currently
-commercially available reagents are capable of labeling up to 16 protein
-preparations which are then analyzed together in a single mass spectrometry run.
-Peptides labeled with TMT tags are distinuisable from each other due to the
-unique reporter ions generated by the TMT tag which  is used for relative
-quantification.  In a TMT experiment, ionized features are matched to peptides,
-these peptide spectrum matches (PSM), for all unique TMT channels are analyzed
-simultaneously as a single precursor. Quantification of all biological
-conditions is thus achived within a single MS run in which all features for a
-protein are quantified simultaneously.\\
+%Tandem mass tag, or TMT reagents enable the combination and simultaneous
+%quantifiaction of multiple biological samples by mass spectrometry. Currently
+%commercially available reagents are capable of labeling up to 16 protein
+%preparations, which are then analyzed together in a single mass spectrometry run.
+%Peptides labeled with TMT tags are distinguishable from each other due to the
+%unique reporter ions generated by the TMT tag which  is used for relative
+%quantification.  In a TMT experiment, ionized features are matched to peptides,
+%these peptide spectrum matches (PSM), for all unique TMT channels are analyzed
+%simultaneously as a single precursor. Quantification of all biological
+%conditions is thus achieved within a single MS run in which all features for a
+%protein are quantified simultaneously.\\
 
 Huang \textit{et al.} created \texttt{MSstatsTMT}, an R package for data
 normalization and hypothesis testing in multiplex TMT proteomics experiments. 
 They outline a common vocabulary for describing the experimental design of 
 TMT MS experiments. A TMT experiment consists
-of the analysis of \texttt{m = 1} ... \texttt{M}\ concatensions of isobarically
+of the analysis of \texttt{m = 1} ... \texttt{M}\ concatenations of isobarically
 labeled samples or \texttt{Mixtures}. This mixture is then analyzed by the mass
 spectrometer in a mass spectrometry \texttt{Run}. This mixture is often
 fractionated into multiple liquid chromotography \texttt{Fractions} to decrease
@@ -274,7 +318,7 @@ sample complexity, and thereby increase the depth of proteome coverage.
 Within a mixture, each of the unique TMT channels is dedicated to the 
 analysis of \texttt{c = 1} ... \texttt{C}\ individual biological or treatment 
 \texttt{Conditions}.  There may then be \texttt{b = 1} or more \texttt{B}\ 
-biological replicates or \texttt{Subjects}. Finally, a sigle TMT mixture may be 
+biological replicates or \texttt{Subjects}. Finally, a single TMT mixture may be 
 repeatedly analyzed in \texttt{t = 1} ... \texttt{T}\ technical replicate mass 
 spectrometry runs.\\
 
@@ -295,7 +339,7 @@ variation in the response.\\
 \begin{equation}
   \begin{gathered}
 	% constraints:
-	Mixture_m \stackrel{iid}{\sim} N(0,\sigma^2_M)
+	Mixture_m \stackrel{iid}{\sim} N(0,\sigma^2_M) \\
 	TechRep(Mixture)_{t(m)} \stackrel{iid}{\sim} N(0,\sigma^2_T) \\
 	\sum_{c=1}^{C} Condition_c = 0 \\
 	Subject_{mcb} \stackrel{iid}{\sim} N(0,\sigma^2_S) \\
@@ -303,12 +347,13 @@ variation in the response.\\
   \end{gathered}
 \end{equation}
 
-\texttt{Mixture} is a mixed effect and 
-represents the variation between TMT mixtures which is assumed to be random 
-and normally distributed (iid). \texttt{TechRep(Mixture)} represents random 
-variation between replicate mass spectrometry runs of a same mixture. 
+\texttt{Mixture} is a mixed-effect and .
+represents the variation between TMT mixtures. By definition mixed-effects are 
+assumed to be independent and normally distributed (iid). 
+\texttt{TechRep(Mixture)} represents random 
+variation between replicate mass spectrometry runs.
 The term \texttt{Subject} cooresponds to each unique biological replicate and 
-represents biological variation among the levels of the fixed effect term
+represents biological variation among the levels of the fixed-effect term
 \texttt{Condition}. The term $\epsilon_{mtcb}$,
 is a random-effect representing both biological and technical variation, 
 quantifying any remaining error.\\
@@ -323,10 +368,10 @@ For example, if there is no technical replication of mixture
 \end{equation}
 
 In the reduced model, biological variation among individual \texttt{Subjects} is 
-captured by the term \texttt{Condition}, and is thus ommited.\\
+captured by the term \texttt{Condition}, and is thus omitted\\
 
 
-\section{Test Statistic}
+\section{Hypothesis Testing}
 
 \texttt{MSstatsTMT} performs protein-wise
 comparisons between \texttt{Conditions} of biological \texttt{Subjects} by 
@@ -334,7 +379,7 @@ a contrast of conditioned means obtained from fitting the data with a
 linear mixed-effects model expressing the major sources of variation in the
 experimental design.\\
 
-Model based testing of differential abundance between pairs of conditions
+Model-based testing of differential abundance between pairs of conditions
 is done by comparing the estimates obtained from the fit LMM. We are interested 
 in testing the null hypothesis $H0 : l^T\beta = 0$. Kutzenova \textit{et al.,}
 derive a test statistic for such contrasts (Kutzenova2017):
@@ -348,7 +393,7 @@ We obtain the model estimates $\hat{\beta}$,
 error $\sigma^2$, and
 variance-covariance matrix $\hat{V}$ from the fitted model. 
 Together $\sigma^2 * \hat{V}$ is the scaled variance-covariance matrix
-describing the error estimates of the models mixed-effect parameters. 
+describing the error estimates of the model's mixed-effect parameters. 
 Given $l^T$, a vector of sum 1 specifying the positive and negative
 coefficients of the comparison, the numerator of the equation is then
 the fold change of a given comparison, and together the denominator 
@@ -357,9 +402,26 @@ represents the standard error of the contrast.\\
 The degrees of freedom for the contrast are derived using the Satterthwaite
 moment of approximation method (Kutzenova2017).
 Finally, given the t-statistic, which is assumed to follow an approximate
-$chi^2$ distribution, and the degrees of freedom, a p-value is calculated. 
+$\chi^2$ distribution, and the degrees of freedom, a p-value is calculated. 
 P-values for the protein-wise tests are adjusted using the
-Benjamnii hochberg method.\\
+Benjamini-Hochberg (REF).\\
+
+
+\begin{figure}[ht!] %% figure 2 -- Experimental Design
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{design}
+	  \caption{\textbf{Experimental Design.} We performed three 16-plex TMT
+	  experiments. Each TMT mixture is a concatenation of 16 labeled
+	  samples. In each experiment we analyzed 7 subcellular
+	  \texttt{BioFractions} prepared from the brain of a 'Control' or
+	  'Mutant' mouse. In all we analyzed 3 \texttt{Subjects} from each 
+	  {Condition}. Each \texttt{Mixture} includes two \texttt{Channels}
+	  dedicated to the analysis of a common quality control sample.}
+	  \label{fig:design}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
 
 
 \section{SWIP-TMT Proteomics Experimental Design}
@@ -369,7 +431,7 @@ combinations of \texttt{Genotype} and \texttt{BioFraction} obtained from
 subcellular fractionation of the brains of 'Control' and 
 SWIP\textsuperscript{P1019R} 'Mutant' mice. We refer to these as
 \texttt{BioFractions} to distinguish them from a MS \texttt{Fraction}. 
-Our TMT proteomics experimental design is summarized in \textbf{Figure}.\\
+Our TMT proteomics experimental design is summarized in \FIG{design}.
 
 In our experiment, each TMT mixture contains seven repeated measurements
 made from each biological \texttt{Subject}. To account for this source of
@@ -378,10 +440,10 @@ intra-Subject variability, we should include the random-effect term
 design \texttt{Mixture} is confounded with the term \texttt{Subject}. In
 each mixture we analyzed all \texttt{BioFractions} from a single Control and
 Mutant mouse.  Thus we can choose to account for the effect of \texttt{Mixture}
-or \texttt{Subject}, but not both. Me choose to account for variability of 
+or \texttt{Subject}, but not both. We choose to account for variability of 
 \texttt{Mixture} under the assumption that the effect of this experimental batch 
 effect is greater than the variance attributable to the random variability
-inherint in making repeated measurements of each subject. 
+inherent to repeated measurements of each subject. 
 Thus we omit the term \texttt{Subject}. The reduced model is then the same as
 equation (EQ) when \texttt{Condition} is the interaction of 
 \texttt{Genotype:BioFraction}.\\
@@ -389,24 +451,42 @@ equation (EQ) when \texttt{Condition} is the interaction of
 
 \section{Protein level comparisions}
 
-Using \texttt{MSstatsTMT} we assesed comparisons at two levels:
+Using \texttt{MSstatsTMT} we assesssed two protein-level comparisons:
 
 \begin{itemize}
 	\item 'intra-BioFraction' contrasts 
 	\item 'Mutant-Control' contrast 
 \end{itemize}
 
-'Intra-BioFraction' comparisons are the 7 pairwise compairisons of Control and
-Mutant protein abundance for each subcellular fractions. We
+\begin{figure}[h!] %% figure 3 -- Contrasts
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{contrasts}
+	  \caption{\textbf{Statistical Comparisons.} We assessed two types of
+	  contrasts. Each row of the matrix specifies a contrast between
+	  positive and negative coefficients in the mixed-effects model fit to
+	  each protein. Contrasts1-7 are 'intra-BioFraction' contrasts that
+	  specify the pairwise comparisons of Control and Mutant groups for a
+	  single fraction. In Contrast 8 we compare 'Mutant-Control' and asses
+	  the overall difference of 'Control' and 'Mutant' conditions.  Each
+	  contrast is a vector of sum 1.}
+	  \label{fig:contrasts}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+
+'Intra-BioFraction' comparisons are the 7 pairwise comparisons of 'Control' and
+'Mutant' protein abundance for each subcellular fractions. We
 also assessed differential abundance for the overall comparison between 'Control'
-and 'Mutant' groups. Each of these contrast is represented by a vector, $l^T$, 
-which specifies a comparison between coefficients in the LMM. Figure (FIG) 
+and 'Mutant' groups. Each of these contrasts is represented by a vector, $l^T$, 
+which specifies a comparison between coefficients in the LMM. \FIG{contrasts}
 illustrates a matrix defining all 8 contrasts. 
 
 \texttt{MSstatsTMT} attempts to automatically parse the experimental design and
 fit an appropriate LMM for the experimental design.
 In order to understand and extend the function of \texttt{MSstatsTMT}, we 
-We extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing 
+extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing 
 steps and illustrate them here.\\
 
 Following data preprocessing, summarization, and normalization, statistical
@@ -417,7 +497,7 @@ inference by \texttt{MSstatsTMT} can be summarized in two steps:\\
 	\item given the fitted model, assess a contrast of interest.
 \end{itemize}
 		
-At the core of the model fitting step is the
+At the core of the model fitting-step is the
 R package \texttt{lme4} which implements mixed-effects models with its function
 \texttt{lmer}. The package \texttt{lmerTest} extends \texttt{lme4's}
 functionality and enables the computation of Sattertwaite degrees of freedom.\\
@@ -486,7 +566,6 @@ Control:F10 & 7.618697 & 0.121126 & 17.30594 & 62.89894 & 7.04e-22\\
 
 
 \end{knitrout}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The model's estimates, $\beta$, represent our best estimate of the mean protein
@@ -495,7 +574,8 @@ comparison, we define a contrast comparing 'Mutant:F7' and 'Control:F7'.
 The function  \texttt{lmerTestContrast} performs model-based comparisons of
 conditions defined by a contrast matrix. While the work done by this function 
 is the same as the work done internally by \texttt{MSstatsTMT's}
-\texttt{groupComparisonsTMT} function, its strength lies in its flexibility.\\
+\texttt{groupComparisonsTMT} function, \texttt{lmerTestContrast} is more
+flexible.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{knitrout}
@@ -515,11 +595,11 @@ is the same as the work done internally by \texttt{MSstatsTMT's}
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\begin{tabular}{l|r|r|r|r|l|r}
+\begin{tabular}{l|r|r|r|l|r}
 \hline
-Contrast & log2FC & percentControl & SE & Tstatistic & Pvalue & DF\\
+Contrast & log2FC & SE & Tstatistic & Pvalue & DF\\
 \hline
-Mutant:F7-Control:F7 & -1.689 & 0.31 & 0.151 & -11.153 & 2.09e-11 & 26\\
+Mutant:F7-Control:F7 & -1.689 & 0.151 & -11.153 & 2.09e-11 & 26\\
 \hline
 \end{tabular}
 
@@ -544,24 +624,12 @@ Provided the correct contrast, we easily assess the overall comparison between
 \end{knitrout}
 
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{df} \hlkwb{<-} \hlkwd{lmerTestContrast}\hlstd{(fm, lT)}
-\hlstd{df} \hlkwb{<-} \hlstd{df} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{Contrast} \hlstd{=} \hlstr{'Mutant-Control'}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{SE} \hlkwb{<-} \hlkwd{round}\hlstd{(df}\hlopt{$}\hlstd{SE,}\hlnum{3}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{log2FC} \hlkwb{<-} \hlkwd{round}\hlstd{(df}\hlopt{$}\hlstd{log2FC,}\hlnum{3}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{percentControl} \hlkwb{<-} \hlkwd{round}\hlstd{(df}\hlopt{$}\hlstd{percentControl,}\hlnum{3}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{Tstatistic} \hlkwb{<-} \hlkwd{round}\hlstd{(df}\hlopt{$}\hlstd{Tstatistic,}\hlnum{3}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{Pvalue} \hlkwb{<-} \hlkwd{formatC}\hlstd{(df}\hlopt{$}\hlstd{Pvalue,}\hlkwc{digits}\hlstd{=}\hlnum{3}\hlstd{)}
-\hlstd{df}\hlopt{$}\hlstd{isSingular} \hlkwb{<-} \hlkwa{NULL}
-\hlstd{df} \hlopt{%>%} \hlkwd{unique}\hlstd{()} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\begin{tabular}{l|r|r|r|r|l|r}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\begin{tabular}{l|r|r|r|l|r}
 \hline
-Contrast & log2FC & percentControl & SE & Tstatistic & Pvalue & DF\\
+Contrast & log2FC & SE & Tstatistic & Pvalue & DF\\
 \hline
-Mutant-Control & -1.517 & 0.349 & 0.057 & -26.496 & 2.42e-20 & 26\\
+Mutant-Control & -1.517 & 0.057 & -26.496 & 2.42e-20 & 26\\
 \hline
 \end{tabular}
 
@@ -569,221 +637,219 @@ Mutant-Control & -1.517 & 0.349 & 0.057 & -26.496 & 2.42e-20 & 26\\
 \end{knitrout}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 \section{Goodness-of-fit}
 
 It is useful to consider the goodness-of-fit of our LMM. A straight forward
-measure of the quality of a mixed model is Nagagawa's coefficient of 
-determination. Nakagawa's conditional $R^2$ is interpreted as 
+measure of a LMM's quality is the Nakagawa coefficient of 
+determination (REF). Nakagawa's conditional $R^2$ is interpreted as 
 the total variance explained by a LMM ($R^2_{total}$).
 The marginal $R^2$ is interpreted as the variance explained by the LMM's 
-fixed effects ($R^2_{fixed}$).
+fixed-effects ($R^2_{fixed}$).
 
 We implment Nakagawa's coeffficient of determination using the 
-\texttt{r.squaredGLMM.merMod} function forked from the \texttt{MuMin} package.\\
+\texttt{r.squaredGLMM.merMod} function taken from the \texttt{MuMin}
+package (REF).\\
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{# assess gof with Nakagawa coefficient of determination}
-\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
+\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm)}
 \end{alltt}
+\begin{verbatim}
+##            R2m      R2c
+## [1,] 0.9353344 0.949433
+\end{verbatim}
 \end{kframe}
-\begin{tabular}{r|r}
-\hline
-R2m & R2c\\
-\hline
-0.9353344 & 0.949433\\
-\hline
-\end{tabular}
-
-
 \end{knitrout}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We can see the total variation explained by the model, $R^2_{c} is 0.949$. 
-The variance explained by fixed effects, \texttt{Genotype:BioFraction},
+We can see the total variation explained by the model, $R^2_{c}$, is 0.949. 
+The variance explained by fixed-effects, \texttt{Genotype:BioFraction},
 equates to 0.935 ($R^2{m}$). A vast majority of the variance is attributable to 
-the fixed effects. Only about 1.5\% of the remaing variance is attributable to 
-mixed effects and the residual variance.
+the fixed-effects. Only about 1.5\% of the remaing variance is attributable to 
+mixed-effects and the residual variance.\\
 
 \section{Module-level analysis}
 
-We wish to perform inference at the level of protein modules. These groups of
-covarying proteins represent hypothesized biological niches
-defined by proteins that localized together in subcellular
-space.\\
+We wish to extend the LMM framework developed by \texttt{MSstatsTMT} to perform 
+inference at the level of protein groups or modules.
+That is, for module-level comparisons, we are interested in the overall affect 
+of Genotype on a group of proteins. Where modules are groups of covarying 
+proteins which represent biological niches defined by proteins that 
+localized together in subcellular space.\\
 
-Effects are fixed if they are interesting in themselves or random if there is
-interest in the underlying population. Searle, Casella, and McCulloch (1992,
-Section 1.4) explore this distinction in depth. morover as the sample does not
-We are interested in the overall affect on the group of proteins and not the
-Mixed effects represent a subset of the exhaust the population. A strenght of
-the LMM approach applied to is the partial pooling which strengthens the power
-of the statistical test.  Here we hypothesize that covarying protein represetnt
-groups of proteins that are a part of a larger groups with a common mean effect.
-Proteins within a module represnt correlated observations with we model as a
-mixed effect. We take the stance that Protein is a random effect in that we are
-primarily interested in makein inference about the overall distribution
-responses for a module rather than within between the particular sublevels of a
-module.\\
+Here we hypothesize that the proteins within a module, which are a subset of 
+the overall proteome,  are a part of a common group, a module, with a common 
+mean effect. Proteins within a module are correlated observations 
+which we model as a mixed-effect. 
+We take the stance that \texttt{Protein} is a mixed-effect 
+in the view that we are primarily interested in making inference about the 
+overall distribution of responses for a module rather than among its sublevels.\\
 
-We model protein groups or modules by adding the mixed effect term
-\texttt{Protein}. The protein constituents of a module.\\
+We model protein groups or modules by adding the mixed-effect term
+\texttt{Protein} to the LMM equation (EQ):
 
 \begin{equation} 
-	% module-model
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}
+  \begin{gathered}
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}\\
+	Protein{p} \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
+  \end{gathered}
 \end{equation}
 
-%%\begin{equation}
-%%  \begin{gathered}
-%%	  % constraints:
-%%	Protein{p} \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
-%%  \end{gathered}
-%%\end{equation}
-%%
+The term \texttt{Protein} is associated with a variance component $\sigma_P$.\\
+
+As a means of example, we demonstrate an ideal module, by fitting the LMM to 
+the 5 WASH complex proteins. As before, we calculate the coefficient of 
+determination for LMM's with the \texttt{r.squaredGLMM.merMod} function
+(REF).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# the module-level formula to be fit:}
+\hlstd{fx} \hlkwb{<-} \hlstr{"Abundance ~0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"}
+
+\hlcom{# load WASH Complex proteins}
+\hlkwd{data}\hlstd{(washc_prots)}
+
+\hlstd{fit} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx, msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
+
+\hlkwd{r.squaredGLMM.merMod}\hlstd{(fit)}
+\end{alltt}
+\begin{verbatim}
+##            R2m       R2c
+## [1,] 0.7620866 0.8928053
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Again, we consider the variance explained by the model as a measure of its
+overall quality. Our model explains 0.89\% of the total variance.
+The Fixed-effect term \texttt{Genotype:BioFraction} explains the majority of 
+the variance ($R^2_m=0.762$). The remaining variance, 0.13\%, is attributable to
+the combination of mixed-effects \texttt{Mixture} and \texttt{Protein} as well as the residual variance.\\
+
+It is useful to consider the variation ($\sigma^2$) of the 
+individual mixed-effect terms. These can be accessed with \texttt{lme4's} 
+\texttt{VarCorr} function.\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# calculate variance of mixed-effects}
+\hlstd{var_df} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(lme4}\hlopt{::}\hlkwd{VarCorr}\hlstd{(fit,}\hlkwc{comp}\hlstd{=}\hlstr{"Variance"}\hlstd{))}
+\hlstd{mixef_var} \hlkwb{<-} \hlkwd{setNames}\hlstd{(var_df}\hlopt{$}\hlstd{vcov,}\hlkwc{nm}\hlstd{=var_df}\hlopt{$}\hlstd{grp)} \hlcom{# var of each component}
+\hlstd{mixef_var}\hlopt{/}\hlkwd{sum}\hlstd{(mixef_var)} \hlcom{# as a percent of the total mixed-effect variance}
+\end{alltt}
+\begin{verbatim}
+##    Protein    Mixture   Residual 
+## 0.52871411 0.02072397 0.45056191
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{figure}[h!] %% figure 4 -- Variance Partition
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{variance}
+	  \caption{\textbf{Analysis of Variance Components.} 
+	  The proportion of variance explained by Genotype, BioFraction,
+	  Mixture, and remaining residual error (subplot error) for all
+	  proteins. Note while the contribution of Mixture seems negligiable,
+	  its average for all proteins is approximately twice the average
+	  percent variance explained by Genotype. BioFraction explains the
+	  majority of the variance for all proteins. Analysis done with
+	  \texttt{variancePartition::calcVarPart}.}
+	  \label{fig:variance}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+
+The R package \texttt{variancePartition} enables us to calculate the percent
+variance explained by a LMM's parameters. To do so, it expects all terms to be
+mixed-effects. \FIG{variance}.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%<<<>>=
-%%%## the module-level model to be fit:
-%%%washc_prots = mapID("Washc*")
-%%%form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
-%%%
-%%%# warnings because our module is too perfect
-%%%fit <- suppressWarnings({ lmerTest::lmer(form, msstats_prot %>% filter(Protein %in% washc_prots)) })
-%%%
-%%%# calculate partitioned variance
-%%%mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
-%%%x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
-%%%PVE_washc = x/sum(x)
-%%%PVE_washc %>% knitr::kable()
-%%%@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%%Again, we consider the variance explained by the model as a measure of its
-%%overall quality. Nakagawa's coefficient of determination does not consider the
-%%variance explained by mixed affects alone.  The R package
-%%\texttt{VariancePartition} computes the varation explained by a LMM terms.
-%%percent variance attributable to that term for the mixed-effect model fit to
-%%each module.  For each model fit the module-level data, we asses the proprotion
-%%of variance explained by \texttt{BioFraction}, \texttt{Genotype},
-%%\texttt{Mixture}, and \texttt{Protein}, and \texttt{Residual} variance.
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%<<<>>=
-%%%# calculate partitioned variance
-%%%mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
-%%%x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
-%%%PVE_washc = x/sum(x)
-%%%PVE_washc %>% knitr::kable()
-%%%@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%%
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%%%% figure 1 -- nb glm and lmm GOF
-%%
-%%\begin{figure}[ht]
-%%	\begin{fullwidth}
-%%		\begin{center}
-%%		\includegraphics[width=0.9\paperwidth,keepaspectratio]{gof}
-%%		\caption{\textbf{Goodness-of-fit of \texttt{edgeR} (A), and 
-%%		\texttt{MSstatsTMT} (B) statistical approaches.} The overall
-%%		adequacy of the linear models fit to the data were assessed 
-%%		by plotting the residual deviance for all proteins as a 
-%%		quantile-quantile plot (McCarthy \textit{et al.}, (2012)). 
-%%		\textbf{(A)} For analysis with \texttt{edgeR}, The normalized
-%%		protein data from \texttt{MSstatsTMT} were fit with a negative
-%%		binomal generalized linear model (NBGLM) of the form: 
-%%		\texttt{Abundance} $\sim$ \texttt{Mixture + Condition}.
-%%		Where \texttt{Mixure} is an additive blocking factor that 
-%%		accounts for variablity between experiments. 
-%%		The NB framework used by edgeR utilizes a dispersion parameter 
-%%		to account for mean-variance relationships in the data.
-%%		The dispersion parameter can take several forms. 
-%%                \texttt{edgeR} supports three dispersion models: 'common',
-%%		'trended', and 'tagwise'. However, when using \texttt{edgeR's}
-%%		robust quasi-likelihood test methods, only global (i.e. 'common'
-%%		or 'trended') dispersion metrics are appropriate 
-%%		(see \texttt{edgeR::glmQLFit's} documentation). 
-%%		We plot the protein-wise deviance from the data fit withe ach of
-%%		the disperions parameters. Protein-wise deviance
-%%		statistics were transformed to normality and plotted against
-%%		theoretical normal quantiles using the \texttt{edgeR::gof}
-%%		function. \textbf{(B)} For analysis with \texttt{MSstatsTMT},
-%%		the normalized protein data were fit with a linear mixed-effects 
-%%		model (LMM) of the form: 
-%%		\texttt{Abundance} $\sim$ \texttt{0 + Condition + (1|Mixture)}. 
-%%		Where \texttt{Mixture} represents the random effect
-%%		of \texttt{Mixture}. The residual deviance and degrees of 
-%%		freedom were extracted from the fitted models, z-score
-%%		normalized, and plotted as in (A). Proteins with a significantly 
-%%		poor fit are indicated as outliers in blue 
-%%		(Holm-adjusted P-value $<$ 0.05).}
-%%		\label{fig:gof}
-%%	\end{center}
-%%	\end{fullwidth}
-%%\end{figure}
-%%
-%%
-%%%% figure 2 -- Experimental Design
-%%
-%%\begin{figure}[h]
-%%  \begin{fullwidth}
-%%  \begin{center}
-%%	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{design}
-%%	  \caption{\textbf{Experimental Design.} We performed three 16-plex TMT
-%%	  experiments. Each TMT mixture is a concatenation of 16 labeled
-%%	  samples. In each experiment we analyzed 7 subcellular
-%%	  \texttt{BioFractions} prepared from the brain of a 'Control' or
-%%	  'Mutant' mouse. In all we analyzed 3 \texttt{Subjects} from each 
-%%	  {Condition}. Each \texttt{Mixture} includes two \texttt{Channels}
-%%	  dedicated to the analysis of a common quality control sample.}
-%%	  \label{fig:design}
-%%  \end{center}
-%%  \end{fullwidth}
-%%\end{figure}
-%%
-%%
-%%%% figure 3 -- Contrasts
-%%
-%%\begin{figure}[h]
-%%  \begin{fullwidth}
-%%  \begin{center}
-%%	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{contrasts}
-%%	  \caption{\textbf{Statistical Comparisons.} We assessed two types of
-%%	  contrasts. Each row of the matrix specifies a contrast between
-%%	  positive and negative coefficients in the mixed effects model fit to
-%%	  each protein. Contrasts1-7 are 'intra-BioFraction' contrasts that
-%%	  specify the pairwise comparisons of Control and Mutant groups for a
-%%	  single fraction. In Contrast 8 we compare 'Mutant-Control' and asses
-%%	  the overall difference of 'Control' and 'Mutant' conditions.  Each
-%%	  contrast is a vector of sum 1.}
-%%	  \label{fig:contrasts}
-%%  \end{center}
-%%  \end{fullwidth}
-%%\end{figure}
-%%
-%%%% figure 4 -- Variance Partition
-%%
-%%\begin{figure}[h]
-%%  \begin{fullwidth}
-%%  \begin{center}
-%%	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{variance}
-%%	  \caption{\textbf{Analysis of Variance Components.} 
-%%	  The proportion of variance explained by Genotype, BioFraction,
-%%	  Mixture, and remaining residual error (subplot error) for all
-%%	  proteins. Note while the contribution of Mixture seems negligiable,
-%%	  its average for all proteins is approximately twice the average
-%%	  percent variance explained by Genotype. BioFraction explains the
-%%	  majority of the variance for all proteins. Analysis done with
-%%	  \texttt{variancePartition::calcVarPart}.
-%%	  \label{fig:variance}
-%%  \end{center}
-%%  \end{fullwidth}
-%%\end{figure}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# load variancePartition}
+\hlkwd{library}\hlstd{(variancePartition)}
+
+\hlcom{# calculate partitioned variance}
+\hlstd{fx} \hlkwb{<-} \hlstr{"Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"}
+\hlstd{fit} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
+
+\hlkwd{calcVarPart}\hlstd{(fit)}
+\end{alltt}
+\begin{verbatim}
+## BioFraction    Genotype     Mixture     Protein   Residuals 
+## 0.032960635 0.822069159 0.002843637 0.074146798 0.067979772
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+We can see that the majority of the variance explained by the LMM fit to the
+WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
+\texttt{Protein} and \texttt{Mixture} account for a small fraction of the 
+overall variance explained by the model.\\
+
+As our overall goal is to identify groups or modules of proteins that strongly
+covary together, our clustering approach should maximize the variance explained
+by a modules fixed-effect parameters (Genotype + BioFraction) while minimizing 
+the variance among its individual proteins. 
+An ideal module is a perfect summary of its protein constituents, 
+$PVE_{Protein}=0$. We use this idea of a module's quality to suprivise our 
+clustering approach.\\
+
+\begin{equation}
+	Quality_{Module}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
+\end{equation}
+
+
+\section{Network Construction}
+
+Using our \textbf{SWIP-TMT} dataset, we aim to identify modules or groups of
+proteins that covary together across subcellular space. Prior to building the
+co-variation network, other sources of variation should be removed. Although
+\texttt{MSstatsTMT} handles the batch effect inherent in experiments with
+multiple TMT mixtures, it is necessary to remove this effect prior to building
+the network. We removed the effect of \texttt{Mixture} using
+\texttt{limma::RemoveBatchEffect}.  These adjusted data are used for network
+construction and plotting but not statistical modeling.\\
+
+Prior to network construction, we removed protein models with poor fit 
+($R^2_{total}<0.7$; n=791 proteins). Removing this noisey proteins facilitation
+module identification and improves overall module quality.\\
+
+The final network was constructed using data from both 'Control' and 'Mutant' 
+samples after adjusting for batch (Mixture). The final dataset included 
+42 samples and 6,119 proteins. The protein covariation network was build by
+calculating the Pearson correlation for all pairwise comparisons of proteins.\\
+
+We performed network enhancement to remove biological noise from the network.
+This step is essential for module detection. Network enhancement reweights the
+network's edges and has the overall effect of making the network sparse.
+Conceptually this step is related to the soft-thresholding approach taken by 
+WGCNA or WPCNA analysis workflows (REFS), but has the befinit of not assuming
+that the network has an overall scale free topology. 
+Without reweighting or enhancing the network, most extant clustering 
+algorithms fail to detect communities in the dataset. 
+Network enhancment has the effect of making the
+network sparse and facilitates the identification of network structure (FIG).\\
 
 
 \end{document}
