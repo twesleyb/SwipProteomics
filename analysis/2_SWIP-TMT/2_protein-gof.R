@@ -33,7 +33,7 @@ suppressPackageStartupMessages({
 ## functions ------------------------------------------------------------------
 
 
-## prepare the data -----------------------------------------------------------
+## prepare the data for variancePartition --------------------------------------
 
 # cast the data into a matrix
 # NOTE: using Abundance and not norm_Abundance!

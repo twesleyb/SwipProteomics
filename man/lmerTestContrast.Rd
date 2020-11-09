@@ -4,7 +4,7 @@
 \alias{lmerTestContrast}
 \title{lmerTestProtein}
 \usage{
-lmerTestContrast(fm, contrast, df_prior = 0, s2_prior = 0)
+lmerTestContrast(fm, contrast, variance = FALSE, df_prior = 0, s2_prior = 0)
 }
 \description{
 lmerTestProtein

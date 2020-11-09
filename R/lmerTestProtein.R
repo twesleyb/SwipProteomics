@@ -3,8 +3,30 @@
 #' @export lmerTestProtein lmerTestContrast
 
 
-lmerTestContrast <- function(fm, contrast, 
+lmerTestContrast <- function(fm, contrast, variance=FALSE,
 			     df_prior=0,s2_prior=0) {
+
+#    # example:
+#    library(dplyr)
+#    library(SwipProteomics)
+#
+#    data(msstats_prot)
+#    data(swip) # "Q3UMB9"
+#
+#    fx <- formula("Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)")
+#    fm <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein == swip))
+#
+#    # create a contrast!
+#    geno <- msstats_prot$Genotype
+#    biof <- msstats_prot$BioFraction
+#    conditions <- levels(interaction(geno, biof))
+#    contrast <- vector("numeric", length(conditions)) %>%
+#	    setNames(nm = names(lme4::fixef(fm)))
+#   contrast[grepl(".*Mutant.*F4",names(contrast))] <- -1
+#   contrast[grepl(".*Control.*F4",names(contrast))] <- +1
+#
+#   # test the comparison!
+#   lmerTestContrast(fm, contrast) 
 
     # comparison should be a numeric and sum of vector == 0
     stopifnot(inherits(contrast,"numeric"))
@@ -16,23 +38,19 @@ lmerTestContrast <- function(fm, contrast,
     # compute Satterthwaite degrees of freedom
     model_summary <- summary(fm, ddf = "Satterthwaite")
 
-    # collect deviance and residual.df for evaluating goodness of fit.
-    #dev <- as.numeric(stats::deviance(fm,REML=FALSE))
-    #ddf <- as.numeric(stats::df.residual(fm))
+    # variance associated with mixed effects
+    mixef_var <- as.data.frame(lme4::VarCorr(fm,comp="Variance"))
 
-    # collect model's df and coefficients
-    s2_df <- as.numeric(model_summary$coefficients[,"df"][pos_group])[1]
+    # collect model's degrees of freedom and coefficients (Beta)
+    #s2_df <- as.numeric(model_summary$coefficients[,"df"][pos_group])[1]
     coeff <- model_summary$coeff[,"Estimate"] # == lme4::fixef(fm)
 
-    # extract sigma and theta
-    sigma <- as.numeric(model_summary$sigma) # == stats::sigma(fm)
-    theta <- as.numeric(model_summary$optinfo$val) # == lme4::getME(fm, "theta")
-
-    # calculate posterior s2
-    s2_post <- (s2_prior * df_prior + sigma^2 * s2_df) / (df_prior + s2_df)
-
-    # compute the unscaled covar matrix with unsc()
-    unscaled_vcov <- fm@pp$unsc()
+    # NOTE: we just use the model summary's vcov object
+    # compute the unscaled covar matrix with unsc() accessed within the model's
+    # environment
+    #unscaled_vcov <- fm@pp$unsc()
+    # compute scaled variance-covariance matrix
+    #all(unscaled_vcov * sigma^2 == vcov) 
 
     # compute scaled variance-covariance matrix
     vcov <- as.matrix(model_summary$vcov) # == vcov(fm) == fm@vcov_beta
@@ -44,13 +62,14 @@ lmerTestContrast <- function(fm, contrast,
     A <- fm@vcov_varpar
 
     # calculate gradient from gradient matrices
+    # consider using lmerTest::calcSatterth(tv, L)
     g <- sapply(fm@Jac_list, function(gm) contrast %*% gm %*% contrast)
 
     # given gradient and asymptoptic var-covar, compute posterior df
     denom <- as.numeric(g %*% A %*% g)
     df_post <- 2 * (se2^2 / denom) + df_prior 
 
-    # compute fold change and the t-statistic
+    # compute fold change and the t-statistic [lmerTest eq 11]
     FC <- (contrast %*% coeff)[, 1]
     t <- FC / sqrt(se2) 
 
@@ -66,6 +85,12 @@ lmerTestContrast <- function(fm, contrast,
 			     SE=sqrt(se2), 
 			     DF=df_post, 
 			     isSingular=lme4::isSingular(fm))
+
+    if (variance) {
+      # return the variance estimates of mixed effects
+      mixef_var <- as.data.frame(lme4::VarCorr(fm,comp="Variance"))
+      attr(prot_stats,"variance") <- setNames(mixef_var$"vcov", nm=mixef_var$grp)
+    }
 
     return(prot_stats)
 } #EOF

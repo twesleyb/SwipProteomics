@@ -70,6 +70,25 @@ pClustered <- round(sum(partition!=0)/length(partition),3)
 medSize <- median(sapply(modules,length))
 knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 
+## fit WASHC4 protein as an example ----------------------------------------------
+
+data(swip)
+
+# the formula to be fit:
+fx0 <- formula(paste(c(
+  "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)"
+), collapse = " "))
+
+message("\nlmer fit to WASHC4:\n",
+	">>>\t",as.character(fx0)[2], " ~ ", as.character(fx0)[3])
+
+
+## fit the model:
+fm0 <- lmerTest::lmer(fx0, msstats_filt %>% filter(Protein == swip))
+
+l0 <- getContrast(fm0,".*Mutant.*F4",".*Control.*F4")
+lmerTestContrast(fm0,l0) %>% knitr::kable()
+
 
 ## fit WASH complex as an example ----------------------------------------------
 
@@ -123,12 +142,14 @@ contrast[idy] <- +1 / length(idy)
 
 
 # asses contrast:
-lmerTestContrast(fm1, contrast) %>%
+results <- lmerTestContrast(fm1, contrast,variance=TRUE) %>%
   mutate(Contrast = "Mutant-Control") %>%
   mutate(isSingular = NULL) %>%
   mutate("nProteins" = length(washc_prots)) %>%
-  unique() %>%
-  knitr::kable()
+  unique()
+
+# variance attributable to mixef
+attr(results,"variance") %>% t() %>% knitr::kable()
 
 
 ## module level analysis for all modules --------------------------------------

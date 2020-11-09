@@ -1,0 +1,268 @@
+% title: response.tex
+% description: Response to eLife Reviewers
+% author: twab
+
+% USAGE: 
+% to compile this document:
+%    R  >>> knitr::knit("response.Rnw")
+%    sh >>> pdflatex response.tex
+
+
+
+%% Notes ----------------------------------------------------------------------
+%\section{PSM level filtering}
+
+%We reanalyzed the data with \texttt{MSstatsTMT} starting with PSM-level data 
+%exported from ProteomeDiscoverer. The intial dataset included \textbf{8,590} 
+%unique proteins. The PSM level data are converted to MSstatsTMT's format 
+%and protein summarization and normalization is performed using the QC samples. 
+%Reproducible quantification of these QC samples is essential for protein-level
+%normalization. We removed PSM with incomplete observations from each experiment 
+%(n=186, 132, and 174 features from each of the three mixtures, respectively).
+%We examined PSM features for potential outliers, 
+%accounting for the mean-variance relationship in PSM quantification 
+%using the method described by Plubell et al. (REF).
+%A small number of QC outliers were identified and removed from each mixture
+%(M1=259; M2=169; M3=159).\\
+%
+%Following PSM filtering, we performed protein-level normalization and 
+%summarization using
+%\texttt{MSstatsTMT}. This step is computationally expensive as each protein is
+%fit with a linear model. We increased the efficiency of this computation by
+%employing 23 parallel processors, in all taking approximately 11.094 minutes.\\
+%
+%\texttt{MSstatsTMT} takes care to impute missing values within each Run. But
+%missing values still exist at the protein level. 
+%In order to avoid discarding a large
+%number or proteins, we imputed missing values using the KNN algorithm for
+%MNAR data. Imputing these missing values helps retain more proteins in the final
+%dataset.
+%In all we retained \textbf{6,910} of the inital 8,590 proteins in the 
+%final normalized dataset.\\
+%
+%
+%%%We evaluate the percent variance explained by each factor in the LMM using the
+%%%\texttt{variancePartition} package.
+%
+%This step is computationally expensive as a linear-mixed model is fit to each
+%protein in the data. The time to perform intra-Biofraction comparisons for all 
+%proteins was approximately 17.834 minutes. \\
+%
+%There were 163 instances of signficant differential abundance for 
+%'intra-BioFraction' comparisons (FDR < 0.05). The following table summarizes 
+%the number of significantly differential abundant
+%proteins for each of the seven intra-BioFraction comparisons. \\
+%
+%%%```
+%%%| F4| F5| F6| F7| F8| F9| F10|
+%%%|--:|--:|--:|--:|--:|--:|---:|
+%%%| 17| 22| 20| 27| 28| 27|  22|
+%%%```
+%
+%We assed overall differnces between 'Mutant' and 'Control' conditions using
+%MSstatsTMT. Since the sample size for this comparison is modest (n=7 per
+%condition), we did not moderate these comparisons.\\
+%
+%There were 785 proteins with an overall significant change for the
+%'Mutant-Control' comparison.\\
+%
+%\section{Network Construction}
+%Using our TMT proteomics dataset, we aim to identify modules or groups of
+%proteins that covary together across subcellular space. Prior to building the
+%co-variation network, other sources of variation should be removed. Although
+%MSstatsTMT handles the batch effect inherent in experiments iwth multiple TMT
+%mixtures, it is necessary to remove this effect prior to building the network.
+%Prior to building the protein covariation network, we removed the effect of
+%\texttt{Mixture} using \texttt{limma::RemoveBatchEffect}. This is necessary as we wish to identify
+%modules that covary together across subcellular space (BioFraction) and not
+%experimental batch.  These adjusted data are used for network construction and
+%plotting but not statistical modeling.\\
+%
+%Prior to network construction, we removed models with poor fit. We removed
+%proteins whose model explained less than 0.7 of the variation for that
+%protein.\\
+%
+%Removing 791 proteins with poor fit before building network. 
+%The final network was constructed using both 'Control' and 'Mutant' samples. The
+%data adjsuted for batch (Mixture). It contained 42 samples and 6,119 proteins.
+%We found that the pearson correlatioin statistic outperformed the bicor
+%statistic we previously used. \\
+%
+%
+%We performed network enhancement to remove biological noise from the datset.
+%This step is essential for module detection. Our approach borrows many of the
+%conceptual ideas utilized in the WGCNA or WPCNA analysis workflows. Network
+%enhancement is analogous to the weighting step performed by WGCNA and analogous
+%emthods in which the network correlation network is transformed by a power in
+%order to re-weight the network. Network enhancment has the effect of making the
+%network sparse and facilitates the identification of network structure.
+
+%%| r2_threshold| out| percent| total| final|
+%%|------------:|---:|-------:|-----:|-----:|
+%%|          0.7| 791|   0.114|  6910|  6119|
+
+%%Number of proteins with poor fit: 791
+
+%%Removing this small number of proteins facilitates clustering.
+
+%% WASHC* protein goodness-of-fit statistics:
+%%|Protein |Symbol | Entrez|   Mixture|  Genotype| BioFraction| Residuals|  R2.fixef|  R2.total|
+%%|:-------|:------|------:|---------:|---------:|-----------:|---------:|---------:|---------:|
+%%|Q8C2E7  |Washc5 | 223593| 0.0004987| 0.9130491|   0.0442397| 0.0422125| 0.9744804| 0.9762336|
+%%|Q8VDD8  |Washc1 |  68767| 0.0070136| 0.8808449|   0.0436028| 0.0685388| 0.9232585| 0.9298346|
+%%|Q3UMB9  |Washc4 | 319277| 0.0133109| 0.8722170|   0.0489876| 0.0654845| 0.9353344| 0.9494330|
+%%|Q6PGL7  |Washc2 |  28006| 0.0000000| 0.7646015|   0.1685491| 0.0668494| 0.9409087| 0.9409087|
+%%|Q9CR27  |Washc3 |  67282| 0.0205066| 0.6701031|   0.0640885| 0.2453017| 0.7341464| 0.7521275|
+%
+%%
+%%| samples| proteins|
+%%|-------:|--------:|
+%%|      42|     6119|
+%
+%%% A module Quality Metric
+%
+%We sought to identify groups, aka clusters or modules, of proteins that strongly
+%covary together across subcellular space. Intuitively, we wish to identify a
+%partition of the graph which maximizes intra-module connectivity and minimizes 
+%inter-module connectivity. Numerous quality statistics descriving the overall
+%quality of a network partition exist, and numerous heuristical algorithms.
+%
+%Identification of communities in a graph by optimization of a quality function
+%is NP-hard5, and consequentially many heuristic algorithms exist.
+%One of the most well known algorithms, is the Louvain algorithm
+%(Traag2010ref10).  \\
+%
+%We utilized a recent improvement of the Louvain algorith, the 
+%Leiden algorithm to identify optimal partitions of the graph. 
+%The Leiden algorithm is implemented in Python and supports several quality
+%statistics, including Modularity, CPM, Surprise, RBER, and RBConfiguration.\\
+%
+%The data as well as a prior definition of what a good cluster is should
+%motivate the selection of quality statistic. For example, in covariation
+%networks such as ours, edges can be positive or negative. Only the \texttt{CPM}
+%algorithm supports negative edges. If other metrics are used, negative edges
+%must be removed or reweighted.\\
+%
+%We aim to cluster the protein-covariation network in order to identify modules
+%which cohesive protein abundance profiles.
+%
+%For each model fit the module-level data, we asses the proprotion of variance
+%explained by BioFraction, Genotype, Mixture, and Protein using the
+%\texttt{VariancePartition} R package. We also compute Nagakawa's coefficient of
+%determination for mixed models, as implemented by the R \texttt{MuMin} package. 
+%Inspection of these variance explained by the components of our model we 
+%realize a natural description of a modules quality. 
+%
+%R2(fixef) aka R2c (conditional) -- interpretation: the total variance explained
+%by fixed effects (Genotype:BioFraction). We wish to maximize this quantity.
+%
+%PVE(protein) -- the percent of the modules variation explained by protein
+%variability. An ideal module is a perfect summary of its constituent proteins
+%and this quantity is 0. We aim to minimize the PVE(protein).
+%
+%An ideal module is a perfect summary of its constituent proteins. Thus, we seek
+%to minimize the variation arising from Protein within a module. While minimizing
+%this quantity, we aim to retain clusters whose variation attributed to fixed
+%effects of BioFraction and Genotype is maximized. Thus, a simple quality metric
+%for a module may be the ratio of variance attributable to fixed effects and the
+%random effect of protein:
+%
+%%q_k = PVE(fixef) / PVE(protein)
+%%This is equivalent to:
+%%q_k = var(fixef) / var(protein)
+%
+%The overall quality of a partition is the average all module quality.
+%
+%All things being equal, an increase in the number of clusters results in a
+%decrease in overall quality. (Imagine splitting a perfect module,into two; for
+%each the variance attributed to Protein is 0, but when this module is split the
+%variance attributable to each modules fixed effects is halved).
+%
+%Performing Leidenalg clustering utilizing the 
+%SurpriseVertexPartition method to find optimal partition(s).
+%
+%Recursively splitting modules larger than 100 nodes with 'Surprise'.
+%We find that recursive splitting of large modules is necessary to resolve 
+%significant heterogenity which exists in large modules and this also improves 
+%recovery of biological signal.
+%
+%We split modules with more than 100 nodes. While this threshold is arbitrary, we
+%found that recursively spliting large modules resulted in higher quality
+%modules. and facilitates biological indference.
+%
+%Final partition:  Clustering with 6119 elements and 502 clusters
+%We removed small mdoules of less than 5 nodes.
+%
+%Module statistic(s) used to evaluate module  preservation:
+%avg.weight, avg.cor, avg.contrib.
+%Criterion for module preservation: strong.
+%
+%We enforced module quality by module preservation using a permutation appraoch.
+%Modules with random toplogy we discarded. 
+%
+%
+%Evaluating  preservation of Swip modules in the Swip network...
+%... 296 of 329 Swip modules are preserved in the Swip network.
+%
+%In all there were 296 modules.
+%
+%%|nProts |kModules |pClustered |medSize |
+%%|:------|:--------|:----------|:-------|
+%%|6,119  |296      |0.908      |13      |
+%
+%
+%%|Term                   | Estimate|    SE|    DF| Tvalue|Pvalue    |
+%%|:----------------------|--------:|-----:|-----:|------:|:---------|
+%%|Control:BioFractionF4  |    6.883| 0.151| 6.891| 45.636|2.91e-09  |
+%%|Control:BioFractionF5  |    7.167| 0.151| 6.891| 47.520|8.249e-10 |
+%%|Control:BioFractionF6  |    7.465| 0.151| 6.891| 49.494|2.289e-09 |
+%%|Control:BioFractionF7  |    7.495| 0.151| 6.891| 49.692|6.248e-10 |
+%%|Control:BioFractionF8  |    7.327| 0.151| 6.891| 48.580|2.017e-09 |
+%%|Control:BioFractionF9  |    7.138| 0.151| 6.891| 47.328|4.722e-10 |
+%%|Control:BioFractionF10 |    7.756| 0.151| 6.891| 51.424|1.931e-09 |
+%%|Mutant:BioFractionF4   |    5.729| 0.151| 6.891| 37.983|4.595e-10 |
+%%|Mutant:BioFractionF5   |    5.933| 0.151| 6.891| 39.334|2.303e-09 |
+%%|Mutant:BioFractionF6   |    6.043| 0.151| 6.891| 40.065|5.369e-10 |
+%%|Mutant:BioFractionF7   |    6.082| 0.151| 6.891| 40.322|2.384e-09 |
+%%|Mutant:BioFractionF8   |    5.927| 0.151| 6.891| 39.299|6.424e-10 |
+%%|Mutant:BioFractionF9   |    5.897| 0.151| 6.891| 39.101|1.991e-09 |
+%%|Mutant:BioFractionF10  |    6.054| 0.151| 6.891| 40.142|3.631e-10 |
+%
+%
+%
+%
+%%|       R2m|       R2c|
+%%|---------:|---------:|
+%%| 0.7620866| 0.8928053|
+%
+%
+%%|Contrast       |    log2FC| percentControl| Pvalue| Tstatistic|        SE|  DF| nProteins|
+%%|:--------------|---------:|--------------:|------:|----------:|---------:|---:|---------:|
+%%|Mutant-Control | -1.366663|      0.3877871|      0|  -36.94728| 0.0369896| 190|         5|
+%
+%Assessing module-level contrasts with lmerTest.
+%
+%Time to analyze 296 modules:
+%Time difference of 5.151603 secs
+%
+%Final number of modules : 296
+%
+%Final percent clustered : 0.908
+%
+%Final Median module size: 13
+%
+%Washc4 assigned to module: M17
+%
+%All significant (Padjust < 0.05) modules:
+%
+%Number of significant modules (Bonferroni<0.05): 61
+%
+%Evaluating goodness-of-fit of modules.
+%There were problems fitting 0 models.
+%
+%Partition Quality: 2.14995 (mean module quality).
+%
+%Number of modules with something interesting going on: 116
+%
+%Significant Modules with significant gse:
+%(23 of 61 significant modules.)
