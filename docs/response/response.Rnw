@@ -288,7 +288,7 @@ biological replicates or \texttt{Subjects}. Finally, a single TMT mixture may be
 repeatedly analyzed in \texttt{t = 1} ... \texttt{T}\ technical replicate mass 
 spectrometry runs.\\
 
-\textbf{Equation} is a mixed-effects formula which describes a general TMT
+The following equation is a LMM formula which describes a general TMT
 experiment composed of \texttt{M} mixtures, \texttt{T} technical replicates of 
 mixture, \texttt{C} conditions, and \texttt{B} biological subjects.
 The abundance of a given protein, $Y_{mcbt}$, is then:\\
@@ -313,16 +313,14 @@ variation in the response.\\
   \end{gathered}
 \end{equation}
 
-\texttt{Mixture} is a mixed-effect and .
-represents the variation between TMT mixtures. By definition mixed-effects are 
-assumed to be independent and normally distributed (iid). 
-\texttt{TechRep(Mixture)} represents random 
-variation between replicate mass spectrometry runs.
-The term \texttt{Subject} cooresponds to each unique biological replicate and 
-represents biological variation among the levels of the fixed-effect term
-\texttt{Condition}. The term $\epsilon_{mtcb}$,
-is a random-effect representing both biological and technical variation, 
-quantifying any remaining error.\\
+\texttt{Mixture} is a mixed-effect and represents the variation between TMT
+mixtures. By definition mixed-effects are assumed to be independent and normally
+distributed (iid).  \texttt{TechRep(Mixture)} represents random variation
+between replicate mass spectrometry runs.  The term \texttt{Subject} cooresponds
+to each unique biological replicate and represents biological variation among
+the levels of the fixed-effect term \texttt{Condition}. The term
+$\epsilon_{mtcb}$, is a random-effect representing both biological and technical
+variation, quantifying any remaining error.\\
 
 If a component of the model is not estimable, then it is removed. 
 For example, if there is no technical replication of mixture 
@@ -370,10 +368,10 @@ moment of approximation method (Kutzenova2017).
 Finally, given the t-statistic, which is assumed to follow an approximate
 $\chi^2$ distribution, and the degrees of freedom, a p-value is calculated. 
 P-values for the protein-wise tests are adjusted using the
-Benjamini-Hochberg (REF).\\
+Benjamini-Hochberg FDR method (REF).\\
 
 
-\begin{figure}[ht!] %% figure 2 -- Experimental Design
+\begin{figure}[hb!] %% figure 2 -- Experimental Design
   \begin{fullwidth}
   \begin{center}
 	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{design}
@@ -424,7 +422,7 @@ Using \texttt{MSstatsTMT} we assesssed two protein-level comparisons:
 	\item 'Mutant-Control' contrast 
 \end{itemize}
 
-\begin{figure}[h!] %% figure 3 -- Contrasts
+\begin{figure}[hb!] %% figure 3 -- Contrasts
   \begin{fullwidth}
   \begin{center}
 	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{contrasts}
@@ -512,7 +510,8 @@ The function  \texttt{lmerTestContrast} performs model-based comparisons of
 conditions defined by a contrast matrix. While the work done by this function 
 is the same as the work done internally by \texttt{MSstatsTMT's}
 \texttt{groupComparisonsTMT} function, \texttt{lmerTestContrast} is more
-flexible.\\
+flexible. Provided the correct contrast, we easily assess the overall comparison 
+between 'Mutant' and 'Control' groups.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <<contrast0, eval=TRUE, echo=TRUE, results='hide'>>=
@@ -542,10 +541,6 @@ df %>% knitr::kable()
 message("\n")
 
 @
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Provided the correct contrast, we easily assess the overall comparison between 
-'Mutant' and 'Control' groups:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <<<contrast1, eval = TRUE, echo = TRUE, results='hide'>>=
@@ -584,8 +579,7 @@ The marginal $R^2$ is interpreted as the variance explained by the LMM's
 fixed-effects ($R^2_{fixed}$).
 
 We implment Nakagawa's coeffficient of determination using the 
-\texttt{r.squaredGLMM.merMod} function taken from the \texttt{MuMin}
-package (REF).\\
+\texttt{r.squaredGLMM} function taken from the \texttt{MuMin} package (REF).\\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -626,7 +620,7 @@ We model protein groups or modules by adding the mixed-effect term
 \begin{equation} 
   \begin{gathered}
 	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}\\
-	Protein{p} \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
+	Protein_p \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
   \end{gathered}
 \end{equation}
 
@@ -634,8 +628,7 @@ The term \texttt{Protein} is associated with a variance component $\sigma_P$.\\
 
 As a means of example, we demonstrate an ideal module, by fitting the LMM to 
 the 5 WASH complex proteins. As before, we calculate the coefficient of 
-determination for LMM's with the \texttt{r.squaredGLMM.merMod} function
-(REF).
+determination for LMM's with the \texttt{r.squaredGLMM} function (REF).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <<module model, eval=TRUE, echo=TRUE>>=
@@ -654,13 +647,13 @@ r.squaredGLMM.merMod(fit)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Again, we consider the variance explained by the model as a measure of its
-overall quality. Our model explains 0.89\% of the total variance.
+overall quality. Our model explains 89.0\% of the total variance.
 The Fixed-effect term \texttt{Genotype:BioFraction} explains the majority of 
-the variance ($R^2_m=0.762$). The remaining variance, 0.13\%, is attributable to
+the variance ($R^2_m=0.762$). The remaining variance, 1.3\%, is attributable to
 the combination of mixed-effects \texttt{Mixture} and \texttt{Protein} as well as the residual variance.\\
 
 It is useful to consider the variation ($\sigma^2$) of the 
-individual mixed-effect terms. These can be accessed with \texttt{lme4's} 
+individual mixed-effect terms. These can be assessed with \texttt{lme4's} 
 \texttt{VarCorr} function.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -668,14 +661,16 @@ individual mixed-effect terms. These can be accessed with \texttt{lme4's}
 
 # calculate variance of mixed-effects
 var_df <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
-mixef_var <- setNames(var_df$vcov,nm=var_df$grp) # var of each component
-mixef_var/sum(mixef_var) # as a percent of the total mixed-effect variance
+mixef_var <- setNames(var_df$vcov,nm=var_df$grp) 
+
+# as a percent of the total mixed-effect variance:
+mixef_var/sum(mixef_var) 
 
 @
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\begin{figure}[h!] %% figure 4 -- Variance Partition
+\begin{figure}[ht!] %% figure 4 -- Variance Partition
   \begin{fullwidth}
   \begin{center}
 	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{variance}
@@ -721,10 +716,10 @@ overall variance explained by the model.\\
 
 As our overall goal is to identify groups or modules of proteins that strongly
 covary together, our clustering approach should maximize the variance explained
-by a modules fixed-effect parameters (Genotype + BioFraction) while minimizing 
+by a module's fixed-effect parameters (Genotype + BioFraction) while minimizing 
 the variance among its individual proteins. 
 An ideal module is a perfect summary of its protein constituents, 
-$PVE_{Protein}=0$. We use this idea of a module's quality to suprivise our 
+$PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
 clustering approach.\\
 
 \begin{equation}
