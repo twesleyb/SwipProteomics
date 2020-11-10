@@ -51,17 +51,12 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## Function ------------------------------------------------------------------
 
-#plot_profile("M1",msstats_prot,partition,module_colors,module_gof)
-#module_gof %>% filter(Module == "M1") %>% select(BioFraction,Genotype,Mixture,Protein,Residuals)
-
 plot_profile <- function(module, msstats_prot, partition,
 			 module_colors, module_gof, wt_color = "#47b2a4") {
 	if (module %notin% module_gof$Module) {
 	       warning(module," is not in 'module_gof'.")
 	       return(NULL)
 	}
-# why are these modules msising? bad fit?
-#which(!(names(modules) %in% module_gof$Module))
   # Subset
   subdat <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
 	  mutate(Module=paste0("M",partition[Protein])) %>% 
@@ -132,6 +127,13 @@ plot_profile <- function(module, msstats_prot, partition,
   return(plot)
 } #EOF
 
+#
+#data(washc_prots)
+#
+#part <- setNames(rep(partition[swip],length(washc_prots)), nm = washc_prots)
+#plot <- plot_profile("M17",msstats_prot,part,module_colors,module_gof)
+#myfile <- file.path(figsdir, "washc_prots.pdf")
+#ggsave(myfile, plot)
 
 
 ## generate plots -------------------------------------------------------------
