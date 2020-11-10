@@ -1,7 +1,5 @@
 ## project specific directories to ignore
-usr/
-src/
-figs/
+local/
 renv/
 rdata/
 ARCHIVE/
