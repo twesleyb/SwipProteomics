@@ -333,28 +333,27 @@ The abundance of a given protein, $Y_{mcbt}$, is then:\\
 	Subject_b + \epsilon_{mcbt}
 \end{equation}
 
-The model's constraints distinguish fixed and random components of 
-variation in the response.\\
 
 \begin{equation}
   \begin{gathered}
 	% constraints:
-	Mixture_m \stackrel{iid}{\sim} N(0,\sigma^2_M) \\
-	TechRep(Mixture)_{t(m)} \stackrel{iid}{\sim} N(0,\sigma^2_T) \\
 	\sum_{c=1}^{C} Condition_c = 0 \\
 	Subject_{mcb} \stackrel{iid}{\sim} N(0,\sigma^2_S) \\
+	Mixture_m \stackrel{iid}{\sim} N(0,\sigma^2_M) \\
+	TechRep(Mixture)_{t(m)} \stackrel{iid}{\sim} N(0,\sigma^2_T) \\
 	\epsilon{mtcb} \stackrel{iid}{\sim} N(0,\sigma^2) \\
   \end{gathered}
 \end{equation}
 
-\texttt{Mixture} is a mixed-effect and represents the variation between TMT
-mixtures. By definition mixed-effects are assumed to be independent and normally
-distributed (iid).  \texttt{TechRep(Mixture)} represents random variation
-between replicate mass spectrometry runs.  The term \texttt{Subject} cooresponds
-to each unique biological replicate and represents biological variation among
-the levels of the fixed-effect term \texttt{Condition}. The term
-$\epsilon_{mtcb}$, is a random-effect representing both biological and technical
-variation, quantifying any remaining error.\\
+The model's constraints distinguish fixed and random components of 
+variation in the response. \texttt{Mixture} is a mixed-effect and represents the
+variation between TMT mixtures. By definition mixed-effects are assumed to be
+independent and normally distributed (iid).  \texttt{TechRep(Mixture)}
+represents random variation between replicate mass spectrometry runs.  The term
+\texttt{Subject} cooresponds to each unique biological replicate and represents
+biological variation among the levels of the fixed-effect term
+\texttt{Condition}. The term $\epsilon_{mtcb}$, is a random-effect representing
+both biological and technical variation, quantifying any remaining error.\\
 
 If a component of the model is not estimable, then it is removed. 
 For example, if there is no technical replication of mixture 
@@ -366,7 +365,7 @@ For example, if there is no technical replication of mixture
 \end{equation}
 
 In the reduced model, biological variation among individual \texttt{Subjects} is 
-captured by the term \texttt{Condition}, and is thus omitted\\
+captured by the term \texttt{Condition}, and is thus omitted.\\
 
 
 \section{Hypothesis Testing}
@@ -447,16 +446,7 @@ equation (EQ) when \texttt{Condition} is the interaction of
 \texttt{Genotype:BioFraction}.\\
 
 
-\section{Protein level comparisions}
-
-Using \texttt{MSstatsTMT} we assesssed two protein-level comparisons:
-
-\begin{itemize}
-	\item 'intra-BioFraction' contrasts 
-	\item 'Mutant-Control' contrast 
-\end{itemize}
-
-\begin{figure}[hb!] %% figure 3 -- Contrasts
+\begin{figure}[ht!] %% figure 3 -- Contrasts
   \begin{fullwidth}
   \begin{center}
 	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{contrasts}
@@ -472,6 +462,17 @@ Using \texttt{MSstatsTMT} we assesssed two protein-level comparisons:
   \end{center}
   \end{fullwidth}
 \end{figure}
+
+
+\section{Protein level comparisions}
+
+Using \texttt{MSstatsTMT} we assesssed two protein-level comparisons:
+
+\begin{itemize}
+	\item 'intra-BioFraction' contrasts 
+	\item 'Mutant-Control' contrast 
+\end{itemize}
+
 
 
 'Intra-BioFraction' comparisons are the 7 pairwise comparisons of 'Control' and
@@ -752,7 +753,7 @@ individual mixed-effect terms. These can be assessed with \texttt{lme4's}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\begin{figure}[ht!] %% figure 4 -- Variance Partition
+\begin{figure}[hb!] %% figure 4 -- Variance Partition
   \begin{fullwidth}
   \begin{center}
 	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{variance}
@@ -845,5 +846,32 @@ Without reweighting or enhancing the network, most extant clustering
 algorithms fail to detect communities in the dataset. 
 Network enhancment has the effect of making the
 network sparse and facilitates the identification of network structure (FIG).\\
+
+\begin{figure}[h] %% figure [x] -- impute.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{impute}
+	  \caption{\textbf{Missing value imputation and PSM outlier removal.}
+	  \textbf{A} \textbf{B} \textbf{C} \textbf{D} }
+	  \label{fig:impute}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+\begin{figure}[h] %% figure [x] -- normalization.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{normalization}
+	  \caption{\textbf{Data Normalization and PCA.} \textbf{A} \textbf{B} }
+	  \label{fig:normalization}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+
+
+(\FIG{impute})
+
+(\FIG{normalization})
 
 \end{document}
