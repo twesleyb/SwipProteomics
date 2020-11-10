@@ -1,25 +1,17 @@
-## project specific directories to ignore.
+## project specific directories to ignore
+usr/
 src/
+figs/
 renv/
 rdata/
 ARCHIVE/
-figs/AI/
-docs/email/
-docs/notes/
-docs/reports/
-#manuscript/
-sessionInfo.txt
 
-
-## project specific files to ignore.
+## project specific files to ignore
 *.email
 *.sw*
 *.report
 renv.lock
-docs/review/
-
-## ignore user's bin
-bin/
+sessionInfo.txt
 
 ## R.gitignore
 

@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-./knit.R && \
-	pdflatex-quiet *.tex \
-	pdflatex-quiet *.tex
