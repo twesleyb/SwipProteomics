@@ -25,6 +25,8 @@ suppressPackageStartupMessages({
 opts <- list(tidy=FALSE,message=FALSE,warning=FALSE,fig.width=4,fig.height=4.5)
 do.call(opts_chunk$set,opts)
 
+# source external R code
+read_chunk('supplement.R')
 
 @
 
@@ -130,12 +132,6 @@ our SWIP-TMT spatial proteomics dataset.\\
 
 
 \section{Lack-of-fit of the NB model}
-
-Test some code.
-
-
-
-
 
 Our previous approach can be summarized as the \textit{Sum + IRS} method (Huang2020).
 Following protein summarization (by summing its features) and internal
@@ -462,12 +458,22 @@ WGCNA or WPCNA analysis workflows (REFS), but has the benefit of not assuming
 that the network has an overall scale free topology.  Without reweighting or
 enhancing the network, most extant clustering algorithms fail to detect
 communities in the dataset.  Network enhancment has the effect of making the
-network sparse and facilitates the identification of network structure.
+network sparse and facilitates the identification of network structure.\\
+
+
+\section{Code}
+
+% R code
+<<external-code>>= 
+@
+
+% R code to do something else
+<<test>>=
+@
 
 
 \section{References}
 
-\nocite{*}
 \bibliography{refs}
 
 

@@ -5,9 +5,9 @@ renv::load(root)
 
 #library(merDeriv)
 library(dplyr)
-library(SwipProteomics)
+#library(SwipProteomics)
 
-#devtools::load_all()
+devtools::load_all()
 
 data(swip)
 data(gene_map)
@@ -19,12 +19,15 @@ data(msstats_prot)
 fx0 <- formula(Abundance ~ 0 + Genotype:BioFraction + (1|Mixture))
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
 
-l1 <- getContrast(fm0, "Control", "Mutant")
+l8 <- getContrast(fm0, "Control", "Mutant")
 
-results <- lmerTestContrast(fm0, l1, variance=TRUE) 
+results <- lmerTestContrast(fm0, l8, variance=TRUE) 
 results %>% knitr::kable()
 
 attr(results,"variance") %>% knitr::kable()
+
+## kable extra
+
 
 
 ## ----------------------------------------------------------------------------

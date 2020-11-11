@@ -371,27 +371,6 @@ we illustrate the analysis of WASHC4. First, we fit the model (\ref{eq:fx0}) to
 a subset of the data, the data for WASHC4.\\
 
 
-%% R ---------------------------------------------------------------------------
-%<<fit0, eval=T, echo=T, results='hide', message=F, warning=F, include=F>>=
-%
-%# load dependencies
-%library(dplyr)
-%library(lmerTest)
-%
-%# load SwipProteomics
-%data(swip)
-%data(msstats_prot)
-%
-%# formula to be fit to WASHC4, aka SWIP:
-%fx0 <- 'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'
-%
-%# fit the LMM
-%fm0 <- lmer(fx0, msstats_prot %>% subset(Protein == swip))
-%
-%# examine the model's summary
-%summary(fm0, ddf = "Satterthwaite")
-%
-%@
 
 
 %% latex -----------------------------------------------------------------------
@@ -408,31 +387,6 @@ is the same as the work done internally by \texttt{MSstatsTMT's}
 flexible. Provided the correct contrast, we also easily assess the overall
 \texttt{Mutant-Control} comparison.\\
 
-
-%% R --------------------------------------------------------------------------
-%<<contrast0, eval=T, echo=T, results='hide'>>=
-%
-%## Compare 'Mutant:F7' and 'Control:F7'
-%
-%# create a contrast
-%coeff <- lme4::fixef(fm0)
-%contrast7 <- setNames(rep(0,length(coeff)), nm = names(coeff))
-%contrast7["GenotypeMutant:BioFractionF7"] <- +1 # positive coeff
-%contrast7["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
-%
-%# evaluate contrast
-%lmerTestContrast(fm0, contrast7)
-%
-%
-%## Compare 'Mutant' versus 'Control'
-%
-%# create a contrast
-%contrast8 <- getContrast(fm0, "Mutant","Control")
-%
-%# evaluate contrast
-%lmerTestContrast(fm0, contrast8)
-%
-%@
 
 \section{Module-level comparisons}
 
@@ -464,20 +418,6 @@ complex proteins.  As before, we calculate the coefficient of determination for
 LMM's with the \texttt{r.squaredGLMM} function (WangMerkel2018).\\
 
 
-%% R --------------------------------------------------------------------------
-%<<module model, eval=TRUE, echo=TRUE, results='hide'>>=
-%
-%# the module-level formula to be fit:
-%fx1 <- 'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'
-%
-%# load WASH Complex proteins
-%data(washc_prots)
-%
-%fm1 <- lmer(fx1, msstats_prot %>% subset(Protein %in% washc_prots))
-%
-%@
-
-%% latex -----------------------------------------------------------------------
 \section{LMM Goodness-of-fit}
 
 Again, we consider the total variance explained as a measure of the model's
@@ -498,42 +438,11 @@ interpreted as the total variance explained by a LMM ($R^2_{total}$).
 The marginal $R^2$ is interpreted as the variance explained by the LMM's 
 fixed-effects ($R^2_{fixed}$). We implment Nakagawa's coeffficient of 
 determination using the \texttt{r.squaredGLMM} function taken from the 
-\texttt{MuMin} package (WangMerkel2018).\\
-
-
-%% R --------------------------------------------------------------------------
-%<<rsquared, eval=TRUE, echo=TRUE, results='hide'>>=
-%
-%# assess gof with Nakagawa coefficient of determination
-%r.squaredGLMM.merMod(fm1)
-%
-%r.squaredGLMM.merMod(fm0)
-%
-%@
-
-
-%% latex -----------------------------------------------------------------------
+\texttt{MuMin} package (WangMerkel2018).
 The total variation explained, $R^2_{c}$, for the LMM fit to WASHC4 is 
 \texttt{0.949}. The variance explained by fixed-effects, represents a large
 fraction of this total ($R^2{m}$=0.935). It follows that 1.5\% of the remaing
 variance is attributable to residuals and the mixed-effect \texttt{Mixture}.\\
-
-
-%% R --------------------------------------------------------------------------
-%<<variancePartition, eval=TRUE, echo=FALSE, results='hide'>>=
-%
-%# load variancePartition
-%library(variancePartition)
-%
-%# calculate partitioned variance
-%form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
-%fit <- lmer(form, data = msstats_prot %>% filter(Protein %in% washc_prots))
-%
-%calcVarPart(fit)
-%
-%@
-
-%% tex -------------------------------------------------------------------------
 
 We can see that the majority of the variance explained by the LMM fit to the
 WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
@@ -547,7 +456,6 @@ the variance among its individual proteins.
 An ideal module is a perfect summary of its protein constituents, 
 $PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
 clustering approach.
-
 \begin{equation}
 	Q_{M}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
 \end{equation}
@@ -582,12 +490,44 @@ WGCNA or WPCNA analysis workflows (REFS), but has the benefit of not assuming
 that the network has an overall scale free topology.  Without reweighting or
 enhancing the network, most extant clustering algorithms fail to detect
 communities in the dataset.  Network enhancment has the effect of making the
-network sparse and facilitates the identification of network structure.
+network sparse and facilitates the identification of network structure.\\
+
+
+\section{Code}
+
+% R code
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# load dependencies}
+\hlkwd{library}\hlstd{(dplyr)}
+\hlkwd{library}\hlstd{(lmerTest)}
+
+\hlstd{x} \hlkwb{<-} \hlnum{5} \hlopt{+} \hlnum{5}
+\hlkwd{print}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 10
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+% R code to do something else
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlkwb{<-} \hlstd{x}\hlopt{/}\hlnum{3}
+\hlkwd{print}\hlstd{(y)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3.333333
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 
 \section{References}
 
-\nocite{*}
 \bibliography{refs}
 
 
