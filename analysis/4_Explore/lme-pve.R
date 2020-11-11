@@ -1,9 +1,13 @@
 #!/usr/bin/env Rscript
 
+root <- "~/projects/SwipProteomics"
+renv::load(root)
+
 #library(merDeriv)
+library(dplyr)
 library(SwipProteomics)
 
-devtools::load_all()
+#devtools::load_all()
 
 data(swip)
 data(gene_map)

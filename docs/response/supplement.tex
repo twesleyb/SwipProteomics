@@ -14,57 +14,7 @@
 
 %% latex document setup -------------------------------------------------------
 
-\documentclass[11pt]{elife}\usepackage[]{graphicx}\usepackage[]{color}
-% maxwidth is the original width if it is less than linewidth
-% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-\let\hlipl\hlkwb
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass[11pt]{elife}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -129,7 +79,6 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 
 %% main -----------------------------------------------------------------------
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
 \maketitle
@@ -368,28 +317,7 @@ a subset of the data, the data for WASHC4.
 
 
 %% R ---------------------------------------------------------------------------
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# load dependencies}
-\hlkwd{library}\hlstd{(dplyr)}
-\hlkwd{library}\hlstd{(lmerTest)}
 
-\hlcom{# load SwipProteomics}
-\hlkwd{data}\hlstd{(swip)}
-\hlkwd{data}\hlstd{(msstats_prot)}
-
-\hlcom{# formula to be fit to WASHC4, aka SWIP:}
-\hlstd{fx0} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'}
-
-\hlcom{# fit the LMM}
-\hlstd{fm0} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx0, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
-
-\hlcom{# examine the model's summary}
-\hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
 
 
 %% latex -----------------------------------------------------------------------
@@ -532,65 +460,4 @@ expects all terms to be mixed-effects. FIG:variance.
 
 
 
-%% tex -------------------------------------------------------------------------
 
-We can see that the majority of the variance explained by the LMM fit to the
-WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
-\texttt{Protein} and \texttt{Mixture} account for a small fraction of the 
-overall variance explained by the model.
-
-As our overall goal is to identify groups or modules of proteins that strongly
-covary together, our clustering approach should maximize the variance explained
-by a module's fixed-effect parameters (Genotype + BioFraction) while minimizing 
-the variance among its individual proteins. 
-An ideal module is a perfect summary of its protein constituents, 
-$PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
-clustering approach.
-
-\begin{equation}
-	Q_{M}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
-\end{equation}
-
-
-\section{Network Construction}
-
-Using our SWIP-TMT dataset, we aim to identify modules or groups of
-proteins that covary together across subcellular space. Prior to building the
-co-variation network, other sources of variation should be removed. Although
-\texttt{MSstatsTMT} handles the batch effect inherent in experiments with
-multiple TMT mixtures, it is necessary to remove this effect prior to building
-the network. We removed the effect of \texttt{Mixture} using
-\texttt{limma::RemoveBatchEffect}. These adjusted data are used for network
-construction and plotting but not statistical modeling.
-
-Prior to network construction, we removed protein models with poor fit 
-($R^2_{total}<0.7$; n=791 proteins). Removing this noisey proteins facilitation
-module identification and improves overall module quality.
-
-The final network was constructed using data from both Control and Mutant 
-samples after adjusting for batch (Mixture). The final dataset included 
-42 samples and 6,119 proteins. The protein covariation network was build by
-calculating the Pearson correlation for all pairwise comparisons of proteins.
-
-We performed network enhancement to remove biological noise from the network.
-This step is essential for module detection. Network enhancement reweights the
-network's edges and has the overall effect of making the network sparse.
-Conceptually this step is related to the soft-thresholding approach taken by
-WGCNA or WPCNA analysis workflows (REFS), but has the befinit of not assuming
-that the network has an overall scale free topology.  Without reweighting or
-enhancing the network, most extant clustering algorithms fail to detect
-communities in the dataset.  Network enhancment has the effect of making the
-network sparse and facilitates the identification of network structure.
-
-
-\section{References}
-
-\bibliography{refs}
-
-
-\section{Figures}
-
-\include{figures}
-
-
-\end{document}

@@ -12,7 +12,6 @@ export(r.squaredGLMM.merMod)
 export(set_font)
 export(tidyProt)
 export(write_excel)
-
 import(dplyr)
 import(lmerTest)
 import(openxlsx)

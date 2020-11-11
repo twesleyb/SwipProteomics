@@ -334,7 +334,7 @@ a subset of the data, the data for WASHC4.
 
 
 %% R ---------------------------------------------------------------------------
-<<fit0, eval=TRUE, echo=TRUE, results='hide'>>=
+<<fit0, eval=T, echo=T, results='hide', message=F, warning=F, include=F>>=
 
 # load dependencies
 library(dplyr)
@@ -498,6 +498,10 @@ calcVarPart(fit)
 
 @
 
+<<engine=python3, eval=TRUE, echo=FALSE>>=
+print("hello world!")
+
+@
 
 %% tex -------------------------------------------------------------------------
 
@@ -539,8 +543,9 @@ samples after adjusting for batch (Mixture). The final dataset included
 42 samples and 6,119 proteins. The protein covariation network was build by
 calculating the Pearson correlation for all pairwise comparisons of proteins.
 
-We performed network enhancement to remove biological noise from the network.
-This step is essential for module detection. Network enhancement reweights the
+We performed network enhancement to remove biological noise from the network
+prior to clustering. This step is essential in large, and dense networks for
+module detection. Network enhancement reweights the
 network's edges and has the overall effect of making the network sparse.
 Conceptually this step is related to the soft-thresholding approach taken by
 WGCNA or WPCNA analysis workflows (REFS), but has the befinit of not assuming
