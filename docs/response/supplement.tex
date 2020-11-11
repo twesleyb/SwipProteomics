@@ -14,7 +14,57 @@
 
 %% latex document setup -------------------------------------------------------
 
-\documentclass[11pt]{elife}
+\documentclass[11pt]{elife}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -79,6 +129,7 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 
 %% main -----------------------------------------------------------------------
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
 \maketitle
@@ -282,7 +333,7 @@ from equation (\ref{eq:full}). The reduced model is equation \ref{eq:fx0}.
 \end{equation}
 
 
-\section{Protein-level comparisions}
+\section{Protein-level comparisons}
 
 Following data preprocessing, summarization, and normalization, statistical
 inference by \texttt{MSstatsTMT} is performed by (1) fitting each protein in the
@@ -313,7 +364,7 @@ implements mixed-effects models with its function \texttt{lme4::lmer}(Bates2015)
 package \texttt{lmerTest} extends \texttt{lme4's} functionality and enables the
 computation of Sattertwaite degrees of freedom (Kutzenova2017). As an example,
 we illustrate the analysis of WASHC4. First, we fit the model (\ref{eq:fx0}) to
-a subset of the data, the data for WASHC4. 
+a subset of the data, the data for WASHC4.\\
 
 
 %% R ---------------------------------------------------------------------------
@@ -321,6 +372,7 @@ a subset of the data, the data for WASHC4.
 
 
 %% latex -----------------------------------------------------------------------
+
 The model's estimates ($\beta$) represent our best estimate of the mean protein
 abundance in the fourteen conditions of \texttt{Genotype:BioFraction}. 
 To illustrate an \texttt{intra-BioFraction} comparison, we 
@@ -338,6 +390,8 @@ flexible. Provided the correct contrast, we also easily assess the overall
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
+\hlcom{## Compare 'Mutant:F7' and 'Control:F7'}
+
 \hlcom{# create a contrast}
 \hlstd{coeff} \hlkwb{<-} \hlstd{lme4}\hlopt{::}\hlkwd{fixef}\hlstd{(fm0)}
 \hlstd{contrast7} \hlkwb{<-} \hlkwd{setNames}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(coeff)),} \hlkwc{nm} \hlstd{=} \hlkwd{names}\hlstd{(coeff))}
@@ -346,25 +400,81 @@ flexible. Provided the correct contrast, we also easily assess the overall
 
 \hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast7)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# use convenience function to contruct a contrast}
+
+\hlcom{## Compare 'Mutant' versus 'Control'}
+
+\hlcom{# create a contrast}
 \hlstd{contrast8} \hlkwb{<-} \hlkwd{getContrast}\hlstd{(fm0,} \hlstr{"Mutant"}\hlstd{,}\hlstr{"Control"}\hlstd{)}
 
-\hlcom{# assess the comparison}
+\hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast8)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 
+\section{Module-level comparisons}
+
+We wish to extend the LMM framework developed by \texttt{MSstatsTMT} to perform 
+inference at the level of protein groups or modules.
+That is, for module-level comparisons, we are interested in the overall effect 
+of Genotype on a group of proteins. Where modules are groups of covarying 
+proteins which represent biological niches defined by proteins that 
+localized together in subcellular space.\\
+
+Here we hypothesize that the proteins within a module, which are a subset of the
+overall proteome,  are a part of a common group, a module, with a common mean
+effect. Proteins within a module are correlated observations which we model as a
+mixed-effect as we are primarily interested in making inference about the
+overall distribution of the responses for a module rather than among its
+sublevels. The following LMM includes the additional mixed effect term
+\texttt{Protein}, capturing variance among a module's constintuent proteins.
+\begin{equation} 
+  \begin{gathered}\label{eq:fx1} % equation -- fx1
+	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}\\
+	Protein_p \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
+  \end{gathered}
+\end{equation}
+
+The term \texttt{Protein} in equation \ref{eq:fx1} quantifies the variance
+$\sigma_P$ attributable to all proteins in a module.  As a means of example, we
+demonstrate an ideal module, by fitting LMM (\ref{eq:fx1}) to the five WASH
+complex proteins.  As before, we calculate the coefficient of determination for
+LMM's with the \texttt{r.squaredGLMM} function (WangMerkel2018).\\
+
+
+%% R --------------------------------------------------------------------------
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# the module-level formula to be fit:}
+\hlstd{fx1} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'}
+
+\hlcom{# load WASH Complex proteins}
+\hlkwd{data}\hlstd{(washc_prots)}
+
+\hlstd{fm1} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx1, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+
 %% latex -----------------------------------------------------------------------
 \section{LMM Goodness-of-fit}
+
+Again, we consider the total variance explained as a measure of the model's
+overall quality. Our model explains 89.2\% of the total variance among these
+five proteins. The fixed-effect term \texttt{Genotype:BioFraction} explains the
+majority of variance ($R^2_m=0.762$). The remaining 13.0\% variance is
+attributable to a combination of mixed-effects \texttt{Mixture} and
+\texttt{Protein} as well as the residual variance. We assess the overall
+\texttt{Mutant-Control} difference between responses of of 'Mutant' and Control
+groups as before. The R package \texttt{variancePartition} enables us to
+calculate the percent variance explained by a LMM's parameters. To do so, it
+expects all terms to be mixed-effects. FIG:variance.
 
 It is useful to consider the goodness-of-fit of our LMM. A straight forward
 measure of a LMM's quality is the Nakagawa coefficient of 
@@ -381,6 +491,8 @@ determination using the \texttt{r.squaredGLMM} function taken from the
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{# assess gof with Nakagawa coefficient of determination}
+\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm1)}
+
 \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm0)}
 \end{alltt}
 \end{kframe}
@@ -394,70 +506,72 @@ fraction of this total ($R^2{m}$=0.935). It follows that 1.5\% of the remaing
 variance is attributable to residuals and the mixed-effect \texttt{Mixture}.\\
 
 
-\section{Module-level analysis}
 
-We wish to extend the LMM framework developed by \texttt{MSstatsTMT} to perform 
-inference at the level of protein groups or modules.
-That is, for module-level comparisons, we are interested in the overall affect 
-of Genotype on a group of proteins. Where modules are groups of covarying 
-proteins which represent biological niches defined by proteins that 
-localized together in subcellular space.\\
+%% R --------------------------------------------------------------------------
 
-Here we hypothesize that the proteins within a module, which are a subset of the
-overall proteome,  are a part of a common group, a module, with a common mean
-effect. Proteins within a module are correlated observations which we model as a
-mixed-effect as we are primarily interested in making inference about the
-overall distribution of the responses for a module rather than among its
-sublevels. The following LMM includes the additional mixed effect term
-\texttt{Protein}, capturing variance among a module's constintuent proteins.\\
 
-\begin{equation} 
-  \begin{gathered}\label{eq:fx1} % equation -- fx1
-	Y_{mcbt} = \mu + Mixture_m + Condition_c + Protein_p + \epsilon_{mcb}\\
-	Protein_p \stackrel{iid}{\sim} N(0,\sigma^2_P) \\
-  \end{gathered}
+
+%% tex -------------------------------------------------------------------------
+
+We can see that the majority of the variance explained by the LMM fit to the
+WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
+\texttt{Protein} and \texttt{Mixture} account for a small fraction of the 
+overall variance explained by the model.
+
+As our overall goal is to identify groups or modules of proteins that strongly
+covary together, our clustering approach should maximize the variance explained
+by a module's fixed-effect parameters (Genotype + BioFraction) while minimizing 
+the variance among its individual proteins. 
+An ideal module is a perfect summary of its protein constituents, 
+$PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
+clustering approach.
+
+\begin{equation}
+	Q_{M}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
 \end{equation}
 
-The term \texttt{Protein} quantifies the variance $\sigma_P$ attributable to all
-proteins in a module.  As a means of example, we demonstrate an ideal module, by
-fitting LMM (\ref{eq:fx1}) to the five WASH complex proteins.  As before, we
-calculate the coefficient of determination for LMM's with the
-\texttt{r.squaredGLMM} function (WangMerkel2018).\\
+
+\section{Network Construction}
+
+Using our SWIP-TMT dataset, we aim to identify modules or groups of
+proteins that covary together across subcellular space. Prior to building the
+co-variation network, other sources of variation should be removed. Although
+\texttt{MSstatsTMT} handles the batch effect inherent in experiments with
+multiple TMT mixtures, it is necessary to remove this effect prior to building
+the network. We removed the effect of \texttt{Mixture} using
+\texttt{limma::RemoveBatchEffect}. These adjusted data are used for network
+construction and plotting but not statistical modeling.
+
+Prior to network construction, we removed protein models with poor fit 
+($R^2_{total}<0.7$; n=791 proteins). Removing this noisey proteins facilitation
+module identification and improves overall module quality.
+
+The final network was constructed using data from both Control and Mutant 
+samples after adjusting for batch (Mixture). The final dataset included 
+42 samples and 6,119 proteins. The protein covariation network was build by
+calculating the Pearson correlation for all pairwise comparisons of proteins.
+
+We performed network enhancement to remove biological noise from the network
+prior to clustering. This step is essential in large, and dense networks for
+module detection. Network enhancement reweights the
+network's edges and has the overall effect of making the network sparse.
+Conceptually this step is related to the soft-thresholding approach taken by
+WGCNA or WPCNA analysis workflows (REFS), but has the benefit of not assuming
+that the network has an overall scale free topology.  Without reweighting or
+enhancing the network, most extant clustering algorithms fail to detect
+communities in the dataset.  Network enhancment has the effect of making the
+network sparse and facilitates the identification of network structure.
 
 
-%% R --------------------------------------------------------------------------
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# the module-level formula to be fit:}
-\hlstd{fx1} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'}
+\section{References}
 
-\hlcom{# load WASH Complex proteins}
-\hlkwd{data}\hlstd{(washc_prots)}
-
-\hlstd{fm1} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx1, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
-
-\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm1)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+\nocite{*}
+\bibliography{refs}
 
 
-%% latex -----------------------------------------------------------------------
-Again, we consider the total variance explained as a measure of the model's
-overall quality. Our model explains 89.2\% of the total variance among these
-five proteins. The fixed-effect term \texttt{Genotype:BioFraction} explains the
-majority of variance ($R^2_m=0.762$). The remaining 13.0\% variance is
-attributable to a combination of mixed-effects \texttt{Mixture} and
-\texttt{Protein} as well as the residual variance. We assess the overall
-\texttt{Mutant-Control} difference between responses of of 'Mutant' and Control
-groups as before. The R package \texttt{variancePartition} enables us to
-calculate the percent variance explained by a LMM's parameters. To do so, it
-expects all terms to be mixed-effects. FIG:variance.
+\section{Figures}
+
+\include{figures}
 
 
-%% R --------------------------------------------------------------------------
-
-
-
-
+\end{document}
