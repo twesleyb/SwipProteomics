@@ -1,4 +1,4 @@
-\begin{thebibliography}{6}
+\begin{thebibliography}{7}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\urlprefix}{}
 \providecommand{\doiprefix}{doi: }
@@ -35,6 +35,14 @@
 \newblock \urlprefix\url{https://doi.org/10.1074/mcp.ra120.002105},
   \href{10.1074/mcp.ra120.002105}{\doiprefix
   \detokenize{10.1074/mcp.ra120.002105}}.
+
+\bibitem[{Kuznetsova et~al.(2017)Alexandra Kuznetsova and Per B. Brockhoff and
+  Rune H. B. Christensen}]{Kuznetsova2017}
+\textbf{\color{eLifeMediumGrey} Kuznetsova A}, Brockhoff PB, Christensen RHB.
+\newblock {lmerTest} Package: Tests in Linear Mixed Effects Models.
+\newblock Journal of Statistical Software.  2017; 82(13).
+\newblock \urlprefix\url{https://doi.org/10.18637/jss.v082.i13},
+  \href{10.18637/jss.v082.i13}{\doiprefix \detokenize{10.18637/jss.v082.i13}}.
 
 \bibitem[{McCarthy et~al.(2012)Davis J. McCarthy and Yunshun Chen and Gordon K.
   Smyth}]{McCarthy2012}
