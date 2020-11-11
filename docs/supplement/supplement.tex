@@ -9,31 +9,62 @@
 
 
 %% R --------------------------------------------------------------------------
-<<renv, echo=FALSE, cache=FALSE, results='hide'>>=
 
-# prepare the R environment
-root <- "~/projects/SwipProteomics"
-renv::load(root,quiet=TRUE)
-devtools::load_all(quiet=TRUE)
-
-suppressPackageStartupMessages({
-  library(knitr)
-  library(data.table)
-})
-
-# global knitr options
-opts <- list(tidy=FALSE,message=FALSE,warning=FALSE,fig.width=4,fig.height=4.5)
-do.call(opts_chunk$set,opts)
-
-# source external R code
-read_chunk('supplement.R')
-
-@
 
 
 %% latex document setup -------------------------------------------------------
 
-\documentclass[11pt]{elife}
+\documentclass[11pt]{elife}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -98,6 +129,7 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 
 
 %% main -----------------------------------------------------------------------
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
 \maketitle
@@ -133,10 +165,10 @@ our SWIP-TMT spatial proteomics dataset.\\
 
 \section{Lack-of-fit of the NB model}
 
-Our previous approach can be summarized as the \textit{Sum + IRS} method (Huang2020).
+Our previous approach can be summarized as the \textit{Sum + IRS} method \citep{Huang2020}.
 Following protein summarization (by summing its features) and internal
-reference scaling (IRS) normalization (Plubell2017),  we applied
-\texttt{edgeR} to assess differential abundance of individual proteins and
+reference scaling (IRS) normalization \citep{Plubell2017},  we applied
+\texttt{edgeR} \citep{McCarthy2012} to assess differential abundance of individual proteins and
 protein-groups.  The use of \texttt{edgeR} for protein-level comparisons was
 based on work by Plubell \textit{et al.} who describe IRS normalization and the
 use of \texttt{edgeR} for statistical testing in TMT MS experiments
@@ -462,18 +494,70 @@ network sparse and facilitates the identification of network structure.\\
 
 \section{Code}
 
-% R code
-<<external-code>>= 
-@
-
 % R code to do something else
-<<test>>=
-@
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# load dependencies}
+\hlkwd{library}\hlstd{(dplyr)}
+\hlkwd{library}\hlstd{(lmerTest)}
+
+\hlcom{# load SwipProteomics}
+\hlkwd{data}\hlstd{(swip)}
+\hlkwd{data}\hlstd{(msstats_prot)}
+
+\hlcom{# formula to be fit to WASHC4, aka SWIP:}
+\hlstd{fx0} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'}
+
+\hlcom{# fit the LMM}
+\hlstd{fm0} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx0, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
+
+\hlcom{# examine the model's summary}
+\hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+## lmerModLmerTest]
+## Formula: fx0
+##    Data: msstats_prot %>% subset(Protein == swip)
+## 
+## REML criterion at convergence: 3.7
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -1.5030 -0.6089 -0.1463  0.7474  1.4302 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  Mixture  (Intercept) 0.009596 0.09796 
+##  Residual             0.034418 0.18552 
+## Number of obs: 42, groups:  Mixture, 3
+## 
+## Fixed effects:
+##                                Estimate Std. Error      df t value Pr(>|t|)    
+## GenotypeMutant:BioFractionF4     5.4043     0.1211 17.3059   44.62   <2e-16 ***
+## GenotypeControl:BioFractionF4    6.7110     0.1211 17.3059   55.41   <2e-16 ***
+## GenotypeMutant:BioFractionF5     5.5674     0.1211 17.3059   45.96   <2e-16 ***
+## GenotypeControl:BioFractionF5    6.9456     0.1211 17.3059   57.34   <2e-16 ***
+## GenotypeMutant:BioFractionF6     5.6402     0.1211 17.3059   46.56   <2e-16 ***
+## GenotypeControl:BioFractionF6    7.2401     0.1211 17.3059   59.77   <2e-16 ***
+## GenotypeMutant:BioFractionF7     5.6317     0.1211 17.3059   46.49   <2e-16 ***
+## GenotypeControl:BioFractionF7    7.3211     0.1211 17.3059   60.44   <2e-16 ***
+## GenotypeMutant:BioFractionF8     5.4928     0.1211 17.3059   45.35   <2e-16 ***
+## GenotypeControl:BioFractionF8    7.1296     0.1211 17.3059   58.86   <2e-16 ***
+## GenotypeMutant:BioFractionF9     5.7810     0.1211 17.3059   47.73   <2e-16 ***
+## GenotypeControl:BioFractionF9    6.9545     0.1211 17.3059   57.41   <2e-16 ***
+## GenotypeMutant:BioFractionF10    5.7844     0.1211 17.3059   47.76   <2e-16 ***
+## GenotypeControl:BioFractionF10   7.6187     0.1211 17.3059   62.90   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 
 \section{References}
-\cite{Aivazian917}
-\citep{Aivazian917}
 
 \bibliography{bibliography}
 

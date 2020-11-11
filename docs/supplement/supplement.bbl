@@ -1,0 +1,40 @@
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\urlprefix}{}
+\providecommand{\doiprefix}{doi: }
+
+\bibitem[{Huang et~al.(2020)Ting Huang and Meena Choi and Manuel Tzouros and
+  Sabrina Golling and Nikhil Janak Pandya and Balazs Banfai and Tom Dunkley and
+  Olga Vitek}]{Huang2020}
+\textbf{\color{eLifeMediumGrey} Huang T}, Choi M, Tzouros M, Golling S, Pandya
+  NJ, Banfai B, Dunkley T, Vitek O.
+\newblock {MSstatsTMT}: Statistical Detection of Differentially Abundant
+  Proteins in Experiments with Isobaric Labeling and Multiple Mixtures.
+\newblock Molecular {\&} Cellular Proteomics.  2020 Jul; 19(10):1706--1723.
+\newblock \urlprefix\url{https://doi.org/10.1074/mcp.ra120.002105},
+  \href{10.1074/mcp.ra120.002105}{\doiprefix
+  \detokenize{10.1074/mcp.ra120.002105}}.
+
+\bibitem[{McCarthy et~al.(2012)Davis J. McCarthy and Yunshun Chen and Gordon K.
+  Smyth}]{McCarthy2012}
+\textbf{\color{eLifeMediumGrey} McCarthy DJ}, Chen Y, Smyth GK.
+\newblock Differential expression analysis of multifactor {RNA}-Seq experiments
+  with respect to biological variation.
+\newblock Nucleic Acids Research.  2012 jan; 40(10):4288--4297.
+\newblock \urlprefix\url{https://doi.org/10.1093%2Fnar%2Fgks042},
+  \href{10.1093/nar/gks042}{\doiprefix \detokenize{10.1093/nar/gks042}}.
+
+\bibitem[{Plubell et~al.(2017)Deanna L. Plubell and Phillip A. Wilmarth and
+  Yuqi Zhao and Alexandra M. Fenton and Jessica Minnier and Ashok P. Reddy and
+  John Klimek and Xia Yang and Larry L. David and Nathalie Pamir}]{Plubell2017}
+\textbf{\color{eLifeMediumGrey} Plubell DL}, Wilmarth PA, Zhao Y, Fenton AM,
+  Minnier J, Reddy AP, Klimek J, Yang X, David LL, Pamir N.
+\newblock Extended Multiplexing of Tandem Mass Tags ({TMT}) Labeling Reveals
+  Age and High Fat Diet Specific Proteome Changes in Mouse Epididymal Adipose
+  Tissue.
+\newblock Molecular {\&} Cellular Proteomics.  2017 Mar; 16(5):873--890.
+\newblock \urlprefix\url{https://doi.org/10.1074/mcp.m116.065524},
+  \href{10.1074/mcp.m116.065524}{\doiprefix
+  \detokenize{10.1074/mcp.m116.065524}}.
+
+\end{thebibliography}

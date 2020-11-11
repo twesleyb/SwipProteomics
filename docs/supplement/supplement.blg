@@ -5,44 +5,44 @@ The style file: vancouver-elife.bst
 A level-1 auxiliary file: figures.aux
 Database file #1: bibliography.bib
 Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
-You've used 1 entry,
+You've used 3 entries,
             3492 wiz_defined-function locations,
-            721 strings with 5589 characters,
-and the built_in function-call counts, 2318 in all, are:
-= -- 300
-> -- 19
+            742 strings with 6523 characters,
+and the built_in function-call counts, 10637 in all, are:
+= -- 1359
+> -- 129
 < -- 0
-+ -- 10
-- -- 6
-* -- 207
-:= -- 261
-add.period$ -- 4
-call.type$ -- 1
-change.case$ -- 7
-chr.to.int$ -- 1
-cite$ -- 1
-duplicate$ -- 227
-empty$ -- 204
-format.name$ -- 8
-if$ -- 524
++ -- 70
+- -- 42
+* -- 976
+:= -- 1161
+add.period$ -- 12
+call.type$ -- 3
+change.case$ -- 33
+chr.to.int$ -- 3
+cite$ -- 3
+duplicate$ -- 916
+empty$ -- 945
+format.name$ -- 48
+if$ -- 2424
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 11
-newline$ -- 12
-num.names$ -- 3
-pop$ -- 19
+missing$ -- 45
+newline$ -- 24
+num.names$ -- 9
+pop$ -- 92
 preamble$ -- 1
-purify$ -- 7
+purify$ -- 33
 quote$ -- 0
-skip$ -- 17
+skip$ -- 58
 stack$ -- 0
-substring$ -- 399
-swap$ -- 26
+substring$ -- 2016
+swap$ -- 108
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 9
+type$ -- 27
 warning$ -- 0
-while$ -- 11
+while$ -- 45
 width$ -- 0
-write$ -- 21
+write$ -- 53

@@ -4,22 +4,7 @@
 # description: code associated with supplement.Rnw
 # author: twab
 
-## ---- external-code
-
-# load dependencies
-library(dplyr)
-library(lmerTest)
-
-x <- 5 + 5
-print(x)
-
-## ---- test
-
-y <- x/3
-print(y)
-
 ## ---- fit0 
-#<<fit0, eval=T, echo=T, results='hide', message=F, warning=F, include=F>>=
 
 # load dependencies
 library(dplyr)
