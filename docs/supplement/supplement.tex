@@ -163,12 +163,12 @@ our SWIP-TMT spatial proteomics dataset.\\
 \newpage
 
 
-\section{Lack-of-fit of the NB model}
+\section{a lack-of-fit of the NB model for TMT proteomics data}
 
-Our previous approach can be summarized as the \textit{Sum + IRS} method \citep{Huang2020}.
+Our previous approach can be summarized as the \textit{Sum + IRS} method \cite{Huang2020}.
 Following protein summarization (by summing its features) and internal
-reference scaling (IRS) normalization \citep{Plubell2017},  we applied
-\texttt{edgeR} \citep{McCarthy2012} to assess differential abundance of individual proteins and
+reference scaling (IRS) normalization \cite{Plubell2017},  we applied
+\texttt{edgeR} \cite{McCarthy2012} to assess differential abundance of individual proteins and
 protein-groups.  The use of \texttt{edgeR} for protein-level comparisons was
 based on work by Plubell \textit{et al.} who describe IRS normalization and the
 use of \texttt{edgeR} for statistical testing in TMT MS experiments
@@ -208,7 +208,7 @@ which does not depend upon the negative binomial assumption.
 % observe a similar lack of fit for the NB GLM.
 %These plots emphasize the overall lack-of-fit for proteomics data fit with the \texttt{edgeR} model.\\ 
 
-\section{Protein-wise LMMs for MSstatsTMT}
+\section{protein-wise linear mixed-models}
 
 The strength of linear mixed-models lies in their flexibility. In LMMs 
 the response variable is taken to be a function of both fixed- and random-effects. 
@@ -278,7 +278,7 @@ then the model is reduced to equation \ref{eq:reduced}.
 \end{equation}
 
 
-\section{SWIP-TMT Experimental Design}
+\section{SWIP-TMT experimental design}
 
 Each 16-plex TMT mixture contains seven repeated measurements made from each
 biological subject (FIG:design).  To account for this repeated measures
@@ -303,7 +303,7 @@ from equation (\ref{eq:full}). The reduced model is equation \ref{eq:fx0}.
 \end{equation}
 
 
-\section{Statistical inference with SstatsTMT}
+\section{statistical inference with MSstatsTMT}
 
 \texttt{MSstatsTMT} performs protein-wise comparisons between pairs of 
 \texttt{Conditions} by comparing the estimates obtained from the fit LMM. 
@@ -337,7 +337,7 @@ protein-wise tests are adjusted using the Benjamini-Hochberg FDR method
 (Benjamini1995,Huang2020).\\
 
 
-\section{Protein-level comparisons}
+\section{protein-level comparisons}
 
 Following data preprocessing, summarization, and normalization, statistical
 inference by \texttt{MSstatsTMT} is performed by (1) fitting each protein in the
@@ -368,12 +368,7 @@ implements mixed-effects models with its function \texttt{lme4::lmer}(Bates2015)
 package \texttt{lmerTest} extends \texttt{lme4's} functionality and enables the
 computation of Sattertwaite degrees of freedom (Kutzenova2017). As an example,
 we illustrate the analysis of WASHC4. First, we fit the model (\ref{eq:fx0}) to
-a subset of the data, the data for WASHC4.\\
-
-
-
-
-%% latex -----------------------------------------------------------------------
+a subset of the data, the data for WASHC4.
 
 The model's estimates ($\beta$) represent our best estimate of the mean protein
 abundance in the fourteen conditions of \texttt{Genotype:BioFraction}. 
@@ -388,7 +383,7 @@ flexible. Provided the correct contrast, we also easily assess the overall
 \texttt{Mutant-Control} comparison.\\
 
 
-\section{Module-level comparisons}
+\section{module-level comparisons}
 
 We wish to extend the LMM framework developed by \texttt{MSstatsTMT} to perform 
 inference at the level of protein groups or modules.
@@ -418,7 +413,7 @@ complex proteins.  As before, we calculate the coefficient of determination for
 LMM's with the \texttt{r.squaredGLMM} function (WangMerkel2018).\\
 
 
-\section{LMM Goodness-of-fit}
+\section{LMM goodness-of-fit}
 
 Again, we consider the total variance explained as a measure of the model's
 overall quality. Our model explains 89.2\% of the total variance among these
@@ -461,7 +456,7 @@ clustering approach.
 \end{equation}
 
 
-\section{Network Construction}
+\section{protein covariation network construction}
 
 Using our SWIP-TMT dataset, we aim to identify modules or groups of
 proteins that covary together across subcellular space. Prior to building the
@@ -491,6 +486,9 @@ that the network has an overall scale free topology.  Without reweighting or
 enhancing the network, most extant clustering algorithms fail to detect
 communities in the dataset.  Network enhancment has the effect of making the
 network sparse and facilitates the identification of network structure.\\
+
+\section{community detection}
+
 
 \section{Code}
 
