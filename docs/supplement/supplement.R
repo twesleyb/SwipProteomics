@@ -4,7 +4,7 @@
 # description: code associated with supplement.Rnw
 # author: twab
 
-## ---- fit0 
+## ---- fit0, results='hide'
 
 # load dependencies
 library(dplyr)

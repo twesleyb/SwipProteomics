@@ -4,45 +4,47 @@ The top-level auxiliary file: supplement.aux
 The style file: vancouver-elife.bst
 A level-1 auxiliary file: figures.aux
 Database file #1: bibliography.bib
+Warning--I didn't find a database entry for "Kutzenova2017"
 Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
-You've used 3 entries,
+You've used 6 entries,
             3492 wiz_defined-function locations,
-            742 strings with 6523 characters,
-and the built_in function-call counts, 10637 in all, are:
-= -- 1359
-> -- 129
+            771 strings with 7475 characters,
+and the built_in function-call counts, 19474 in all, are:
+= -- 2500
+> -- 228
 < -- 0
-+ -- 70
-- -- 42
-* -- 976
-:= -- 1161
-add.period$ -- 12
-call.type$ -- 3
-change.case$ -- 33
-chr.to.int$ -- 3
-cite$ -- 3
-duplicate$ -- 916
-empty$ -- 945
-format.name$ -- 48
-if$ -- 2424
++ -- 129
+- -- 74
+* -- 1780
+:= -- 2131
+add.period$ -- 24
+call.type$ -- 6
+change.case$ -- 61
+chr.to.int$ -- 6
+cite$ -- 6
+duplicate$ -- 1721
+empty$ -- 1728
+format.name$ -- 86
+if$ -- 4446
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 45
-newline$ -- 24
-num.names$ -- 9
-pop$ -- 92
+missing$ -- 82
+newline$ -- 42
+num.names$ -- 18
+pop$ -- 168
 preamble$ -- 1
-purify$ -- 33
+purify$ -- 61
 quote$ -- 0
-skip$ -- 58
+skip$ -- 111
 stack$ -- 0
-substring$ -- 2016
-swap$ -- 108
+substring$ -- 3637
+swap$ -- 192
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 27
+type$ -- 54
 warning$ -- 0
-while$ -- 45
+while$ -- 79
 width$ -- 0
-write$ -- 53
+write$ -- 101
+(There was 1 warning)

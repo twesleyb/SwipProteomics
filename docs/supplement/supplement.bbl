@@ -1,7 +1,28 @@
-\begin{thebibliography}{3}
+\begin{thebibliography}{6}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\urlprefix}{}
 \providecommand{\doiprefix}{doi: }
+
+\bibitem[{Bates et~al.(2015)Douglas Bates and Martin Mächler and Ben Bolker
+  and Steve Walker}]{Bates2015}
+\textbf{\color{eLifeMediumGrey} Bates D}, Mächler M, Bolker B, Walker S.
+\newblock Fitting Linear Mixed-Effects Models Usinglme4.
+\newblock Journal of Statistical Software.  2015; 67(1).
+\newblock \urlprefix\url{https://doi.org/10.18637%2Fjss.v067.i01},
+  \href{10.18637/jss.v067.i01}{\doiprefix \detokenize{10.18637/jss.v067.i01}}.
+
+\bibitem[{Geladaki et~al.(2019)Aikaterini Geladaki and Nina Ko{\v{c}}evar
+  Britov{\v{s}}ek and Lisa M. Breckels and Tom S. Smith and Owen L. Vennard and
+  Claire M. Mulvey and Oliver M. Crook and Laurent Gatto and Kathryn S.
+  Lilley}]{Geladaki2019}
+\textbf{\color{eLifeMediumGrey} Geladaki A}, Britov{\v{s}}ek NK, Breckels LM,
+  Smith TS, Vennard OL, Mulvey CM, Crook OM, Gatto L, Lilley KS.
+\newblock Combining {LOPIT} with differential ultracentrifugation for
+  high-resolution spatial proteomics.
+\newblock Nature Communications.  2019 jan; 10(1).
+\newblock \urlprefix\url{https://doi.org/10.1038%2Fs41467-018-08191-w},
+  \href{10.1038/s41467-018-08191-w}{\doiprefix
+  \detokenize{10.1038/s41467-018-08191-w}}.
 
 \bibitem[{Huang et~al.(2020)Ting Huang and Meena Choi and Manuel Tzouros and
   Sabrina Golling and Nikhil Janak Pandya and Balazs Banfai and Tom Dunkley and
@@ -36,5 +57,14 @@
 \newblock \urlprefix\url{https://doi.org/10.1074/mcp.m116.065524},
   \href{10.1074/mcp.m116.065524}{\doiprefix
   \detokenize{10.1074/mcp.m116.065524}}.
+
+\bibitem[{Traag et~al.(2019)V. A. Traag and L. Waltman and N. J. van
+  Eck}]{Traag2019}
+\textbf{\color{eLifeMediumGrey} Traag VA}, Waltman L, van Eck NJ.
+\newblock From Louvain to Leiden: guaranteeing well-connected communities.
+\newblock Scientific Reports.  2019 mar; 9(1).
+\newblock \urlprefix\url{https://doi.org/10.1038%2Fs41598-019-41695-z},
+  \href{10.1038/s41598-019-41695-z}{\doiprefix
+  \detokenize{10.1038/s41598-019-41695-z}}.
 
 \end{thebibliography}
