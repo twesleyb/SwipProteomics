@@ -3,4 +3,4 @@
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-knitr::knit("response.Rnw",quiet=TRUE)
+knitr::knit("supplement.Rnw",quiet=TRUE)

@@ -1,39 +1,6 @@
-% title: figs.tex
-% description: 
+% title: figures.tex
+% description: supplemental figures
 % author: twab
-
-\begin{figure}[h] %% figure [x] -- impute.pdf
-  \begin{fullwidth}
-  \begin{center}
-	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{impute}
-	  \caption{\textbf{Missing value imputation and PSM outlier removal.}
-	  \textbf{A} \textbf{B} \textbf{C} \textbf{D} }
-	  \label{fig:impute}
-  \end{center}
-  \end{fullwidth}
-\end{figure}
-
-
-\begin{figure}[h] %% figure [x] -- normalization.pdf
-  \begin{fullwidth}
-  \begin{center}
-	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{normalization}
-	  \caption{\textbf{Data Normalization and PCA.} \textbf{A} \textbf{B} }
-	  \label{fig:normalization}
-  \end{center}
-  \end{fullwidth}
-\end{figure}
-
-
-\begin{figure}[h] %% figure [x] -- washc4.pdf
-  \begin{fullwidth}
-  \begin{center}
-	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{washc4}
-	  \caption{\textbf{Data Normalization and PCA.} \textbf{A} \textbf{B} }
-	  \label{fig:washc4}
-  \end{center}
-  \end{fullwidth}
-\end{figure}
 
 
 \begin{figure}[h] % figure -- gof
@@ -52,7 +19,7 @@
 		Where \texttt{Mixure} is an additive blocking factor that 
 		accounts for variablity between experiments. 
 		The NB framework used by \texttt{edgeR} utilizes a dispersion 
-			parameter 
+			parameter $\psi$
 		to account for mean-variance relationships in the data.
 		The dispersion parameter can take several forms including:
                 'common', 'trended', and 'tagwise'. We plot the deviance
@@ -74,6 +41,63 @@
 	\end{fullwidth}
 \end{figure}
 
+\newpage
+
+\begin{figure}[h] %% ./figs/khan.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{khan}
+	  \caption{\textbf{Goodness-of-fit for the edgeR NB GLM for the Khan
+	  \textit{et al}, (2018) dataset.} } % EOC
+	  \label{fig:khan}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+\newpage
+
+
+\begin{figure}[h] %% figure -- ./figs/impute.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{impute}
+	  \caption{\textbf{Missing value imputation and PSM outlier removal.}
+	  \textbf{A} \textbf{B} \textbf{C} \textbf{D} }
+	  \label{fig:impute}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+\newpage
+
+
+\begin{figure}[h] %% figure -- normalization.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{normalization}
+	  \caption{\textbf{Data Normalization and PCA.} \textbf{A} \textbf{B} }
+	  \label{fig:normalization}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+\newpage
+
+
+\begin{figure}[h] %% figure [x] -- washc4.pdf
+  \begin{fullwidth}
+  \begin{center}
+	  \includegraphics[width=0.9\paperwidth,keepaspectratio]{washc4}
+	  \caption{\textbf{Data Normalization and PCA.} \textbf{A} \textbf{B} }
+	  \label{fig:washc4}
+  \end{center}
+  \end{fullwidth}
+\end{figure}
+
+\newpage
+
+
+
 
 \begin{figure}[h] %% figure x -- design 
   \begin{fullwidth}
@@ -91,6 +115,8 @@
   \end{center}
   \end{fullwidth}
 \end{figure}
+
+\newpage
 
 
 \begin{figure}[h] %% figure x -- contrasts
@@ -110,6 +136,8 @@
   \end{fullwidth}
 \end{figure}
 
+\newpage
+
 
 \begin{figure}[h] %% figure -- variance
   \begin{fullwidth}
@@ -127,3 +155,5 @@
   \end{center}
   \end{fullwidth}
 \end{figure}
+
+\newpage
