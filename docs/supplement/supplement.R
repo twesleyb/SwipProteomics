@@ -6,6 +6,8 @@
 
 ## ---- fit0, results='hide'
 
+## fit the protein-level model to WASHC4
+
 # load dependencies
 library(dplyr)
 library(lmerTest)
@@ -14,20 +16,19 @@ library(lmerTest)
 data(swip)
 data(msstats_prot)
 
-# formula to be fit to WASHC4, aka SWIP:
+# LMM formula
 fx0 <- 'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'
 
-# fit the LMM
+# fit the model
 fm0 <- lmer(fx0, msstats_prot %>% subset(Protein == swip))
 
 # examine the model's summary
 summary(fm0, ddf = "Satterthwaite")
 
 
-## ---- contrast0 
-#<<contrast0, eval=T, echo=T, results='hide'>>=
+## ---- contrast7 
 
-## Compare 'Mutant:F7' and 'Control:F7'
+## Compare 'Mutant:F7' and 'Control:F7' Conditions
 
 # create a contrast
 coeff <- lme4::fixef(fm0)
@@ -39,17 +40,16 @@ contrast7["GenotypeControl:BioFractionF7"] <- -1 # negative coeff
 lmerTestContrast(fm0, contrast7)
 
 
-## Compare 'Mutant' versus 'Control'
+## ---- contrast8 
 
-# create a contrast
+# create a contrast to compare 'Mutant' versus 'Control'
 contrast8 <- getContrast(fm0, "Mutant","Control")
 
 # evaluate contrast
 lmerTestContrast(fm0, contrast8)
 
 
-## ---- module-model
-# <<module-model, eval=TRUE, echo=TRUE, results='hide'>>=
+## ---- fit1
 
 # the module-level formula to be fit:
 fx1 <- 'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'
@@ -59,18 +59,19 @@ data(washc_prots)
 
 fm1 <- lmer(fx1, msstats_prot %>% subset(Protein %in% washc_prots))
 
+# assess 'Mutant-Control' comparison
+lmerTestContrast(fm1, contrast8)
 
-## ---- rsquared
-#<<rsquared, eval=TRUE, echo=TRUE, results='hide'>>=
+
+## ---- nakagawa
 
 # assess gof with Nakagawa coefficient of determination
-r.squaredGLMM.merMod(fm1)
-
 r.squaredGLMM.merMod(fm0)
+
+r.squaredGLMM.merMod(fm1)
 
 
 ## ---- variancePartition
-#<<variancePartition, eval=TRUE, echo=FALSE, results='hide'>>=
 
 # load variancePartition
 library(variancePartition)

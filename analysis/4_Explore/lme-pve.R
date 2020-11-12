@@ -15,47 +15,90 @@ data(msstats_prot)
 
 ## ----------------------------------------------------------------------------
 
-## the protein-level model to be fit:
-fx0 <- formula(Abundance ~ 0 + Genotype:BioFraction + (1|Mixture))
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-
-l8 <- getContrast(fm0, "Control", "Mutant")
-
-results <- lmerTestContrast(fm0, l8, variance=TRUE) 
-results %>% knitr::kable()
-
-attr(results,"variance") %>% knitr::kable()
-
-## kable extra
-
-
-
-## ----------------------------------------------------------------------------
-## the protein-level model to be fit:
-fx0 <- formula(Abundance ~ 0 + Genotype:BioFraction + (1|Mixture))
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein == swip))
-
-# calculate variance partition
-#FIXME: need to explain why modeled all as mixef
-form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture)"
-fit <- lme4::lmer(form, msstats_prot %>% filter(Protein == swip))
-mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
-x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
-PVE_swip = x/sum(x)
-
-#sum(PVE_swip)==1
-
-## ----------------------------------------------------------------------------
-
 ## the module-level model to be fit:
 washc_prots = mapID("Washc*")
-form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
 
-# warnings because our module is too perfect
-fit <- suppressWarnings({ lmerTest::lmer(form, msstats_prot %>% filter(Protein %in% washc_prots)) })
+# variance partitioned
+form0 <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
+fit0 <- lmerTest::lmer(form0, msstats_prot %>% filter(Protein %in% washc_prots))
+vp <- variancePartition::calcVarPart(fit0)
+sum(vp) == 1
+
+## these results are the same!
 
 # calculate partitioned variance
-mixef_var <- as.data.frame(lme4::VarCorr(fit,comp="Variance"))
-x <- setNames(mixef_var$vcov,nm=mixef_var$grp) # variance of each component
-PVE_washc = x/sum(x)
-PVE_washc %>% knitr::kable()
+var_df <- as.data.frame(lme4::VarCorr(fit0,comp="Variance"))
+mixef_var <- setNames(var_df$vcov,nm=var_df$grp) # variance of each component
+round(mixef_var/sum(mixef_var),4)
+
+
+## Mutant-Control comparision
+# two models with the same result
+form2 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
+fit2 <- lmerTest::lmer(form2, msstats_prot %>% filter(Protein %in% washc_prots))
+L2 <- getContrast(fit2,"Mutant","Control")
+lmerTestContrast(fit2, L2) %>% mutate(Contrast = 'Mutant-Control') %>% unique() %>% knitr::kable()
+
+form1 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
+fit1 <- lmerTest::lmer(form1, msstats_prot %>% filter(Protein %in% washc_prots))
+L1 <- getContrast(fit1,"Mutant","Control")
+lmerTestContrast(fit1,L1)  %>% knitr::kable()
+
+
+qqnorm(resid(fit0))
+qqline(resid(fit0))
+
+qqnorm(resid(fit1))
+qqline(resid(fit1))
+
+qqnorm(resid(fit2))
+qqline(resid(fit2))
+
+
+## real world module
+
+data(partition)
+
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
+
+wash_module <- paste0("M",partition[swip])
+prots <- modules[[wash_module]]
+
+# variance partitioned
+fit0 <- lmerTest::lmer(form0, msstats_prot %>% filter(Protein %in% prots))
+vp <- variancePartition::calcVarPart(fit0)
+vp # 81 % of variance is attributable to protein
+# 5% of variance is attributable to Genotype
+
+## these results are the same!
+
+# calculate partitioned variance
+var_df <- as.data.frame(lme4::VarCorr(fit0,comp="Variance"))
+mixef_var <- setNames(var_df$vcov,nm=var_df$grp) # variance of each component
+round(mixef_var/sum(mixef_var),4)
+
+
+## Mutant-Control comparision
+# two models with the same result
+form2 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
+fit2 <- lmerTest::lmer(form2, msstats_prot %>% filter(Protein %in% prots))
+L2 <- getContrast(fit2,"Mutant","Control")
+lmerTestContrast(fit2, L2) %>% mutate(Contrast = 'Mutant-Control') %>% unique() %>% knitr::kable()
+
+form1 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
+fit1 <- lmerTest::lmer(form1, msstats_prot %>% filter(Protein %in% prots))
+L1 <- getContrast(fit1,"Mutant","Control")
+lmerTestContrast(fit1,L1)  %>% knitr::kable()
+
+## fat tails
+
+qqnorm(resid(fit0))
+qqline(resid(fit0))
+
+qqnorm(resid(fit1))
+qqline(resid(fit1))
+
+qqnorm(resid(fit2))
+qqline(resid(fit2))
+

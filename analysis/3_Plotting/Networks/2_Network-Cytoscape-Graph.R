@@ -7,6 +7,7 @@
 #' ---
 
 # Plot an overview of the network.
+save_image = FALSE
 
 #----------------------------------------------------------------------
 ## Misc functions.
@@ -83,8 +84,8 @@ data(partition)
 data(module_colors)
 
 # Load networks.
-data(ne_adjm) # loads "edges", then cast to adjm.
-ne_adjm <- convert_to_adjm(edges)
+myfile <- file.path(root,"rdata","ne_adjm.rda")
+load(myfile) # ne_adjm 
 
 #--------------------------------------------------------------------
 ## Create igraph graph.
@@ -98,10 +99,10 @@ tmp_adjm <- ne_adjm[!idx,!idx]
 # Threshold the graph.
 # Search for an appropriate threshold.
 # By manual search the 'best' threshold is...
-#is_connected(mask(tmp_adjm, threshold = 24.526))
+is_connected(mask(tmp_adjm, threshold = 51.989))
 
 # Create igraph graph from thresholded adjm.
-threshold = 24.526
+threshold = 70
 adjm <- mask(ne_adjm[!idx,!idx], threshold)
 g <- graph_from_adjacency_matrix(adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
@@ -133,17 +134,17 @@ Sys.sleep(3); unlink(myfile)
 result = tryCatch({
 	getNetworkViews()
 }, warning = function(w) {
-	print(w)
+	message(w)
 }, error = function(e) {
 	commandsPOST("view create")
 }, finally = {
-	print("Created Network View!")
+	message("Created Network View!")
 	Sys.sleep(3)
 })
 
 # Visual Property defaults:
 defaults <- list(
-	 NETWORK_TITLE = "THIS IS A NETWORK",
+	 NETWORK_TITLE = "network",
 	 NODE_FILL_COLOR = col2hex("gray"),
 	 NODE_TRANSPARENCY = 200,
 	 NODE_SIZE = 35,
@@ -184,10 +185,12 @@ invisible({ setVisualStyle("mysteez") }); Sys.sleep(3)
 invisible({ layoutNetwork(netw_layout) }); Sys.sleep(3); fitContent()
 
 # Save network image.
-#netw_image <- file.path(figsdir, "Network_Overview")
-#winfile <- gsub("/mnt/d/", "D:/", netw_image)
-#exportImage(winfile, "svg")
-#message("\nConvert svg image to tiff before pushing to git (too big)!")
+if (save_image) {
+  netw_image <- file.path(figsdir, "Network_Overview")
+  winfile <- gsub("/mnt/d/", "D:/", netw_image)
+  exportImage(winfile, "svg")
+  message("\nConvert svg image to tiff before pushing to git (too big)!")
+}
 
 # Free up some memory.
 invisible({ cytoscapeFreeMemory() })

@@ -1,4 +1,4 @@
-\begin{thebibliography}{7}
+\begin{thebibliography}{8}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\urlprefix}{}
 \providecommand{\doiprefix}{doi: }
@@ -74,5 +74,13 @@
 \newblock \urlprefix\url{https://doi.org/10.1038%2Fs41598-019-41695-z},
   \href{10.1038/s41598-019-41695-z}{\doiprefix
   \detokenize{10.1038/s41598-019-41695-z}}.
+
+\bibitem[{Wang and Merkle(2018)Ting Wang and Edgar C. Merkle}]{WangMerkle2018}
+\textbf{\color{eLifeMediumGrey} Wang T}, Merkle EC.
+\newblock {merDeriv}: Derivative Computations for Linear Mixed Effects Models
+  with Application to Robust Standard Errors.
+\newblock Journal of Statistical Software.  2018; 87(Code Snippet 1).
+\newblock \urlprefix\url{https://doi.org/10.18637%2Fjss.v087.c01},
+  \href{10.18637/jss.v087.c01}{\doiprefix \detokenize{10.18637/jss.v087.c01}}.
 
 \end{thebibliography}
