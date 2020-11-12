@@ -27,16 +27,16 @@
 }
 \makeatother
 
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\definecolor{fgcolor}{rgb}{0.196, 0.196, 0.196}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.063,0.58,0.627}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.063,0.58,0.627}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.588,0.588,0.588}{#1}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0.196,0.196,0.196}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.196,0.196,0.196}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.231,0.416,0.784}{#1}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.627,0,0.314}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0,0.631,0.314}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.78,0.227,0.412}{#1}}%
 \let\hlipl\hlkwb
 
 \usepackage{framed}
@@ -162,7 +162,7 @@ statistical comparisions in our SWIP-TMT spatial proteomics dataset.
 \newpage
 
 
-\section{Lack-of-fit for the NB Model and TMT MS Data}
+\section{Goodness-of-fit for the NB Model and TMT MS Data}
 
 Our previous method can be summarized as the \textit{Sum + IRS} approach
 \citep{Huang2020}.  Following protein summarization (by summing its features)
@@ -483,12 +483,18 @@ network sparse and facilitates the identification of network structure.\\
 To reveal the structure of our spatial proteomics network we used the recently
 published Leiden algorithm \citep{Traag2019}.
 
-\section{Code}
+\newpage
+
+
+\section{Source Code}
 
 % R code
+% NOTE: chunk options inherited from global options above.
+% I've set results='hide' as the default. So, you must explicitly set
+% results to 'markup' for results you want to show.
 
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{## fit the protein-level model to WASHC4}
 
@@ -504,7 +510,7 @@ published Leiden algorithm \citep{Traag2019}.
 \hlstd{fx0} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'}
 
 \hlcom{# fit the model}
-\hlstd{fm0} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx0, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
+\hlstd{fm0} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx0,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
 
 \hlcom{# examine the model's summary}
 \hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
@@ -512,66 +518,17 @@ published Leiden algorithm \citep{Traag2019}.
 \end{kframe}
 \end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{## Compare 'Mutant:F7' and 'Control:F7' Conditions}
-
-\hlcom{# create a contrast}
-\hlstd{coeff} \hlkwb{<-} \hlstd{lme4}\hlopt{::}\hlkwd{fixef}\hlstd{(fm0)}
-\hlstd{contrast7} \hlkwb{<-} \hlkwd{setNames}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(coeff)),} \hlkwc{nm} \hlstd{=} \hlkwd{names}\hlstd{(coeff))}
-\hlstd{contrast7[}\hlstr{"GenotypeMutant:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{+}\hlnum{1} \hlcom{# positive coeff}
-\hlstd{contrast7[}\hlstr{"GenotypeControl:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{-}\hlnum{1} \hlcom{# negative coeff}
-
-\hlcom{# evaluate contrast}
-\hlkwd{lmerTestContrast}\hlstd{(fm0, contrast7)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{## Compare 'Mutant' versus 'Control'}
-
-\hlcom{# create a contrast}
-\hlstd{contrast8} \hlkwb{<-} \hlkwd{getContrast}\hlstd{(fm0,} \hlstr{"Mutant"}\hlstd{,}\hlstr{"Control"}\hlstd{)}
-
-\hlcom{# evaluate contrast}
-\hlkwd{lmerTestContrast}\hlstd{(fm0, contrast8)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# the module-level formula to be fit:}
-\hlstd{fx1} \hlkwb{<-} \hlstr{'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'}
-
-\hlcom{# load WASH Complex proteins}
-\hlkwd{data}\hlstd{(washc_prots)}
-
-\hlstd{fm1} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx1, msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
-
-\hlcom{# assess 'Mutant-Control' comparison}
-\hlkwd{lmerTestContrast}\hlstd{(fm1, contrast8)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# assess gof with Nakagawa coefficient of determination}
-\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm1)}
-
-\hlkwd{r.squaredGLMM.merMod}\hlstd{(fm0)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
 
 
+
+
+
+
+
+
+
+
+\newpage
 
 
 %\section{References}

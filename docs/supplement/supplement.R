@@ -4,7 +4,25 @@
 # description: code associated with supplement.Rnw
 # author: twab
 
-## ---- fit0, results='hide'
+# NOTE: code chunks are delimited with '## ---- LABEL' where LABEL cooresponds
+# to its label in the main *.Rnw file. Declare code chunk options in the main
+# R noweave file. 
+
+# NOTE: it seems best if your approach each chunk as a stand-alone bit of code.
+
+# prepare the renv
+root <- "~/projects/swipproteomics"
+renv::load(root)
+devtools::load_all(root)
+
+suppressPackageStartupMessages({
+  #library(knitr)
+  library(dplyr)
+  library(data.table)
+})
+
+
+## ---- fit0
 
 ## fit the protein-level model to WASHC4
 
@@ -20,7 +38,28 @@ data(msstats_prot)
 fx0 <- 'Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)'
 
 # fit the model
-fm0 <- lmer(fx0, msstats_prot %>% subset(Protein == swip))
+fm0 <- lmer(fx0, data = msstats_prot %>% subset(Protein == swip))
+
+# examine the model's summary
+summary(fm0, ddf = "Satterthwaite")
+
+## ---- tab0
+
+df <- summary(fm0, ddf="Satterthwaite")[["coefficients"]] %>%
+	as.data.table(keep.rownames="Coefficient")
+df$Coefficient <- gsub("Genotype|BioFraction","",df$Coefficient)
+colnames(df)[colnames(df)=="Pr(>|t|)"] <- "p value"
+colnames(df)[colnames(df)=="Std. Error"] <- "SE"
+colnames(df)[colnames(df)=="df"] <- "DF"
+df$"p value" <- formatC(df$"p value",digits=3)
+knitr::kable(df)
+
+
+## ---- alt0
+
+# fit the model
+fx0 <- 'Abundance ~ 0 + Genotype + BioFraction + (1|Mixture)'
+fm0 <- lmer(fx0, data = msstats_prot %>% subset(Protein == swip))
 
 # examine the model's summary
 summary(fm0, ddf = "Satterthwaite")
@@ -28,7 +67,7 @@ summary(fm0, ddf = "Satterthwaite")
 
 ## ---- contrast7 
 
-## Compare 'Mutant:F7' and 'Control:F7' Conditions
+## compare 'Mutant:F7' and 'Control:F7' conditions
 
 # create a contrast
 coeff <- lme4::fixef(fm0)
@@ -57,10 +96,19 @@ fx1 <- 'Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)'
 # load WASH Complex proteins
 data(washc_prots)
 
-fm1 <- lmer(fx1, msstats_prot %>% subset(Protein %in% washc_prots))
+fm1 <- lmer(fx1, data=msstats_prot %>% subset(Protein %in% washc_prots))
 
 # assess 'Mutant-Control' comparison
 lmerTestContrast(fm1, contrast8)
+
+
+## ---- flexibility
+
+# the module-level formula to be fit:
+fx2 <- 'Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)'
+fm2 <- lmer(fx2, data = msstats_prot %>% subset(Protein %in% washc_prots))
+lT <- getContrast(fm2,"Mutant","Control")
+lmerTestContrast(fm2, lT)
 
 
 ## ---- nakagawa
@@ -74,7 +122,9 @@ r.squaredGLMM.merMod(fm1)
 ## ---- variancePartition
 
 # load variancePartition
-library(variancePartition)
+suppressPackageStartupMessages({
+	library(variancePartition)
+})
 
 # calculate partitioned variance
 form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"

@@ -22,11 +22,15 @@ suppressPackageStartupMessages({
 })
 
 # global knitr options
-opts <- list(tidy=FALSE,message=FALSE,warning=FALSE,fig.width=4,fig.height=4.5)
-do.call(opts_chunk$set,opts)
+defaults <- list(tidy=FALSE, message=FALSE, warning=FALSE, 
+	     fig.width=4, fig.height=4.5, results='hide')
+do.call(knitr::opts_chunk$set, defaults)
+
+# set code highlighting theme
+knitr::knit_theme$set("bclear") # good options: acid, bclear, earendel, bright
 
 # source external R code
-read_chunk('supplement.R')
+knitr::read_chunk('supplement.R')
 
 @
 
@@ -452,27 +456,38 @@ network sparse and facilitates the identification of network structure.\\
 To reveal the structure of our spatial proteomics network we used the recently
 published Leiden algorithm \citep{Traag2019}.
 
-\section{Code}
+\newpage
+
+
+\section{Source Code}
 
 % R code
+% NOTE: chunk options inherited from global options above.
+% I've set results='hide' as the default. So, you must explicitly set
+% results to 'markup' for results you want to show.
 
-<<fit0,results='hide'>>=
+<<fit0>>=
 @
 
-<<contrast7,results='hide'>>=
+<<tab0, echo=FALSE, results="markup">>=
 @
 
-<<contrast8,results='hide'>>=
+<<contrast7, echo = FALSE>>=
 @
 
-<<fit1,results='hide'>>=
+<<contrast8, echo = FALSE>>=
 @
 
-<<nakagawa,results='hide'>>=
+<<fit1, echo = FALSE>>=
 @
 
-<<variancePartition,include=F,results='hide'>>=
+<<nakagawa, echo = FALSE>>=
 @
+
+<<variancePartition, echo=FALSE>>=
+@
+
+\newpage
 
 
 %\section{References}

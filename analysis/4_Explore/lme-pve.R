@@ -102,3 +102,27 @@ qqline(resid(fit1))
 qqnorm(resid(fit2))
 qqline(resid(fit2))
 
+###################################################################################
+
+# try glmer
+
+library(lattice)
+
+xyplot(incidence/size ~ period|herd, cbpp, type=c('g','p','l'),layout=c(3,5), index.cond = function(x,y)max(y))
+
+library(lme4)
+
+gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd), data = cbpp, family = binomial())
+
+
+data(msstats_prot)
+data(washc_prots)
+fx <- "scale_Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
+subdat <- msstats_prot %>% group_by(Protein) %>% mutate(scale_Abundance = Abundance/max(Abundance)) %>% ungroup() %>% subset(Protein %in% washc_prots)
+gm1 <- glmer(fx, data = subdat, family = poisson())
+
+fx <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
+subdat <- msstats_prot %>% group_by(Protein) %>% mutate(scale_Abundance = Abundance/max(Abundance)) %>% ungroup() %>% subset(Protein %in% washc_prots)
+gm1 <- glmer(fx, data = subdat, family = poisson())
+
+

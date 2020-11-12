@@ -77,6 +77,8 @@ moduleQ2 <- function(module,partition,msstats_prot) {
 	}
 
 	# compute some model statistics
+	# from insight::.get_variance_information, insight::.compute_variance_fixed
+	# https://github.com/easystats/insight/blob/master/R/compute_variances.R
 	rho <- list(
 		    beta = lme4::fixef(fm1),
 		    X = lme4::getME(fm1, "X"),
