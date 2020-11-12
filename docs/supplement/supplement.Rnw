@@ -461,10 +461,9 @@ published Leiden algorithm \citep{Traag2019}.
 
 \section{Source Code}
 
-% R code
-% NOTE: chunk options inherited from global options above.
-% I've set results='hide' as the default. So, you must explicitly set
-% results to 'markup' for results you want to show.
+% NOTE: knitr chunk options are inherited from the global options set above.
+% I've set results='hide' as the default. So you must explicitly set
+% results to 'markup' for results that you want to show.
 
 <<fit0>>=
 @

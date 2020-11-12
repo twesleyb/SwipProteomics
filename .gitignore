@@ -3,6 +3,7 @@ local/
 renv/
 rdata/
 ARCHIVE/
+cache/
 
 ## project specific files to ignore
 *.email
