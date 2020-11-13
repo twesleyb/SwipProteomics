@@ -2,9 +2,9 @@
 
 # work though lmerTestContrast for protein- and module- level comparisions
 
-# fit two types of models:
-# (1) protein-level model (fx1 -> fm1)
-# (2) module-level model (fx2 -> fm2)
+# * fit two types of models:
+#     (1) protein-level model (fx1 -> fm1)
+#     (2) module-level model (fx2 -> fm2)
 
 # * analyze the variance partition of each model 
 
@@ -67,10 +67,13 @@ results <- lmerTestContrast(fm1, L8)
 
 # examine results
 results %>% select(-isSingular) %>% 
-	mutate(Contrast="Mutant-Control") %>% knitr::kable()
+	mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
 
 
 ## 3. fit module-level model to the WASH complex -------------------------------
+
+data(gene_map)
+
 ## the module-level model to be fit:
 washc_prots <- mapID("Washc*")
 
@@ -82,7 +85,7 @@ fx2 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
 fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
 
 # examine the model
-summary(fm2,ddf="Satterthwaite")
+summary(fm2, ddf="Satterthwaite")
 
 ## assess the overall comparison between Mutant and Control
 L8 <- getContrast(fm2,"Mutant","Control")
@@ -107,12 +110,12 @@ results <- lmerTestContrast(alt_fm2, L8)
 results %>% select(-isSingular) %>% mutate(Contrast="Mutant-Control") %>% 
 	unique() %>% knitr::kable()
 
-getVariance(alt_fm2) # sigma^2
-
-# NOTE: fixed effects account for most of the varaition
 
 
 ## 5. variancePartition -------------------------------------------------------
+
+# NOTE: fixed effects account for most of the variation
+getVariance(alt_fm2) # sigma^2
 
 # library(variancePartition)
 
@@ -156,13 +159,15 @@ qqline(resid(alt_fm2))
 
 # module  that contains the wash complex protein, SWIP
 
-data(partition)
+data(partition) 
 
-knitr::kable(head(table(partition)))
+# vector of module membership for all proteins
+head(partition)
 
 # all modules
 modules <- split(partition,partition)
 
+# proteins in same module as WASHC4 (swip)
 prots <- names(which(partition==partition[swip]))
 
 length(prots)
@@ -170,32 +175,15 @@ length(prots)
 
 ## Mutant-Control comparision
 
-## two models with the same result
-#fit <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% prots))
-#
-#L8 <- getContrast(fit,"Mutant","Control")
-#
-## examine the results
-#lmerTestContrast(fit, L8) %>% select(-isSingular) %>% 
-#	mutate(Contrast = 'Mutant-Control') %>% 
-#	unique() %>% knitr::kable()
-
 # alternative model, same result
-alt_fx2 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
-fit <- lmerTest::lmer(alt_fx2, msstats_prot %>% filter(Protein %in% prots))
+fx2 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
+
+fit <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% prots))
 
 L8 <- getContrast(fit,"Mutant","Control")
 
 lmerTestContrast(fit,L8) %>% select(-isSingular) %>% 
 	mutate(Contrast='Mutant-Control') %>% knitr::kable()
-
-
-## real world modules are over-dispersed
-
-## fat tails
-
-qqnorm(resid(fit))
-qqline(resid(fit))
 
 
 ## proteasome example module ---------------------------------------------------
@@ -217,6 +205,8 @@ data(corum)
 idx <- which(names(corum) == "26S proteasome")
 proteasome <- mapID(corum[[idx]],"entrez","uniprot")
 
+head(proteasome)
+
 knitr::kable(cbind(module="proteasome",
 		   nProts=sum(proteasome %in% names(partition))))
 
@@ -227,6 +217,8 @@ fit <- lmerTest::lmer(alt_fx2, msstats_prot %>% subset(Protein %in% proteasome))
 
 # compute sigma
 var1 <- getVariance(fit)
+
+var1
 
 R2 <- var1["Fixed"]/sum(var1) # nakagawa!
 
@@ -249,6 +241,8 @@ knitr::kable(t(var1)) # variance of mixed and fixed effects
 # accounts for a large proportion of variation within the module.
 
 
+## variancePartition ----------------------------------------------------------
+
 # NOTE: We need to know the PVE for each term!
 
 #library(variancePartition)
@@ -266,5 +260,6 @@ knitr::kable(t(x/sum(x))) # as a percentage of the total
 # variance. Variation from BioFraction dominates.
 
 ## goodness of fit to proteasome ----------------------------------------------
+
 qqnorm(resid(fit))
 qqline(resid(fit))
