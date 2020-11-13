@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{9}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\urlprefix}{}
 \providecommand{\doiprefix}{doi: }
@@ -52,6 +52,16 @@
 \newblock Nucleic Acids Research.  2012 jan; 40(10):4288--4297.
 \newblock \urlprefix\url{https://doi.org/10.1093%2Fnar%2Fgks042},
   \href{10.1093/nar/gks042}{\doiprefix \detokenize{10.1093/nar/gks042}}.
+
+\bibitem[{Nakagawa and Schielzeth(2012)Shinichi Nakagawa and Holger
+  Schielzeth}]{Nakagawa2012}
+\textbf{\color{eLifeMediumGrey} Nakagawa S}, Schielzeth H.
+\newblock A general and simple method for {obtainingR}2from generalized linear
+  mixed-effects models.
+\newblock Methods in Ecology and Evolution.  2012 dec; 4(2):133--142.
+\newblock \urlprefix\url{https://doi.org/10.1111%2Fj.2041-210x.2012.00261.x},
+  \href{10.1111/j.2041-210x.2012.00261.x}{\doiprefix
+  \detokenize{10.1111/j.2041-210x.2012.00261.x}}.
 
 \bibitem[{Plubell et~al.(2017)Deanna L. Plubell and Phillip A. Wilmarth and
   Yuqi Zhao and Alexandra M. Fenton and Jessica Minnier and Ashok P. Reddy and

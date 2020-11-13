@@ -47,6 +47,8 @@ summary(fm0, ddf = "Satterthwaite")
 library(grid)
 library(gtable)
 library(gridExtra)
+library(ggplot2)
+library(cowplot)
 
 df <- summary(fm0, ddf="Satterthwaite")[["coefficients"]] %>%
 	as.data.table(keep.rownames="Coefficient")
@@ -72,9 +74,7 @@ for (i in c(1:nrow(tab))) {
 	g <- gtable_add_grob(g, grobs = rectGrob(gp = gpar(fill = NA, lwd = 1)), 
 		     t = i, b = i, l = 1, r = ncol(tab))
 }
-
-plot(g)
-
+plot_grid(g)
 
 ## ---- alt0
 
