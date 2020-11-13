@@ -142,13 +142,10 @@ r.squaredGLMM.merMod(fm1)
 
 ## ---- variancePartition
 
-# load variancePartition
-suppressPackageStartupMessages({
-	library(variancePartition)
-})
+library(variancePartition)
 
 # calculate partitioned variance
-form <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
-fit <- lmer(form, data = msstats_prot %>% filter(Protein %in% washc_prots))
+vp_fx <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
+fit <- lmer(vp_fx, data = msstats_prot %>% filter(Protein %in% washc_prots))
 
-calcVarPart(fit)
+calcVarPart(fit) %>% knitr::kable()

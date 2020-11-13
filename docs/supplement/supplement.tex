@@ -393,23 +393,24 @@ cite(variancePartition).
 
 \section{Spatial Proteomics Network Construction}
 
-Using our SWIP-TMT dataset, we aim to identify modules or groups of
-proteins that covary together across subcellular space. Prior to building the
-co-variation network, other sources of variation should be removed. Although
-\texttt{MSstatsTMT} handles the batch effect inherent in experiments with
-multiple TMT mixtures, it is necessary to remove this effect prior to building
-the network. We removed the effect of \texttt{Mixture} using
+Using our SWIP-TMT dataset, we aim to identify modules or groups of proteins
+that covary together across subcellular space. Prior to building the
+co-variation network, other sources of variation should be removed.
+\texttt{MSstatsTMT} handles the effect of \texttt{Mixture} when performing
+statistical testing,  but prior to plotting and downstream analysis the batch
+effect inherent in experiments with multiple TMT \texttt{Mixtures} should be
+removed.  We removed the effect of \texttt{Mixture} using
 \texttt{limma::RemoveBatchEffect}. These adjusted data are used for network
 construction and plotting, but not statistical modeling.
 
-Prior to network construction, we removed protein models with poor fit 
-($R^2_{total}<0.7$; n=791 proteins). Removing this noisey proteins facilitation
-module identification and improves overall module quality.
+Prior to network construction, we removed proteins for which modelling indicated
+a poor fit. We removed proteins whose LMM explained less than 0.7\% of the total
+variation ($R^2_{total}<0.7$; n=791 proteins). Removing these poorly fit proteins facilitation
+module identification and improves the overall quality of the network.
 
-The final network was constructed using data from both Control and Mutant 
-samples after adjusting for batch (Mixture). The final dataset included 
-42 samples and 6,119 proteins. The protein covariation network was build by
-calculating the Pearson correlation for all pairwise comparisons of proteins.
+The final dataset included 42 samples and 6,119 proteins. The protein
+covariation network was build by calculating the Pearson correlation for all
+pairwise comparisons of proteins.
 
 We performed network enhancement to remove biological noise from the network
 prior to clustering. This step is essential in large, and dense networks for
@@ -426,10 +427,15 @@ network sparse and facilitates the identification of network structure.\\
 \section{Community Detection with Leidenalg}
 
 To reveal the structure of our spatial proteomics network we used the recently
-published Leiden algorithm \citep{Traag2019}.
+published Leiden algorithm \citep{Traag2019} and the 'Suprise' quality metric.
+To facilitate identification of cohesive protein-covaration modules, we
+recursively split modules that contained more than 100 nodes. The final network
+included ~2xx modules.
 
 %------------------------------------------------------------------------------
 \section{Implementation}
+
+% Source Code
 
 In order to understand and extend the function of \texttt{MSstatsTMT}, we
 extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing
@@ -631,18 +637,32 @@ We compute the variance explained using \texttt{variancePartition}.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# load variancePartition}
-\hlkwd{suppressPackageStartupMessages}\hlstd{(\{}
-        \hlkwd{library}\hlstd{(variancePartition)}
-\hlstd{\})}
+\hlkwd{library}\hlstd{(variancePartition)}
 
 \hlcom{# calculate partitioned variance}
-\hlstd{form} \hlkwb{<-} \hlstr{"Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"}
-\hlstd{fit} \hlkwb{<-} \hlkwd{lmer}\hlstd{(form,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
+\hlstd{vp_fx} \hlkwb{<-} \hlstr{"Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"}
+\hlstd{fit} \hlkwb{<-} \hlkwd{lmer}\hlstd{(vp_fx,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
 
-\hlkwd{calcVarPart}\hlstd{(fit)}
+\hlkwd{calcVarPart}\hlstd{(fit)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
 \end{alltt}
 \end{kframe}
+\begin{tabular}{l|r}
+\hline
+  & x\\
+\hline
+BioFraction & 0.0329606\\
+\hline
+Genotype & 0.8220692\\
+\hline
+Mixture & 0.0028436\\
+\hline
+Protein & 0.0741468\\
+\hline
+Residuals & 0.0679798\\
+\hline
+\end{tabular}
+
+
 \end{knitrout}
 
 %------------------------------------------------------------------------------
