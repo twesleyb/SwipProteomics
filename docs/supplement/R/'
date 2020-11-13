@@ -12,10 +12,10 @@ root <- "~/projects/SwipProteomics"
 renv::load(root)
 
 
-library(lme4) # Bates et al., 2020
+library(lme4)
 
 
-library(lmerTest) # Kuznetsova et al. 2017
+library(lmerTest)
 
 
 suppressPackageStartupMessages({
@@ -28,11 +28,8 @@ suppressPackageStartupMessages({
 devtools::load_all(root)
 
 data(swip) 
+data(gene_map)
 data(msstats_prot)
-
-# examine key elements of msstats_prot
-msstats_prot %>% select(Abundance, Protein, Condition) %>% head() %>% 
-	knitr::kable()
 
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
@@ -100,7 +97,7 @@ results %>% select(-isSingular) %>%
 alt_fx2 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
 alt_fm2 <- lmer(alt_fx2, msstats_prot %>% filter(Protein %in% washc_prots))
 
-L8 <- getContrast(alt_fm2, "Mutant","Control")
+L8 <- getContrast(alt_fm1, "Mutant","Control")
 
 results <- lmerTestContrast(alt_fm2, L8)  
 
@@ -109,94 +106,84 @@ results %>% select(-isSingular) %>% mutate(Contrast="Mutant-Control") %>%
 
 getVariance(alt_fm2) # sigma^2
 
-# NOTE: fixed effects account for most of the varaition
 
+# NOTE: fixed effects account for most of the varaition
 
 ## 5. variancePartition -------------------------------------------------------
 
-# library(variancePartition)
+library(variancePartition)
 
 # variance partitioned
 vp_fx <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
 vp_fm <- lmerTest::lmer(vp_fx, msstats_prot %>% filter(Protein %in% washc_prots))
-
-vp <- variancePartition::calcVarPart(vp_fm)
-
+vp <- calcVarPart(vp_fm)
 knitr::kable(t(vp))
 sum(vp) == 1
 
 ## these results are the same!
 
 # calculate partitioned variance
-var_df <- VarCorr(vp_fm, comp="Variance") %>% as.data.table()
-mixef_var <- setNames(var_df$vcov, nm=var_df$grp) # variance of each component
-
+var_df <- as.data.frame(lme4::VarCorr(vp_fm,comp="Variance"))
+mixef_var <- setNames(var_df$vcov,nm=var_df$grp) # variance of each component
 round(mixef_var/sum(mixef_var),4) %>% t() %>% knitr::kable()
 
 
 ## qqplot protein-model fm1 ---------------------------------------------------
 
-# fit to WASHC4
 qqnorm(resid(fm1))
 qqline(resid(fm1))
 
 
 ## qqplot module-model fm2 ---------------------------------------------------
 
-# fit to WASH Complex
 qqnorm(resid(fm2))
 qqline(resid(fm2))
 
-# fit to WASH Complex
 qqnorm(resid(alt_fm2))
 qqline(resid(alt_fm2))
 
 
-## 6. real world module -------------------------------------------------------
-
-# module  that contains the wash complex protein, SWIP
+## real world module
 
 data(partition)
 
-knitr::kable(head(table(partition)))
-
 # all modules
-modules <- split(partition,partition)
+modules <- split(names(partition),partition)[-1]
+names(modules) <- paste0("M",names(modules))
 
-prots <- names(which(partition==partition[swip]))
+# wash module and its proteins
+wash_module <- paste0("M",partition[swip])
+prots <- modules[[wash_module]]
 
-length(prots)
+knitr::kable(cbind(wash_module,nProts=length(prots)))
+
 
 
 ## Mutant-Control comparision
 
-## two models with the same result
-#fit <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% prots))
-#
-#L8 <- getContrast(fit,"Mutant","Control")
-#
-## examine the results
-#lmerTestContrast(fit, L8) %>% select(-isSingular) %>% 
-#	mutate(Contrast = 'Mutant-Control') %>% 
-#	unique() %>% knitr::kable()
-
-# alternative model, same result
-alt_fx2 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
-fit <- lmerTest::lmer(alt_fx2, msstats_prot %>% filter(Protein %in% prots))
-
-L8 <- getContrast(fit,"Mutant","Control")
-
-lmerTestContrast(fit,L8) %>% select(-isSingular) %>% 
-	mutate(Contrast='Mutant-Control') %>% knitr::kable()
+# two models with the same result
+form2 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
+fit2 <- lmerTest::lmer(form2, msstats_prot %>% filter(Protein %in% prots))
+L2 <- getContrast(fit2,"Mutant","Control")
+lmerTestContrast(fit2, L2) %>% mutate(Contrast = 'Mutant-Control') %>% 
+	unique() %>% knitr::kable()
 
 
-## real world modules are over-dispersed
+form1 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
+fit1 <- lmerTest::lmer(form1, msstats_prot %>% filter(Protein %in% prots))
+L1 <- getContrast(fit1,"Mutant","Control")
+lmerTestContrast(fit1,L1)  %>% knitr::kable()
 
 ## fat tails
 
-qqnorm(resid(fit))
-qqline(resid(fit))
+qqnorm(resid(fit0))
+qqline(resid(fit0))
 
+qqnorm(resid(fit1))
+qqline(resid(fit1))
+
+qqnorm(resid(fit2))
+qqline(resid(fit2))
 
 ## proteasome example module ---------------------------------------------------
 
@@ -217,16 +204,15 @@ data(corum)
 idx <- which(names(corum) == "26S proteasome")
 proteasome <- mapID(corum[[idx]],"entrez","uniprot")
 
-knitr::kable(cbind(module="proteasome",
-		   nProts=sum(proteasome %in% names(partition))))
+knitr::kable(cbind(module="proteasome",nProts=sum(proteasome %in% names(partition))))
 
 # fit the alternative module-level model
-fit <- lmerTest::lmer(alt_fx2, msstats_prot %>% subset(Protein %in% proteasome)) 
+fit <- lmerTest::lmer(alt_fx1, msstats_prot %>% subset(Protein %in% proteasome)) 
 
 (fit)
 
 # compute sigma
-var1 <- getVariance(fit)
+var1 <- getVariance(fm)
 
 R2 <- var1["Fixed"]/sum(var1) # nakagawa!
 
@@ -237,19 +223,17 @@ R2 # the total variance explained by fixed effects
 
 L8 <- getContrast(fit,"Mutant","Control")
 
-lmerTestContrast(fit, L8) %>% select(-isSingular) %>% 
-	mutate(Contrast='Mutant-Control') %>% knitr::kable()
+lmerTestContrast(fit, L8) %>% knitr::kable()
 
 # no change
 
 knitr::kable(t(var1)) # variance of mixed and fixed effects
 
-# highly cohesive, variance explained by Protein is small.
+# highly cohesive, variance explained by Protein is 6.89%.
 # variance of Fixed effects, Condition (Genotype:BioFraction)
-# accounts for a large proportion of variation within the module.
+# accounts for 0.75% of variation within the module?
 
-
-# NOTE: We need to know the PVE for each term!
+# We need to know the PVE for each term!
 
 #library(variancePartition)
 vp_fx <- "Abundance ~  (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
@@ -265,6 +249,37 @@ knitr::kable(t(x/sum(x))) # as a percentage of the total
 # This module is highly cohesive. Protein variation only explains ~7% of
 # variance. Variation from BioFraction dominates.
 
-## goodness of fit to proteasome ----------------------------------------------
-qqnorm(resid(fit))
-qqline(resid(fit))
+
+## goodness of fit
+qqnorm(resid(vp_fm))
+qqline(resid(vp_fm))
+
+# this is common... fat tails
+
+
+## fit to wash complex --------------------------------------------------------
+
+
+data(washc_prots)
+
+fx <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
+fm <- lmerTest::lmer(fx, data = msstats_prot %>% subset(Protein %in% washc_prots))
+vp0 <- calcVarPart(fm)
+	
+partition <- setNames(c(1,1,1,2,2),nm=washc_prots)
+modules <- split(partition,partition)
+
+fit_list <- list()
+for (i in seq(modules)){
+	fit_list[[i]] <- lmerTest::lmer(fx, data = msstats_prot %>% subset(Protein %in% names(modules[[i]])))
+}
+
+q0 <- as.numeric((vp0["Genotype"] + vp0["BioFraction"]) / vp0["Protein"])
+
+vp1 <- calcVarPart(fit_list[[1]])
+q1 <- as.numeric((vp1["Genotype"] + vp1["BioFraction"]) / vp1["Protein"])
+
+vp2 <- calcVarPart(fit_list[[2]])
+q2 <- as.numeric((vp2["Genotype"] + vp2["BioFraction"]) / vp2["Protein"])
+
+
