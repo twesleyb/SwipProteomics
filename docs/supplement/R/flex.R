@@ -3,7 +3,6 @@
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-#library(merDeriv)
 library(dplyr)
 #library(SwipProteomics)
 
@@ -22,6 +21,7 @@ washc_prots = mapID("Washc*")
 form0 <- "Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"
 fit0 <- lmerTest::lmer(form0, msstats_prot %>% filter(Protein %in% washc_prots))
 vp <- variancePartition::calcVarPart(fit0)
+knitr::kable(t(vp))
 sum(vp) == 1
 
 ## these results are the same!
@@ -29,7 +29,7 @@ sum(vp) == 1
 # calculate partitioned variance
 var_df <- as.data.frame(lme4::VarCorr(fit0,comp="Variance"))
 mixef_var <- setNames(var_df$vcov,nm=var_df$grp) # variance of each component
-round(mixef_var/sum(mixef_var),4)
+round(mixef_var/sum(mixef_var),4) %>% knitr::kable()
 
 
 ## Mutant-Control comparision

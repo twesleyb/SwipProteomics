@@ -412,41 +412,41 @@ which implements mixed-effects models with its function
 \texttt{lme4's} functionality and enables the computation of Sattertwaite
 degrees of freedom \citep{Kuznetsova2017}. 
 
-\subsection{Fit WASHC4}
+\paragraph{Fit WASHC4}
 
 As a means of example, we demonstrate the model fitting statistical testing
 steps for both and protein- and module-level statistical comparisons.
 First, we fit the LMM in (\ref{eq:fx0}) the normalized protein level data from
 \texttt{MSstatsTMT} for WASHC4.
-<<fit0>>=
+<<fit0, results='markup'>>=
 @
 
-\subsection{'MutantF7-ControlF7'}
+\paragraph{'MutantF7-ControlF7'}
 
 We assess the contrast between \texttt{BioFraction} seven (F7) mutant and
 control conditions.
-<<contrast7, echo = TRUE>>=
+<<contrast7, results='markup'>>=
 @
 
-\subsection{'Mutant-Control'}
+\paragraph{'Mutant-Control'}
 
 Provided the correct contrast, we easily evaluate the overall difference
 between mutant and control mice.
-<<contrast8, echo = TRUE>>=
+<<contrast8, results='markup'>>=
 @
 
-\subsection{Fit WASH Complex}
+\paragraph{Fit WASH Complex}
 Next we fit a LMM to the five WASH complex proteins.
-<<fit1, echo = TRUE>>=
+<<fit1, results='markup'>>=
 @
 
 We evaluate the goodness of fit of our module-level model.
-<<nakagawa, echo = TRUE>>=
+<<nakagawa, results='markup'>>=
 @
 
-\subsection{varianceParition}
+\paragraph{varianceParition}
 We compute the variance explained using \texttt{variancePartition}.
-<<variancePartition, echo=TRUE>>=
+<<variancePartition>>=
 @
 
 %------------------------------------------------------------------------------
@@ -487,46 +487,3 @@ We compute the variance explained using \texttt{variancePartition}.
 
 
 \end{document}
-
-
-%% scraps
-%The total variation explained, $R^2_{c}$, for the LMM fit to WASHC4 is 
-%\texttt{0.949}. The variance explained by fixed-effects, represents a large
-%fraction of this total ($R^2{m}$=0.935). It follows that 1.5\% of the remaing
-%variance is attributable to residuals and the mixed-effect \texttt{Mixture}.\\
-
-%We can see that the majority of the variance explained by the LMM fit to the
-%WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
-%\texttt{Protein} and \texttt{Mixture} account for a small fraction of the 
-%overall variance explained by the model.
-%
-%As our overall goal is to identify groups or modules of proteins that strongly
-%covary together, our clustering approach should maximize the variance explained
-%by a module's fixed-effect parameters (Genotype + BioFraction) while minimizing 
-%the variance among its individual proteins. 
-%An ideal module is a perfect summary of its protein constituents, 
-%$PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
-%clustering approach.
-%\begin{equation}
-%	Q_{M}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
-%\end{equation}
-
-%The model's estimates ($\beta$) represent our best estimate of the mean protein
-%To illustrate an \texttt{intra-BioFraction} comparison, we 
-%define a contrast comparing the \texttt{Mutant:F7} and \texttt{Control:F7}
-%conditions. The function \texttt{lmerTestContrast} performs the statstical comparison given
-%a fitted model and a contrast vector defining a comparison between the models
-%coefficients. While the work done by this function 
-%is the same as the work done internally by \texttt{MSstatsTMT's}
-%\texttt{groupComparisonsTMT} function, \texttt{lmerTestContrast} is more
-%flexible. Provided the correct contrast, we also easily assess the overall
-%\texttt{Mutant-Control} comparison.
-
-%Again, we consider the total variance explained as a measure of the model's
-%overall quality. Our model explains 89.2\% of the total variance among these
-%five proteins. The fixed-effect term \texttt{Genotype:BioFraction} explains the
-%majority of variance ($R^2_m=0.762$). The remaining 13.0\% variance is
-%attributable to a combination of mixed-effects \texttt{Mixture} and
-%\texttt{Protein} as well as the residual variance. We assess the overall
-%\texttt{Mutant-Control} difference between responses of Mutant and Control
-%groups as before. 

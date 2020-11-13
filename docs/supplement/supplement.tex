@@ -439,7 +439,7 @@ which implements mixed-effects models with its function
 \texttt{lme4's} functionality and enables the computation of Sattertwaite
 degrees of freedom \citep{Kuznetsova2017}. 
 
-\subsection{Fit WASHC4}
+\paragraph{Fit WASHC4}
 
 As a means of example, we demonstrate the model fitting statistical testing
 steps for both and protein- and module-level statistical comparisons.
@@ -467,10 +467,47 @@ First, we fit the LMM in (\ref{eq:fx0}) the normalized protein level data from
 \hlcom{# examine the model's summary}
 \hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
 \end{alltt}
+\begin{verbatim}
+## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+## lmerModLmerTest]
+## Formula: fx0
+##    Data: msstats_prot %>% subset(Protein == swip)
+## 
+## REML criterion at convergence: 3.7
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -1.5030 -0.6089 -0.1463  0.7474  1.4302 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  Mixture  (Intercept) 0.009596 0.09796 
+##  Residual             0.034418 0.18552 
+## Number of obs: 42, groups:  Mixture, 3
+## 
+## Fixed effects:
+##                                Estimate Std. Error      df t value Pr(>|t|)    
+## GenotypeMutant:BioFractionF4     5.4043     0.1211 17.3059   44.62   <2e-16 ***
+## GenotypeControl:BioFractionF4    6.7110     0.1211 17.3059   55.41   <2e-16 ***
+## GenotypeMutant:BioFractionF5     5.5674     0.1211 17.3059   45.96   <2e-16 ***
+## GenotypeControl:BioFractionF5    6.9456     0.1211 17.3059   57.34   <2e-16 ***
+## GenotypeMutant:BioFractionF6     5.6402     0.1211 17.3059   46.56   <2e-16 ***
+## GenotypeControl:BioFractionF6    7.2401     0.1211 17.3059   59.77   <2e-16 ***
+## GenotypeMutant:BioFractionF7     5.6317     0.1211 17.3059   46.49   <2e-16 ***
+## GenotypeControl:BioFractionF7    7.3211     0.1211 17.3059   60.44   <2e-16 ***
+## GenotypeMutant:BioFractionF8     5.4928     0.1211 17.3059   45.35   <2e-16 ***
+## GenotypeControl:BioFractionF8    7.1296     0.1211 17.3059   58.86   <2e-16 ***
+## GenotypeMutant:BioFractionF9     5.7810     0.1211 17.3059   47.73   <2e-16 ***
+## GenotypeControl:BioFractionF9    6.9545     0.1211 17.3059   57.41   <2e-16 ***
+## GenotypeMutant:BioFractionF10    5.7844     0.1211 17.3059   47.76   <2e-16 ***
+## GenotypeControl:BioFractionF10   7.6187     0.1211 17.3059   62.90   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-\subsection{'MutantF7-ControlF7'}
+\paragraph{'MutantF7-ControlF7'}
 
 We assess the contrast between \texttt{BioFraction} seven (F7) mutant and
 control conditions.
@@ -488,10 +525,16 @@ control conditions.
 \hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast7)}
 \end{alltt}
+\begin{verbatim}
+##                                                     Contrast    log2FC
+## 1 GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 -1.689393
+##   percentControl        SE Tstatistic      Pvalue DF isSingular
+## 1      0.3100573 0.1514779  -11.15274 2.08622e-11 26      FALSE
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-\subsection{'Mutant-Control'}
+\paragraph{'Mutant-Control'}
 
 Provided the correct contrast, we easily evaluate the overall difference
 between mutant and control mice.
@@ -504,10 +547,28 @@ between mutant and control mice.
 \hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast8)}
 \end{alltt}
+\begin{verbatim}
+##                                                       Contrast    log2FC
+## 1   GenotypeMutant:BioFractionF4-GenotypeControl:BioFractionF4 -1.516956
+## 2   GenotypeMutant:BioFractionF5-GenotypeControl:BioFractionF5 -1.516956
+## 3   GenotypeMutant:BioFractionF6-GenotypeControl:BioFractionF6 -1.516956
+## 4   GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 -1.516956
+## 5   GenotypeMutant:BioFractionF8-GenotypeControl:BioFractionF8 -1.516956
+## 6   GenotypeMutant:BioFractionF9-GenotypeControl:BioFractionF9 -1.516956
+## 7 GenotypeMutant:BioFractionF10-GenotypeControl:BioFractionF10 -1.516956
+##   percentControl         SE Tstatistic       Pvalue DF isSingular
+## 1      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 2      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 3      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 4      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 5      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 6      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+## 7      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-\subsection{Fit WASH Complex}
+\paragraph{Fit WASH Complex}
 Next we fit a LMM to the five WASH complex proteins.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -523,6 +584,24 @@ Next we fit a LMM to the five WASH complex proteins.
 \hlcom{# assess 'Mutant-Control' comparison}
 \hlkwd{lmerTestContrast}\hlstd{(fm1, contrast8)}
 \end{alltt}
+\begin{verbatim}
+##                                                       Contrast    log2FC
+## 1   GenotypeMutant:BioFractionF4-GenotypeControl:BioFractionF4 0.2305437
+## 2   GenotypeMutant:BioFractionF5-GenotypeControl:BioFractionF5 0.2305437
+## 3   GenotypeMutant:BioFractionF6-GenotypeControl:BioFractionF6 0.2305437
+## 4   GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 0.2305437
+## 5   GenotypeMutant:BioFractionF8-GenotypeControl:BioFractionF8 0.2305437
+## 6   GenotypeMutant:BioFractionF9-GenotypeControl:BioFractionF9 0.2305437
+## 7 GenotypeMutant:BioFractionF10-GenotypeControl:BioFractionF10 0.2305437
+##   percentControl         SE Tstatistic       Pvalue  DF isSingular
+## 1       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 2       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 3       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 4       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 5       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 6       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+## 7       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
@@ -532,13 +611,22 @@ We evaluate the goodness of fit of our module-level model.
 \begin{alltt}
 \hlcom{# assess gof with Nakagawa coefficient of determination}
 \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm0)}
-
+\end{alltt}
+\begin{verbatim}
+##            R2m      R2c
+## [1,] 0.9353344 0.949433
+\end{verbatim}
+\begin{alltt}
 \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm1)}
 \end{alltt}
+\begin{verbatim}
+##            R2m       R2c
+## [1,] 0.7620866 0.8928053
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-\subsection{varianceParition}
+\paragraph{varianceParition}
 We compute the variance explained using \texttt{variancePartition}.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -603,46 +691,3 @@ We compute the variance explained using \texttt{variancePartition}.
 
 
 \end{document}
-
-
-%% scraps
-%The total variation explained, $R^2_{c}$, for the LMM fit to WASHC4 is 
-%\texttt{0.949}. The variance explained by fixed-effects, represents a large
-%fraction of this total ($R^2{m}$=0.935). It follows that 1.5\% of the remaing
-%variance is attributable to residuals and the mixed-effect \texttt{Mixture}.\\
-
-%We can see that the majority of the variance explained by the LMM fit to the
-%WASH complex is attributable to \texttt{Genotype}. The mixed-effect terms
-%\texttt{Protein} and \texttt{Mixture} account for a small fraction of the 
-%overall variance explained by the model.
-%
-%As our overall goal is to identify groups or modules of proteins that strongly
-%covary together, our clustering approach should maximize the variance explained
-%by a module's fixed-effect parameters (Genotype + BioFraction) while minimizing 
-%the variance among its individual proteins. 
-%An ideal module is a perfect summary of its protein constituents, 
-%$PVE_{Protein}=0$. We use this idea of a module's quality to supervise our 
-%clustering approach.
-%\begin{equation}
-%	Q_{M}=\frac{PVE_{Genotype} + PVE_{BioFraction}}{PVE_{Protein}}
-%\end{equation}
-
-%The model's estimates ($\beta$) represent our best estimate of the mean protein
-%To illustrate an \texttt{intra-BioFraction} comparison, we 
-%define a contrast comparing the \texttt{Mutant:F7} and \texttt{Control:F7}
-%conditions. The function \texttt{lmerTestContrast} performs the statstical comparison given
-%a fitted model and a contrast vector defining a comparison between the models
-%coefficients. While the work done by this function 
-%is the same as the work done internally by \texttt{MSstatsTMT's}
-%\texttt{groupComparisonsTMT} function, \texttt{lmerTestContrast} is more
-%flexible. Provided the correct contrast, we also easily assess the overall
-%\texttt{Mutant-Control} comparison.
-
-%Again, we consider the total variance explained as a measure of the model's
-%overall quality. Our model explains 89.2\% of the total variance among these
-%five proteins. The fixed-effect term \texttt{Genotype:BioFraction} explains the
-%majority of variance ($R^2_m=0.762$). The remaining 13.0\% variance is
-%attributable to a combination of mixed-effects \texttt{Mixture} and
-%\texttt{Protein} as well as the residual variance. We assess the overall
-%\texttt{Mutant-Control} difference between responses of Mutant and Control
-%groups as before. 
