@@ -45,6 +45,7 @@ mapGeneIDs <- function(id_in,identifiers,new_ids) {
 ## prepare the data -----------------------------------------------------------
 
 # all modules
+names(partition) <- sample(names(partition))
 all_modules <- split(names(partition),partition)
 names(all_modules) <- paste0("M",names(all_modules))
 

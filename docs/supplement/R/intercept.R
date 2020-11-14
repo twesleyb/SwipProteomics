@@ -7,12 +7,8 @@
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-
 library(lme4) # Bates et al., 2020
-
-
 library(lmerTest) # Kuznetsova et al. 2017
-
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -29,10 +25,22 @@ data(msstats_prot)
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
 
+fx0 <- "Abundance ~ 0 + Condition + (1|Mixture)"
+fm0 <- lmerTest::lmer(fx0, msstats_prot %>% subset(Protein == swip))
+
+df <- summary(fm0, ddf="Satterthwaite")[["coefficients"]]
+df <- as.data.table(df,keep.rownames="Coefficient")
+colnames(df)[colnames(df) == "Pr(>|t|)"] <- "p value"
+df$"p value" <- formatC(df$"p value")
+df %>% knitr::kable()
+
+L8 <- getContrast(fm0,"Mutant","Control")
+lmerTestContrast(fm0,L8) %>% mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
+
 # fit protein-level model
 # NOTE: we specify the intercept = 1
-fx0 <- "Abundance ~ 1 + Condition + (1|Mixture)"
-fm <- lmerTest::lmer(fx0, msstats_prot %>% subset(Protein == swip))
+fx <- "Abundance ~ 1 + Condition + (1|Mixture)"
+fm <- lmerTest::lmer(fx, msstats_prot %>% subset(Protein == swip))
 
 # examine coefficients
 df <- summary(fm, ddf="Satterthwaite")[["coefficients"]]
@@ -42,6 +50,14 @@ df$"p value" <- formatC(df$"p value")
 df %>% knitr::kable()
 
 # I find it much harder to interpret this table...
+L8 <- fixef(fm)
+L8[] <- 0
+L8[which(grepl("Mutant",names(L8)))] <- +1/7
+L8[which(grepl("Control",names(L8)))] <- -1/7
+
+lmerTestContrast(fm,L8) %>% mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
+
+quit()
 
 # we must specify the contrast correctly.
 L10 <- fixef(fm)
