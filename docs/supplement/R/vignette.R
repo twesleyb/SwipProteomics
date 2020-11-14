@@ -30,17 +30,14 @@ devtools::load_all(root)
 data(swip) 
 data(msstats_prot)
 
-# examine key elements of msstats_prot
-msstats_prot %>% select(Abundance, Protein, Condition) %>% head() %>% 
-	knitr::kable()
-
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
 
 # fit protein-level model
-fx1 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)"
-fm1 <- lmerTest::lmer(fx1, msstats_prot %>% subset(Protein == swip))
+protein = sample(unique(msstats_prot$Protein),1)
 
+fx1 <- "Abundance ~ Condition + (1|Mixture)"
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% subset(Protein == swip))
 (fm1)
 
 # examine coefficients
@@ -50,19 +47,26 @@ colnames(df)[colnames(df) == "Pr(>|t|)"] <- "p value"
 df$"p value" <- formatC(df$"p value")
 df %>% knitr::kable()
 
-L7 <- getContrast(fm1,"GenotypeMutant:BioFractionF7",
-		  "GenotypeControl:BioFractionF7")
+L7 <- getContrast(fm1,"ConditionMutant.F7",
+		  "ConditionControl.F7")
 
 lmerTestContrast(fm1,L7) %>% mutate(Contrast="F7") %>% knitr::kable()
 
 
 ## 2. assess 'Mutant-Control' contrast -----------------------------------------
 
+x <- fixef(fm1)
 
-L8 <- getContrast(fm1,"Mutant","Control")
+lT <- setNames(rep(0,length(x)),names(x))
+lT[1] <- -1
 
+lT[grep("Mutant",names(lT))] <- +1/7
 
-results <- lmerTestContrast(fm1, L8) 
+#lT[grep("Control",names(lT))] <- -1/7
+sum(lT)
+
+lmerTestContrast(fm1, lT) 
+
 
 
 # examine results
@@ -80,7 +84,7 @@ washc_prots <- mapID("Washc*")
 ## Mutant-Control comparision
 
 # two models with the same result
-fx2 <- "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
+fx2 <- "Abundance ~ 0 + Genotype + BioFraction + Protein + (1|Mixture)"
 
 fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
 

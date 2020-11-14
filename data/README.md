@@ -6,11 +6,11 @@
 
 
 ## TMT Pre-processed data
-* gene_map.rda - gene uniprot, entrez, and symbol identifiers
-* msstats_contrasts.rda - a contrast matrix in the format MSstatsTMT expects
 * pd_psm.rda - raw PSM data reformatted for MSstatsTMT, input to `PDtoMSstatsTMTFormat`
 * pd_annotation.rda - annotations for PDtoMSstatsTMTFormat, input to `PDtoMSstatsTMTFormat`
 * msstats_prot.rda - normalized protein-level data
+* msstats_contrasts.rda - a contrast matrix in the format MSstatsTMT expects
+* gene_map.rda - gene uniprot, entrez, and symbol identifiers
 
 
 ## MSstatsTMT results

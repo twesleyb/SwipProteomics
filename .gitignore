@@ -4,6 +4,8 @@ renv/
 rdata/
 ARCHIVE/
 cache/
+*.notes
+*.note
 
 ## project specific files to ignore
 *.email
