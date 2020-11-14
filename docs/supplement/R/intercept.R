@@ -1,12 +1,8 @@
 #!/usr/bin/env Rscript
 
-# work though lmerTestContrast for protein- and module- level comparisions
-
-# * fit two types of models:
-#     (1) protein-level model (fx1 -> fm1)
-#     (2) module-level model (fx2 -> fm2)
-
-# * analyze the variance partition of each model 
+# author: twab
+# title: SwipProteomics
+# description: set the intercept to +1
 
 root <- "~/projects/SwipProteomics"
 renv::load(root)
@@ -34,22 +30,81 @@ data(msstats_prot)
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
 
 # fit protein-level model
-fx1 <- "Abundance ~ Condition + (1|Mixture)"
-fx2 <- "Abundance ~ 1 + Condition + (1|Mixture)"
-fx3 <- "Abundance ~ 1 + Genotype + BioFraction + (1|Mixture)"
-fx4 <- "Abundance ~ 1 + Genotype:BioFraction + (1|Mixture)" # rank deficient
-
-args <- list(fx2, msstats_prot %>% subset(Protein == swip))
-fm <- do.call(lmerTest::lmer,args)
-
-fm1 <- lmerTest::lmer(fx2, msstats_prot %>% subset(Protein == swip))
-
+# NOTE: we specify the intercept = 1
+fx0 <- "Abundance ~ 1 + Condition + (1|Mixture)"
+fm <- lmerTest::lmer(fx0, msstats_prot %>% subset(Protein == swip))
 
 # examine coefficients
-df <- summary(fm1,ddf="Satterthwaite")[["coefficients"]]
+df <- summary(fm, ddf="Satterthwaite")[["coefficients"]]
 df <- as.data.table(df,keep.rownames="Coefficient")
 colnames(df)[colnames(df) == "Pr(>|t|)"] <- "p value"
 df$"p value" <- formatC(df$"p value")
 df %>% knitr::kable()
 
-# hard to interpret...
+# I find it much harder to interpret this table...
+
+# we must specify the contrast correctly.
+L10 <- fixef(fm)
+L10[] <- 0
+
+# The tricky one is the contrast for ConditionMutant.F10 versus
+# ConditionControl.F10. --> the intercept represents ConditionControl.F10?
+
+L10["ConditionMutant.F10"] <- 1
+L10["ConditionControl.F10"] # doesnt exist
+L10
+
+lmerTestContrast(fm,lT) %>% knitr::kable() # this is correct
+
+# try one more
+L4 <- L10
+L4[] <- 0
+L4["ConditionMutant.F4"] <- 1
+L4["ConditionControl.F4"] <- -1 
+
+lmerTestContrast(fm,L4) %>% knitr::kable() # this is correct
+
+
+## fit to wash module ---------------------------------------------------------
+
+data(partition)
+data(washc_prots)
+
+
+# NOTE: we specify the intercept = 1
+fx1 <- "Abundance ~ 1 + Condition + Protein + (1|Mixture)"
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% subset(Protein %in% washc_prots))
+
+qqnorm(residuals(fm1))
+qqline(residuals(fm1))
+
+
+# specify the overall contrast.
+LT <- fixef(fm1)
+LT[] <- 0
+LT[grepl("Control",names(LT))] <- -1/7
+LT[grepl("Mutant",names(LT))] <- +1/7
+
+lmerTestContrast(fm1,LT) %>% knitr::kable()
+
+
+## expand scope
+
+modules <- split(names(partition),partition)
+names(modules) <- paste0("M",names(modules))
+
+#partition[swip] # "M17"
+m = "M17"
+prots <- modules[[m]]
+fit <- lmerTest::lmer(fx1, msstats_prot %>% subset(Protein %in% prots))
+
+# specify the overall contrast.
+LT <- fixef(fit)
+LT[] <- 0
+LT[grepl("Control",names(LT))] <- -1/7
+LT[grepl("Mutant",names(LT))] <- +1/7
+
+lmerTestContrast(fit,LT) %>% knitr::kable()
+
+qqnorm(residuals(fit))
+qqline(residuals(fit))

@@ -35,10 +35,10 @@ mapGeneIDs <- function(id_in,identifiers,new_ids) {
   # prots, uniprot, symbols
   if (length(id_in)==1) { type = "one" }
   if (length(id_in)>1) { type = "many" }
-idx <- switch(type,
-	      one = grepl(id_in, gene_map[[identifiers]]),
-	      many = match(id_in,gene_map[[identifiers]]))
-return(gene_map[[new_ids]][idx])
+  idx <- switch(type,
+	        one = grepl(id_in, gene_map[[identifiers]]),
+	        many = match(id_in,gene_map[[identifiers]]))
+  return(gene_map[[new_ids]][idx])
 } #EOF
 
 
@@ -70,50 +70,29 @@ pClustered <- round(sum(partition!=0)/length(partition),3)
 medSize <- median(sapply(modules,length))
 knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 
-## fit WASHC4 protein as an example ----------------------------------------------
-
-data(swip)
-
-# the formula to be fit:
-fx0 <- formula(paste(c(
-  "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture)"
-), collapse = " "))
-
-message("\nlmer fit to WASHC4:\n",
-	">>>\t",as.character(fx0)[2], " ~ ", as.character(fx0)[3])
-
-
-## fit the model:
-fm0 <- lmerTest::lmer(fx0, msstats_filt %>% filter(Protein == swip))
-
-l0 <- getContrast(fm0,".*Mutant.*F4",".*Control.*F4")
-lmerTestContrast(fm0,l0) %>% knitr::kable()
-
-
 ## fit WASH complex as an example ----------------------------------------------
 
-# wash complex prots
-washc_prots <- mapGeneIDs("Washc*","symbol","uniprot")
-
-# wash complex genes
-washc_genes <- sort(mapGeneIDs(washc_prots,"uniprot","symbol"))
+data(swip)
+data(washc_prots)
 
 # the formula to be fit:
-fx1 <- formula(paste(c(
-  "Abundance ~ 0 + Genotype:BioFraction + (1|Mixture) + (1|Protein)"
-), collapse = " "))
-
-message("\nlmer fit to WASH complex (", paste(washc_genes,collapse=", "),") proteins:\n",
-	">>>\t",as.character(fx1)[2], " ~ ", as.character(fx1)[3])
-
-
+fx1 <- "Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)"
 ## fit the model:
-fm1 <- lmerTest::lmer(fx1, 
-		      data = msstats_filt %>% filter(Protein %in% washc_prots))
+fit <- lmerTest::lmer(fx1, msstats_filt %>% filter(Protein %in% washc_prots))
+
+lT <- getContrast(fit,".*Mutant.*F4",".*Control.*F4")
+
+lT <- lme4::fixef(fit)
+lT[] <- 0 
+lT[grepl("Control",names(lT))] <- -1/7
+lT[grepl("Mutant",names(lT))] <- +1/7
+
+lmerTestContrast(fit,lT) %>% knitr::kable()
+
 
 ## examine the model
 p = "Pr(>|t|)"
-dm <- summary(fm1, ddf = "Satterthwaite")[["coefficients"]]
+dm <- summary(fit, ddf = "Satterthwaite")[["coefficients"]]
 df <- t(apply(dm,1,round,3)) %>% as.data.table(keep.rownames="Term")
 df <- df %>% mutate(Term=gsub("Genotype","",Term))
 idx <- order(sapply(strsplit(df$Term,"\\:"),"[",1))
@@ -129,27 +108,24 @@ df %>% knitr::kable(format="markdown")
 ## goodness of fit
 message("R2m: Marginal; variation explained by fixed effects.")
 message("R2c: Conditional; total variation explained by the model.")
-r.squaredGLMM.merMod(fm1) %>% knitr::kable(format="markdown")
+r.squaredGLMM.merMod(fit) %>% knitr::kable(format="markdown")
 
 
 ## build a contrast for assessing 'Mutant-Control' comparison
-contrast <- lme4::fixef(fm1)
-contrast[] <- 0
-idx <- which(grepl("Control", names(contrast)))
-contrast[idx] <- -1 / length(idx)
-idy <- which(grepl("Mutant", names(contrast)))
-contrast[idy] <- +1 / length(idy)
+#contrast <- lme4::fixef(fm1)
+#contrast[] <- 0
+#idx <- which(grepl("Control", names(contrast)))
+#contrast[idx] <- -1 / length(idx)
+#idy <- which(grepl("Mutant", names(contrast)))
+#contrast[idy] <- +1 / length(idy)
 
 
 # asses contrast:
-results <- lmerTestContrast(fm1, contrast,variance=TRUE) %>%
+lmerTestContrast(fit, lT) %>%
   mutate(Contrast = "Mutant-Control") %>%
   mutate(isSingular = NULL) %>%
   mutate("nProteins" = length(washc_prots)) %>%
-  unique()
-
-# variance attributable to mixef
-attr(results,"variance") %>% t() %>% knitr::kable()
+  unique() %>% knitr::kable()
 
 
 ## module level analysis for all modules --------------------------------------
@@ -162,9 +138,6 @@ message("\nAssessing module-level contrasts with lmerTest.")
 
 t0 <- Sys.time()
 
-# the reduced model, to be fit if singular
-fx0 <- Abundance ~ 0 + Genotype:BioFraction + (1 | Protein)
-
 # loop through all modules
 results_list <- foreach(module = names(modules)) %dopar% {
   # fit full model
@@ -172,20 +145,21 @@ results_list <- foreach(module = names(modules)) %dopar% {
   suppressMessages({ # about boundary fits
     fm <- try(do.call(lmerTest::lmer, input), silent = TRUE)
   })
-  # if singular, fit reduced model
-  if (lme4::isSingular(fm)) {
-    input <- list(fx0, data = msstats_filt %>% filter(Module == module))
-    suppressMessages({
-      fm <- try(do.call(lmerTest::lmer, input), silent = TRUE)
-    })
-  }
+  ## if singular, fit reduced model
+  #if (lme4::isSingular(fm)) {
+  #  input <- list(fx0, data = msstats_filt %>% filter(Module == module))
+  #  suppressMessages({
+  #    fm <- try(do.call(lmerTest::lmer, input), silent = TRUE)
+  #  })
+  #}
   # test the contrast
-  df <- lmerTestContrast(fm, contrast) %>%
+  df <- lmerTestContrast(fm, lT) %>%
 	  mutate(Contrast = "Mutant-Control") %>%
 	  unique()
   # return the results
   return(df)
 }
+
 names(results_list) <- names(modules)
 
 # summary

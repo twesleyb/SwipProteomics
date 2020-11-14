@@ -28,9 +28,10 @@ lmerTestContrast <- function(fm, contrast, variance=FALSE,
 #   # test the comparison!
 #   lmerTestContrast(fm, contrast) 
 
-    # comparison should be a numeric and sum of vector == 0
-    stopifnot(inherits(contrast,"numeric"))
-    stopifnot(sum(contrast[contrast<0],contrast[contrast>0])==0)
+    stopifnot(all(names(contrast) == names(lme4::fixef(fm))))
+
+    #stopifnot(sum(contrast[contrast<0],contrast[contrast>0])==0)
+
     pos_group <- names(contrast[contrast>0])
     neg_group <- names(contrast[contrast<0])
     comparison <- paste(pos_group,neg_group,sep="-")
