@@ -34,28 +34,32 @@ colnames(df)[colnames(df) == "Pr(>|t|)"] <- "p value"
 df$"p value" <- formatC(df$"p value")
 df %>% knitr::kable()
 
+# create contrast
 L8 <- getContrast(fm0,"Mutant","Control")
+
+message(fx0)
 lmerTestContrast(fm0,L8) %>% mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
 
 # fit protein-level model
 # NOTE: we specify the intercept = 1
-fx <- "Abundance ~ 1 + Condition + (1|Mixture)"
-fm <- lmerTest::lmer(fx, msstats_prot %>% subset(Protein == swip))
+fx1 <- "Abundance ~ 1 + Condition + (1|Mixture)"
+fm1 <- lmerTest::lmer(fx1, msstats_prot %>% subset(Protein == swip))
 
 # examine coefficients
-df <- summary(fm, ddf="Satterthwaite")[["coefficients"]]
+df <- summary(fm1, ddf="Satterthwaite")[["coefficients"]]
 df <- as.data.table(df,keep.rownames="Coefficient")
 colnames(df)[colnames(df) == "Pr(>|t|)"] <- "p value"
 df$"p value" <- formatC(df$"p value")
 df %>% knitr::kable()
 
 # I find it much harder to interpret this table...
-L8 <- fixef(fm)
+L8 <- fixef(fm1)
 L8[] <- 0
 L8[which(grepl("Mutant",names(L8)))] <- +1/7
 L8[which(grepl("Control",names(L8)))] <- -1/7
 
-lmerTestContrast(fm,L8) %>% mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
+message(fx1)
+lmerTestContrast(fm1,L8) %>% mutate(Contrast="Mutant-Control") %>% unique() %>% knitr::kable()
 
 quit()
 
