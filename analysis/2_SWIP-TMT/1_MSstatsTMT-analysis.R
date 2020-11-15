@@ -8,14 +8,11 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot <- "all" # the number of random proteins to be analyzed or 'all'
-FDR_alpha <- 0.05 # FDR threshold for significance
+nprot <- 23 #"all" # the number of random proteins to be analyzed or 'all'
 save_rda <- TRUE
-# moderated = TRUE # intra-BioFraction comparisons
-# moderated = FALSE # 'Mutant-Control' comparison
-# NOTE: we remove outlier PSM (4xSD outside mean of Intensity bin)
-# NOTE: we impute protein-level missingness with KNN
-# NOTE: we use limma to account for batch effect (1|mixture)
+
+FDR_alpha <- 0.05 # FDR threshold for significance
+
 
 ## prepare the working environment ---------------------------------------------
 
@@ -26,23 +23,26 @@ renv::load(root)
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
-  # my forks:
+  # my MSstats forks:
   library(MSstats) # twesleyb/MSstats
   library(MSstatsTMT) # twesleyb/MSstats
 })
 
 
-## NOTE: my fork attempts to remove much of MSstats's verbosity as well as
-## includes access to the internal functions used by MSstatsTMT to fit
-## protein-wise models and perform statistical comparisons between groups.
-## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass
-## arguments for parallel processing to proteinSummarization to speed things up.
+## NOTE: my fork attempts to remove much of MSstats's verbosity.
+## NOTE: you may find some debug.log files on your computer still, their source
+## has not been found yet.
+## twesleyb/MSstatsTMT includes access to the internal functions used by
+## MSstatsTMT to fit protein-wise models and perform statistical comparisons.
+## MSstatsTMT is a wrapper around MSstats. My fork allows you to pass arguments
+## for parallel processing to MSstats::proteinSummarization to speed things up.
 
 
 ## load data ------------------------------------------------------------------
 
 # load functions in root/R and make data in root/data accessible
 suppressWarnings({
+  # library(SwipProteomics)
   devtools::load_all()
 })
 
@@ -87,8 +87,6 @@ cleanResults <- function(df) {
   idx <- match(df$Protein, gene_map$uniprot)
   df$Symbol <- gene_map$symbol[idx]
   df$Entrez <- gene_map$entrez[idx]
-  df <- df %>% filter(is.na(issue))
-  df$issue <- NULL
   df <- df %>%
     select(
       Label, Protein, Entrez,
@@ -151,31 +149,18 @@ detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
   return(out_df %>% filter(isOutlier))
 } # EOF
 
+## 0. Create a contrast -------------------------------------------------------
 
+# add a contrast vector specifying the mutant-control comparison to
+# msstats_contrasts matrix (see 0_*.R)
 
-## [0] subset the data ------------------------------------------------------------
-# NOTE: we have previously made sure Master.Protein.Accessions is a column of
-# (single) Uniprot Identifiers. NOTE: Only run once!
-
-# all proteins
-proteins <- unique(as.character(pd_psm$Master.Protein.Accessions))
-
-# define proteins to be analyzed:
-if (nprot > length(proteins) | nprot == "all") {
-  # using all proteins
-  message(
-    "\nAnalyzing 'all' (N=",
-    formatC(length(proteins), big.mark = ","), ") proteins."
-  )
-  msstats_input <- pd_psm
-} else {
-  # subset the data
-  message("\nAnalyzing a subset of the data (n=", nprot, ") proteins.")
-  prots <- sample(proteins, nprot)
-  pd_filt <- pd_psm %>%
-    filter(Master.Protein.Accessions %in% prots)
-  msstats_input <- pd_filt
-} # EIS
+mut_vs_control <- matrix(c(
+  -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
+  1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
+), nrow = 1)
+row.names(mut_vs_control) <- "Mutant-Control"
+colnames(mut_vs_control) <- levels(msstats_prot$Condition)
+msstats_contrasts <- rbind(msstats_contrasts, mut_vs_control)
 
 
 ## [1] convert to msstats format -----------------------------------------------
@@ -187,7 +172,7 @@ t0 <- Sys.time()
 
 suppressMessages({ # verbosity
   msstats_psm <- PDtoMSstatsTMTFormat(msstats_input,
-    pd_annotation,
+    pd_annotation, # see 0_PD-data-preprocess.R
     which.proteinid = "Master.Protein.Accessions",
     rmProtein_with1Feature = TRUE
   )
@@ -199,7 +184,8 @@ message(
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
 )
 
-## [added] QC-based PSM filtering ----------------------------------------------------
+
+## [added] QC-based PSM filtering ------------------------------------------------
 
 # Assess reproducibility of QC measurements and remove QC samples
 # that are irreproducible.
@@ -232,7 +218,8 @@ names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
 # NOTE: PSM with incomplete observations within a mixture (n=2) are removed
 filt_list <- list()
 for (mixture in names(psm_list)) {
-	filt_psm <- psm_list[[mixture]] %>% filter(PSM %notin% psm_outliers[[mixture]])
+	filt_psm <- psm_list[[mixture]] %>% 
+		filter(PSM %notin% psm_outliers[[mixture]])
 	filt_list[[mixture]] <- filt_psm
 }
 
@@ -258,12 +245,13 @@ suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(filt_msstats_psm,
     method = "msstats",
     remove_norm_channel = TRUE,
-    global_norm = TRUE,
+    global_norm = TRUE, # perform global normalization using 'norm'
     MBimpute = TRUE, 
     reference_norm = TRUE,
     clusters = n_cores
   )
 })
+
 
 # This takes about 11 minutes for 8.5 k proteins with 23 cores
 # FIXME: fix warnings messages about closing clusters.
@@ -273,12 +261,39 @@ message(
 )
 
 
+## [3] perform intrafraction statistical comparisons --------------------------
+
+# NOTE: for the pairwise contrasts, MSstats fits the lmer model:
+# fx <- formula(Abundance ~ 1 + Condition + (1|Mixture)) # lmerTest::lmer
+
+# We specify Condition as Genotype.BioFraction for all intra-fraction
+# comparisons. T-statistics are moderated using ebayes methods in limma.
+
+message("\nAssessing protein-level comparisons with MSstatsTMT.")
+
+t0 <- Sys.time()
+
+suppressWarnings({ # about closing clusters FIXME:
+  suppressMessages({ # verbosity FIXME:
+    msstats_results <- groupComparisonTMT(msstats_prot,
+      msstats_contrasts,
+      moderated = TRUE
+    )
+  })
+})
+
+# This takes about 21 minutes for 8.5 k proteins
+message(
+  "\nTime to perform 9 pairwise comparisons for ", nprot, " proteins: ",
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
+)
+
+
 ## [added] impute protein-level missing values ---------------------------------
 
 # There are multiple levels of missingness:
 # * missingness within a Run -- handled by MSstats during protein processing
-# * missingness within a mixture
-# * missingness within an experiment -- between mixtures
+# * missingness between mixtures
 
 # there are proteins with only a couple missing values that we have to discard
 # because missing values are not tolerated in a number of the subsequent steps
@@ -294,20 +309,20 @@ dm <- msstats_prot %>%
 		value.var="Abundance") %>%
   as.data.table() %>% as.matrix(rownames="Protein")
 
-# we can impute up to 50% missingness
+
+# we will impute up to 50% missingness--a protein must be identified in at least
+# 1 mixture/experiment.
 idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
 if (sum(idx)>0) {
   warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
 }
 
-# subset
-subdm <- dm[!idx,]
-
-# impute, suppress output from cat with sing()
+# impute, suppress output from cat with sink()
 sink(tempfile())
-dm_knn <- impute::impute.knn(subdm,k=10,colmax=0.8,rowmax=0.5)$data
+dm_knn <- impute::impute.knn(dm[!idx,],k=10,colmax=0.8,rowmax=0.5)$data
 sink()
 
+# there should be no missing values
 stopifnot(!any(is.na(dm_knn)))
 
 # tidy the imputed data
@@ -324,129 +339,38 @@ impute_prot <- msstats_prot %>%
 	filter(Protein %in% df_knn$Protein) %>% 
 	right_join(df_knn,by=cols)
 
-# check
-dm <- impute_prot %>% 
-  reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-		value.var="Abundance") %>% as.data.table() %>% as.matrix(rownames="Protein")
-stopifnot(!any(is.na(dm)))
-
-
 # proceed with imputed data -- there should be no missing observations
 # proteins with missingness have been imputed or removed
-msstats_prot <- impute_prot
-
-
 # status
-nprots <- length(unique(msstats_prot$Protein))
+nprots <- length(unique(impute_prot$Protein))
 message("Final number of proteins with complete observations: ", 
 	formatC(nprots,big.mark=","))
 
-stopifnot(!(any(is.na(msstats_prot$Abundance))))
-
-
-# insure that the following cols are factors for MSstatsTMT to work
-msstats_prot <- msstats_prot %>% mutate(Mixture = factor(Mixture), 
-					Channel = factor(Channel), 
-					Condition = factor(Condition))
-
-
-## [3] perform intrafraction statistical comparisons --------------------------
-
-# NOTE: for the pairwise contrasts, MSstats fits the lmer model:
-fx0 <- formula(Abundance ~ 0 + Condition + (1|Mixture)) # lmerTest::lmer
-
-# We specify Condition as Genotype.BioFraction for all intra-fraction
-# comparisons. T-statistics are moderated using ebayes methods in limma.
-
-message("\nAssessing intrafraction comparisons with MSstatsTMT.")
-message("Moderated = TRUE")
-
-t0 <- Sys.time()
-
-suppressWarnings({ # about closing clusters FIXME:
-  suppressMessages({ # verbosity
-    msstats_results <- groupComparisonTMT(msstats_prot,
-      msstats_contrasts,
-      moderated = TRUE
-    )
-  })
-})
-
-# This takes about 21 minutes for 8.5 k proteins
-message(
-  "\nTime to perform intra-Biofraction comparisons for ", nprot, " proteins: ",
-  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
-)
-
-
-## [4] perform statistical comparisons for 'Control-Mutant' comparison ---------
-
-# create a contrast for assessing difference between 'Control' and 'Mutant' coef:
-alt_contrast <- matrix(c(
-  -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
-  1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
-), nrow = 1)
-row.names(alt_contrast) <- "Mutant-Control"
-colnames(alt_contrast) <- levels(msstats_prot$Condition)
-
-message("\nAssessing 'Mutant-Control' comparison with MSstatsTMT.")
-message("Moderated = FALSE")
-
-t0 <- Sys.time()
-
-suppressWarnings({ # about closing clusters FIXME:
-  suppressMessages({ # verbosity
-    res2 <- MSstatsTMT::groupComparisonTMT(
-      data = msstats_prot,
-      contrast.matrix = alt_contrast,
-      moderated = FALSE # no moderation
-    )
-  })
-})
-
-# This takes about ?? minutes for 8.5 k proteins
-message(
-  "\nTime to perform comparison for ", nprot, " proteins: ",
-  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes."
-)
+stopifnot(!(any(is.na(impute_prot$Abundance))))
 
 
 ## clean-up and combine results -----------------------------------------------
 
 # clean-up protein results
-msstats_prot <- cleanProt(msstats_prot)
+msstats_prot <- cleanProt(impute_prot)
 
-# create list of intrafraction results
-tmp_list <- cleanResults(msstats_results) %>%
-  group_by(Contrast) %>%
-  group_split()
-names(tmp_list) <- sapply(tmp_list, function(x) unique(x$Contrast))
-
-# simplify names
-names(tmp_list) <- sapply(strsplit(names(tmp_list), "\\."), "[", 3)
+# collect a list of results 
+results_list <- cleanResults(msstats_results) %>% as.data.table() %>%
+	group_by(Contrast) %>% group_split()
+class(results_list) <- "list"
 
 # sort list
-tmp_list <- tmp_list[c("F4", "F5", "F6", "F7", "F8", "F9", "F10")]
+namen <- sapply(results_list,function(x) unique(x$Contrast))
+names(results_list) <- gsub("Mutant.F[0-9]{1,2}-Control\\.","",namen)
+idx <- c("F4", "F5", "F6", "F7", "F8", "F9", "F10","Mutant-Control")
+results_list <- results_list[idx]
 
-# fix column names
-tmp_list <- lapply(tmp_list,function(x) {
-  colnames(x)[colnames(x) == "pvalue"] <- "Pvalue"
-  colnames(x)[colnames(x) == "adj.pvalue"] <- "FDR"
-  return(x)
-})
-
-
-# sort msstats_prot columns 
-tmp_df <- msstats_prot %>% select(Mixture,Channel,Genotype,BioFraction,
-				  Condition,Subject,Protein,Symbol,Entrez,Abundance)
 
 # combine into list to be saved as excel
 results_list <- c(
-  "Normalized Protein" = list(tmp_df),
-  tmp_list, # intrafraction results
-  "Mutant-Control" = list(cleanResults(res2))
+  "Normalized Protein" = list(msstats_prot),
+  results_list
 )
-
 
 # save results as excel document
 myfile <- file.path(root, "tables", "S2_SWIP_TMT_Results.xlsx")
@@ -455,81 +379,21 @@ write_excel(results_list, myfile)
 
 ## summarize significant results ----------------------------------------------
 
-# Same with/without outlier psm
-message("\nTotal instances of significant 'Intra-Fraction' change: ",
-	sum(sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha))))
+message("\nTotal instances of significant change: ",
+	sum(sapply(results_list,function(x) sum(x$FDR<FDR_alpha))))
 
-message("\nSummary of significant proteins for 'Intra-BioFraction' comparisons:")
-sapply(tmp_list,function(x) sum(x$FDR<FDR_alpha)) %>% t() %>% knitr::kable()
+message("\nSummary of significant proteins for each contrast:")
+sapply(results_list[-1],function(x) sum(x$FDR<FDR_alpha)) %>% 
+	t() %>% knitr::kable()
 
-message("\nTotal number of significant proteins for overall 'Mutant-Control' comparison:")
-results_list[["Mutant-Control"]] %>% 
-	summarize(Contrast = unique(Contrast), nSig = sum(FDR<FDR_alpha)) %>% 
-	knitr::kable()
-
-
-## [added] remove batch effect ---------------------------------------------------------
-
-# MSstats does not perform any batch (aka Mixture or Experiment) normalization.
-# The variance due to random variability of Mixture is dealt with by the
-# mixed-models used to assess protein differential abundance. However,
-# we wish to contruct a covariation matrix from proteins that covary together in
-# subcellular space. We should remove any variability that can be explained by
-# Mixture effects before we do this.
-
-message("\nUsing limma::RemoveBatchEffect to remove effect of 'Mixture'!")
-
-# cast data into a matrix
-dm <- msstats_prot %>%  
-	reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-			value.var="Abundance") %>%
-        as.data.table() %>% as.matrix(rownames="Protein")
-
-stopifnot(!any(apply(dm,1,function(x) any(is.na(x)))))
-
-# use column names to construct sample metadata matrix
-namen <- colnames(dm)
-samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
-colnames(samples) <- c("Mixture","Channel","Condition")
-samples$sample <- namen
-
-# use limma to remove batch effect
-# NOTE: we still preserve the effect of Condition
-# NOTE: this is saved as rda for module preservation script
-norm_dm <- limma::removeBatchEffect(dm,
-			 batch=samples$Mixture,
-			 design=model.matrix(~Condition,data=samples))
-
-# collect data
-norm_df <- as.data.table(norm_dm,keep.rownames="Protein") %>% 
-	reshape2::melt(id.var="Protein",variable.name="sample",
-		       value.name="norm_Abundance")
-
-# combine with sample annotations
-anno_df <- left_join(norm_df,samples,
-		     by=intersect(colnames(samples),colnames(norm_df)))
-anno_df$sample <- NULL
-
-# combine with msstats_prot
-msstats_prot <- msstats_prot %>% 
-	left_join(anno_df,by=intersect(colnames(anno_df),colnames(msstats_prot)))
-
-# now we have norm_Abundance(no batch effect)
-
-# NOTE: norm_Abundance is not used for downstream linear modeling!
-# We use the adjusted data for ploting only!
-
-stopifnot(!any(is.na(msstats_prot$norm_Abundance)))
+# proteins with sig change
+sigprots <- msstats_results %>% filter(adj.pvalue<FDR_alpha) %>% 
+	select(Protein) %>% unlist() %>% as.character() %>% unique()
 
 
 ## save results ---------------------------------------------------------------
 
 if (save_rda) {
-
-  # save the model formula
-  myfile <- file.path(root, "data", "fx0.rda")
-  save(fx0,file=myfile,version=2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
   # save msstats_prot -- the normalized protein data
   myfile <- file.path(root, "data", "msstats_prot.rda")
@@ -537,15 +401,11 @@ if (save_rda) {
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
   # save results
-  msstats_results <- cleanResults(rbind(msstats_results, res2))
   myfile <- file.path(root, "data", "msstats_results.rda")
   save(msstats_results, file = myfile, version = 2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
-  # quick, save sigprots
-  sigprots <- msstats_results %>% 
-	filter(Contrast == 'Mutant-Control' & FDR < 0.05) %>%
-	select(Protein) %>% unlist() %>% as.character() %>% unique()
+  # save sigprots
   myfile <- file.path(root,"data","sigprots.rda")
   save(sigprots,file=myfile,version=2)
   message("\nSaved ", basename(myfile), " in ", dirname(myfile))
