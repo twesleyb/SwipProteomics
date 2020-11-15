@@ -1,10 +1,28 @@
 #' lmTestContrast
+#' @author twab 
 #' @import dplyr
 #' @export lmTestContrast 
 
 lmTestContrast <- function(fm, contrast, s2_prior=0, df_prior=0) {
 
+	##!/usr/bin/env Rscript
+	#
+	##library(SwipProteomics)
+	#
+	#data(swip)
+	#data(msstats_prot)
+	#
+	#library(dplyr)
+	#
+	#fx <- "Abundance ~ Condition"
+	#fm <- lm(fx, data = msstats_prot %>% subset(Protein == swip))
+	#
+	#LT <- getContrast(fm,"ConditionMutant.F6","ConditionControl.F6")
+	#
+	#lmTestContrast(fm,LT) %>% knitr::kable()
+
 	# check input 
+	stopifnot(inherits(fm,"lm"))
 	stopifnot(all(names(contrast) %in% names(coef(fm))))
 
 	# create comparison
@@ -12,8 +30,8 @@ lmTestContrast <- function(fm, contrast, s2_prior=0, df_prior=0) {
 	neg_coef <- names(contrast)[contrast<0]
 	comparison <- paste(pos_coef,neg_coef,sep="-")
 
-	# fit the model
-	fm <- lm(fx, data = msstats_prot %>% subset(Protein == swip))
+	# extract model coefficients
+	coeff <- fm$coefficients
 
 	# compute FC
 	FC <- as.numeric(LT %*% coeff)

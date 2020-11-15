@@ -4,15 +4,24 @@
 getContrast <- function(fm, pos_coef, neg_coef){
 
   # create a contrast!
-  stopifnot(inherits(fm,"lmerModLmerTest"))
+
   stopifnot(is.character(pos_coef))
   stopifnot(is.character(neg_coef))
 
-  contrast <- lme4::fixef(fm)
+  if (inherits(fm,"lm")) {
+	  contrast <- fm$coefficients
+  } else if (inherits(fm,"lmerModLmerTest")) {
+	  contrast <- lme4::fixef(fm)
+  } else {
+	  stop("Input 'fm' must be a 'lm' or 'lmerModLmerTest' object.")
+  }
 
   contrast[] <- 0
+
   neg_index <- grepl(neg_coef,names(contrast))
   pos_index <- grepl(pos_coef,names(contrast))
+
+  # FIXME: doesnt work for intercept scenarios
   contrast[neg_index] <- -1/sum(neg_index)
   contrast[pos_index] <- +1/sum(pos_index)
 
