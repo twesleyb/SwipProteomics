@@ -8,10 +8,15 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options
-nprot <- 23 #"all" # the number of random proteins to be analyzed or 'all'
+FDR_alpha <- 0.05 
+moderated <- TRUE
 save_rda <- TRUE
+MBimpute <- TRUE
+rm_single <- TRUE
+global_norm <- TRUE
+reference_norm <- TRUE
 
-FDR_alpha <- 0.05 # FDR threshold for significance
+# rm proteins with a single feature
 
 
 ## prepare the working environment ---------------------------------------------
@@ -41,16 +46,15 @@ suppressPackageStartupMessages({
 ## load data ------------------------------------------------------------------
 
 # load functions in root/R and make data in root/data accessible
-suppressWarnings({
-  # library(SwipProteomics)
-  devtools::load_all()
-})
+# library(SwipProteomics)
+devtools::load_all()
 
 # load data in root/data
 data(pd_psm) # 46 mb
 data(gene_map)
 data(pd_annotation)
 data(msstats_contrasts)
+
 # NOTE: msstats_contrasts is a matrix specifying pairwise contrasts between all
 # 'BioFraction.Control' and 'BioFraction.Mutant' Conditions.
 
@@ -58,7 +62,7 @@ data(msstats_contrasts)
 ## Functions ------------------------------------------------------------------
 
 cleanProt <- function(df) {
-  # clean-up msstats_prot
+  # clean-up msstats_prot results data.frame
   # add BioFraction, Genotype, and Subject columns
   idx <- match(df$Protein, gene_map$uniprot)
   Symbol <- gene_map$symbol[idx]
@@ -83,7 +87,7 @@ cleanProt <- function(df) {
 
 
 cleanResults <- function(df) {
-  # clean-up msstat_results
+  # clean-up msstat_results data.frame
   idx <- match(df$Protein, gene_map$uniprot)
   df$Symbol <- gene_map$symbol[idx]
   df$Entrez <- gene_map$entrez[idx]
@@ -149,6 +153,7 @@ detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
   return(out_df %>% filter(isOutlier))
 } # EOF
 
+
 ## 0. Create a contrast -------------------------------------------------------
 
 # add a contrast vector specifying the mutant-control comparison to
@@ -159,7 +164,8 @@ mut_vs_control <- matrix(c(
   1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
 ), nrow = 1)
 row.names(mut_vs_control) <- "Mutant-Control"
-colnames(mut_vs_control) <- levels(msstats_prot$Condition)
+colnames(mut_vs_control) <- colnames(msstats_contrasts)
+
 msstats_contrasts <- rbind(msstats_contrasts, mut_vs_control)
 
 
@@ -171,10 +177,10 @@ message("\nConverting PD PSM-level data into MSstatsTMT format.")
 t0 <- Sys.time()
 
 suppressMessages({ # verbosity
-  msstats_psm <- PDtoMSstatsTMTFormat(msstats_input,
+  msstats_psm <- PDtoMSstatsTMTFormat(pd_psm,
     pd_annotation, # see 0_PD-data-preprocess.R
     which.proteinid = "Master.Protein.Accessions",
-    rmProtein_with1Feature = TRUE
+    rmProtein_with1Feature = rm_single
   )
 })
 
@@ -245,9 +251,9 @@ suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(filt_msstats_psm,
     method = "msstats",
     remove_norm_channel = TRUE,
-    global_norm = TRUE, # perform global normalization using 'norm'
-    MBimpute = TRUE, 
-    reference_norm = TRUE,
+    global_norm = global_norm, # perform global normalization using 'norm'
+    MBimpute = MBimpute, 
+    reference_norm = reference_norm,
     clusters = n_cores
   )
 })
@@ -289,70 +295,73 @@ message(
 )
 
 
-## [added] impute protein-level missing values ---------------------------------
-
-# There are multiple levels of missingness:
-# * missingness within a Run -- handled by MSstats during protein processing
-# * missingness between mixtures
-
-# there are proteins with only a couple missing values that we have to discard
-# because missing values are not tolerated in a number of the subsequent steps
-# MSstats should have imputed these (I thought), but here we do so with KNN for
-# MNAR data.
-
-# FIXME: need to visualize this
-message("\nImputing protein-level missing values with KNN.")
-
-# cast the data into a matrix
-dm <- msstats_prot %>% 
-  reshape2::dcast(Protein ~ Mixture + Channel + Condition,
-		value.var="Abundance") %>%
-  as.data.table() %>% as.matrix(rownames="Protein")
-
-
-# we will impute up to 50% missingness--a protein must be identified in at least
-# 1 mixture/experiment.
-idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
-if (sum(idx)>0) {
-  warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
-}
-
-# impute, suppress output from cat with sink()
-sink(tempfile())
-dm_knn <- impute::impute.knn(dm[!idx,],k=10,colmax=0.8,rowmax=0.5)$data
-sink()
-
-# there should be no missing values
-stopifnot(!any(is.na(dm_knn)))
-
-# tidy the imputed data
-df_knn <- reshape2::melt(dm_knn)
-colnames(df_knn) <- c("Protein","Sample","Abundance")
-df_knn$Mixture <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",1)
-df_knn$Channel <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",2)
-df_knn$Condition <-sapply(strsplit(as.character(df_knn$Sample),"_"),"[",3)
-
-# merge with msstats_prot, write over Abundance, keep proteins with complete obs
-cols <- intersect(colnames(msstats_prot),colnames(df_knn))
-# NOTE: use right_join here!
-impute_prot <- msstats_prot %>% 
-	filter(Protein %in% df_knn$Protein) %>% 
-	right_join(df_knn,by=cols)
-
-# proceed with imputed data -- there should be no missing observations
-# proteins with missingness have been imputed or removed
-# status
-nprots <- length(unique(impute_prot$Protein))
-message("Final number of proteins with complete observations: ", 
-	formatC(nprots,big.mark=","))
-
-stopifnot(!(any(is.na(impute_prot$Abundance))))
+### [added] impute protein-level missing values ---------------------------------
+#
+## There are multiple levels of missingness:
+## * missingness within a Run -- handled by MSstats during protein processing
+## * missingness between mixtures
+#
+## there are proteins with only a couple missing values that we have to discard
+## because missing values are not tolerated in a number of the subsequent steps
+## MSstats should have imputed these (I thought), but here we do so with KNN for
+## MNAR data.
+#
+## FIXME: need to visualize this
+#message("\nImputing protein-level missing values with KNN.")
+#
+## cast the data into a matrix
+#dm <- msstats_prot %>% 
+#  reshape2::dcast(Protein ~ Mixture + Channel + Condition,
+#		value.var="Abundance") %>%
+#  as.data.table() %>% as.matrix(rownames="Protein")
+#
+#
+## we will impute up to 50% missingness--a protein must be identified in at least
+## 1 mixture/experiment.
+#idx <- apply(dm,1,function(x) sum(is.na(x)) > 0.5 * ncol(dm))
+#if (sum(idx)>0) {
+#  warning(sum(idx)," rows (proteins) with > 50% missingness cannot be imputed.")
+#}
+#
+## impute, suppress output from cat with sink()
+#sink(tempfile())
+#dm_knn <- impute::impute.knn(dm[!idx,],k=10,colmax=0.8,rowmax=0.5)$data
+#sink()
+#
+## there should be no missing values
+#stopifnot(!any(is.na(dm_knn)))
+#
+## tidy the imputed data
+#df_knn <- reshape2::melt(dm_knn)
+#colnames(df_knn) <- c("Protein","Sample","Abundance")
+#df_knn$Mixture <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",1)
+#df_knn$Channel <- sapply(strsplit(as.character(df_knn$Sample),"_"),"[",2)
+#df_knn$Condition <-sapply(strsplit(as.character(df_knn$Sample),"_"),"[",3)
+#
+#df_knn$censor <- TRUE # censor these values when computing correlation stats
+#
+## merge with msstats_prot, write over Abundance, keep proteins with complete obs
+#cols <- intersect(colnames(msstats_prot),colnames(df_knn))
+## NOTE: use right_join here!
+#impute_prot <- msstats_prot %>% 
+#	filter(Protein %in% df_knn$Protein) %>% 
+#	right_join(df_knn,by=cols)
+#
+#
+## proceed with imputed data -- there should be no missing observations
+## proteins with missingness have been imputed or removed
+## status
+#nprots <- length(unique(impute_prot$Protein))
+#message("Final number of proteins with complete observations: ", 
+#	formatC(nprots,big.mark=","))
+#
+#stopifnot(!(any(is.na(impute_prot$Abundance))))
 
 
 ## clean-up and combine results -----------------------------------------------
 
 # clean-up protein results
-msstats_prot <- cleanProt(impute_prot)
+msstats_prot <- cleanProt(msstats_prot)
 
 # collect a list of results 
 results_list <- cleanResults(msstats_results) %>% as.data.table() %>%
