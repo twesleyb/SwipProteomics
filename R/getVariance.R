@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 #' export getVariance
 
 getVariance <- function(fm) {
