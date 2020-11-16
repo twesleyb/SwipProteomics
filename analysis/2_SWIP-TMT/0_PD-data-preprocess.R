@@ -20,22 +20,22 @@ input_psm <- "PSM/5359_PSM_Report.xlsx" # the data exported from PD
 input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 
 
-## Options --------------------------------------------------------------------
-save_rda <- TRUE # save key R objects?
-
-
 ## Output ---------------------------------------------------------------------
 # saved in root/data
 
 # * gene_map - data.table mapping UniProt Accession to Entrez IDs and gene
-#       Symbols.
-# * pd_psm - PSM data from Proteome Discoverer reformatted for MSstatsTMT.
-#       This file is just less than 50 mb.
-# * pd_annotation - the annotation object for PDtoMSstatsTMTformat().
+#       Symbols -- FIXME: you need the getPPIs package for this which is probably a
+#       pain to install...
+# * pd_psm - PSM data from Proteome Discoverer reformatted for MSstatsTMT
+#       This file is just less than 50 mb
+# * pd_annotation - the annotation object for PDtoMSstatsTMTformat()
 #       This maps individual MS runs to Spectrum.File and other sample
 #       information
 # * msstats_contrasts - a matrix specifying all pairwise intrafraction contrasts
 #       between Control and SWIP P1019R homozygous Mutant mice.
+# * mut_vs_control - contrast specifying the MUT versus control comparison 
+#       between Control and SWIP P1019R homozygous Mutant mice.
+# * swip - WASHC4's uniprot ID
 
 
 ## Functions -----------------------------------------------------------------
@@ -120,10 +120,8 @@ renv::load(root, quiet = TRUE)
 # imports
 suppressPackageStartupMessages({
   library(dplyr)
-  suppressWarnings({
-    library(getPPIs)
-  }) # FIXME: annoying warnings!
   library(data.table)
+  library(getPPIs) # twesleyb/getPPIs for mapping gene identifiers
   library(MSstatsTMT) # twesleyb/MSstatsTMT
 })
 
@@ -154,7 +152,7 @@ raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
 
 
 ## load sample data -----------------------------------------------------------
-# recieved this excel spreadsheet from GW--I think he exported from PD
+# recieved this excel spreadsheet from GW, exported from PD
 
 # pass meaningful colnames to read_excel
 col_names <- c(
@@ -259,15 +257,13 @@ if (!check) {
 }
 
 # Map entrez ids to gene symbols using twesleyb/getPPIs.
-symbols <- getPPIs::getIDs(entrez,
-  from = "entrez",
-  to = "symbol", species = "mouse"
-)
+symbols <- getPPIs::getIDs(entrez, "entrez", "symbol", species = "mouse")
 
 # check there should be no missing gene symbols
 if (any(is.na(symbols))) {
   stop("Unable to map all Entrez to gene Symbols.")
 }
+
 # Create gene identifier mapping data.table.
 gene_map <- data.table(
   uniprot = names(entrez),

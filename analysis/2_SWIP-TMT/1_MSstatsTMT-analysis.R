@@ -12,6 +12,9 @@ global_norm <- TRUE
 reference_norm <- TRUE
 remove_norm_channel <- TRUE
 
+## Threshold for significance
+FDR_alpha = 0.05
+
 
 ## prepare the working environment ---------------------------------------------
 
@@ -111,6 +114,13 @@ filt_psm <- do.call(rbind,filt_list)
 stopifnot(!any(is.na(filt_psm$Intensity)))
 
 
+## Subset data ----------------------------------------------------------------
+
+proteins <- unique(as.character(filt_psm$ProteinName))
+
+filt_psm <- filt_psm %>% subset(ProteinName %in% sample(proteins,100))
+
+
 ## [2] summarize protein level data ----------------------------------------------
 # Perform protein summarization for each run.
 
@@ -119,6 +129,7 @@ stopifnot(!any(is.na(filt_psm$Intensity)))
 # be used for parallel processing.
 
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
+
 
 n_cores <- parallel::detectCores() - 1
 
@@ -193,6 +204,9 @@ suppressWarnings({ # about closing clusters FIXME:
     )
   })
 })
+
+# Adjust pvalues for multiple comparisons with Bonferroni method
+results2$adj.pvalue <- p.adjust(results2$pvalue,method="bonferroni")
 
 # examine the results
 results2 %>% group_by(Label) %>% 
@@ -281,16 +295,3 @@ message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 myfile <- file.path(root, "data", "msstats_results.rda")
 save(msstats_results, file = myfile, version = 2)
 message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-#!/usr/bin/env Rscript 
-
-# title: MSstatsTMT
-# description: analysis of intrafraction comparisons with MSstats
-# author: twab
-
-## Input:
-root <- "~/projects/SwipProteomics"
-
-
-## Options
-FDR_alpha = 0.05
-
