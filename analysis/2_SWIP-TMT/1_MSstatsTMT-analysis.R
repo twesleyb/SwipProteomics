@@ -113,7 +113,7 @@ stopifnot(!any(is.na(filt_psm$Intensity)))
 
 
 ## [2] summarize protein level data ----------------------------------------------
-# Perform protein summarization for each run.
+# Perform protein summarization for each run with MSstatsTMT.
 
 # NOTE: my fork allows you to pass additional args to underlying MSstats 
 # dataProcess function  -- speed things up by specifying the number of cores to 
