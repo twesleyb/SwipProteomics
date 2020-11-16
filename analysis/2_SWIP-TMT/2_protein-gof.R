@@ -2,16 +2,16 @@
 
 # title: SwipProteomics
 # author: twab
-# description: generate some gof statistics for protein models
+# description: generate some gof statistics for protein-wise models
 
-save_rda = FALSE 
+# threshold for defining proteins with poor fit
 r2_threshold = 0.70
-# NOTE: proteins with r2 < r2_threshold are considered to have a poor fit and 
-# not used in downstream analysis
 
 # prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
+
+# library(SwipProteomics)
 devtools::load_all(root)
 
 # load the data
@@ -24,12 +24,9 @@ data(pd_annotation)
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
-  library(doParallel)
+  library(doParallel) 
   library(variancePartition)
 })
-
-
-## functions ------------------------------------------------------------------
 
 
 ## prepare the data for variancePartition --------------------------------------
@@ -49,7 +46,8 @@ colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
 
 ## variancePartition -----------------------------------------------------------
 
-# calculate protein-wise variance explained by major covariates
+# calculate protein-wise variance explained by major covariates in the
+# mixed-model:
 form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
 prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
 
@@ -90,7 +88,7 @@ message("\nEvaluating Nakagawa goodness-of-fit, refitting modules...")
 
 gof_list <- foreach (protein = proteins) %dopar% {
 	# fit model
-	fx0 <- Abundance ~ 0 + Condition + (1 | Mixture)
+	fx0 <- Abundance ~ 1 + Condition + (1 | Mixture)
 	fm <- suppressMessages({
 		try({
 		  lmerTest::lmer(fx0, msstats_prot %>% filter(Protein==protein))

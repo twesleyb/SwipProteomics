@@ -4,20 +4,16 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-save_rda = TRUE 
-
 # prepare the env
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 devtools::load_all(root)
 
 # load the data
-data(fx1) # module-level model
 data(swip)
 data(gene_map)
 data(sigprots)
 data(partition)
-data(poor_prots) # proteins with poor fm0 lmer fit (R2<thresh)
 data(msstats_prot)
 
 # imports
@@ -59,10 +55,6 @@ moduleGOF <- function(module,partition,msstats_prot){
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-if (any(poor_prots %in% names(partition))) {
-	warning("Proteins with poor fit are in partition.")
-}
-
 # loop to evaluate gof
 message("\nEvaluating goodness-of-fit of modules.")
 results_list <- list()
@@ -96,23 +88,20 @@ module_gof <- df %>%
 	select(Module, Size, BioFraction, Genotype,
 	       Mixture, Protein, Residuals, R2.fixef, R2.total)
 
-module_gof$Quality <- module_gof$R2.total/module_gof$Protein
+# work
+module_gof %>% mutate(Quality = R2.total * sum(BioFraction, Genotype)/sum(Protein,Residuals))
 
 q <- sum(module_gof$Quality)/length(modules)
 message("Partition Quality: ", round(q,5))
 
 module_gof %>% knitr::kable()
 
+
 ## save results -----------------------------------------------------------------
 
+# save as rda
+myfile <- file.path(root,"data","module_gof.rda")
+save(module_gof, file=myfile, version=2)
 
-if (save_rda) {
-
-  # save as rda
-  myfile <- file.path(root,"data","module_gof.rda")
-  save(module_gof, file=myfile, version=2)
-
-  # save the data
-  fwrite(module_gof,file.path(root,"rdata","module_gof.csv"))
-
-}
+# save the data
+fwrite(module_gof,file.path(root,"rdata","module_gof.csv"))

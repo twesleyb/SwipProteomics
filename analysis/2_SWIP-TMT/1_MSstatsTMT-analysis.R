@@ -1,15 +1,11 @@
 #!/usr/bin/env Rscript 
 
 # title: MSstatsTMT
-# description: analysis of intrafraction comparisons with MSstats
+# description: analysis of intra-BioFraction and Mutant-Control contrasts with 
+#   MSstatsTMT
 # author: twab
 
-## Options
-FDR_alpha <- 0.05 
-save_rda <- TRUE
-
 ## MSstatsTMT Options
-moderated <- TRUE
 MBimpute <- TRUE
 rm_single <- TRUE
 global_norm <- TRUE
@@ -31,7 +27,7 @@ devtools::load_all(root)
 data(pd_psm) 
 data(gene_map)
 data(pd_annotation)
-data(mutant_vs_control) # 'Mutant-Control' comparison
+data(mut_vs_control) # 'Mutant-Control' comparison
 data(msstats_contrasts) # 'intra-BioFraction' comparisons
 
 # NOTE: msstats_contrasts is a matrix specifying pairwise contrasts between all
@@ -58,13 +54,16 @@ suppressPackageStartupMessages({
 ## Functions ------------------------------------------------------------------
 
 detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
+
   # this function identifies QC PSM-level outliers
   # NOTE: PSM with incomplete (n != nComplete) features are removed
-  # We cannot assess reproducibility of a PSM if it was only quantified once
+  # ^we cannot assess reproducibility of a PSM if it was only quantified once
+
   # collect psm with incomplete (missing) data
   is_incomplete <- psm_df %>% dplyr::filter(Mixture == mixture & Condition == "Norm") %>%
 	  group_by(PSM) %>% mutate(nObs=length(PSM)) %>% ungroup() %>% filter(nObs != nComplete) %>%
 	  select(PSM) %>% unlist() %>% unique()
+
   # subset, keep psm with complete features
   filt_df <- psm_df %>% dplyr::filter(Mixture == mixture & Condition == "Norm") %>%
 	  group_by(PSM) %>% mutate(nObs=length(PSM)) %>% ungroup()  %>%
@@ -73,34 +72,41 @@ detectOutliers <- function(mixture, psm_df, nbins=5, nSD=4, nComplete=2) {
 	  # calculate mean of log2 Intensity for binning psm
 	  group_by(Mixture,PSM) %>% mutate(meanQC=mean(log2(Intensity))) %>% 
 	  ungroup()
+
   # group ratio data into intensity bins
   breaks <- stats::quantile(filt_df$meanQC, seq(0, 1, length.out=nbins+1),
   		   names=FALSE,na.rm=TRUE)
   filt_df <- filt_df %>% 
   	mutate(bin = cut(meanQC, breaks, labels=FALSE, include.lowest=TRUE))
+
   # compute log ratio (difference) of QC measurments
   filt_df <- filt_df %>% group_by(Mixture,PSM) %>% 
   	mutate(ratioQC = diff(log2(Intensity))) %>% ungroup()
+
   # summarize mean and SD of each bin
   filt_df <- filt_df %>% group_by(bin) %>% 
   	mutate(meanRatio = mean(ratioQC,na.rm=TRUE),
   	       binSD = sd(ratioQC), .groups="drop") %>% ungroup()
+
   # flag outliers
   filt_df <- filt_df %>% mutate(isLow = ratioQC < meanRatio - nSD*binSD)
   filt_df <- filt_df %>% mutate(isHigh = ratioQC > meanRatio + nSD*binSD)
   filt_df <- filt_df %>% mutate(isOutlier = isLow | isHigh)
+
   # summary
   summary_df <- filt_df %>% group_by(bin) %>%
   	summarize(meanIntensity = mean(Intensity),
   		  meanRatio = mean(ratioQC,na.rm=TRUE),
   		  binSD = sd(ratioQC), 
   		  nOut = sum(isOutlier), .groups="drop")
+
   # status
   if (length(is_incomplete) > 0) {
     warning(length(is_incomplete),
 	    " PSM with incomplete features in mixture ", mixture,
 	    " were removed.", call.=FALSE)
   }
+
   out_df <- filt_df %>% select(Mixture,PSM, bin, meanQC, ratioQC, binSD, isOutlier)
   return(out_df %>% filter(isOutlier))
 } # EOF
@@ -216,18 +222,15 @@ message("\nAssessing protein-level comparisons with MSstatsTMT.")
 
 t0 <- Sys.time()
 
-# 1. 'intra-BioFraction' comparisons
+## 1. 'intra-BioFraction' comparisons
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity FIXME:
     results1 <- groupComparisonTMT(msstats_prot,
       msstats_contrasts,
-      moderated = moderated
+      moderated = TRUE
     )
   })
 })
-
-
-results1 %>% subset(Protein %in% washc_prots)
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
@@ -235,9 +238,10 @@ message(
   " proteins: ", round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
+## 2. 'Mutant-Control' comparison
+
 t0 <- Sys.time()
 
-# 1. 'Mutant-Control' comparison
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity FIXME:
     results2 <- groupComparisonTMT(msstats_prot,
@@ -253,35 +257,93 @@ message(
   " proteins: ", round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
+## format msstats_prot and resulst for downstream analysis -------------------
 
-## clean-up and combine results -----------------------------------------------
-
-# combine results
+# combine statistical results
 msstats_results <- rbind(results1,results2)
+
+# clean-up the data
+msstats_prot$Run <- NULL
+msstats_prot$TechRepMixture <- NULL
+msstats_prot$Channel <- as.character(msstats_prot$Channel)
+msstats_prot$BioReplicate <- as.character(msstats_prot$BioReplicate)
+msstats_prot$Condition <- as.character(msstats_prot$Condition)
+msstats_prot$Mixture <- as.character(msstats_prot$Mixture)
+msstats_prot$Genotype <- sapply(strsplit(msstats_prot$Condition,"\\."),"[", 1)
+msstats_prot$BioFraction <- sapply(strsplit(msstats_prot$Condition,"\\."),"[", 2)
+
+# annotate with gene Symbols and Entrez ids
+idx <- match(msstats_prot$Protein,gene_map$uniprot)
+msstats_prot <- msstats_prot %>% 
+	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
+	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
+
+idx <- match(msstats_results$Protein,gene_map$uniprot)
+msstats_results <- msstats_results %>% 
+	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
+	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
+
+# cast the data into a matrix
+dm <- msstats_prot %>% 
+	reshape2::dcast(Protein ~ Mixture + Genotype + BioFraction, 
+			value.var="Abundance") %>%
+	as.data.table() %>% as.matrix(rownames="Protein")
+
+# number of missing vals
+n_miss <- apply(dm,1,function(x) sum(is.na(x)))
+
+# we can only impute up to 50% missing. 
+# what is up with spurious missing vals?
+keep <- n_miss < 0.5 * ncol(dm)
+subdm <- dm[keep,]
+
+knn_data <- impute::impute.knn(subdm)
+knn_dm <- knn_data$data
+knn_df <- reshape2::melt(knn_dm)
+colnames(knn_df) <- c("Protein","Sample","Abundance")
+knn_prot <- knn_df %>% mutate(Sample = as.character(Sample)) %>% 
+	mutate(Mixture = sapply(strsplit(Sample,"_"),"[",1)) %>%
+	mutate(Genotype = sapply(strsplit(Sample,"_"),"[",2)) %>%
+	mutate(BioFraction = sapply(strsplit(Sample,"_"),"[",3))
+
+# merge with msstats_prot
+idy <- c("Protein","Abundance", "Mixture","Genotype","BioFraction")
+msstats_prot <- knn_prot %>% left_join(msstats_prot, by=idy)
+
+dm <- msstats_prot %>% 
+	reshape2::dcast(Protein ~ Mixture + Genotype + BioFraction, 
+			value.var="Abundance") %>%
+	as.data.table() %>% as.matrix(rownames="Protein")
+
+stopifnot(!any(is.na(dm)))
+
+# collect sig prots
+idx <- msstats_results$"adj.pvalue" < FDR_alpha
+sigprots <- unique(as.character(msstats_results$Protein)[idx])
 
 
 ## save results ---------------------------------------------------------------
 
-if (save_rda) {
 
-  ## save impute_prot -- the normalized, imputed protein data
-  #myfile <- file.path(root, "data", "impute_prot.rda")
-  #save(impute_prot, file = myfile, version = 2)
-  #message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+# save msstats_prot -- the normalized protein data
+myfile <- file.path(root, "data", "msstats_prot.rda")
+save(msstats_prot, file = myfile, version = 2)
+message("\nSaved ", basename(myfile), " in ", dirname(myfile))
 
-  # save msstats_prot -- the normalized protein data
-  myfile <- file.path(root, "data", "msstats_prot.rda")
-  save(msstats_prot, file = myfile, version = 2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+# save results
+myfile <- file.path(root, "data", "msstats_results.rda")
+save(msstats_results, file = myfile, version = 2)
+message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+#!/usr/bin/env Rscript 
 
-  # save results
-  myfile <- file.path(root, "data", "msstats_results.rda")
-  save(msstats_results, file = myfile, version = 2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+# title: MSstatsTMT
+# description: analysis of intrafraction comparisons with MSstats
+# author: twab
 
-  # save sigprots
-  myfile <- file.path(root,"data","sigprots.rda")
-  save(sigprots,file=myfile,version=2)
-  message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+## Input:
+root <- "~/projects/SwipProteomics"
 
-}
+
+## Options
+FDR_alpha = 0.05
+

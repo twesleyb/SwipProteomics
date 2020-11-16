@@ -35,7 +35,7 @@ save_rda <- TRUE # save key R objects?
 #       This maps individual MS runs to Spectrum.File and other sample
 #       information
 # * msstats_contrasts - a matrix specifying all pairwise intrafraction contrasts
-#       between Control and Mutant mice.
+#       between Control and SWIP P1019R homozygous Mutant mice.
 
 
 ## Functions -----------------------------------------------------------------
@@ -367,14 +367,21 @@ conditions <- conditions[conditions != "Norm"]
 # matrix for all pairwise comparisions defined by comp
 all_contrasts <- MSstatsTMT::makeContrast(groups = conditions)
 
-# subset contrasts matrix
+# subset contrast matrix, keep pairwise contrasts of interest
 biof <- sapply(strsplit(rownames(all_contrasts), "\\.|-"), "[",
   c(2, 4),
   simplify = FALSE
 )
 idx <- sapply(biof, function(x) x[1] == x[2])
+
 # subset and flip sign of the comparisons: Mutant - Control
 msstats_contrasts <- -1 * all_contrasts[idx, ]
+
+# flip rownames
+namen <- rownames(msstats_contrasts)
+new_names <- paste(sapply(strsplit(namen,"-"),"[",2),
+		   sapply(strsplit(namen,"-"),"[",1),sep="-")
+rownames(msstats_contrasts) <- new_names
 
 
 ## Create 'Mutant-Control contrast ---------------------------------------------
@@ -392,62 +399,53 @@ colnames(mut_vs_control) <- colnames(msstats_contrasts)
 
 ## Save outputs to file ---------------------------------------------------------
 
-# save to file
-if (save_rda) {
+# save WASHC4's uniprot ID
+swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
+myfile <- file.path(root, "data", "swip.rda")
+save(swip, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
 
-  # save Swip/Washc4's uniprot ID
-  swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
-  myfile <- file.path(root, "data", "swip.rda")
-  save(swip, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
+# gene_map - gene identifiers for all proteins
+myfile <- file.path(datadir, "gene_map.rda")
+save(gene_map, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
 
-  # gene_map - gene identifiers for all proteins
-  myfile <- file.path(datadir, "gene_map.rda")
-  save(gene_map, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
+# pd_annotation - input annotations for MSstatsTMT
+pd_annotation <- annotation_dt
+myfile <- file.path(datadir, "pd_annotation.rda")
+save(pd_annotation, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
 
-  # pd_annotation - input annotations for MSstatsTMT
-  pd_annotation <- annotation_dt
-  myfile <- file.path(datadir, "pd_annotation.rda")
-  save(pd_annotation, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
+# pd_psm - the raw PSM data--input for MSstatsTMT
+pd_psm <- filt_pd
+myfile <- file.path(datadir, "pd_psm.rda")
+save(pd_psm, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
 
-  # pd_psm - the raw PSM data--input for MSstatsTMT
-  pd_psm <- filt_pd
-  myfile <- file.path(datadir, "pd_psm.rda")
-  save(pd_psm, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
+# msstats_contrasts - all pairwise intraBioFraction comparisons
+myfile <- file.path(datadir, "msstats_contrasts.rda")
+save(msstats_contrasts, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
 
-  # msstats_contrasts - all pairwise intrafraction comparisons
-  myfile <- file.path(datadir, "msstats_contrasts.rda")
-  save(msstats_contrasts, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
-
-  # mut_vs_control - the 'Mutant-Control' comparison
-  myfile <- file.path(datadir, "mut_vs_control.rda")
-  save(mut_vs_control, file = myfile, version = 2)
-  message(
-    "\nSaved ", squote(basename(myfile)), " in ",
-    squote(dirname(myfile)), "."
-  )
-
-
-
-
-} # EIS
-
+# mut_vs_control - the 'Mutant-Control' comparison
+myfile <- file.path(datadir, "mut_vs_control.rda")
+save(mut_vs_control, file = myfile, version = 2)
+message(
+"\nSaved ", squote(basename(myfile)), " in ",
+squote(dirname(myfile)), "."
+)
