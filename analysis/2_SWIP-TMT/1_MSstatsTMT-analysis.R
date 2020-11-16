@@ -7,6 +7,7 @@
 ## MSstatsTMT options
 MBimpute <- TRUE
 rm_single <- TRUE
+
 global_norm <- TRUE
 reference_norm <- TRUE
 remove_norm_channel <- TRUE
@@ -14,11 +15,13 @@ remove_norm_channel <- TRUE
 ## threshold for significance
 FDR_alpha = 0.05
 
-
 ## prepare the working environment ---------------------------------------------
 
 # load functions in root/R and make data in root/data accessible
-library(SwipProteomics)
+#library(SwipProteomics)
+root <- "~/projects/SwipProteomics"
+renv::load(root)
+devtools::load_all(root)
 
 # load data in root/data
 data(pd_psm) 

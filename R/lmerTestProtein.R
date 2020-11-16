@@ -1,5 +1,6 @@
 #' lmerTestProtein
-#' @import dplyr lmerTest
+#' @import lmerTest
+#' @importFrom dplyr %>%
 #' @export lmerTestProtein lmerTestContrast
 
 

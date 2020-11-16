@@ -1,25 +1,17 @@
 #' ggtheme
 #'
-#' Set a theme for ggplots.
-#'
-#' @param none
-#'
-#' @return none
+#' set a theme for ggplots
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #'
-#' @references none
-#'
-#' @keywords none
-#'
 #' @export ggtheme
 #'
-#' @examples
-#' ggtheme()
 ggtheme <- function() {
+
   suppressPackageStartupMessages({
     require(ggplot2)
   })
+
   ggtheme <- theme_gray() +
     theme(
       text = element_text(family = "Arial"),

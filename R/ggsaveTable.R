@@ -1,26 +1,25 @@
 #' ggsaveTable
 #'
-#' save a table with appropriate dimensions.
+#' save a table with appropriate dimensions
 #'
-#' @param x (grob) a grob object
-#'
-#' @return None
+#' @param mytable a grob object
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #' @references \url{https://stackoverflow.com/questions/13867325/get-width-of-plot-area-in-ggplot2}
 #' @keywords grob size height width
-#'
-#' @examples
-#' ggsaveTable(grob)
+#' @export ggsaveTable
+
 ggsaveTable <- function(mytable, myfile) {
+
   suppressPackageStartupMessages({
-    library(grid)
-    library(ggplot2)
-    library(cowplot)
-    library(gridExtra)
+    require(grid)
+    require(ggplot2)
+    require(cowplot)
+    require(gridExtra)
   })
+
   # Function to get absolute size of a grob in inches.
-  # Modified from: Hack-R's solution on Stackoverflow, see refernces.
+  # Modified from: Hack-R's solution on Stackoverflow, see refs
   # Get height (h) and width (w) of table in inches.
   f <- tempfile()
   png(f)
@@ -28,7 +27,9 @@ ggsaveTable <- function(mytable, myfile) {
   w <- convertWidth(sum(mytable$widths), "in", TRUE)
   dev.off()
   unlink(f)
-  # Save.
+
+  # save
   plot <- plot_grid(mytable)
   ggsave(myfile, plot, width = 1.05 * w, height = 1.1 * h, units = "in")
-}
+
+} #EOF

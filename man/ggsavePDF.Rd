@@ -6,19 +6,9 @@
 \usage{
 ggsavePDF(plots, file)
 }
-\value{
-none
-}
 \description{
-Function for saving multiple ggplots to single pdf.
-}
-\examples{
-ggsavePDF(plots, file)
-}
-\references{
-none
+function for saving multiple ggplots to single pdf
 }
 \author{
 Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 }
-\keyword{none}

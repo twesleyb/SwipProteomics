@@ -6,22 +6,9 @@
 \usage{
 ggtheme()
 }
-\arguments{
-\item{none}{}
-}
-\value{
-none
-}
 \description{
-Set a theme for ggplots.
-}
-\examples{
-ggtheme()
-}
-\references{
-none
+set a theme for ggplots
 }
 \author{
 Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 }
-\keyword{none}

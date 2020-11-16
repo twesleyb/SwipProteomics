@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#' mapID
 
 #' @export mapID
 

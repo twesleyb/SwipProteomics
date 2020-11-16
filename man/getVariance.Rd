@@ -2,10 +2,10 @@
 % Please edit documentation in R/getVariance.R
 \name{getVariance}
 \alias{getVariance}
-\title{export getVariance}
+\title{getVariance}
 \usage{
 getVariance(fm)
 }
 \description{
-export getVariance
+getVariance
 }

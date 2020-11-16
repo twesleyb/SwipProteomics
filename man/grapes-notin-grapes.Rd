@@ -6,16 +6,6 @@
 \usage{
 ... \%notin\% NA
 }
-\value{
-none
-}
 \description{
 %notin% - the opposite of %in%
 }
-\references{
-none
-}
-\author{
-Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
-}
-\keyword{none}

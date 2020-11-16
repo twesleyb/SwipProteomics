@@ -7,16 +7,10 @@
 ggsaveTable(mytable, myfile)
 }
 \arguments{
-\item{x}{(grob) a grob object}
-}
-\value{
-None
+\item{mytable}{a grob object}
 }
 \description{
-save a table with appropriate dimensions.
-}
-\examples{
-ggsaveTable(grob)
+save a table with appropriate dimensions
 }
 \references{
 \url{https://stackoverflow.com/questions/13867325/get-width-of-plot-area-in-ggplot2}

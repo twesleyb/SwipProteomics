@@ -1,35 +1,31 @@
 #' ggsavePDF
 #'
-#' Function for saving multiple ggplots to single pdf.
-#'
-#' @return none
+#' function for saving multiple ggplots to single pdf
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #'
-#' @references none
-#'
-#' @keywords none
-#'
 #' @export ggsavePDF
-#'
-#' @examples
-#' ggsavePDF(plots, file)
+
 ggsavePDF <- function(plots, file) {
-  library(ggplotify)
-  pdf(file, onefile = TRUE)
+
+  require(ggplotify)
+
   # If not a list, coerce to list.
   if (!inherits(plots, "list")) {
     plot_list <- list(plots)
   } else {
     plot_list <- plots
   }
+
   # Loop through list, save plots to pdf.
+  pdf(file, onefile = TRUE)
+
   for (i in 1:length(plot_list)) {
-    # If ggplot, then print.
+    # if ggplot, then use print()
     plot <- plot_list[[i]]
     if (inherits(plot, "ggplot")) {
       print(plot)
-      # If else, coerce to ggplot and print.
+      # if else, coerce to ggplot and print
     } else {
       print(as.ggplot(plot))
     }

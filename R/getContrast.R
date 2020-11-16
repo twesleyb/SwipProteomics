@@ -1,7 +1,10 @@
-#' getContrast
 #' @export getContrast
 
+#' @importFrom lme4 fixef
+
 getContrast <- function(fm, pos_coef, neg_coef) {
+
+  # FIXME: doesnt work for intercept scenarios
 
   # create a contrast!
 
@@ -21,7 +24,6 @@ getContrast <- function(fm, pos_coef, neg_coef) {
   neg_index <- grepl(neg_coef, names(contrast))
   pos_index <- grepl(pos_coef, names(contrast))
 
-  # FIXME: doesnt work for intercept scenarios
   contrast[neg_index] <- -1 / sum(neg_index)
   contrast[pos_index] <- +1 / sum(pos_index)
 

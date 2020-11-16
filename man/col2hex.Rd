@@ -9,19 +9,9 @@ col2hex(color, maxValue = 255)
 \arguments{
 \item{color}{- character}
 }
-\value{
-none
-}
 \description{
-Convert a color to its hexadecimal code.
-}
-\examples{
-col2hex(color, maxValue = 255)
-}
-\references{
-none
+convert a color to its hexadecimal code
 }
 \author{
 Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 }
-\keyword{none}

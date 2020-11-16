@@ -1,9 +1,8 @@
 #' @export imputeKNNpep
 #'
 #' @import impute
-#' @import dplyr
-#' @import tibble
-#' @import data.table
+#' @importFrom dplyr %>%
+#' @importFrom data.table as.data.table
 
 imputeKNNpep <- function(tp, groupBy = NULL, samples_to_ignore = NULL,
                          colID = "Abundance", max_percent_missing = 0.5,
