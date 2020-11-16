@@ -6,6 +6,7 @@
 # os: windows linux subsystem (WSL)
 
 ## Input ----------------------------------------------------------------------
+
 # specify the projects root directory:
 root <- "~/projects/SwipProteomics"
 
@@ -235,9 +236,7 @@ uniprot <- unique(filt_pd$Master.Protein.Accessions)
 # NOTE: this may take several minutes
 
 # all entrez gene ids
-entrez <- suppressWarnings({
-  mgi_batch_query(uniprot, quiet = TRUE)
-})
+entrez <- getPPIs::mgi_batch_query(uniprot)
 names(entrez) <- uniprot
 
 # Map any remaining missing IDs by hand.
@@ -250,13 +249,13 @@ mapped_by_hand <- c(
 ) # tub3a
 entrez[names(mapped_by_hand)] <- mapped_by_hand
 
-# Check: Have we successfully mapped all Uniprot IDs to Entrez?
+# check: Have we successfully mapped all Uniprot IDs to Entrez?
 check <- sum(is.na(entrez)) == 0
 if (!check) {
   stop("Unable to map all UniprotIDs to Entrez.")
 }
 
-# Map entrez ids to gene symbols using twesleyb/getPPIs.
+# map entrez ids to gene symbols using twesleyb/getPPIs
 symbols <- getPPIs::getIDs(entrez, "entrez", "symbol", species = "mouse")
 
 # check there should be no missing gene symbols
@@ -264,7 +263,7 @@ if (any(is.na(symbols))) {
   stop("Unable to map all Entrez to gene Symbols.")
 }
 
-# Create gene identifier mapping data.table.
+# create gene identifier mapping data.table
 gene_map <- data.table(
   uniprot = names(entrez),
   entrez = entrez,
@@ -291,6 +290,7 @@ exp_files <- lapply(
   split(all_files, sapply(strsplit(all_files, "_"), "[", 1)),
   unique
 )
+
 files_dt <- data.table(
   "Experiment" = rep(names(exp_files),
     times = sapply(exp_files, length)
@@ -399,6 +399,7 @@ colnames(mut_vs_control) <- colnames(msstats_contrasts)
 swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]
 myfile <- file.path(root, "data", "swip.rda")
 save(swip, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
@@ -407,6 +408,7 @@ squote(dirname(myfile)), "."
 # gene_map - gene identifiers for all proteins
 myfile <- file.path(datadir, "gene_map.rda")
 save(gene_map, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
@@ -416,6 +418,7 @@ squote(dirname(myfile)), "."
 pd_annotation <- annotation_dt
 myfile <- file.path(datadir, "pd_annotation.rda")
 save(pd_annotation, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
@@ -425,6 +428,7 @@ squote(dirname(myfile)), "."
 pd_psm <- filt_pd
 myfile <- file.path(datadir, "pd_psm.rda")
 save(pd_psm, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
@@ -433,6 +437,7 @@ squote(dirname(myfile)), "."
 # msstats_contrasts - all pairwise intraBioFraction comparisons
 myfile <- file.path(datadir, "msstats_contrasts.rda")
 save(msstats_contrasts, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
@@ -441,6 +446,7 @@ squote(dirname(myfile)), "."
 # mut_vs_control - the 'Mutant-Control' comparison
 myfile <- file.path(datadir, "mut_vs_control.rda")
 save(mut_vs_control, file = myfile, version = 2)
+
 message(
 "\nSaved ", squote(basename(myfile)), " in ",
 squote(dirname(myfile)), "."
