@@ -286,7 +286,7 @@ the hypothesis:
 Where $l^T$ is a vector of $\sum=1$ specifying the positive and negative
 coefficients of a contrast. $\beta$ is the model-based estimates of
 \texttt{Condition}.  The null hypothesis (\ref{eq:null}) is that the fold
-change, $\l^T * \beta$, is 0.  A test statistic for such a two-way contrasts is
+change, $l^T * \beta$, is 0.  A test statistic for such a two-way contrasts is
 given by \cite{Kuznetsova2017}:
 \begin{equation} 
 	\label{eq:tstatistic} % equation -- tstatistic

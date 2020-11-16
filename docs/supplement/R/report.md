@@ -149,7 +149,7 @@ fit: Abundance ~ 1 + Condition + (1|Mixture)
 
 ### F10
 
-fit: Abundance ~ Condition + (1|Mixture)
+fit: Abundance ~ Condition + (1|Mixture)impute_prot
 ```
 |Contrast |    log2FC| percentControl|        SE| Tstatistic| Pvalue| DF|isSingular |
 |:--------|---------:|--------------:|---------:|----------:|------:|--:|:----------|
@@ -170,7 +170,7 @@ fit:Abundance ~ 1 + Condition + (1|Mixture)
 |F10      | -1.834294|      0.2804287| 0.1514779|  -12.10931|      0| 26|FALSE      |
 ```
 
-
+impute_prot
 ## Assessing 'Mutant-Control' comparison.
 
 fit: Abundance ~ Condition + (1|Mixture)

@@ -23,7 +23,7 @@ ne_diffusion=0.4
 # * data(msstats_prot)
 # * data(musInteractome) from twesleyb/getPPIs
 
-## HELLO ## 
+## NOTE: ## 
 # this script seems to be a hub. it generates adjm, ne_adjm, and norm_prot --
 # all used in the network building process
 
@@ -86,6 +86,8 @@ devtools::load_all()
 data(gene_map)
 data(poor_prots)
 data(msstats_prot)
+
+# load mouse PPIs from twesleyb/getPPIs
 data(musInteractome)
 
 # NOTE: We will remove proteins with poor fit before creating network
@@ -119,7 +121,7 @@ if (rm_poor) {
 # NOTE: we use the batch corrected Abundance to construct the network!
 dm <- prot_df %>% as.data.table() %>%
   dcast(interaction(Mixture, BioFraction, Genotype) ~ Protein,
-    value.var = "norm_Abundance"
+    value.var = "Abundance"
   ) %>% as.matrix(rownames = TRUE)
 
 # status
@@ -127,7 +129,8 @@ knitr::kable(cbind(samples = dim(dm)[1], proteins = dim(dm)[2]))
 
 # Create correlation (adjacency) matrix
 message("\nGenerating protein co-variation network.")
-adjm <- cor(dm, method = "pearson")
+
+adjm <- cor(dm, method = "pearson", use="complete.obs")
 
 # Enhanced network
 # NOTE: this can take a couple minutes

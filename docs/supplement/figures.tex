@@ -1,5 +1,5 @@
 % title: figures.tex
-% description: supplemental figures
+% description: supplemental latex figures
 % author: twab
 
 
@@ -7,22 +7,21 @@
 	\begin{fullwidth}
 		\begin{center}
 		\includegraphics[width=0.9\paperwidth,keepaspectratio]{gof}
-		\caption{\textbf{Goodness-of-fit of \texttt{edgeR} (A), and 
-		\texttt{MSstatsTMT} (B) statistical approaches.} The overall
-		adequacy of the linear models fit to the data were assessed 
+		\caption{\textbf{Goodness-of-fit of the \texttt{edgeR} model for
+		TMT proteomics data.} The overall
+		adequacy of the NB GLM fit to the data were assessed 
 		by plotting the residual deviance for all proteins as a 
 		quantile-quantile plot (McCarthy \textit{et al.}, (2012)). 
-		\textbf{(A)} For analysis with \texttt{edgeR}, The normalized
-		protein data from \texttt{MSstatsTMT} were fit with a negative
+		\textbf{(A)} The normalized protein data were fit with a 
 		binomal generalized linear model of the form: 
-		\texttt{Abundance} $\sim$ \texttt{Mixture + Condition}.
+		\texttt{log2(Intensity)} $\sim$ \texttt{Mixture + Condition}.
 		Where \texttt{Mixure} is an additive blocking factor that 
-		accounts for variablity between experiments. 
-		The NB framework used by \texttt{edgeR} utilizes a dispersion 
-			parameter $\psi$
-		to account for mean-variance relationships in the data.
-		The dispersion parameter can take several forms including:
-                'common', 'trended', and 'tagwise'. We plot the deviance
+		accounts for variablity between experiments.  The NB framework
+		used by \texttt{edgeR} utilizes a dispersion parameter,
+		$\psi$, to model mean-variance relationships in the data
+		in three different ways.
+		The dispersion parameter can take the form of: 'common', 'trended', and 'tagwise'. 
+		We plot the deviance
 		statistics for the data fit with each of
 		the three disperions parameters against their 
 		theoretical normal quantiles using the \texttt{edgeR::gof}

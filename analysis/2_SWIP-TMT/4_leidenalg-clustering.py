@@ -14,24 +14,25 @@ root = "~/projects/SwipProteomics"
 ## Parameters for multiresolution methods:
 ## NOTE: some parameters are not used if they are not required by the set 
 ## optimization method
-rmin = 1 # Min resolution for multi-resolution methods.
+rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 1 # Number of steps to take between rmin and rmax.
+nsteps = 100 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'ne_surprise_surprise' # Prefix out output partition, saved as .csv.
-optimization_method = 'Surprise'
+output_name = 'cpm' # Prefix out output partition, saved as .csv.
+optimization_method = 'CPM'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-adjm_file = 'ne_adjm.csv' 
+#adjm_file = 'ne_adjm.csv' 
+adjm_file = 'adjm.csv' 
 
 ## Output:
 # Saved in root/rdata/

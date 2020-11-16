@@ -419,6 +419,19 @@ gene_map <- data.table(uniprot, entrez, symbol)
 
 message("\nPerforming sample loading normalization.")
 
+colnames(tidy_prot)
+
+samples <- unique(tidy_prot$Sample)
+conditionsapply(strsplit(samples,"\\ "),"[",2)
+
+tidy_prot <- tidy_prot %>% mutate(Condition = sapply(strsplit(Sample,"\\ "),"[",2))
+tidy_prot <- tidy_prot %>% mutate(Run = sapply(strsplit(Sample,"\\ "),"[",1))
+tidy_prot <- tidy_prot %>% mutate(BioReplicate = sapply(strsplit(Sample,"\\ "),"[",3))
+tidy_prot <- tidy_prot %>% mutate(Subject = interaction(Condition,BioReplicate))
+
+#fx <- log2(Intensity) ~ 0 + Condition + (1|Run)
+#prot = sample(unique(tidy_prot$Accession),1)
+#fm <- lmerTest::lmer(fx, data = tidy_prot %>% subset(Accession == prot))
 SL_prot <- normSL(tidy_prot,groupBy="Sample")
 
 # Check, column sums should now be equal:

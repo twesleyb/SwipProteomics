@@ -377,6 +377,19 @@ idx <- sapply(biof, function(x) x[1] == x[2])
 msstats_contrasts <- -1 * all_contrasts[idx, ]
 
 
+## Create 'Mutant-Control contrast ---------------------------------------------
+
+# add a contrast vector specifying the mutant-control comparison to
+# msstats_contrasts matrix (see 0_*.R)
+
+mut_vs_control <- matrix(c(
+  -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
+  1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
+), nrow = 1)
+row.names(mut_vs_control) <- "Mutant-Control"
+colnames(mut_vs_control) <- colnames(msstats_contrasts)
+
+
 ## Save outputs to file ---------------------------------------------------------
 
 # save to file
@@ -424,4 +437,17 @@ if (save_rda) {
     "\nSaved ", squote(basename(myfile)), " in ",
     squote(dirname(myfile)), "."
   )
+
+  # mut_vs_control - the 'Mutant-Control' comparison
+  myfile <- file.path(datadir, "mut_vs_control.rda")
+  save(mut_vs_control, file = myfile, version = 2)
+  message(
+    "\nSaved ", squote(basename(myfile)), " in ",
+    squote(dirname(myfile)), "."
+  )
+
+
+
+
 } # EIS
+

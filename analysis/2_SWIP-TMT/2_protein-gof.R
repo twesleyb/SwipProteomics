@@ -4,7 +4,7 @@
 # author: twab
 # description: generate some gof statistics for protein models
 
-save_rda = TRUE 
+save_rda = FALSE 
 r2_threshold = 0.70
 # NOTE: proteins with r2 < r2_threshold are considered to have a poor fit and 
 # not used in downstream analysis
@@ -15,7 +15,6 @@ renv::load(root)
 devtools::load_all(root)
 
 # load the data
-data(fx0) # protein model
 data(swip)
 data(gene_map)
 data(msstats_prot)
@@ -36,7 +35,6 @@ suppressPackageStartupMessages({
 ## prepare the data for variancePartition --------------------------------------
 
 # cast the data into a matrix
-# NOTE: using Abundance and not norm_Abundance!
 fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
 dm <- msstats_prot %>%
 	reshape2::dcast(fx, value.var= "Abundance") %>% 

@@ -15,7 +15,9 @@ devtools::load_all(root)
 data(swip)
 data(gene_map)
 data(partition)
+data(washc_prots)
 data(msstats_prot)
+
 
 # other imports
 suppressPackageStartupMessages({
@@ -71,15 +73,18 @@ pClustered <- round(sum(partition!=0)/length(partition),3)
 medSize <- median(sapply(modules,length))
 knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 
+
 ## fit WASH complex as an example ----------------------------------------------
 
-data(swip)
-data(washc_prots)
+# the formula to be fit: Intercept +1 and Protein as a mixed effect.
+fx1 <- "Abundance ~ Condition + (1|Mixture) + (1|Protein)"
 
-# the formula to be fit:
-fx1 <- "Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)"
+# you must have complete cases here
+
+
 ## fit the model:
-fit <- lmerTest::lmer(fx1, msstats_filt %>% filter(Protein %in% washc_prots))
+fit <- lmerTest::lmer(fx1, data = msstats_filt)
+
 
 lT <- getContrast(fit,".*Mutant.*F4",".*Control.*F4")
 
