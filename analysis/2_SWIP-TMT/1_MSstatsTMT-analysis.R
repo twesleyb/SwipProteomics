@@ -1,17 +1,17 @@
 #!/usr/bin/env Rscript 
 
-# title: MSstatsTMT
+# title: MSstatsTMT analysis of SWIP-TMT Proteomics
 # description: analysis of protein-level comparisons with MSstatsTMT
 # author: twab
 
-## MSstatsTMT Options
+## MSstatsTMT options
 MBimpute <- TRUE
 rm_single <- TRUE
 global_norm <- TRUE
 reference_norm <- TRUE
 remove_norm_channel <- TRUE
 
-## Threshold for significance
+## threshold for significance
 FDR_alpha = 0.05
 
 
@@ -63,7 +63,7 @@ suppressMessages({ # verbosity
   )
 })
 
-message("\nTime to reformat PSM data.", 
+message("\nTime to reformat PSM data: ", 
 	round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
@@ -175,7 +175,8 @@ suppressWarnings({ # about closing clusters FIXME:
 
 # examine the results
 results1 %>% group_by(Label) %>% 
-	summarize(nSig = sum(adj.pvalue < FDR_alpha)) %>% knitr::kable()
+	summarize(nSig = sum(adj.pvalue < FDR_alpha),.groups="drop") %>% 
+	knitr::kable()
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
@@ -201,7 +202,8 @@ results2$adj.pvalue <- p.adjust(results2$pvalue,method="bonferroni")
 
 # examine the results
 results2 %>% group_by(Label) %>% 
-	summarize(nSig = sum(adj.pvalue < FDR_alpha)) %>% knitr::kable()
+	summarize(nSig = sum(adj.pvalue < FDR_alpha),.groups="drop") %>% 
+	knitr::kable()
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
