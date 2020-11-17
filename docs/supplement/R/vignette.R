@@ -16,6 +16,7 @@ data(swip)
 data(washc_prots)
 data(msstats_prot)
 data(msstats_contrasts)
+data(mut_vs_control)
 
 suppressPackageStartupMessages({
   library(lme4) # Bates et al., 2020
@@ -31,17 +32,39 @@ arg_list[["data"]] <- msstats_prot %>% subset(Protein == swip)
 arg_list[["contrast.matrix"]] <- msstats_contrasts
 arg_list[["moderated"]] <- FALSE
 
+# intra-BioFraction comparisons
 do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
 
+# overall Mut-Control comparison
+LT <- msstats_contrasts[1,]
+LT[] <- 0
+LT[grepl("Control",names(LT))] <- -1/7
+LT[grepl("Mutant",names(LT))] <- +1/7
+
+LTm <- as.matrix(t(LT))
+rownames(LTm) <- "Mutant-Control"
+arg_list$contrast.matrix <- LTm
+
+do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
+
+
+##  lmerTestContrast = same result
 fx <- Abundance ~ 1 + Condition + (1|Mixture)
 fm <- lmer(fx, msstats_prot %>% subset(Protein == swip))
 
+L8 <- fixef(fm)
+L8[] <- 0
+L8["ConditionMutant.F8"] <- +1
+L8["ConditionControl.F8"] <- -1
+
+lmerTestContrast(fm,L8) %>% knitr::kable()
+
 LT <- fixef(fm)
 LT[] <- 0
-LT["ConditionMutant.F8"] <- +1
-LT["ConditionControl.F8"] <- -1
-
-lmerTestContrast(fm,LT) %>% knitr::kable()
+LT[grep("Mutant",names(LT))] <- +1/7
+LT[grep("Control",names(LT))] <- -1/7
+lmerTestContrast(fm, LT) %>% mutate(Contrast="Mutant-Control") %>% 
+	unique() %>% knitr::kable()
 
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
