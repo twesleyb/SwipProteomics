@@ -158,10 +158,6 @@ fx <- "Abundance ~ Condition + Protein + (1|Mixture)"
 fx0 <- "Abundance ~ 0 + Genotype + BioFraction + Protein + (1|Mixture)"
 fx1 <- "Abundance ~ 1 + Genotype + BioFraction + Protein + (1|Mixture)"
 
-
-
-
-
 ## Mutant-Control comparision
 message("\nfit: ", fx)
 fm <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein %in% washc_prots))
@@ -186,11 +182,12 @@ LT[grep("Mutant",names(LT))] <- +1/7
 message("\nfit: ",fx)
 lmerTestContrast(fm, LT) %>% mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
-## getContrast doesnt work for models with +1 intercept
+# for +0
 LT <- getContrast(fm0,"Mutant","Control")
 message("\nfit: ", fx0)
 lmerTestContrast(fm0, LT) %>% mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
+## getContrast doesnt work for models with +1 intercept
 # for fm1: must specify contrast correctly!
 LT <- fixef(fm1)
 LT[] <- 0
@@ -201,25 +198,21 @@ lmerTestContrast(fm1, LT) %>% mutate(Contrast='Mutant-Control') %>%
 
 
 ## protein as a mixed effect
-fx2 <- "Abundance ~ 0 + Genotype + BioFraction + (1|Mixture) + (1|Protein)"
+fx2 <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
 fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
+
 LT <- getContrast(fm2,"Mutant","Control")
 y = lmerTestContrast(fm2, LT) # as a mixed effect
+y %>% unique() %>% knitr::kable()
 
+fx0 <- "Abundance ~ 0 + Condition + Protein + (1|Mixture)"
 fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein %in% washc_prots))
 LT <- getContrast(fm0,"Mutant","Control")
 x = lmerTestContrast(fm0, LT) # as  a fixed effect
+x %>% unique() %>% knitr::kable()
 
-aov(fm0,fm2)
+fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
 
-x = residuals(fm0)
+REMLcrit(fm2) # protein as mixed
 
-REMLcrit(fm0)
-
-qqnorm(residuals(fm0))
-qqline(residuals(fm0))
-
-REMLcrit(fm2)
-
-qqnorm(residuals(fm2))
-qqline(residuals(fm2))
+REMLcrit(fm0) # protein as fixed
