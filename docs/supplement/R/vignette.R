@@ -24,6 +24,25 @@ suppressPackageStartupMessages({
   library(data.table)
 })
 
+## 0. MSstatsTMT ---------------------------------------
+
+arg_list <- list()
+arg_list[["data"]] <- msstats_prot %>% subset(Protein == swip)
+arg_list[["contrast.matrix"]] <- msstats_contrasts
+arg_list[["moderated"]] <- FALSE
+
+do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
+
+fx <- Abundance ~ 1 + Condition + (1|Mixture)
+fm <- lmer(fx, msstats_prot %>% subset(Protein == swip))
+
+LT <- fixef(fm)
+LT[] <- 0
+LT["ConditionMutant.F8"] <- +1
+LT["ConditionControl.F8"] <- -1
+
+lmerTestContrast(fm,LT) %>% knitr::kable()
+
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
 
@@ -216,3 +235,20 @@ fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
 REMLcrit(fm2) # protein as mixed
 
 REMLcrit(fm0) # protein as fixed
+
+##
+
+fx <- Abundance ~ 0 + Condition + (1|Mixture)
+fm <- lmer(fx,data=msstats_prot %>% subset(Protein == swip))
+LT <- getContrast(fm,"Mutant","Control")
+lmerTestContrast(fm,LT)
+
+
+
+MSstatsTMT::groupComparisonTMT(msstats_prot %>% subset(Protein == swip), 
+				     contrast.matrix=LT, moderated=FALSE)
+
+
+
+
+
