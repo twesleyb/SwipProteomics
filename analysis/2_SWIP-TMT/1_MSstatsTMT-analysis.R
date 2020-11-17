@@ -191,13 +191,12 @@ message(
 
 t0 <- Sys.time()
 
+# contrast.matrix should be a matrix!
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity FIXME:
-    results2 <- groupComparisonTMT(msstats_prot,
-      mut_vs_control,
-      moderated = FALSE
-    )
-  })
+    results2 <- groupComparisonTMT(msstats_prot, 
+				   contrast.matrix = mutant_vs_control,
+				   moderated = FALSE) })
 })
 
 # Adjust pvalues for multiple comparisons with Bonferroni method

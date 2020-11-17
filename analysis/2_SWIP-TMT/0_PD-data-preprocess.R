@@ -5,6 +5,7 @@
 # author: Tyler W Bradshaw <twesleyb10@gmail.com>
 # os: windows linux subsystem (WSL)
 
+
 ## Input ----------------------------------------------------------------------
 
 # specify the projects root directory:
@@ -38,6 +39,7 @@ input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 #       between Control and SWIP P1019R homozygous Mutant mice.
 # * swip - WASHC4's uniprot ID
 
+# FIXME: mut_vs_control contrast is screwed up somehow
 
 ## Functions -----------------------------------------------------------------
 # functions utilized herein
@@ -153,7 +155,7 @@ raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
 
 
 ## load sample data -----------------------------------------------------------
-# recieved this excel spreadsheet from GW, exported from PD
+# received this excel spreadsheet from GW, exported from PD
 
 # pass meaningful colnames to read_excel
 col_names <- c(
@@ -385,12 +387,10 @@ rownames(msstats_contrasts) <- new_names
 # add a contrast vector specifying the mutant-control comparison to
 # msstats_contrasts matrix (see 0_*.R)
 
-mut_vs_control <- matrix(c(
-  -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7, -1 / 7,
-  1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7
-), nrow = 1)
-row.names(mut_vs_control) <- "Mutant-Control"
-colnames(mut_vs_control) <- colnames(msstats_contrasts)
+mut_vs_control <- as.matrix(t(msstats_contrasts[1,]))
+rownames(mut_vs_control) <- "Mutant-Control"
+mut_vs_control[grepl("Mutant",colnames(mut_vs_control))] <- +1/7
+mut_vs_control[grepl("Control",colnames(mut_vs_control))] <- -1/7
 
 
 ## Save outputs to file ---------------------------------------------------------

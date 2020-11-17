@@ -36,15 +36,7 @@ arg_list[["moderated"]] <- FALSE
 do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
 
 # overall Mut-Control comparison
-LT <- msstats_contrasts[1,]
-LT[] <- 0
-LT[grepl("Control",names(LT))] <- -1/7
-LT[grepl("Mutant",names(LT))] <- +1/7
-
-LTm <- as.matrix(t(LT))
-rownames(LTm) <- "Mutant-Control"
-arg_list$contrast.matrix <- LTm
-
+arg_list$contrast.matrix <- mut_vs_control
 do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
 
 
