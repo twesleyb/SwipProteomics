@@ -62,15 +62,13 @@ part_df$Entrez <- mapGeneIDs(part_df$Protein,"uniprot","entrez")
 
 
 ## examine the washc_module
-fx <- Abundance ~ 0 + Condition + (1|Protein) + (1|Mixture)
+fx <- Abundance ~ 1 + Condition + (1|Protein) + (1|Mixture)
 fm <- lmerTest::lmer(fx,data=msstats_prot%>% subset(Protein %in% washc_prots))
 
-fx0 <- Abundance ~ Condition + (1|Protein) + (1|Mixture)
-fm0 <- lmerTest::lmer(fx0,msstats_prot %>% subset(Protein %in% washc_prots))
-vp <- getVariance(fm0)
+vp <- getVariance(fm)
 vp/sum(vp)
 
-# summary:
+# network summary:
 nProts <- formatC(length(names(partition)),big.mark=",")
 kModules <- length(modules)
 pClustered <- round(sum(partition!=0)/length(partition),3)
@@ -80,15 +78,18 @@ knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 
 ## fit WASH complex as an example ----------------------------------------------
 
-fx <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
 
 # fit the model:
-fm <- lmerTest::lmer(fx, msstats_filt %>% subset(Protein %in% washc_prots))
+fx <- "Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)"
+fm <- lmerTest::lmer(fx, msstats_prot %>% subset(Protein %in% washc_prots))
 
 ## assess contrast
 LT <- getContrast(fm,"Mutant","Control")
 lmerTestContrast(fm, LT) %>% mutate(Contrast="Mutant-Control") %>% 
 	unique() %>% knitr::kable()
+
+
+calcSatter
 
 
 ## examine the model
@@ -105,11 +106,11 @@ colnames(df)[colnames(df) == "t value"] <- "Tvalue"
 colnames(df)[colnames(df) == p ] <- "Pvalue"
 df %>% knitr::kable(format="markdown")
 
-
 ## goodness of fit
 message("R2m: Marginal; variation explained by fixed effects.")
 message("R2c: Conditional; total variation explained by the model.")
-r.squaredGLMM.merMod(fit) %>% knitr::kable(format="markdown")
+r.squaredGLMM.merMod(fm) %>% knitr::kable(format="markdown")
+
 
 ## module level analysis for all modules --------------------------------------
 

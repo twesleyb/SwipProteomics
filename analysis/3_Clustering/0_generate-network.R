@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript 
 
 # title: 
-# description:
+# description: generate protein covariation (correlation) network
 # author: twab
 
 ## Input:
