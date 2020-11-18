@@ -8,7 +8,8 @@
 root <- "~/projects/SwipProteomics"
 
 ## Options:
-rm_poor <- TRUE # rm proteins with overall R2 less than 0.7 before network construction
+rm_poor <- TRUE
+# rm proteins with overall R2 less than 0.7 before network construction
 
 ## Output:
 # * generates correlation matrix which is used as input for Leidenalg clustering
@@ -19,7 +20,6 @@ rm_poor <- TRUE # rm proteins with overall R2 less than 0.7 before network const
 # load renv
 renv::load(root)
 
-# load functions in root/R and make data in root/data accessible
 # library(SwipProteomics)
 devtools::load_all(root)
 
@@ -62,7 +62,7 @@ n_missing <- apply(dm,1,function(x) sum(is.na(x)))
 
 # we cant work with proteins with more than 50% missing values
 # drop proteins with more than 50% missingness
-drop <- apply(dm,1,function(x) sum(is.na(x))> 0.5 * ncol(dm))
+drop <- apply(dm, 1, function(x) sum(is.na(x))> 0.5 * ncol(dm))
 
 # knn impute
 knn_data <- impute::impute.knn(dm[!drop,])
@@ -73,6 +73,7 @@ namen <- colnames(knn_dm)
 samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
 colnames(samples) <- c("Mixture","Genotype","BioFraction")
 samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
+
 
 ## ---- address effect of Mixture
 
@@ -113,3 +114,17 @@ fwrite(adjm_dt, myfile)
 ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
 fwrite(ne_adjm_dt, myfile)
+
+
+## ---- save norm_dm and other input to permutation testing
+
+norm_prot <- norm_dm
+myfile <- file.path(root,"data","norm_prot.rda")
+save(norm_prot,file=myfile,version=2)
+
+# root/rdata
+myfile <- file.path(root,"rdata","adjm.rda")
+save(adjm,file=myfile,version=2)
+
+myfile <- file.path(root,"rdata","ne_adjm.rda")
+save(ne_adjm,file=myfile,version=2)

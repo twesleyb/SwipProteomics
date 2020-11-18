@@ -1,13 +1,11 @@
 #!/usr/bin/env Rscript
 
 # title: Module Preservation
-# description: Evaluate module preservation by permutation testing.
+# description: evaluate module preservation by permutation testing
 # authors: Tyler W A Bradshaw
 
 ## INPUT data:
-# specify the partition to be used:
 part_file <- "leidenalg_partition.rda" # in root/data
-# NOTE: other inputs are defined below.
 
 ## OPTIONS:
 stats <- c(1, 6, 7) # Statistics by which module preservation is enforced.
@@ -38,9 +36,7 @@ save_as <- "rda" # Output format for partition: can be RData or csv
 output_prefix <- "" # partition.rda in root/data
 
 
-#---------------------------------------------------------------------
-## Description of NetRep Permutation Statistics:
-#---------------------------------------------------------------------
+## ---- Description of NetRep Permutation Statistics:
 
 # 1. avg.weight (average edge weight) - Calculated from network. Assumes edge
 #    weights are positive.
@@ -61,9 +57,8 @@ output_prefix <- "" # partition.rda in root/data
 # 7. avg.contrib (average node contribution) - Quantifies how similar nodes are
 #    to summary profile.
 
-#---------------------------------------------------------------------
-## Misc function - getrd().
-#---------------------------------------------------------------------
+
+## ---- Misc functions 
 
 getrd <- function(here = getwd(), dpat = ".git") {
   # Get the repository's root directory.
@@ -241,9 +236,8 @@ check_modules <- function(x, strength = "strong", stats = c(1:7), alpha = 0.05) 
   return(v)
 } # Ends function.
 
-#---------------------------------------------------------------------
-## Set-up the workspace.
-#---------------------------------------------------------------------
+
+## ---- Set-up the workspace.
 
 # Load renv.
 root <- getrd()
@@ -266,9 +260,7 @@ rdatdir <- file.path(root, "rdata")
 # Number of threads for parallel processing.
 nThreads <- parallel::detectCores() - 1
 
-#---------------------------------------------------------------------
-## Collect input for permutation testing.
-#---------------------------------------------------------------------
+## ---- Collect input for permutation testing.
 
 ## Prepare input for NetRep.
 # All data should be in datadir/.

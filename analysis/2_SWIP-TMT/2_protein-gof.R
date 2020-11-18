@@ -174,10 +174,10 @@ protein_gof %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
 myfile <- file.path(root,"data","poor_prots.rda")
 save(poor_prots,file=myfile,version=2)
   
-# save protein_gof data.table as rda
+# save protein_gof data.table as rda --> used to annotate plots
 myfile <- file.path(root,"data","protein_gof.rda")
 save(protein_gof, file=myfile, version=2)
   
-# TODO: save as exel table!
+# TODO: save as excel table!
 myfile <- file.path(root,"tables","Protein_GOF.csv")
 fwrite(protein_gof,file=myfile)

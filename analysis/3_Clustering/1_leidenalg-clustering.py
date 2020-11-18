@@ -20,18 +20,18 @@ root = "~/projects/SwipProteomics"
 ## optimization method
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 3 # Number of steps to take between rmin and rmax.
+nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'ne_cpm' # Prefix out output partition, saved as .csv.
-optimization_method = 'CPM'
+output_name = 'ne_surprise_surprise' # Prefix out output partition, saved as .csv.
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = False # If module_size > max_size, then cluster recursively.
-recursive_method = 'CPM'
+recursive = True # If module_size > max_size, then cluster recursively.
+recursive_method = 'Surprise'
 
 
 ## Output:
