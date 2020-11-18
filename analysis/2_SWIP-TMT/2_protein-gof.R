@@ -180,4 +180,5 @@ save(protein_gof, file=myfile, version=2)
   
 # TODO: save as excel table!
 myfile <- file.path(root,"tables","S3_SWIP_TMT_Protein_GOF.xlsx")
-write_excel(list("Protein GOF" = protein_gof),file=myfile)
+results_list <- list("Protein GOF" = protein_gof)
+write_excel(results_list,myfile)
