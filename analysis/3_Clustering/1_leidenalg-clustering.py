@@ -6,7 +6,7 @@ description: Leidenalg Clustering of the Enhanced Protein Covariation Network
 authors: Tyler W A Bradshaw
 '''
 
-## Inputs ---------------------------------------------------------------------
+## ---- Inputs
 
 ## Project root:
 root = "~/projects/SwipProteomics"
@@ -16,22 +16,21 @@ root = "~/projects/SwipProteomics"
 ## optimization method
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 100 # Number of steps to take between rmin and rmax.
+nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'cpm' # Prefix out output partition, saved as .csv.
+output_name = 'cpm_cpm' # Prefix out output partition, saved as .csv.
 optimization_method = 'CPM'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = False # If module_size > max_size, then cluster recursively.
-recursive_method = 'Surprise'
+recursive = True # If module_size > max_size, then cluster recursively.
+recursive_method = 'CPM'
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-#adjm_file = 'ne_adjm.csv' 
 adjm_file = 'adjm.csv' 
 
 ## Output:
@@ -39,7 +38,7 @@ adjm_file = 'adjm.csv'
 # [output_name]_partitions.csv
 
 
-## Prepare the workspace ------------------------------------------------------
+## ---- Prepare the workspace
 
 import os
 import sys
@@ -66,7 +65,7 @@ from myfun import * # try putting SwipProtomics in bashrc's python path
 #from Py.myfun import *
 
 
-## Leidenalg qualitity metrics ------------------------------------------------
+## ---- Leidenalg qualitity metrics
 
 # Leidenalg supports the following optimization methods:
 methods = {
@@ -129,7 +128,7 @@ if parameters.get('multi_resolution') is True:
 
 
 
-## Load input adjacency matrix and create an igraph object --------------------
+## ---- Load input adjacency matrix and create an igraph object
 
 # Load graph adjacency matrix.
 myfile = os.path.join(rdatdir,adjm_file)
@@ -154,7 +153,7 @@ print("Input graph: {}".format(g.summary()),file=stderr)
 # NOTE: UNW is UNdirected and Weighted graph!
 
 
-## Community detection with the Leiden algorithm -----------------------------
+## ---- Community detection with the Leiden algorithm
 
 # FIXME: really we need two functions:
 # * single-resolution (+/- recursive)
@@ -170,7 +169,7 @@ out = [key for key in parameters if parameters.get(key) is None]
 for key in out: del parameters[key]
 
 
-## Perform Leidenalg module detection -----------------------------------------
+## ---- Perform Leidenalg module detection
 
 ## MULTIRESOLUTION METHODS
 
@@ -283,7 +282,7 @@ else:
 print("Final partition:  {}".format(partition.summary()), file=stderr)
 
 
-## Save Leidenalg clustering results ------------------------------------------
+## ---- Save Leidenalg clustering results
 
 # collect matrix in which each row is a partition (nrow = nRes)
 df = DataFrame(columns = profile[0].graph.vs['name'])

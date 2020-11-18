@@ -7,10 +7,11 @@
 ## Input:
 root <- "~/projects/SwipProteomics"
 
+## Output:
+# * generates correlation matrix which is used as input for Leidenalg clustering
 
-## Options
 
-## prepare the working environment ---------------------------------------------
+## ---- prepare the working environment
 
 # load renv
 renv::load(root)
@@ -31,7 +32,7 @@ suppressPackageStartupMessages({
 })
 
 
-## create covariation network -------------------------------------------------
+## ---- create covariation network
 
 # cast the data into a matrix
 dm <- msstats_prot %>% 
@@ -40,15 +41,21 @@ dm <- msstats_prot %>%
         as.matrix(rownames="Protein")
 
 
-# 563 proteins with missingness
+## examine missingness
+# there are a large number or proteins with some sort of missingness
+# many of these proteins are quantified in 2/3 experiments (mixtures)
+# in order to retain these proteins in the network, we impute protein-
+# level missing values using the KNN algorithm for MNAR data (missing-ness
+# is inferred to be related to the left-shifted distribution of these 
+# proteins -- they are less abundant, e.g. WASHC3)
+
+# sum(any_missing) ~ 563 proteins with missingness
 any_missing <- apply(dm,1,function(x) any(is.na(x)))
 
-# flag proteins with missingness--we will not use these in the statistical
-# analysis of modules.
-
-## types of missingness
+# types of missingness
 n_missing <- apply(dm,1,function(x) sum(is.na(x)))
 
+# we cant work with proteins with more than 50% missing values
 # drop proteins with more than 50% missingness
 drop <- apply(dm,1,function(x) sum(is.na(x))> 0.5 * ncol(dm))
 
@@ -62,12 +69,22 @@ samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
 colnames(samples) <- c("Mixture","Genotype","BioFraction")
 samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
 
+## ---- address effect of Mixture
+
+# we aim to identify proteins that covary together in biological space
+# (BioFraction); we remove the effect of Mixture using limma prior to building
+# the covariation network in order to mitigate the contribution of Mixture to
+# covariation modules
+
 # with complete cases, address effect of mixture
 norm_dm <- limma::removeBatchEffect(knn_dm, batch=samples$Mixture,
 			 design=model.matrix(~Condition,data=samples))
 
 # calculate coorrelation matrix
 adjm <- cor(t(norm_dm),method="pearson",use="complete.obs")
+
+
+## ---- save adjm
 
 # coerce to data.table and save to file
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")

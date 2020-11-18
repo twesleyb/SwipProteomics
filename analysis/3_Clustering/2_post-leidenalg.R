@@ -40,5 +40,3 @@ calcModQuality <- function(part, msstats_prot) {
 # maximize variance attributable to fixef (Condition)
 # minimize variance attributable to mixef (Mixture + Protein)
 # minimize unexplained variance (minimize Residual)
-
-

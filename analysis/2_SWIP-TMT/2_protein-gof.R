@@ -4,10 +4,13 @@
 # author: twab
 # description: generate some gof statistics for protein-wise models
 
+## options
+
 # threshold for defining proteins with poor fit
 r2_threshold = 0.70
 
-# prepare the env
+
+## prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
 
@@ -20,7 +23,8 @@ data(gene_map)
 data(msstats_prot)
 data(pd_annotation)
 
-# imports
+
+## imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
@@ -28,33 +32,47 @@ suppressPackageStartupMessages({
 })
 
 
-## prepare the data for variancePartition --------------------------------------
+## ---- prepare the data for variancePartition 
 
 # cast the data into a matrix
-fx <- formula(Protein ~ Mixture + Genotype + BioFraction)
+form <- formula(Protein ~ Mixture + Genotype + BioFraction)
 dm <- msstats_prot %>%
-	reshape2::dcast(fx, value.var= "Abundance") %>% 
+	reshape2::dcast(form, value.var= "Abundance") %>% 
 	as.data.table() %>% as.matrix(rownames="Protein")
+
+# we cannot work with missingness for variancePartition
+idx <- apply(dm,1,function(x) any(is.na(x)))
+if (sum(idx)>0) {
+	warning("Removing ", sum(idx), " proteins with any missing values.")
+	dm <- dm[!idx,]
+}
 
 stopifnot(!any(is.na(dm)))
 
-# munge to create sample info from the dcast fx
+# munge to create sample info from the dcast formula
 info <- as.data.table(do.call(rbind,strsplit(colnames(dm),"_")))
-colnames(info) <- strsplit(as.character(fx)[3]," \\+ ")[[1]]
+colnames(info) <- strsplit(as.character(form)[3]," \\+ ")[[1]]
 
 
-## variancePartition -----------------------------------------------------------
+## ---- variancePartition analysis 
 
 # calculate protein-wise variance explained by major covariates in the
 # mixed-model:
-form <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
-prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form, info)
+form0 <- formula(~ (1|Mixture) + (1|Genotype) + (1|BioFraction))
+
+# register parallel backend
+n_cores <- parallel::detectCores() - 1
+doParallel::registerDoParallel(n_cores)
+
+prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form0, info)
 
 
 ## parse the response ----------------------------------------------------------
 
 # collect results
 df <- as.data.frame(prot_varpart)
+class(df) <- "data.frame"
+
 varpart_df <- as.data.table(df,keep.rownames="Protein")
 
 # annotate with gene ids
@@ -122,10 +140,11 @@ protein_gof <- left_join(varpart_df,gof_df,by="Protein")
 # examine results
 protein_gof %>% head() %>% knitr::kable()
 
+# highly spatially cohesive proteins
 protein_gof %>% arrange(desc(BioFraction)) %>% head() %>% knitr::kable()
 
 
-## identify proteins with poor fit ---------------------------------------------
+## ---- identify proteins with poor fit 
 
 # use overall R2 -- the percent of variance explained by the model as a natural
 # description of the overall quality of the fit
@@ -149,21 +168,16 @@ message("\nWASHC* protein goodness-of-fit statistics:")
 protein_gof %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
 
 
-## save results -----------------------------------------------------------------
+## ---- save results
 
-
-if (save_rda) {
-
-  # save character vector of poor_prots
-  myfile <- file.path(root,"data","poor_prots.rda")
-  save(poor_prots,file=myfile,version=2)
+# save character vector of poor_prots
+myfile <- file.path(root,"data","poor_prots.rda")
+save(poor_prots,file=myfile,version=2)
   
-  # save protein_gof data.table as rda
-  myfile <- file.path(root,"data","protein_gof.rda")
-  save(protein_gof, file=myfile, version=2)
+# save protein_gof data.table as rda
+myfile <- file.path(root,"data","protein_gof.rda")
+save(protein_gof, file=myfile, version=2)
   
-  myfile <- file.path(root,"rdata","protein_gof.csv")
-  fwrite(protein_gof,file=myfile)
-  
-}
-
+# TODO: save as exel table!
+myfile <- file.path(root,"tables","Protein_GOF.csv")
+fwrite(protein_gof,file=myfile)
