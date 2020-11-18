@@ -229,7 +229,7 @@ lapply(results_list, summarize, sum(Padjust<0.05)) %>%
 	bind_rows(.id="Contrast") %>% knitr::kable()
 
 # save as excel document
-myfile <- file.path(root,"tables","results.xlsx")
+myfile <- file.path(root,"tables","S2_SWIP_TMT_Results.xlsx")
 write_excel(results_list,myfile)
 
 

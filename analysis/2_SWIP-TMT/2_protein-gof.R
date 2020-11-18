@@ -179,5 +179,5 @@ myfile <- file.path(root,"data","protein_gof.rda")
 save(protein_gof, file=myfile, version=2)
   
 # TODO: save as excel table!
-myfile <- file.path(root,"tables","Protein_GOF.csv")
-fwrite(protein_gof,file=myfile)
+myfile <- file.path(root,"tables","S3_SWIP_TMT_Protein_GOF.xlsx")
+write_excel(list("Protein GOF" = protein_gof),file=myfile)

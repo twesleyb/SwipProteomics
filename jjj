@@ -1,0 +1,105 @@
+contestMD.lmerModLmerTest       package:lmerTest       R Documentation
+
+_M_u_l_t_i_p_l_e _D_e_g_r_e_e_s-_o_f-_F_r_e_e_d_o_m _C_o_n_t_r_a_s_t _T_e_s_t_s
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     Compute the multi degrees-of-freedom test in a linear mixed model
+     fitted by ‘lmer’. The contrast (L) specifies a linear function of
+     the mean-value parameters, beta. Satterthwaite's method is used to
+     compute the denominator df for the F-test.
+
+_U_s_a_g_e:
+
+     ## S3 method for class 'lmerModLmerTest'
+     contestMD(
+       model,
+       L,
+       rhs = 0,
+       ddf = c("Satterthwaite", "Kenward-Roger"),
+       eps = sqrt(.Machine$double.eps),
+       ...
+     )
+     
+     calcSatterth(model, L)
+     
+     ## S3 method for class 'lmerMod'
+     contestMD(
+       model,
+       L,
+       rhs = 0,
+       ddf = c("Satterthwaite", "Kenward-Roger"),
+       eps = sqrt(.Machine$double.eps),
+       ...
+     )
+     
+_A_r_g_u_m_e_n_t_s:
+
+   model: a model object fitted with ‘lmer’ from package ‘lmerTest’,
+          i.e., an object of class ‘lmerModLmerTest’.
+
+       L: a contrast matrix with nrow >= 1 and ncol ==
+          ‘length(fixef(model))’.
+
+     rhs: right-hand-side of the statistical test, i.e. the
+          hypothesized value. A numeric vector of length ‘nrow(L)’ or a
+          numeric scalar.
+
+     ddf: the method for computing the denominator degrees of freedom
+          and F-statistics. ‘ddf="Kenward-Roger"’ uses Kenward-Roger's
+          method.
+
+     eps: tolerance on eigenvalues to determine if an eigenvalue is
+          positive. The number of positive eigenvalues determine the
+          rank of L and the numerator df of the F-test.
+
+     ...: currently not used.
+
+_D_e_t_a_i_l_s:
+
+     The F-value and associated p-value is for the hypothesis L beta =
+     rhs in which rhs may be non-zero and beta is ‘fixef(model)’.
+
+     Note: NumDF = row-rank(L) is determined automatically so row
+     rank-deficient L are allowed. One-dimensional contrasts are also
+     allowed (L has 1 row).
+
+_V_a_l_u_e:
+
+     a ‘data.frame’ with one row and columns with ‘"Sum Sq"’, ‘"Mean
+     Sq"’, ‘"F value"’, ‘"NumDF"’ (numerator df), ‘"DenDF"’
+     (denominator df) and ‘"Pr(>F)"’ (p-value).
+
+_A_u_t_h_o_r(_s):
+
+     Rune Haubo B. Christensen
+
+_S_e_e _A_l_s_o:
+
+     ‘contest’ for a flexible and general interface to tests of
+     contrasts among fixed-effect parameters. ‘contest1D’ is a direct
+     interface for tests of 1-dimensional contrasts.
+
+_E_x_a_m_p_l_e_s:
+
+     data("sleepstudy", package="lme4")
+     fm <- lmer(Reaction ~ Days + I(Days^2) + (1|Subject) + (0+Days|Subject),
+                sleepstudy)
+     
+     # Define 2-df contrast - since L has 2 (linearly independent) rows
+     # the F-test is on 2 (numerator) df:
+     L <- rbind(c(0, 1, 0), # Note: ncol(L) == length(fixef(fm))
+                c(0, 0, 1))
+     
+     # Make the 2-df F-test of any effect of Days:
+     contestMD(fm, L)
+     
+     # Illustrate rhs argument:
+     contestMD(fm, L, rhs=c(5, .1))
+     
+     # Make the 1-df F-test of the effect of Days^2:
+     contestMD(fm, L[2, , drop=FALSE])
+     # Same test, but now as a t-test instead:
+     contest1D(fm, L[2, , drop=TRUE])
+     
+

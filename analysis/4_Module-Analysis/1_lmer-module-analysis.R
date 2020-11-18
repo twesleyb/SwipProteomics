@@ -165,7 +165,7 @@ results_df <- results_df %>%
 
 # save results as an excel workbook
 results_list <- list("Partition" = part_df, "Mutant-Control" = results_df)
-myfile <- file.path(root, "tables", "S3_SWIP_Module_Results.xlsx")
+myfile <- file.path(root, "tables", "S4_SWIP_Module_Results.xlsx")
 write_excel(results_list, myfile)
 
 # save module_results as rda
