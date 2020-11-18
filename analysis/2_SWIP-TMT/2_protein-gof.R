@@ -67,7 +67,7 @@ doParallel::registerDoParallel(n_cores)
 prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form0, info)
 
 
-## parse the response ----------------------------------------------------------
+## parse the response 
 
 # collect results
 df <- as.data.frame(prot_varpart)
@@ -89,7 +89,7 @@ varpart_df <- varpart_df %>%
 varpart_df %>% head() %>% knitr::kable()
 
 
-## fit all protein models -----------------------------------------------------
+## ---- fit all protein models 
 # calculate Nakagawa coefficient of determination
 
 # evaluate gof of all protein-wise models

@@ -7,7 +7,6 @@
 ## MSstatsTMT options
 MBimpute <- TRUE
 rm_single <- TRUE
-
 global_norm <- TRUE
 reference_norm <- TRUE
 remove_norm_channel <- TRUE
@@ -15,12 +14,14 @@ remove_norm_channel <- TRUE
 ## threshold for significance
 FDR_alpha = 0.05
 
-## prepare the working environment ---------------------------------------------
 
-# load functions in root/R and make data in root/data accessible
+## ---- prepare the working environment
+
 #library(SwipProteomics)
 root <- "~/projects/SwipProteomics"
 renv::load(root)
+
+# load functions in root/R and make data in root/data accessible
 devtools::load_all(root)
 
 # load data in root/data
@@ -51,8 +52,8 @@ suppressPackageStartupMessages({
 ## for parallel processing to MSstats::proteinSummarization to speed things up.
 
 
-## [1] convert to msstats format -----------------------------------------------
-# Proteins with a single feature (i.e. peptide) are removed if rm_single.
+## ---- convert PSM data to MSstatsTMT format
+# proteins with a single feature (i.e. peptide) are removed if rm_single
 
 message("\nConverting PD PSM-level data into MSstatsTMT format.")
 
@@ -71,53 +72,8 @@ message("\nTime to reformat PSM data: ",
 	round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
-### [added] QC-based PSM filtering ------------------------------------------------
-#
-## Assess reproducibility of QC measurements and remove QC samples
-## that are irreproducible.
-## This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
-## For each experiment, the ratio of QC measurments is calculated.
-## These ratios are then binned based on mean(log2(Intensity)) into
-## 5 bins. For each bin, measuremnts that are outside
-## +/- nSD x standard deviations from the bin's mean are removed as outliers.
-#
-## This is essential because our normalization strategy depends upon the SPQC
-## samples. We cannot perform normalization to SPQC PSM that are highly variable.
-#
-## identify psm outliers for each Mixture
-#mix <- c("M1","M2","M3")
-#outlier_list <- lapply(mix, rmOutlierPSM, msstats_psm, nbins=5, nSD=4)
-#names(outlier_list) <- mix
-#
-## all psm outliers
-#psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
-#
-#message("\nSummary of PSM outliers:")
-#x <- sapply(psm_outliers,length)
-#data.table(Mixture=names(x), nOutliers=x) %>% knitr::kable()
-#
-## psm data for each mix in a list
-#psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
-#names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
-#
-## loop to remove outlier psm from each mixture
-## NOTE: PSM with incomplete observations within a mixture (n=2) are removed
-#filt_list <- list()
-#for (mixture in names(psm_list)) {
-#	filt_psm <- psm_list[[mixture]] %>% 
-#		filter(PSM %notin% psm_outliers[[mixture]])
-#	filt_list[[mixture]] <- filt_psm
-#}
-#
-#
-## collect results--outliers removed from each mixture
-#filt_psm <- do.call(rbind,filt_list)
-#
-#stopifnot(!any(is.na(filt_psm$Intensity)))
-
-
-## [2] summarize protein level data ----------------------------------------------
-# Perform protein summarization for each run with MSstatsTMT.
+## ---- protein-level summarization and normalization
+# perform protein summarization for each run with MSstatsTMT
 
 # NOTE: my fork allows you to pass additional args to underlying MSstats 
 # dataProcess function  -- speed things up by specifying the number of cores to 
@@ -149,7 +105,7 @@ message(
 )
 
 
-## [3] perform statistical comparisons with MSstatsTMT --------------------------
+## ---- perform statistical comparisons with MSstatsTMT
 
 # NOTE: for the pairwise contrasts, MSstats fits the lmer model:
 # fx <- formula(Abundance ~ 1 + Condition + (1|Mixture)) # lmerTest::lmer
@@ -206,7 +162,7 @@ message(
 msstats_results <- rbind(results1,results2)
 
 
-## format msstats_prot for downstream analysis --------------------------------
+## ---- format msstats_prot for downstream analysis
 
 # clean-up the data
 msstats_prot$Run <- NULL
@@ -228,7 +184,7 @@ msstats_prot <- msstats_prot %>%
 	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
 
 
-## format msstats_results for downstream analysis -----------------------------
+## ---- format msstats_results for downstream analysis
 
 # drop NA pvals and remove SingleMeasurePerCondition
 msstats_results <- msstats_results %>% 
@@ -248,7 +204,7 @@ msstats_results <- msstats_results %>% group_by(Contrast) %>%
 	mutate(Padjust=p.adjust(Pvalue,method="bonferroni"))
 
 
-## save msstats_results as an excel document ----------------------------------
+## ---- save msstats_results as an excel document
 
 # format the data for saving
 results_list <- msstats_results %>% group_by(Contrast) %>% group_split()
@@ -277,7 +233,7 @@ myfile <- file.path(root,"tables","results.xlsx")
 write_excel(results_list,myfile)
 
 
-## save results as rda ---------------------------------------------------------------
+## ---- save results as rda in root/data
 
 # save msstats_prot -- the normalized protein data
 myfile <- file.path(root, "data", "msstats_prot.rda")

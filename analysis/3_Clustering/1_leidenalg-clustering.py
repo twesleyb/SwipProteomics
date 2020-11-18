@@ -8,6 +8,10 @@ authors: Tyler W A Bradshaw
 
 ## ---- Inputs
 
+## Input data:
+# Input adjacency matrix should be in root/rdata/
+adjm_file = 'ne_adjm.csv' 
+
 ## Project root:
 root = "~/projects/SwipProteomics"
 
@@ -16,22 +20,19 @@ root = "~/projects/SwipProteomics"
 ## optimization method
 rmin = 0 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
-nsteps = 1 # Number of steps to take between rmin and rmax.
+nsteps = 3 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'cpm_cpm' # Prefix out output partition, saved as .csv.
+output_name = 'ne_cpm' # Prefix out output partition, saved as .csv.
 optimization_method = 'CPM'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'CPM'
 
-## Input data:
-# Input adjacency matrix should be in root/rdata/
-adjm_file = 'adjm.csv' 
 
 ## Output:
 # Saved in root/rdata/

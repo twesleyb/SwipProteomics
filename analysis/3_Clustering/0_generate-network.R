@@ -7,6 +7,9 @@
 ## Input:
 root <- "~/projects/SwipProteomics"
 
+## Options:
+rm_poor <- TRUE # rm proteins with overall R2 less than 0.7 before network construction
+
 ## Output:
 # * generates correlation matrix which is used as input for Leidenalg clustering
 
@@ -22,6 +25,7 @@ devtools::load_all(root)
 
 # load data in root/data
 data(gene_map)
+data(poor_prots)
 data(msstats_prot)
 data(msstats_results)
 
@@ -29,6 +33,7 @@ data(msstats_results)
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
+  library(neten) # twesleyb/neten
 })
 
 
@@ -80,13 +85,31 @@ samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
 norm_dm <- limma::removeBatchEffect(knn_dm, batch=samples$Mixture,
 			 design=model.matrix(~Condition,data=samples))
 
+## rm poor_prots 
+
+if (rm_poor) {
+	idx <- rownames(norm_dm) %in% poor_prots
+	warning("Removing ", sum(idx)," proteins before network construction.")
+	norm_dm <- norm_dm[!idx,]
+}
+
 # calculate coorrelation matrix
 adjm <- cor(t(norm_dm),method="pearson",use="complete.obs")
 
 
-## ---- save adjm
+## ---- network enhancement
+
+ne_adjm <- neten(adjm)
+
+
+## ---- save networks
 
 # coerce to data.table and save to file
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","adjm.csv")
 fwrite(adjm_dt, myfile)
+
+# coerce to data.table and save to file
+ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
+myfile <- file.path(root,"rdata","ne_adjm.csv")
+fwrite(ne_adjm_dt, myfile)
