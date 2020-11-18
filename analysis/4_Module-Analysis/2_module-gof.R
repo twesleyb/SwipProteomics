@@ -101,4 +101,5 @@ myfile <- file.path(root,"tables","module_gof.rda")
 save(module_gof, file=myfile, version=2)
 
 # save the data
-write_excel(list("Module GOF"=module_gof),file.path(root,"tables","S5_SWIP_Module_GOF.xlsx"))
+results_list <- list("Module GOF"=module_gof)
+write_excel(results_list,file.path(root,"tables","S5_SWIP_Module_GOF.xlsx"))

@@ -25,32 +25,32 @@
 #' write.excel(data, file = "foo.xlsx")
 #' @export write_excel
 
-write_excel <- function(data, file, rowNames = FALSE, colNames = TRUE, ...) {
+write_excel <- function(mydata, myfile, rowNames = FALSE, colNames = TRUE, ...) {
   # imports
   suppressPackageStartupMessages({
     require(openxlsx)
   })
   # check that input data is a list
-  if (class(data) == "list") {
-    list <- data
+  if ("list" %in% class(mydata)) {
+    mylist <- mydata
   } else {
-    # Coerce to list.
-    list <- list(data)
+    # Coerce to list
+    mylist <- list(mydata)
   }
   # Insure there are names.
-  if (is.null(names(list))) {
-    names(list) <- paste("Sheet", c(1:length(list)))
+  if (is.null(names(mylist))) {
+    names(mylist) <- paste("Sheet", c(1:length(mylist)))
   }
   wb <- openxlsx::createWorkbook()
   # Loop to add a worksheets:
-  for (i in 1:length(list)) {
-    df <- as.data.frame(list[[i]])
-    openxlsx::addWorksheet(wb, sheetName = names(list[i]))
+  for (i in 1:length(mylist)) {
+    df <- as.data.frame(mylist[[i]])
+    openxlsx::addWorksheet(wb, sheetName = names(mylist[i]))
     openxlsx::writeData(wb,
       sheet = i, df,
       rowNames = rowNames, colNames = colNames, ...
     )
   }
   # Save workbook.
-  openxlsx::saveWorkbook(wb, file, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb, myfile, overwrite = TRUE)
 }
