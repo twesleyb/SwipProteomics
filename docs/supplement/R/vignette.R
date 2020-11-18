@@ -23,40 +23,46 @@ suppressPackageStartupMessages({
   library(lmerTest) # Kuznetsova et al. 2017
   library(dplyr)
   library(data.table)
+  library(MSstatsTMT)
 })
 
-## 0. MSstatsTMT ---------------------------------------
-
-arg_list <- list()
-arg_list[["data"]] <- msstats_prot %>% subset(Protein == swip)
-arg_list[["contrast.matrix"]] <- msstats_contrasts
-arg_list[["moderated"]] <- FALSE
+## 0. MSstatsTMT --------------------------------------------------------------
 
 # intra-BioFraction comparisons
-do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
-
-# overall Mut-Control comparison
-arg_list$contrast.matrix <- mut_vs_control
-do.call(MSstatsTMT::groupComparisonTMT, arg_list) %>% knitr::kable()
-
+MSstatsTMT::groupComparisonTMT(msstats_prot %>% subset(Protein == swip),
+			       contrast.matrix=msstats_contrasts) %>% knitr::kable()
 
 ##  lmerTestContrast = same result
 fx <- Abundance ~ 1 + Condition + (1|Mixture)
 fm <- lmer(fx, msstats_prot %>% subset(Protein == swip))
 
-L8 <- fixef(fm)
-L8[] <- 0
-L8["ConditionMutant.F8"] <- +1
-L8["ConditionControl.F8"] <- -1
+# create a contrast between coef(fm)
+L8 <- getContrast(fm, "ConditionMutant.F8", "ConditionControl.F8")
 
+# for a single intra-fraction comparison
 lmerTestContrast(fm,L8) %>% knitr::kable()
 
+# create a contrast for the Mutant-Control comparison
 LT <- fixef(fm)
 LT[] <- 0
-LT[grep("Mutant",names(LT))] <- +1/7
-LT[grep("Control",names(LT))] <- -1/7
+LT[grep("Mutant",names(LT))] <- +1/7 # 7x
+LT[grep("Control",names(LT))] <- -1/7 # 6x
+
+# NOTE: the intercept is 0 and absorbs the first coeff==ConditionControl.F10
+#length(names(which(LT < 0))) == 6 # Control.BioFraction
+#length(names(which(LT > 0))) == 7 # Mutant.BioFraction
+stopifnot(("ConditionControl.F10" %in% names(which(LT < 0)) ) == FALSE)
+stopifnot(sum(LT)  == + 1/7)
+
 lmerTestContrast(fm, LT) %>% mutate(Contrast="Mutant-Control") %>% 
 	unique() %>% knitr::kable()
+
+# overall Mut-Control comparison with MSstatsTMT
+MSstatsTMT::groupComparisonTMT(msstats_prot %>% subset(Protein == swip),
+			       contrast.matrix=mut_vs_control) %>% knitr::kable()
+
+# NOTE: the DF differ subtly because of numerical precision term added to
+# MSstatsTMT result.
 
 
 ## 1. fit protein-level model to WASHC4 ---------------------------------------
@@ -116,7 +122,7 @@ lmerTestContrast(fm1,L7) %>% mutate(Contrast="F7") %>% knitr::kable()
 
 
 # illustrate the tricky comparison
-# F10 is embodied by the term intercept
+# ConditionControl.F10 is embodied by the term (Intercept)
 fm
 
 # no intercept
@@ -187,8 +193,8 @@ MSstatsTMT::groupComparisonTMT(msstats_prot %>% subset(Protein == swip),
 message("\nFitting module-level mixed-models.")
 
 ## the module-level model to be fit:
-# three models with the same result
-fx <- "Abundance ~ Condition + Protein + (1|Mixture)"
+# three models with only subtly different results
+fx <- "Abundance ~ Condition + Protein + (1|Mixture)" 
 fx0 <- "Abundance ~ 0 + Genotype + BioFraction + Protein + (1|Mixture)"
 fx1 <- "Abundance ~ 1 + Genotype + BioFraction + Protein + (1|Mixture)"
 
@@ -217,7 +223,7 @@ message("\nfit: ",fx)
 lmerTestContrast(fm, LT) %>% mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # for +0
-LT <- getContrast(fm0,"Mutant","Control")
+LT <- getContrast(fm0,"Mutant","Control") # stats differ
 message("\nfit: ", fx0)
 lmerTestContrast(fm0, LT) %>% mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
@@ -225,45 +231,89 @@ lmerTestContrast(fm0, LT) %>% mutate(Contrast='Mutant-Control') %>% unique() %>%
 # for fm1: must specify contrast correctly!
 LT <- fixef(fm1)
 LT[] <- 0
-LT[grep("Control",names(LT))] <- -1 
+LT[grep("Mutant",names(LT))] <- +1/7
+LT[grep("Control",names(LT))] <- -1/7
 message("\nfit: ", fx1)
 lmerTestContrast(fm1, LT) %>% mutate(Contrast='Mutant-Control') %>% 
 	unique() %>% knitr::kable()
 
 
-## protein as a mixed effect
-fx2 <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
-fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
+## protein as a mixed-effect
 
-LT <- getContrast(fm2,"Mutant","Control")
-y = lmerTestContrast(fm2, LT) # as a mixed effect
-y %>% unique() %>% knitr::kable()
+fx_mixed <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
+fm_mixed <- lmerTest::lmer(fx_mixed, msstats_prot %>% filter(Protein %in% washc_prots))
 
-fx0 <- "Abundance ~ 0 + Condition + Protein + (1|Mixture)"
-fm0 <- lmerTest::lmer(fx0, msstats_prot %>% filter(Protein %in% washc_prots))
-LT <- getContrast(fm0,"Mutant","Control")
-x = lmerTestContrast(fm0, LT) # as  a fixed effect
-x %>% unique() %>% knitr::kable()
+fx_fixed <- "Abundance ~ 0 + Condition + Protein + (1|Mixture)"
+fm_fixed <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein %in% washc_prots))
 
-fm2 <- lmerTest::lmer(fx2, msstats_prot %>% filter(Protein %in% washc_prots))
+summary(fm_mixed)
 
-REMLcrit(fm2) # protein as mixed
+summary(fm_fixed)
 
-REMLcrit(fm0) # protein as fixed
+LT <- getContrast(fm_mixed,"Mutant","Control")
+lmerTestContrast(fm_mixed, LT) %>% 
+	mutate(Contrast='Mutant-Control') %>% unique() %>% 
+	mutate(Protein = "mixed") %>% select(-isSingular) %>%
+	knitr::kable()
 
-##
+LT <- getContrast(fm_fixed,"Mutant","Control")
+lmerTestContrast(fm_fixed, LT) %>% 
+	mutate(Contrast='Mutant-Control') %>% unique() %>% 
+	mutate(Protein = "fixed") %>% select(-isSingular) %>%
+	knitr::kable()
 
-fx <- Abundance ~ 0 + Condition + (1|Mixture)
-fm <- lmer(fx,data=msstats_prot %>% subset(Protein == swip))
-LT <- getContrast(fm,"Mutant","Control")
-lmerTestContrast(fm,LT)
-
+# numerically these results are the same
 
 
-MSstatsTMT::groupComparisonTMT(msstats_prot %>% subset(Protein == swip), 
-				     contrast.matrix=LT, moderated=FALSE)
+# try to compare the models
+REMLcrit(fm_mixed) # protein as mixed
 
+REMLcrit(fm_fixed) # protein as fixed
 
+REMLcrit(fm_mixed) > REMLcrit(fm_fixed)
 
+AIC(fm_mixed,fm_fixed) %>% knitr::kable()
 
+AIC(fm_mixed) < AIC(fm_fixed)
 
+r.squaredGLMM.merMod(fm_fixed)
+
+# very similar, total R2c is greater for fm_mixed
+r.squaredGLMM.merMod(fm_mixed)
+
+# REML
+# AIC
+# nakagawa
+
+# what about other modules?
+data(partition)
+
+module <- sample(split(names(partition),partition),1)
+M <- paste0("M",names(module))
+prots <- unlist(module,use.names=FALSE)
+
+cbind(M,nProts=length(prots))
+
+fx_mixed <- "Abundance ~ 0 + Condition + (1|Mixture) + (1|Protein)"
+fm_mixed <- lmerTest::lmer(fx_mixed, msstats_prot %>% filter(Protein %in% prots))
+fx_fixed <- "Abundance ~ 0 + Condition + Protein + (1|Mixture)"
+fm_fixed <- lmerTest::lmer(fx, msstats_prot %>% filter(Protein %in% prots))
+
+# M61
+
+# fixed
+r.squaredGLMM.merMod(fm_fixed) %>% knitr::kable() # nearly all variance attributable to fixef
+
+REMLcrit(fm_fixed)
+
+AIC(fm_fixed)
+
+# mixed
+r.squaredGLMM.merMod(fm_mixed) %>% knitr::kable() 
+# fixef now only account for 48% of total -- some of this variance is now
+# attributable to mixed effects. modeling protein as a mixed effect we can
+# seperate variance attributable to Condition and Protein
+
+REMLcrit(fm_mixed)
+
+AIC(fm_mixed)

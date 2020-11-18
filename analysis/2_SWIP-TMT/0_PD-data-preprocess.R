@@ -11,10 +11,9 @@
 # specify the projects root directory:
 root <- "~/projects/SwipProteomics"
 
-# the PSM data is in root/rdata:
 # NOTE: the raw data is 75 mb and is too large to be managed by git.
-# After preprocessing, the PSM-level data is saved as pd_psm.rda in
-# root/data.
+# After preprocessing by this script the PSM-level data is saved as 
+# pd_psm.rda in root/data (~46 MB).
 input_dir <- "rdata/PSM.zip"
 
 # PSM.zip contains:
@@ -26,8 +25,7 @@ input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 # saved in root/data
 
 # * gene_map - data.table mapping UniProt Accession to Entrez IDs and gene
-#       Symbols -- FIXME: you need the getPPIs package for this which is probably a
-#       pain to install...
+#       Symbols -- NOTE: you need the getPPIs package for this
 # * pd_psm - PSM data from Proteome Discoverer reformatted for MSstatsTMT
 #       This file is just less than 50 mb
 # * pd_annotation - the annotation object for PDtoMSstatsTMTformat()
@@ -39,10 +37,8 @@ input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 #       between Control and SWIP P1019R homozygous Mutant mice.
 # * swip - WASHC4's uniprot ID
 
-# FIXME: mut_vs_control contrast is screwed up somehow
-
 ## Functions -----------------------------------------------------------------
-# functions utilized herein
+# misc functions utilized herein
 
 squote <- function(string) {
   # wrap a string in singular quotation marks (')

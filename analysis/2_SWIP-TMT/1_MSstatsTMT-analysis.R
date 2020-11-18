@@ -25,6 +25,7 @@ devtools::load_all(root)
 
 # load data in root/data
 data(pd_psm) 
+data(gene_map)
 data(pd_annotation)
 data(mut_vs_control) # 'Mutant-Control' comparison
 data(msstats_contrasts) # 'intra-BioFraction' comparisons
@@ -70,49 +71,49 @@ message("\nTime to reformat PSM data: ",
 	round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
-## [added] QC-based PSM filtering ------------------------------------------------
-
-# Assess reproducibility of QC measurements and remove QC samples
-# that are irreproducible.
-# This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
-# For each experiment, the ratio of QC measurments is calculated.
-# These ratios are then binned based on mean(log2(Intensity)) into
-# 5 bins. For each bin, measuremnts that are outside
-# +/- nSD x standard deviations from the bin's mean are removed as outliers.
-
-# This is essential because our normalization strategy depends upon the SPQC
-# samples. We cannot perform normalization to SPQC PSM that are highly variable.
-
-# identify psm outliers for each Mixture
-mix <- c("M1","M2","M3")
-outlier_list <- lapply(mix, rmOutlierPSM, msstats_psm, nbins=5, nSD=4)
-names(outlier_list) <- mix
-
-# all psm outliers
-psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
-
-message("\nSummary of PSM outliers:")
-x <- sapply(psm_outliers,length)
-data.table(Mixture=names(x), nOutliers=x) %>% knitr::kable()
-
-# psm data for each mix in a list
-psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
-names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
-
-# loop to remove outlier psm from each mixture
-# NOTE: PSM with incomplete observations within a mixture (n=2) are removed
-filt_list <- list()
-for (mixture in names(psm_list)) {
-	filt_psm <- psm_list[[mixture]] %>% 
-		filter(PSM %notin% psm_outliers[[mixture]])
-	filt_list[[mixture]] <- filt_psm
-}
-
-
-# collect results--outliers removed from each mixture
-filt_psm <- do.call(rbind,filt_list)
-
-stopifnot(!any(is.na(filt_psm$Intensity)))
+### [added] QC-based PSM filtering ------------------------------------------------
+#
+## Assess reproducibility of QC measurements and remove QC samples
+## that are irreproducible.
+## This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
+## For each experiment, the ratio of QC measurments is calculated.
+## These ratios are then binned based on mean(log2(Intensity)) into
+## 5 bins. For each bin, measuremnts that are outside
+## +/- nSD x standard deviations from the bin's mean are removed as outliers.
+#
+## This is essential because our normalization strategy depends upon the SPQC
+## samples. We cannot perform normalization to SPQC PSM that are highly variable.
+#
+## identify psm outliers for each Mixture
+#mix <- c("M1","M2","M3")
+#outlier_list <- lapply(mix, rmOutlierPSM, msstats_psm, nbins=5, nSD=4)
+#names(outlier_list) <- mix
+#
+## all psm outliers
+#psm_outliers <- sapply(outlier_list,function(x) unique(x$PSM[x$isOutlier]))
+#
+#message("\nSummary of PSM outliers:")
+#x <- sapply(psm_outliers,length)
+#data.table(Mixture=names(x), nOutliers=x) %>% knitr::kable()
+#
+## psm data for each mix in a list
+#psm_list <- msstats_psm %>% group_by(Mixture) %>% group_split()
+#names(psm_list) <- sapply(psm_list,function(x) unique(as.character(x$Mixture)))
+#
+## loop to remove outlier psm from each mixture
+## NOTE: PSM with incomplete observations within a mixture (n=2) are removed
+#filt_list <- list()
+#for (mixture in names(psm_list)) {
+#	filt_psm <- psm_list[[mixture]] %>% 
+#		filter(PSM %notin% psm_outliers[[mixture]])
+#	filt_list[[mixture]] <- filt_psm
+#}
+#
+#
+## collect results--outliers removed from each mixture
+#filt_psm <- do.call(rbind,filt_list)
+#
+#stopifnot(!any(is.na(filt_psm$Intensity)))
 
 
 ## [2] summarize protein level data ----------------------------------------------
@@ -124,13 +125,12 @@ stopifnot(!any(is.na(filt_psm$Intensity)))
 
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
 
-
 n_cores <- parallel::detectCores() - 1
 
 t0 <- Sys.time()
 
 suppressMessages({ # verbosity
-  msstats_prot <- proteinSummarization(filt_psm,
+  msstats_prot <- proteinSummarization(msstats_psm,
     method = "msstats", 
     remove_norm_channel = remove_norm_channel,
     global_norm = global_norm, # perform global norm using 'norm' condition
@@ -139,7 +139,6 @@ suppressMessages({ # verbosity
     clusters = n_cores
   )
 })
-
 
 # This takes about 11 minutes for 8.5 k proteins with 23 cores
 # FIXME: fix warnings messages about closing clusters.
@@ -176,18 +175,15 @@ suppressWarnings({ # about closing clusters FIXME:
   })
 })
 
-# examine the results
-results1 %>% group_by(Label) %>% 
-	summarize(nSig = sum(adj.pvalue < FDR_alpha),.groups="drop") %>% 
-	knitr::kable()
-
 # This takes about 21 minutes for 8.5 k proteins
 message(
-  "\nTime to perform 8 'intra-BioFraction' comparisons for ", length(proteins),
-  " proteins: ", round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
+  "\nTime to perform 8 'intra-BioFraction' comparisons for ", 
+  formatC(length(proteins),big.mark=","), " proteins: ", 
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
 ## 2. 'Mutant-Control' comparison
+# repeat for overall comparision
 
 t0 <- Sys.time()
 
@@ -195,26 +191,93 @@ t0 <- Sys.time()
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity FIXME:
     results2 <- groupComparisonTMT(msstats_prot, 
-				   contrast.matrix = mutant_vs_control,
+				   contrast.matrix = mut_vs_control,
 				   moderated = FALSE) })
 })
 
-# Adjust pvalues for multiple comparisons with Bonferroni method
-results2$adj.pvalue <- p.adjust(results2$pvalue,method="bonferroni")
-
-# examine the results
-results2 %>% group_by(Label) %>% 
-	summarize(nSig = sum(adj.pvalue < FDR_alpha),.groups="drop") %>% 
-	knitr::kable()
-
 # This takes about 21 minutes for 8.5 k proteins
 message(
-  "\nTime to perform 'Mutant-Control' comparison for ", length(proteins),
-  " proteins: ", round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
+  "\nTime to perform 'Mutant-Control' comparison for ", 
+  formatC(length(proteins),big.mark=","), " proteins: ", 
+  round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
+
+# combine intra-BioFraction and Mutant-Control results
 msstats_results <- rbind(results1,results2)
 
-## save results ---------------------------------------------------------------
+
+## format msstats_prot for downstream analysis --------------------------------
+
+# clean-up the data
+msstats_prot$Run <- NULL
+msstats_prot$TechRepMixture <- NULL
+msstats_prot$Channel <- as.character(msstats_prot$Channel)
+msstats_prot$BioReplicate <- as.character(msstats_prot$BioReplicate)
+msstats_prot$Condition <- as.character(msstats_prot$Condition)
+msstats_prot$Mixture <- as.character(msstats_prot$Mixture)
+msstats_prot$Genotype <- sapply(strsplit(msstats_prot$Condition,"\\."),"[", 1)
+msstats_prot$BioFraction <- sapply(strsplit(msstats_prot$Condition,"\\."),"[", 2)
+msstats_prot <- msstats_prot %>% subset(!is.na(Abundance))
+
+
+# map uniprot to gene symbols and entrez ids
+proteins <- unique(as.character(msstats_prot$Protein))
+idx <- match(msstats_prot$Protein,gene_map$uniprot)
+msstats_prot <- msstats_prot %>% 
+	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
+	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
+
+
+## format msstats_results for downstream analysis -----------------------------
+
+# drop NA pvals and remove SingleMeasurePerCondition
+msstats_results <- msstats_results %>% 
+	filter(!is.na(adj.pvalue)) %>% filter(is.na(issue)) %>% select(-issue)
+colnames(msstats_results)[colnames(msstats_results) == "Label"] <- "Contrast"
+colnames(msstats_results)[colnames(msstats_results) == "pvalue"] <- "Pvalue"
+colnames(msstats_results)[colnames(msstats_results) == "adj.pvalue"] <- "FDR"
+
+# annotate with gene Symbols and Entrez ids
+idx <- match(msstats_results$Protein,gene_map$uniprot)
+msstats_results <- msstats_results %>% 
+	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
+	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
+
+# bonferroni padjust
+msstats_results <- msstats_results %>% group_by(Contrast) %>%
+	mutate(Padjust=p.adjust(Pvalue,method="bonferroni"))
+
+
+## save msstats_results as an excel document ----------------------------------
+
+# format the data for saving
+results_list <- msstats_results %>% group_by(Contrast) %>% group_split()
+names(results_list) <- sapply(results_list,function(x) unique(x$Contrast))
+namen <- names(results_list)
+new_names <- gsub("Mutant.F[0-9]{1,2}-Control\\.","",namen)
+names(results_list) <- new_names
+
+# sort by pvalue
+results_list <- lapply(results_list,arrange,Pvalue)
+
+# sort results list
+idx <- c("F4","F5","F6","F7","F8","F9","F10","Mutant-Control")
+results_list <- results_list[idx]
+
+class(results_list) <- "list"
+
+lapply(results_list, summarize, sum(FDR<0.05)) %>% 
+	bind_rows(.id="Contrast") %>% knitr::kable()
+
+lapply(results_list, summarize, sum(Padjust<0.05)) %>% 
+	bind_rows(.id="Contrast") %>% knitr::kable()
+
+# save as excel document
+myfile <- file.path(root,"tables","results.xlsx")
+write_excel(results_list,myfile)
+
+
+## save results as rda ---------------------------------------------------------------
 
 # save msstats_prot -- the normalized protein data
 myfile <- file.path(root, "data", "msstats_prot.rda")

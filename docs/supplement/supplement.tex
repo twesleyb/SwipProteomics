@@ -127,6 +127,8 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 \setlength{\abovedisplayskip}{3pt}
 \setlength{\belowdisplayskip}{3pt}
 
+\rhead{not-final-proof}
+
 
 %% main -----------------------------------------------------------------------
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -313,7 +315,7 @@ the hypothesis:
 Where $l^T$ is a vector of $\sum=1$ specifying the positive and negative
 coefficients of a contrast. $\beta$ is the model-based estimates of
 \texttt{Condition}.  The null hypothesis (\ref{eq:null}) is that the fold
-change, $\l^T * \beta$, is 0.  A test statistic for such a two-way contrasts is
+change, $l^T * \beta$, is 0.  A test statistic for such a two-way contrasts is
 given by \cite{Kuznetsova2017}:
 \begin{equation} 
 	\label{eq:tstatistic} % equation -- tstatistic
@@ -469,48 +471,16 @@ First, we fit the LMM in (\ref{eq:fx0}) the normalized protein level data from
 
 \hlcom{# fit the model}
 \hlstd{fm0} \hlkwb{<-} \hlkwd{lmer}\hlstd{(fx0,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{subset}\hlstd{(Protein} \hlopt{==} \hlstd{swip))}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(predvars, data, env): object 'Genotype' not found}}\begin{alltt}
 \hlcom{# examine the model's summary}
 \hlkwd{summary}\hlstd{(fm0,} \hlkwc{ddf} \hlstd{=} \hlstr{"Satterthwaite"}\hlstd{)}
 \end{alltt}
-\begin{verbatim}
-## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
-## lmerModLmerTest]
-## Formula: fx0
-##    Data: msstats_prot %>% subset(Protein == swip)
-## 
-## REML criterion at convergence: 3.7
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -1.5030 -0.6089 -0.1463  0.7474  1.4302 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  Mixture  (Intercept) 0.009596 0.09796 
-##  Residual             0.034418 0.18552 
-## Number of obs: 42, groups:  Mixture, 3
-## 
-## Fixed effects:
-##                                Estimate Std. Error      df t value Pr(>|t|)    
-## GenotypeMutant:BioFractionF4     5.4043     0.1211 17.3059   44.62   <2e-16 ***
-## GenotypeControl:BioFractionF4    6.7110     0.1211 17.3059   55.41   <2e-16 ***
-## GenotypeMutant:BioFractionF5     5.5674     0.1211 17.3059   45.96   <2e-16 ***
-## GenotypeControl:BioFractionF5    6.9456     0.1211 17.3059   57.34   <2e-16 ***
-## GenotypeMutant:BioFractionF6     5.6402     0.1211 17.3059   46.56   <2e-16 ***
-## GenotypeControl:BioFractionF6    7.2401     0.1211 17.3059   59.77   <2e-16 ***
-## GenotypeMutant:BioFractionF7     5.6317     0.1211 17.3059   46.49   <2e-16 ***
-## GenotypeControl:BioFractionF7    7.3211     0.1211 17.3059   60.44   <2e-16 ***
-## GenotypeMutant:BioFractionF8     5.4928     0.1211 17.3059   45.35   <2e-16 ***
-## GenotypeControl:BioFractionF8    7.1296     0.1211 17.3059   58.86   <2e-16 ***
-## GenotypeMutant:BioFractionF9     5.7810     0.1211 17.3059   47.73   <2e-16 ***
-## GenotypeControl:BioFractionF9    6.9545     0.1211 17.3059   57.41   <2e-16 ***
-## GenotypeMutant:BioFractionF10    5.7844     0.1211 17.3059   47.76   <2e-16 ***
-## GenotypeControl:BioFractionF10   7.6187     0.1211 17.3059   62.90   <2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'object' in selecting a method for function 'summary': object 'fm0' not found}}\end{kframe}
 \end{knitrout}
 
 \paragraph{'MutantF7-ControlF7'}
@@ -524,20 +494,31 @@ control conditions.
 
 \hlcom{# create a contrast}
 \hlstd{coeff} \hlkwb{<-} \hlstd{lme4}\hlopt{::}\hlkwd{fixef}\hlstd{(fm0)}
-\hlstd{contrast7} \hlkwb{<-} \hlkwd{setNames}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(coeff)),} \hlkwc{nm} \hlstd{=} \hlkwd{names}\hlstd{(coeff))}
-\hlstd{contrast7[}\hlstr{"GenotypeMutant:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{+}\hlnum{1} \hlcom{# positive coeff}
-\hlstd{contrast7[}\hlstr{"GenotypeControl:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{-}\hlnum{1} \hlcom{# negative coeff}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in lme4::fixef(fm0): object 'fm0' not found}}\begin{alltt}
+\hlstd{contrast7} \hlkwb{<-} \hlkwd{setNames}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{0}\hlstd{,}\hlkwd{length}\hlstd{(coeff)),} \hlkwc{nm} \hlstd{=} \hlkwd{names}\hlstd{(coeff))}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in setNames(rep(0, length(coeff)), nm = names(coeff)): object 'coeff' not found}}\begin{alltt}
+\hlstd{contrast7[}\hlstr{"GenotypeMutant:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{+}\hlnum{1} \hlcom{# positive coeff}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in contrast7["{}GenotypeMutant:BioFractionF7"{}] <- +1: object 'contrast7' not found}}\begin{alltt}
+\hlstd{contrast7[}\hlstr{"GenotypeControl:BioFractionF7"}\hlstd{]} \hlkwb{<-} \hlopt{-}\hlnum{1} \hlcom{# negative coeff}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in contrast7["{}GenotypeControl:BioFractionF7"{}] <- -1: object 'contrast7' not found}}\begin{alltt}
 \hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast7)}
 \end{alltt}
-\begin{verbatim}
-##                                                     Contrast    log2FC
-## 1 GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 -1.689393
-##   percentControl        SE Tstatistic      Pvalue DF isSingular
-## 1      0.3100573 0.1514779  -11.15274 2.08622e-11 26      FALSE
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in stopifnot(all(names(contrast) == names(lme4::fixef(fm)))): object 'contrast7' not found}}\end{kframe}
 \end{knitrout}
 
 \paragraph{'Mutant-Control'}
@@ -549,29 +530,16 @@ between mutant and control mice.
 \begin{alltt}
 \hlcom{# create a contrast to compare 'Mutant' versus 'Control'}
 \hlstd{contrast8} \hlkwb{<-} \hlkwd{getContrast}\hlstd{(fm0,} \hlstr{"Mutant"}\hlstd{,}\hlstr{"Control"}\hlstd{)}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in inherits(fm, "{}lm"{}): object 'fm0' not found}}\begin{alltt}
 \hlcom{# evaluate contrast}
 \hlkwd{lmerTestContrast}\hlstd{(fm0, contrast8)}
 \end{alltt}
-\begin{verbatim}
-##                                                       Contrast    log2FC
-## 1   GenotypeMutant:BioFractionF4-GenotypeControl:BioFractionF4 -1.516956
-## 2   GenotypeMutant:BioFractionF5-GenotypeControl:BioFractionF5 -1.516956
-## 3   GenotypeMutant:BioFractionF6-GenotypeControl:BioFractionF6 -1.516956
-## 4   GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 -1.516956
-## 5   GenotypeMutant:BioFractionF8-GenotypeControl:BioFractionF8 -1.516956
-## 6   GenotypeMutant:BioFractionF9-GenotypeControl:BioFractionF9 -1.516956
-## 7 GenotypeMutant:BioFractionF10-GenotypeControl:BioFractionF10 -1.516956
-##   percentControl         SE Tstatistic       Pvalue DF isSingular
-## 1      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 2      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 3      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 4      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 5      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 6      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-## 7      0.3494225 0.05725328  -26.49552 2.423534e-20 26      FALSE
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in stopifnot(all(names(contrast) == names(lme4::fixef(fm)))): object 'contrast8' not found}}\end{kframe}
 \end{knitrout}
 
 \paragraph{Fit WASH Complex}
@@ -590,25 +558,9 @@ Next we fit a LMM to the five WASH complex proteins.
 \hlcom{# assess 'Mutant-Control' comparison}
 \hlkwd{lmerTestContrast}\hlstd{(fm1, contrast8)}
 \end{alltt}
-\begin{verbatim}
-##                                                       Contrast    log2FC
-## 1   GenotypeMutant:BioFractionF4-GenotypeControl:BioFractionF4 0.2305437
-## 2   GenotypeMutant:BioFractionF5-GenotypeControl:BioFractionF5 0.2305437
-## 3   GenotypeMutant:BioFractionF6-GenotypeControl:BioFractionF6 0.2305437
-## 4   GenotypeMutant:BioFractionF7-GenotypeControl:BioFractionF7 0.2305437
-## 5   GenotypeMutant:BioFractionF8-GenotypeControl:BioFractionF8 0.2305437
-## 6   GenotypeMutant:BioFractionF9-GenotypeControl:BioFractionF9 0.2305437
-## 7 GenotypeMutant:BioFractionF10-GenotypeControl:BioFractionF10 0.2305437
-##   percentControl         SE Tstatistic       Pvalue  DF isSingular
-## 1       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 2       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 3       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 4       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 5       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 6       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-## 7       1.173277 0.03698955   6.232669 2.894644e-09 190      FALSE
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in stopifnot(all(names(contrast) == names(lme4::fixef(fm)))): object 'contrast8' not found}}\end{kframe}
 \end{knitrout}
 
 We evaluate the goodness of fit of our module-level model.
@@ -618,11 +570,9 @@ We evaluate the goodness of fit of our module-level model.
 \hlcom{# assess gof with Nakagawa coefficient of determination}
 \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm0)}
 \end{alltt}
-\begin{verbatim}
-##            R2m      R2c
-## [1,] 0.9353344 0.949433
-\end{verbatim}
-\begin{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in family(object): object 'fm0' not found}}\begin{alltt}
 \hlkwd{r.squaredGLMM.merMod}\hlstd{(fm1)}
 \end{alltt}
 \begin{verbatim}
@@ -642,27 +592,15 @@ We compute the variance explained using \texttt{variancePartition}.
 \hlcom{# calculate partitioned variance}
 \hlstd{vp_fx} \hlkwb{<-} \hlstr{"Abundance ~ (1|Genotype) + (1|BioFraction) + (1|Mixture) + (1|Protein)"}
 \hlstd{fit} \hlkwb{<-} \hlkwd{lmer}\hlstd{(vp_fx,} \hlkwc{data} \hlstd{= msstats_prot} \hlopt{%>%} \hlkwd{filter}\hlstd{(Protein} \hlopt{%in%} \hlstd{washc_prots))}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(predvars, data, env): object 'Genotype' not found}}\begin{alltt}
 \hlkwd{calcVarPart}\hlstd{(fit)} \hlopt{%>%} \hlstd{knitr}\hlopt{::}\hlkwd{kable}\hlstd{()}
 \end{alltt}
-\end{kframe}
-\begin{tabular}{l|r}
-\hline
-  & x\\
-\hline
-BioFraction & 0.0329606\\
-\hline
-Genotype & 0.8220692\\
-\hline
-Mixture & 0.0028436\\
-\hline
-Protein & 0.0741468\\
-\hline
-Residuals & 0.0679798\\
-\hline
-\end{tabular}
 
 
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'fit' in selecting a method for function 'calcVarPart': object 'fit' not found}}\end{kframe}
 \end{knitrout}
 
 %------------------------------------------------------------------------------
@@ -679,14 +617,36 @@ Residuals & 0.0679798\\
 
 \begin{figure}
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}
-
-{\centering \includegraphics[width=\maxwidth]{figure/tab0-1} 
-
-}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 
 
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'object' in selecting a method for function 'summary': object 'fm0' not found}}
 
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$Coefficient: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `colnames<-`(`*tmp*`, value = character(0)): attempt to set 'colnames' on an object with less than two dimensions}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `colnames<-`(`*tmp*`, value = character(0)): attempt to set 'colnames' on an object with less than two dimensions}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `colnames<-`(`*tmp*`, value = character(0)): attempt to set 'colnames' on an object with less than two dimensions}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$"{}p value"{}: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$Estimate: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$SE: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$DF: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in df\$"{}t value"{}: object of type 'closure' is not subsettable}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.vector(x, mode): cannot coerce type 'closure' to vector of type 'any'}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in is.gtable(x): object 'tab' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'tab' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot\_grid(g): object 'g' not found}}\end{kframe}
 \end{knitrout}
 	\caption{This is a caption.}
 	\label{fig:tab0}
