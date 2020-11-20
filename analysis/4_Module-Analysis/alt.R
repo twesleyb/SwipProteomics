@@ -16,7 +16,8 @@ data(swip)
 data(gene_map)
 data(ne_surprise_surprise_partition)
 data(washc_prots)
-data(msstats_prot)
+#data(msstats_prot)
+data(swip_tmt)
 
 
 # other imports
@@ -43,11 +44,15 @@ part_df$Entrez <- mapID(part_df$Protein,"uniprot","entrez")
 
 
 ## examine the washc_module
-fx <- Abundance ~ 1 + Condition + (1|Protein) + (1|Mixture)
-fm <- lmerTest::lmer(fx,data=msstats_prot%>% subset(Protein %in% washc_prots))
+swip_tmt$Abundance <- log2(swip_tmt$Intensity)
+swip_tmt$Condition <- interaction(swip_tmt$Genotype,swip_tmt$BioFraction)
+
+fx <- Abundance ~ 1 + Condition + (1|Protein)
+fm <- lmerTest::lmer(fx,data=swip_tmt%>% subset(Protein %in% washc_prots))
 
 vp <- getVariance(fm)
 knitr::kable(t(vp/sum(vp))) # pve by each covariate
+
 
 # network summary:
 nProts <- formatC(length(names(partition)),big.mark=",")
@@ -60,8 +65,8 @@ knitr::kable(cbind(nProts,kModules,pClustered,medSize))
 ## fit WASH complex as an example ----------------------------------------------
 
 # fit the model:
-fx <- "Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)"
-fm <- lmer(fx, msstats_prot %>% subset(Protein %in% washc_prots))
+fx <- "Abundance ~ 1 + Condition + (1|Protein)"
+fm <- lmer(fx, swip_tmt %>% subset(Protein %in% washc_prots))
 
 ## assess contrast
 LT <- getContrast(fm,"Mutant","Control")
@@ -89,11 +94,15 @@ modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
 
 
+too_small = names(which(sapply(modules,length) < 5))
+modules = modules[!names(modules) %in% too_small]
+
+
 # loop through all modules
 results_list <- foreach(module = names(modules)) %dopar% {
   # fit full model
   input <- list(formula = fx)
-  input[["data"]] <- msstats_prot %>% filter(Protein %in% modules[[module]])
+  input[["data"]] <- swip_tmt %>% filter(Protein %in% modules[[module]])
   input[["control"]] <- lme4::lmerControl(check.conv.singular = "ignore",
 					  calc.derivs = FALSE, 
 					  check.rankX = "stop.deficient")
@@ -131,10 +140,7 @@ message("\nWashc4 assigned to module: ", paste0("M",partition[swip]))
 module_size <- sapply(modules,length)[results_df$Module]
 results_df <- tibble::add_column(results_df,Size=module_size,.after="Module")
 
-## examine top results
-results_df %>% select(-isSingular, -Fstat, -S2, - percentControl) %>% 
-	mutate(Pvalue = formatC(Pvalue)) %>% mutate(log2FC=round(log2FC)) %>% 
-	arrange(Pvalue) %>% head() %>% knitr::kable() 
+results_df <- results_df %>% arrange(Pvalue)
 
 # annotate results with protein identifiers
 results_df$Proteins <- sapply(modules[results_df$Module],paste,collapse=";")

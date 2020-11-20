@@ -10,7 +10,7 @@ authors: Tyler W A Bradshaw
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-adjm_file = 'ne_adjm.csv' 
+adjm_file = 'new_ne_adjm.csv' 
 
 ## Project root:
 root = "~/projects/SwipProteomics"
@@ -18,8 +18,8 @@ root = "~/projects/SwipProteomics"
 ## Parameters for multiresolution methods:
 ## NOTE: some parameters are not used if they are not required by the set 
 ## optimization method
-rmin = 0 # Min resolution for multi-resolution methods.
-rmax = 0 # Max resolution for multi-resolution methods.
+rmin = 1 # Min resolution for multi-resolution methods.
+rmax = 1 # Max resolution for multi-resolution methods.
 nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 

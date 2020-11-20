@@ -9,6 +9,9 @@ root <- "~/projects/SwipProteomics"
 
 ## Options:
 rm_poor <- TRUE
+rm_batch <- TRUE
+impute <- TRUE
+sub_control <- FALSE
 
 ## Output:
 # * generates correlation matrix which is used as input for Leidenalg clustering
@@ -63,12 +66,18 @@ n_missing <- apply(dm,1,function(x) sum(is.na(x)))
 # drop proteins with more than 50% missingness
 drop <- apply(dm, 1, function(x) sum(is.na(x))> 0.5 * ncol(dm))
 
-# knn impute
-knn_data <- impute::impute.knn(dm[!drop,])
-knn_dm <- knn_data$data
+if (impute) {
+	# knn impute
+	knn_data <- impute::impute.knn(dm[!drop,])
+	no_missing_dm <- knn_data$data
+} else {
+	no_missing_dm <- dm[!any_missing,]
+}
+
+stopifnot(!any(is.na(no_missing_dm)))
 
 # build sample metadata
-namen <- colnames(knn_dm)
+namen <- colnames(dm)
 samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
 colnames(samples) <- c("Mixture","Genotype","BioFraction")
 samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
@@ -82,19 +91,28 @@ samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
 # covariation modules
 
 # with complete cases, address effect of mixture before building network
-norm_dm <- limma::removeBatchEffect(knn_dm, batch=samples$Mixture,
+if (rm_batch) {
+	norm_dm <- limma::removeBatchEffect(no_missing_dm, batch=samples$Mixture,
 			 design=model.matrix(~Condition,data=samples))
+} else {
+	norm_dm <- no_missing_dm
+}
 
 ## rm poor_prots 
-
 if (rm_poor) {
 	idx <- rownames(norm_dm) %in% poor_prots
 	warning("Removing ", sum(idx)," proteins before network construction.")
 	norm_dm <- norm_dm[!idx,]
 }
 
+## subset control data?
+if (sub_control) {
+	idy <- grepl("Control",colnames(norm_dm))
+	norm_dm <- norm_dm[,idy]
+}
+
 # calculate coorrelation matrix
-adjm <- cor(t(norm_dm),method="pearson",use="complete.obs")
+adjm <- cor(t(norm_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
