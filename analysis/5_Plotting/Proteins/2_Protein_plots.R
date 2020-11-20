@@ -41,8 +41,8 @@ plot_protein <- function(prot_df, gene_map, protein,
   colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
   	    "#942192","#B847B4","#DC6AD7") # Swip Purples
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
-	select(R2.total) %>% as.numeric()
-  title_anno <- paste0("(R2 = ",round(r2,3),")")
+	select(R2.fixef) %>% as.numeric()
+  title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
 
   # function to generate a proteins plot
   # Subset the data.
@@ -56,7 +56,7 @@ plot_protein <- function(prot_df, gene_map, protein,
 
   # Collect FDR stats.
   stats <- df %>% group_by(Genotype,BioFraction) %>% 
-  		summarize(`Max Abundance` = max(norm_Abundance),
+  		summarize(`Max Abundance` = max(Abundance),
   			  FDR = unique(FDR),.groups="drop")
   stats$ypos <- 1.02 * max(stats$`Max Abundance`)
   stats <- stats %>% filter(Genotype == "Control")
@@ -72,12 +72,10 @@ plot_protein <- function(prot_df, gene_map, protein,
 
   # Generate the plot.
   plot <- ggplot(df)
-  # NOTE: we use the adjusted (norm_Abundance) protein data for plotting!
-  plot <- plot + aes(x = BioFraction, y = norm_Abundance)
+  plot <- plot + aes(x = BioFraction, y = Abundance)
   plot <- plot + aes(group = interaction(Mixture,Genotype))
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
   plot <- plot + aes(shape=Mixture)
-  #plot <- plot + aes(fill=Genotype)
   plot <- plot + aes(group = interaction(Mixture,Genotype))
   plot <- plot + aes(colour = interaction(Mixture,Genotype))
   plot <- plot + geom_point(size=2)
@@ -98,17 +96,11 @@ plot_protein <- function(prot_df, gene_map, protein,
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
   plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
 
-  #plot <- plot + scale_x_discrete(labels=stats$Cfg.Force)
-  #plot <- plot + xlab("Force (xg)")
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-  # Edit y axis.
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-  # Make x and y axes consistent.
   plot <- plot + theme(axis.text.x = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
   plot <- plot + theme(axis.text.y = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
-  # Remove background.
   plot <- plot + theme(panel.background = element_blank())
-  # Add x and y axes.
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
 
@@ -128,11 +120,12 @@ root <- getrd()
 renv::load(root,quiet=TRUE)
 
 # Load additional functions in root/R/
-devtools::load_all()
+devtools::load_all(root,quiet=TRUE)
 
 # load the data
 data(swip)
 data(gene_map)
+data(norm_prot)
 data(partition)
 data(poor_prots)
 data(protein_gof)
@@ -159,12 +152,30 @@ if (! dir.exists(figsdir)) {
 ggtheme(); set_font("Arial",font_path=fontdir)
 
 
+# melt the normalized protein data.matrix into a tidy df
+prot_df <- reshape2::melt(norm_prot)
+colnames(prot_df) <- c("Protein","Sample","Abundance")
+mix <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",1)
+geno <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",2)
+biof <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",3)
+prot_df$Mixture <- mix
+prot_df$Genotype <- geno
+prot_df$BioFraction <- biof
+
+# combine with other meta data from msstats_prot
+msstats_prot$Abundance <- NULL
+prot_df$Sample <- NULL
+prot_df <- left_join(prot_df,msstats_prot,
+		     by=intersect(colnames(msstats_prot),colnames(prot_df)))
+
+
 # combine protein data and statistical results
 # we will use stats to annotate plots with stars
 biofraction <- sapply(strsplit(msstats_results$Contrast,"\\."),"[",3)
 msstats_results$BioFraction <- biofraction
-shared_cols <- intersect(colnames(msstats_prot),colnames(msstats_results))
-prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
+
+shared_cols <- intersect(colnames(prot_df),colnames(msstats_results))
+prot_df <- left_join(prot_df,msstats_results,by=shared_cols)
 
 # annotate with module membership
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
@@ -172,8 +183,8 @@ prot_df$Module <- paste0("M",partition[prot_df$Protein])
 
 # collect vector of sigprots. annotate title in red if protein has overall 
 # sig change in 'Mutant-Control' comparison
-sigprots <- msstats_results %>% filter(Contrast == 'Mutant-Control') %>% 
-	filter(FDR<0.05) %>% select(Protein) %>% 
+sigprots <- msstats_results %>% 
+	subset(Contrast == 'Mutant-Control' & FDR<0.05) %>% select(Protein) %>%
 	unlist() %>% as.character() %>% unique()
 
 

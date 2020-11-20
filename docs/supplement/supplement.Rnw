@@ -114,76 +114,20 @@ University of Tennessee Health Science Center, Memphis, TN 38163, USA}
 \begin{abstract}
 
 	Here we provide supplemental description of our spatial proteomics
-	experiment, network construction and community detection, and approach to perform
-	protein- and module-level statistical testing. evaluate
-	protein level differential abundance using \texttt{MSstatsTMT}. We
-	extend Huang et al.'s linear mixed-model (LMM) framework to perform 
-	inference at the level of protein groups or modules. 
-%Here we address concerns about the statistical validity of our previous approach
-%to assess differential protein abundance in the \textbf{WASH-iBioID} and
-%\textbf{SWIP-TMT} proteomics datasets. Our previous approach depended
-%upon the R package \texttt{edgeR}. We used \texttt{edgeR} to perform
-%both protein- and module-level inference---assessing differential
-%abundance of individual proteins as well as protein groups in
-%SWIP\textsuperscript{P1019R} mouse brain. \texttt{edgeR} utilizes a
-%negative binomial (NB) statistical framework originally developed for
-%analysis of RNA-Seq read count data. Previously, we failed to fully
-%consider the validity of \texttt{edgeR's} NB assumption for proteomics
-%data. We evaluate the goodness-of-fit of the negative binomial model for
-%our TMT dataset and find evidence of a lack-of-fit.  Thus, we	revise
-%our statistical approach and reanalyze our data, making use of
-%\cite{Huang2020}'s recently published R package \texttt{MSstatsTMT}.
-%\texttt{MSstatsTMT} uses a flexible linear mixed-model (LMM) statistical
-%framework which we extend to re-evaluate both protein- and module-level
-%statistical comparisions in our SWIP-TMT spatial proteomics dataset.
+	experiment, and subsequent network construction, community detection and
+	hypothesis testing.  We build upon the linear mixed-model framework
+	established by \texttt{MSstatsTMT} to perform protein-level comparisons,
+	to assess the overall effect of Genotype on groups of proteins or
+	modules in the spatial proteomics dataset.  inference at the level of
+	protein groups or modules. 
 
 \end{abstract}
 
 \newpage
 
 
-%\section{Goodness-of-fit of the NB Model for TMT MS}
-%
-%Our previous method can be summarized as the \textit{Sum + IRS} approach
-%\citep{Huang2020}.  Following protein summarization 
-%and internal reference scaling (IRS) normalization \citep{Plubell2017},  we
-%applied \texttt{edgeR} \citep{McCarthy2012} to assess differential abundance of
-%individual proteins and protein-groups.  The use of \texttt{edgeR} for
-%protein-level comparisons was based on work by \cite{Plubell2017} who describe
-%IRS normalization and the use of \texttt{edgeR} for statistical testing in TMT
-%MS experiments \citep{Plubell2017}.  We failed however, to consider the overall
-%adequecy of \texttt{edgeR's} NB GLM model for our TMT proteomics data.
-%
-%Statistical inference in \texttt{edgeR} is performed for each gene or protein
-%using a negative binomial, generalized linear model framework.  The data are
-%assumed to be adequately described by a NB distribution parameterized by a
-%dispersion parameter, $\phi$. The dispersion parameter $\phi$ accounts for
-%mean-variance relationships in proteomics and transcriptomics data.  As signal
-%intensity in protein MS is fundamentally related to the number of ions generated
-%from an ionized, fragmented protein, we incorrectly inferred that TMT mass
-%spectrometry data can be modeled as NB count data. Based on this assumption, we
-%justified our use of \texttt{edgeR}.  
-%
-%To evaluate the overall adequacy of the negative binomial model for TMT
-%proteomics data, we plot the residual protein deviance statistics of all
-%proteins fit with \texttt{edgeR's} NB GLM against their theoretical normal
-%quantiles in a quantile-quantile (QQ) plot (FIG:gof).  The QQ plot addresses the
-%question of how similar the observed data are to the theoretical distribution
-%given by the NB model.  A linear relationship between the observed and
-%theoretical values is a goodness-of-fit indicator.  Deviation from this linear
-%trend is evidence of a lack-of-fit.
-%
-%Following protein summarization and normalization with \texttt{MSstatsTMT}, the
-%SWIP-TMT data were fit with a NB GLM using \texttt{edgeR::glmFit}. \FIG{gof}
-%illustrates the divergence of the observed and theoretical quantiles for our
-%SWIP-TMT dataset fit with \texttt{edgeR's} NB GLM. Given our experimental
-%design, \texttt{MSstatsTMT} fits an appropriate linear-mixed model to the data.
-%The quantile-quantile plot in \FIG{gof} indicates that the data are well
-%described by \texttt{MSstatsTMT's} LMM, which does not depend upon the negative
-%binomial assumption.
 
-
-\section{Protein-wise Linear Mixed-Models}
+\section{Protein-wised Linear Mixed-Models}
 
 \cite{Huang2020} created \texttt{MSstatsTMT}, an R package for data
 normalization and hypothesis testing in multiplex TMT proteomics experiments.
@@ -324,7 +268,7 @@ illustrates the two types of protein-level statistical comparisons we implement
 with \texttt{MSstatsTMT}.
 
 
-\section{Module-level Inference with Mixed-Models}
+\section{Module-level Inference}
 
 The strength of linear mixed-models lies in their flexibility. In a mixed-model
 the response variable is taken to be a function of both fixed- and
@@ -414,57 +358,6 @@ To facilitate identification of cohesive protein-covaration modules, we
 recursively split modules that contained more than 100 nodes. The final network
 included ~2xx modules.
 
-%------------------------------------------------------------------------------
-%\section{Implementation}
-%
-%% Source Code
-%
-%In order to understand and extend the function of \texttt{MSstatsTMT}, we
-%extracted \texttt{MSstatsTMT's} core model-fitting and statistical testing
-%steps.  At the core of the model fitting-step is the R package \texttt{lme4}
-%which implements mixed-effects models with its function
-%\texttt{lme4::lmer}\citep{Bates2015}. The package \texttt{lmerTest} extends
-%\texttt{lme4's} functionality and enables the computation of Sattertwaite
-%degrees of freedom \citep{Kuznetsova2017}. 
-%
-%\paragraph{Fit WASHC4}
-%
-%As a means of example, we demonstrate the model fitting statistical testing
-%steps for both and protein- and module-level statistical comparisons.
-%First, we fit the LMM in (\ref{eq:fx0}) the normalized protein level data from
-%\texttt{MSstatsTMT} for WASHC4.
-%<<fit0, results='markup'>>=
-%@
-%
-%\paragraph{'MutantF7-ControlF7'}
-%
-%We assess the contrast between \texttt{BioFraction} seven (F7) mutant and
-%control conditions.
-%<<contrast7, results='markup'>>=
-%@
-%
-%\paragraph{'Mutant-Control'}
-%
-%Provided the correct contrast, we easily evaluate the overall difference
-%between mutant and control mice.
-%<<contrast8, results='markup'>>=
-%@
-%
-%\paragraph{Fit WASH Complex}
-%Next we fit a LMM to the five WASH complex proteins.
-%<<fit1, results='markup'>>=
-%@
-%
-%We evaluate the goodness of fit of our module-level model.
-%<<nakagawa, results='markup'>>=
-%@
-%
-%\paragraph{varianceParition}
-%We compute the variance explained using \texttt{variancePartition}.
-%<<variancePartition, results='markup'>>=
-%@
-
-%------------------------------------------------------------------------------
 \newpage
 
 

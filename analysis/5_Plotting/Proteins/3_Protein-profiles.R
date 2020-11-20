@@ -21,6 +21,7 @@ suppressWarnings({ devtools::load_all() })
 data(swip)
 data(gene_map)
 data(partition)
+data(norm_prot)
 data(protein_gof)
 data(msstats_prot)
 data(module_colors)
@@ -57,12 +58,29 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## prepare the data -----------------------------------------------------------
 
-# combine msstats_results (stats) and msstats_prot (normalized protein data)
+
+# melt the normalized protein data.matrix into a tidy df
+prot_df <- reshape2::melt(norm_prot)
+colnames(prot_df) <- c("Protein","Sample","Abundance")
+mix <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",1)
+geno <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",2)
+biof <- sapply(strsplit(as.character(prot_df$Sample),"\\_"),"[",3)
+prot_df$Mixture <- mix
+prot_df$Genotype <- geno
+prot_df$BioFraction <- biof
+
+# combine with other meta data from msstats_prot
+msstats_prot$Abundance <- NULL
+prot_df$Sample <- NULL
+prot_df <- left_join(prot_df,msstats_prot,
+		     by=intersect(colnames(msstats_prot),colnames(prot_df)))
+
+# combine msstats_results (stats) and prot_df (normalized protein data)
 sub_results <- msstats_results %>% filter(Contrast != "Mutant-Control")
 biofraction <- sapply(strsplit(sub_results$Contrast, "\\."),"[",3)
 sub_results$BioFraction <- biofraction
-shared_cols <- intersect(colnames(sub_results),colnames(msstats_prot))
-prot_df <- left_join(msstats_prot,sub_results,by=shared_cols)
+shared_cols <- intersect(colnames(sub_results),colnames(prot_df))
+prot_df <- left_join(prot_df,sub_results,by=shared_cols)
 
 # annotate with module membership
 prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
@@ -82,8 +100,8 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 			 wt_color = "#47b2a4",
 			 mut_color = prot_colors[protein]) {
 	r2 <- protein_gof %>% filter(Protein == protein) %>% 
-		select(R2.total) %>% as.numeric()
-	title_anno <- paste0("(R2 = ",round(r2,3),")")
+		select(R2.fixef) %>% as.numeric()
+	title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
 	title_colors <- c("darkred"=TRUE,"black"=FALSE)
 	title_color <- names(which(title_colors==protein %in% sigprots))
   # prepare stats for labeling
@@ -100,8 +118,8 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
   # group by Genotype.BioFraction.Protein
   group_by(Condition,Protein) %>%
   # calculate the average of the three mixtures
-  summarize(mean_Abundance = mean(norm_Abundance), # using batch corrected norm_Abundance!
-	    SD = sd(norm_Abundance),
+  summarize(mean_Abundance = mean(Abundance),
+	    SD = sd(Abundance),
 	    SE = unique(SE),
 	    N = length(Abundance),
 	    .groups="drop") %>%
@@ -157,7 +175,7 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 } #EOF
 
 
-#plot_profile(prot_df,swip,sigprots,protein_gof)
+plot_profile(prot_df,swip,sigprots,protein_gof)
 
 ## generate plots -------------------------------------------------------------
 

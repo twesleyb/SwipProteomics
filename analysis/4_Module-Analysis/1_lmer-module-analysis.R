@@ -29,9 +29,6 @@ suppressPackageStartupMessages({
 })
 
 
-## functions ------------------------------------------------------------------
-
-
 ## prepare the data -----------------------------------------------------------
 
 # all modules
@@ -105,7 +102,7 @@ results_list <- foreach(module = names(modules)) %dopar% {
   # test the contrast
   df <- lmerTestContrast(fm, LT) %>% mutate(Contrast = "Mutant-Control")
   df <- df %>% unique()
-  # add fstat
+  # add fstatitistic
   df$Fstat <- calcSatterth(fm,LT)[["Fstat"]]
   # return the results
   return(unique(df))
@@ -120,13 +117,6 @@ difftime(t1,t0)
 ## collect results
 results_df <- do.call(rbind, results_list) %>% 
 	as.data.table(keep.rownames = "Module")
-
-results_df <- results_df %>%
-  arrange(Pvalue) %>%
-  mutate(
-    FDR = p.adjust(Pvalue, method = "BH"),
-    Padjust = p.adjust(Pvalue, method = "bonferroni")
-  )
 
 # examine the results
 k <- unique(results_df$Module)
@@ -143,11 +133,7 @@ module_size <- sapply(modules,length)[results_df$Module]
 results_df <- tibble::add_column(results_df,Size=module_size,.after="Module")
 
 ## examine top results
-results_df %>% filter(Padjust<0.05) %>% knitr::kable()
-
-message("\nModules with greater than 10% change:")
-idx <- abs(results_df$log2FC) > log2(1.1)  
-results_df[idx,] %>% knitr::kable()
+results_df %>% head() %>% knitr::kable()
 
 message("Number of significant modules (Bonferroni<0.05): ",
 	sum(results_df$Padjust<0.05))
@@ -162,6 +148,8 @@ results_df$Symbols <- sapply(modules[results_df$Module], function(x) {
 results_df <- results_df %>% 
 	select(Module,Size,Contrast,log2FC,percentControl,
 	       Pvalue,FDR,Padjust,Tstatistic,SE,DF,Symbols)
+
+
 
 # save results as an excel workbook
 results_list <- list("Partition" = part_df, "Mutant-Control" = results_df)

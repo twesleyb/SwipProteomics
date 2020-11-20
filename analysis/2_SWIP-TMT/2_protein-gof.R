@@ -6,7 +6,7 @@
 
 ## options
 
-# threshold for defining proteins with poor fit
+# R2 conditional (total) threshold for defining proteins with poor fit
 r2_threshold = 0.70
 
 
@@ -67,7 +67,7 @@ doParallel::registerDoParallel(n_cores)
 prot_varpart <- variancePartition::fitExtractVarPartModel(dm, form0, info)
 
 
-## parse the response 
+## ---- parse the response 
 
 # collect results
 df <- as.data.frame(prot_varpart)
@@ -89,7 +89,7 @@ varpart_df <- varpart_df %>%
 varpart_df %>% head() %>% knitr::kable()
 
 
-## ---- fit all protein models 
+## ---- re-fit all protein models
 # calculate Nakagawa coefficient of determination
 
 # evaluate gof of all protein-wise models
@@ -105,37 +105,24 @@ message("\nEvaluating Nakagawa goodness-of-fit, refitting modules...")
 
 gof_list <- foreach (protein = proteins) %dopar% {
 	# fit protein-wise model
-	fx0 <- Abundance ~ 1 + Condition + (1 | Mixture)
-	fm <- suppressMessages({
-		try({
-		  lmerTest::lmer(fx0, msstats_prot %>% filter(Protein==protein))
-		}) 
-	})
-	# if error, return null
-	if (inherits(fm,"try-error")) { 
-             return(NULL)
-	} else {
-		# else, evaluate goodness-of-fit
-		r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
-				       c("R2.fixef","R2.total"))
-		# return coefficient of determination
-		return(r2)
-	}
+	args_list <- list()
+	args_list[["formula"]] <- Abundance ~ 1 + Condition + (1 | Mixture)
+	args_list[["data"]] <- msstats_prot %>% filter(Protein==protein)
+	fm <- lmerFit(args_list)
+	r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
+			       c("R2.fixef","R2.total"))
+	# return coefficient of determination
+	return(r2)
 } #EOL
 names(gof_list) <- proteins
 
 # collect results
-idx <- !sapply(gof_list,is.null)
-if (any(!idx)) { 
-	warning("There were problems fitting ",sum(idx)," models.")
-}
-
 gof_df <- as.data.table(do.call(rbind,gof_list[idx]),keep.rownames="Protein")
 
 # combine varpart -- the precent variance explained for each covariate and
 # gof_df -- the overall R2 for total and fixed effects (which is the percent
 # variance explained by our models).
-protein_gof <- left_join(varpart_df,gof_df,by="Protein")
+protein_gof <- left_join(varpart_df,gof_df,by="Protein") %>% na.omit()
 
 # examine results
 protein_gof %>% head() %>% knitr::kable()
@@ -148,15 +135,14 @@ protein_gof %>% arrange(desc(BioFraction)) %>% head() %>% knitr::kable()
 
 # use overall R2 -- the percent of variance explained by the model as a natural
 # description of the overall quality of the fit
-message("\nR2 threshold: ", r2_threshold)
+message("\nR2.total threshold: ", r2_threshold)
 
 # Summary
 total <- length(unique(protein_gof$Protein))
-out <- sum(protein_gof$R2.total < r2_threshold)
+out <- sum(protein_gof$R2.total < 0.7)
 percent <- round(out/total,3)
 final <- total-out
 cbind(r2_threshold, out, percent, total,final) %>% knitr::kable()
-
 
 # proteins with R2 less than threshold are poor_prots
 poor_prots <- protein_gof$Protein[protein_gof$R2.total < r2_threshold]

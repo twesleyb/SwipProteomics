@@ -92,8 +92,8 @@ plot_profile <- function(module, msstats_prot, partition,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
   # get r2 for annot plot title
   # need to regen stats
-  r2 <- module_gof %>% filter(Module == module) %>% select(R2.total,R2.fixef) %>% as.numeric() 
-  r2_anno <- paste("(",paste(paste(c("R2.Total =","R2.Fixef = "),round(r2,3)),collapse=" | "),")")
+  r2 <- module_gof %>% filter(Module == module) %>% select(R2.fixef) %>% as.numeric() 
+  r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),round(r2,3)),collapse=" | "),")")
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
