@@ -175,8 +175,6 @@ plot_profile <- function(prot_df, protein, sigprots, protein_gof,
 } #EOF
 
 
-plot_profile(prot_df,swip,sigprots,protein_gof)
-
 ## generate plots -------------------------------------------------------------
 
 # protein names sorted by module membership

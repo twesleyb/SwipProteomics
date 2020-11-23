@@ -9,26 +9,10 @@ BF_alpha <- 0.05 # Significance threshold for enrichment
 Padjust_alpha <- 0.05 
 
 
-## Misc function - getrd() ----------------------------------------------------
-
-# Get the repository's root directory.
-getrd <- function(here = getwd(), dpat = ".git") {
-  in_root <- function(h = here, dir = dpat) {
-    check <- any(grepl(dir, list.dirs(h, recursive = FALSE)))
-    return(check)
-  }
-  # Loop to find root.
-  while (!in_root(here)) {
-    here <- dirname(here)
-  }
-  root <- here
-  return(root)
-}
-
 ## Set-up the workspace -------------------------------------------------------
 
 # Load renv
-root <- getrd()
+root <- "~/projects/SwipProteomics"
 renv::load(root, quiet = TRUE)
 
 # Global imports
@@ -39,9 +23,7 @@ suppressPackageStartupMessages({
 })
 
 # Load functions in root/R and data in root/data
-suppressWarnings({
-  devtools::load_all()
-})
+devtools::load_all()
 
 # Project Directories
 datadir <- file.path(root, "data")
@@ -64,8 +46,15 @@ retriever <- c("Vps35l", "Vps26c", "Vps29")
 data(gene_map) # gene mapping data
 data(partition) # the graph partition
 data(msstats_prot) # the proteomics data
+data(msstats_results) # protein stats
 data(module_results) # module-level statistics
 data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. [7]
+
+
+## add sigprots
+sig_prots <- list("SigProts" = msstats_results %>% ungroup() %>%
+	filter(Contrast == "Mutant-Control", FDR < 0.05) %>% 
+	select(Entrez) %>% unlist() %>% as.character() %>% unique())
 
 
 ## Do work --------------------------------------------------------------------
@@ -108,7 +97,8 @@ gene_lists <- c(
   list("McNally et al., 2017: Retriever Complex" = names(retriever)),
   takamori2006SV, # 5
   iPSD, # 6
-  ePSD # 7
+  ePSD, # 7
+  sig_prots
 )
 
 # Remove lists with less than 3 proteins.
@@ -188,11 +178,6 @@ dt <- bind_rows(results)
 sig_dt <- dt %>% filter(Padjust < Padjust_alpha) %>% 
 	filter(`Fold enrichment` > 1) 
 
-# all lopitDC compartments are represented
-#all(names(lopitDCpredictions) %in% sig_dt$Pathway)
-#idx <- names(lopitDCpredictions) %in% sig_dt$Pathway
-#names(lopitDCpredictions)[!idx] # only unknown is not represented
-
 # Status:
 n_mods <- length(unique(sig_dt$Module))
 message(paste(
@@ -262,3 +247,8 @@ dt %>% filter(`Fold enrichment` > 1) %>% filter(Padjust < 0.05) %>%
 		  Padjust = head(Padjust,1),
 		  .groups="drop") %>%
 	arrange(as.numeric(gsub("M","",Module))) %>% knitr::kable()
+
+
+sig_mods <- sig_dt %>% filter(Pathway == "SigProts") %>% select(Module) %>% unlist() %>% unique()
+myfile <- file.path(root,"data","sig_mods.rda")
+save(sig_mods,file=myfile,version=2)

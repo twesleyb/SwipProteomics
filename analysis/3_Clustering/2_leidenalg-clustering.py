@@ -10,7 +10,7 @@ authors: Tyler W A Bradshaw
 
 ## Input data:
 # Input adjacency matrix should be in root/rdata/
-adjm_file = 'new_ne_adjm.csv' 
+adjm_file = 'ne_adjm.csv' 
 
 ## Project root:
 root = "~/projects/SwipProteomics"
@@ -24,13 +24,13 @@ nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-output_name = 'ne_surprise_surprise' # Prefix out output partition, saved as .csv.
+output_name = 'ne_surprise' # Prefix out output partition, saved as .csv.
 optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 

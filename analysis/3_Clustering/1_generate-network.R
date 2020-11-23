@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript 
 
-# title: 
-# description: generate protein covariation (correlation) network
+# title:  SwipProteomics
+# description: generate protein co-variation (correlation) network
 # author: twab
 
 ## Input:
@@ -11,7 +11,6 @@ root <- "~/projects/SwipProteomics"
 rm_poor <- TRUE
 rm_batch <- TRUE
 impute <- TRUE
-sub_control <- FALSE
 
 ## Output:
 # * generates correlation matrix which is used as input for Leidenalg clustering
@@ -92,27 +91,26 @@ samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
 
 # with complete cases, address effect of mixture before building network
 if (rm_batch) {
-	norm_dm <- limma::removeBatchEffect(no_missing_dm, batch=samples$Mixture,
+	nobatch_dm <- limma::removeBatchEffect(no_missing_dm, batch=samples$Mixture,
 			 design=model.matrix(~Condition,data=samples))
 } else {
-	norm_dm <- no_missing_dm
+	nobatch_dm <- no_missing_dm
 }
 
 ## rm poor_prots 
 if (rm_poor) {
-	idx <- rownames(norm_dm) %in% poor_prots
+	idx <- rownames(nobatch_dm) %in% poor_prots
 	warning("Removing ", sum(idx)," proteins before network construction.")
-	norm_dm <- norm_dm[!idx,]
+	filt_dm <- nobatch_dm[!idx,]
+} else {
+	filt_dm <- nobatch_dm
 }
 
-## subset control data?
-if (sub_control) {
-	idy <- grepl("Control",colnames(norm_dm))
-	norm_dm <- norm_dm[,idy]
-}
+# scale profiles before building network
+norm_dm <- apply(filt_dm,1,function(x) x/max(x))
 
 # calculate coorrelation matrix
-adjm <- cor(t(norm_dm), method="pearson",use="complete.obs")
+adjm <- cor(norm_dm, method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
