@@ -4,13 +4,13 @@
 # author: twab
 # description: generate some gof statistics for protein-wise models
 
-## options
+## ---- options
 
 # R2 conditional (total) threshold for defining proteins with poor fit
 r2_threshold = 0.70
 
 
-## prepare the env
+## ---- prepare the env
 root = "~/projects/SwipProteomics"
 renv::load(root)
 
@@ -24,7 +24,7 @@ data(msstats_prot)
 data(pd_annotation)
 
 
-## imports
+## ---- imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)

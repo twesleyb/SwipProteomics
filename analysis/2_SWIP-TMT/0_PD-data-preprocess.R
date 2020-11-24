@@ -6,14 +6,15 @@
 # os: windows linux subsystem (WSL)
 
 
-## Input ----------------------------------------------------------------------
+## ---- Input
 
 # specify the projects root directory:
 root <- "~/projects/SwipProteomics"
 
 # NOTE: the raw data is 75 mb and is too large to be managed by git.
 # After preprocessing by this script the PSM-level data is saved as 
-# pd_psm.rda in root/data (~46 MB).
+# pd_psm.rda in root/data (~46 MB). pd_psm.rda is converted to MSstatsTMT's
+# format and analyzed with MSstatsTMT.
 input_dir <- "rdata/PSM.zip"
 
 # PSM.zip contains:
@@ -21,7 +22,7 @@ input_psm <- "PSM/5359_PSM_Report.xlsx" # the data exported from PD
 input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 
 
-## Output ---------------------------------------------------------------------
+## ---- Output
 # saved in root/data
 
 # * gene_map - data.table mapping UniProt Accession to Entrez IDs and gene
@@ -37,7 +38,7 @@ input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 #       between Control and SWIP P1019R homozygous Mutant mice.
 # * swip - WASHC4's uniprot ID
 
-## Functions -----------------------------------------------------------------
+## ---- Functions
 # misc functions utilized herein
 
 squote <- function(string) {
@@ -100,18 +101,18 @@ reformat_cols <- function(raw_pd) {
 }
 
 
-## Prepare the working environment --------------------------------------------
+## ---- Prepare the working environment
 
 # project directories
 datadir <- file.path(root, "data")
 mkdir(datadir, warn = FALSE)
+
 rdatdir <- file.path(root, "rdata")
 mkdir(rdatdir, warn = FALSE)
+
 downdir <- file.path(root, "downloads")
 mkdir(downdir, warn = FALSE)
 
-
-# Prepare the R environment ---------------------------------------------------
 
 # load renv
 renv::load(root, quiet = TRUE)
@@ -125,19 +126,17 @@ suppressPackageStartupMessages({
 })
 
 # load functions in root/R
-suppressPackageStartupMessages({
-  devtools::load_all(quiet = TRUE)
-})
+devtools::load_all(quiet = TRUE)
 
 
-## unzip the data in root/data ------------------------------------------------
+## ---- unzip the data in root/data
 
 # unzip data into downloads
 unzip(file.path(root, input_dir), exdir = downdir)
 message("\nUnzipped ", squote(input_dir), " into ", squote(downdir), ".")
 
 
-## read PSM data from excel ---------------------------------------------------
+## ---- read PSM data from excel
 
 # read PSM-level data exported from PD as an excel worksheet
 # NOTE: this takes several minutes!
@@ -150,7 +149,7 @@ raw_pd <- readxl::read_excel(myfile, progress = FALSE)
 raw_pd <- reformat_cols(raw_pd) # changes colnames to match what MSstats expects
 
 
-## load sample data -----------------------------------------------------------
+## ---- load sample data
 # received this excel spreadsheet from GW, exported from PD
 
 # pass meaningful colnames to read_excel
@@ -167,7 +166,7 @@ unlink(mydir, recursive = TRUE)
 message("\nRemoved ", squote(mydir), ".")
 
 
-## re-format sample metadata annotations for MSstats ---------------------------
+## ---- re-format sample metadata annotations for MSstats
 
 # remove un-needed col
 samples$drop <- NULL
@@ -190,9 +189,7 @@ samples$Condition <- condition
 # clean-up 'Mixture' column by replacing F with M
 samples$Mixture <- gsub("F", "M", samples$Mixture)
 
-# FIXME: how should BioReplicate be defined?
-# for intrafraction contrasts, 'BioReplicate' should be ...
-# add R# to indicate the replicate %eg% Control.F4.R2
+# BioReplicate
 biorep <- as.character(interaction(samples$Experiment, samples$Condition))
 biorep[grep("Norm", biorep)] <- "Norm"
 samples$BioReplicate <- biorep
@@ -201,7 +198,7 @@ samples$BioReplicate <- biorep
 samples$Subject <- samples$BioReplicate
 
 
-## drop contaminant proteins ---------------------------------------------------
+## ---- drop contaminant proteins
 
 # drop PSM that are mapped to multiple proteins
 idx_drop <- grepl(";", raw_pd$Master.Protein.Accessions)
@@ -230,8 +227,7 @@ filt_pd <- filt_pd[idx_keep & !idx_drop1 & !idx_drop2, ]
 uniprot <- unique(filt_pd$Master.Protein.Accessions)
 
 
-## create gene map by mapping uniprot to entrez -------------------------------
-# NOTE: this may take several minutes
+## ---- create gene map by mapping uniprot to entrez
 
 # all entrez gene ids
 entrez <- getPPIs::mgi_batch_query(uniprot)
@@ -270,7 +266,8 @@ gene_map <- data.table(
 gene_map$id <- paste(gene_map$symbol, gene_map$uniprot, sep = "|")
 
 
-## map Spectrum.Files to MS.Channels ------------------------------------------
+## ---- map Spectrum.Files to MS.Channels
+
 # Basically, its just complicated. There were 3x 16-plex TMT experiments.
 # In each, the concatenated TMT mixture was fractionated into 12 fractions in
 # order to increase analytical depth. Therefore, there were 12 * 3 = 36 mass
@@ -314,7 +311,8 @@ exp_dt <- data.table(
 )
 
 
-## build annotation file for MSstats -------------------------------------------
+## ---- build annotation file for MSstatsTMT
+
 # the annotation data.frame passed to MSstats requires the following columns:
 # * Run - indicates which channel within a Spectrum.File; this should match
 #     Spectrum.File in raw_pd.
@@ -327,7 +325,7 @@ exp_dt <- data.table(
 # * Channel - the TMT labels/channels used e.g. 126N, 134N
 # * BioReplicate - indicates an individual Biological subject
 # * Condition - indicates the treatment condition e.g. WT, MUT or SPQC (Norm)
-# NOTE: MSstats expects the Norm(alization) condition to be 'Norm'.
+# NOTE: MSstats expects the Norm(alization) condition to be 'Norm' (title-case).
 
 # create annotation_dt from Spectrum.Files and MS.Runs
 # add additional freatures from samples
@@ -344,7 +342,7 @@ annotation_dt$BioReplicate <- samples$BioReplicate[idx]
 annotation_dt$"MS.Channel" <- NULL
 
 
-## build contrast_matrix ----------------------------------------------------
+## ---- build contrast_matrix
 # create MSstatsTMT contrasts for intrafraction comparisons
 
 # define all intrafraction comparisons:
@@ -378,10 +376,10 @@ new_names <- paste(sapply(strsplit(namen,"-"),"[",2),
 rownames(msstats_contrasts) <- new_names
 
 
-## Create 'Mutant-Control contrast ---------------------------------------------
+## ---- Create 'Mutant-Control contrast
 
-# add a contrast vector specifying the mutant-control comparison to
-# msstats_contrasts matrix (see 0_*.R)
+# create a contrast vector specifying an overall comparison between 'Mutant' and
+# 'Control' conditions
 
 mut_vs_control <- as.matrix(t(msstats_contrasts[1,]))
 rownames(mut_vs_control) <- "Mutant-Control"
@@ -389,7 +387,7 @@ mut_vs_control[grepl("Mutant",colnames(mut_vs_control))] <- +1/7
 mut_vs_control[grepl("Control",colnames(mut_vs_control))] <- -1/7
 
 
-## Save outputs to file ---------------------------------------------------------
+## ---- Save outputs to file
 
 # save WASHC4's uniprot ID
 swip <- gene_map$uniprot[gene_map$symbol == "Washc4"]

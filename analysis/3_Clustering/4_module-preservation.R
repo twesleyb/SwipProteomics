@@ -4,16 +4,27 @@
 # description: evaluate module preservation by permutation testing
 # authors: Tyler W A Bradshaw
 
-## INPUT data:
-part_file <- "ne_surprise_surprise_partition.rda" # in root/data
+## ---- INPUT data
+root <- "~/projects/SwipProteomics"
+adjm_file <- file.path(root, "rdata", "adjm.rda")
+netw_file <- file.path(root, "rdata", "ne_adjm.rda")
+data_file <- file.path(root, "data", "msstats_prot.rda")
+part_file <- file.path(root, "data", "ne_surprise_surprise_partition.rda")
 
-## OPTIONS:
-stats <- c(1, 6, 7) # Statistics by which module preservation is enforced.
-strength <- "strong" # Criterion for pres; weak = any(sig), strong = all(sig).
-negative_edges <- "zero" # How will negative edges be replacedR? Abs val or zero.
-replace_zero_index <- TRUE # If min(module index)==0, +1 such that all indices >0.
-log_data <- FALSE # Should input data be log2 transformed?
-min_size <- 5 # Minimum size of a module.
+
+## ---- OUTPUT saved in root/data
+# Partition of the network with preservation enforced.
+# Indices of modules that are not preserved are set to 0.
+# * partition.rda
+
+
+## ---- OPTIONS
+
+stats <- c(1, 6, 7) # Statistics by which module preservation is enforced
+strength <- "strong" # Criterion for pres; weak = any(sig), strong = all(sig)
+negative_edges <- "zero" # How will negative edges be replacedR? Abs val or zero
+replace_zero_index <- TRUE # If min(module index)==0, +1 such that all indices >0
+
 
 ## ORGANIZATION of the permutation test:
 # Names of discovery_data and test_data can be anything.
@@ -28,12 +39,6 @@ nPerm <- NULL
 null <- "overlap"
 backgroundLabel <- 0 # Modules with backgroundLabel will be ignored. *See NOTE.
 alternative <- "greater" # Greater or less, for preservation use 'greater'.
-
-## OUTPUT saved in root/rdata:
-# Partition of the network with preservation enforced.
-# NOTE: Indices of modules that are not preserved are set to 0.
-save_as <- "rda" # Output format for partition: can be RData or csv
-output_prefix <- "" # partition.rda in root/data
 
 
 ## ---- Description of NetRep Permutation Statistics:
@@ -58,49 +63,31 @@ output_prefix <- "" # partition.rda in root/data
 #    to summary profile.
 
 
-## ---- Misc functions 
+## ---- functions
 
-getrd <- function(here = getwd(), dpat = ".git") {
-  # Get the repository's root directory.
-  in_root <- function(h = here, dir = dpat) {
-    check <- any(grepl(dir, list.dirs(h, recursive = FALSE)))
-    return(check)
-  }
-  # Loop to find root.
-  while (!in_root(here)) {
-    here <- dirname(here)
-  }
-  root <- here
-  return(root)
+cast2dm <- function(data, transpose = TRUE) {
+	if (!transpose) { 
+		stop("The data should be transposed such that ",
+		     "rows = Samples, cols = Proteins.")
+	}
+	data %>% 
+		reshape2::dcast(Protein ~ Condition + Mixture, 
+				value.var = "Abundance") %>% 
+	as.data.table() %>% 
+	as.matrix(rownames="Protein") %>% t()
 }
 
 
 reset_index <- function(partition) {
-  #' reset_index
-  #'
-  #' reset partition indices
-  #'
-  #' @param partition - a named vector describing the partition of a network.
-  #'
-  #' @return none
-  #'
-  #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
-  #'
-  #' @references none
-  #'
-  #' @keywords none
-  #'
-  #' @examples
-  #' reset_index(partition)
-  x <- partition
-  # Start from 0.
+  # reset partition indices
+  # min index is 0
   if (min(x) == 0) {
     v <- c(0:length(unique(x)))
   } else {
-    # Start from 1.
+    # min index is 1
     v <- c(1:length(unique(x)))
   }
-  # Map old indices to new ones.
+  # map old indices to new ones
   namen <- unique(x)
   names(v) <- namen[order(namen)]
   y <- as.numeric(v[as.character(x)])
@@ -234,120 +221,75 @@ check_modules <- function(x, strength = "strong", stats = c(1:7), alpha = 0.05) 
   v[less & sig] <- "divergent"
   names(v) <- names(x$nVarsPresent)
   return(v)
-} # Ends function.
+} # EOF
 
 
-## ---- Set-up the workspace.
+## ---- Set-up the workspace
 
-# Load renv.
-root <- getrd()
+# Load renv
+root <- "~/projects/SwipProteomics"
 renv::load(root, quiet = TRUE)
 
-# Global options and imports.
-suppressPackageStartupMessages({
-  library(dplyr) # For manipulating the data.
-  library(NetRep) # For permutation testing.
-  library(data.table) # For working with tables.
-})
-
-# Additional functions.
 devtools::load_all(quiet = TRUE)
 
-# Directories.
+# imports
+suppressPackageStartupMessages({
+  library(dplyr) 
+  library(NetRep) # for permutation testing
+  library(data.table) 
+})
+
+# Directories:
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 
-# Number of threads for parallel processing.
+# Number of threads for parallel processing
 nThreads <- parallel::detectCores() - 1
 
-## ---- Collect input for permutation testing.
+
+## ---- Collect input for permutation testing
+
+# load data
+data(partition)
+data(msstats_prot)
 
 ## Prepare input for NetRep.
-# All data should be in datadir/.
 
-# 1. Load expression data.
-myfile <- file.path(root, "data", "norm_prot.rda")
-load(myfile)
-data_list <- list(discovery = t(norm_prot))
+# 1. Load expression data
+#data(msstats_prot)
+data <- msstats_prot %>% cast2dm()
 
-# 2. Load correlation matrices.
-myfile <- file.path(root, "rdata", "adjm.rda")
-load(myfile)
-adjm_list <- list(discovery = adjm)
+# 2. Load correlation matrix
+load(adjm_file)
+# adjm
 
-# 3. Load interaction/adjacency networks.
-myfile <- file.path(root, "rdata", "ne_adjm.rda")
-load(myfile)
-netw_list <- list(discovery = ne_adjm)
-netw_list <- lapply(netw_list, function(x) {
-  replace_negative(x, replace = negative_edges)
-})
-netw_list <- lapply(netw_list, function(x) {
-  rownames(x) <- colnames(x)
-  return(x)
-})
+# 3. Load interaction/adjacency network
+load(netw_file)
+netw <- ne_adjm 
 
-# 4. Load network partitions.
-myfile <- file.path(root, "data", part_file)
-load(myfile)
-part_list <- list(discovery = partition)
+stopifnot(!any(netw<0)) # there should be no negative vals in netw
 
-# Insure that all module indices are > 0.
+# 4. Load network partition
+# data(partition)
+
+# Add 1 if minimum partition index is 0.
 if (replace_zero_index) {
-  # Add 1 if minimum partition index is 0.
-  part_list <- lapply(part_list[which(sapply(part_list, min) == 0)], 
-		      function(x) x + 1)
+  part <- partition + 1
 }
 
-# Coerce to named vector.
-part_list <- lapply(part_list, unlist)
+# enforce minimum module size
+stopifnot(!any(table(part) < min_size))
 
-# Enforce minimum module size.
-too_small <- lapply(part_list, function(x) {
-  as.numeric(names(which(sapply(split(x, x), length) < min_size)))
-})
+# only keep proteins that are in all datasets
+clust_prot <- Reduce(intersect,list(colnames(adjm),colnames(netw),colnames(data),names(part)))
 
-# Loop to remove small modules.
-message(paste("\nRemoving modules that contain less than", min_size, "nodes."))
-for (i in c(1:length(part_list))) {
-  part <- part_list[[i]]
-  part[part %in% too_small[[1]]] <- 0
-  part_list[[i]] <- part
-}
-
-# Insure that names of the and data, adjm,  netw, and partitions match.
-adjm <- adjm_list[["discovery"]]
-netw <- netw_list[["discovery"]]
-data <- data_list[["discovery"]]
-part <- part_list[["discovery"]]
-
-# only keep proteins that per clustered
-proteins <- Reduce(intersect,list(colnames(adjm),colnames(data),names(part)))
-
-# more input munge
-adjm <- adjm[proteins, proteins]
-netw <- netw[proteins, proteins]
-data <- data[, proteins]
-part <- part[proteins]
-
-# Insure names are equal.
-new_data <- set_matching_node_order(adjm, netw, data, part)
-
-data_list[["discovery"]] <- new_data$data
-adjm_list[["discovery"]] <- new_data$adjm
-netw_list[["discovery"]] <- new_data$netw
-part_list[["discovery"]] <- new_data$part
+netw_list[["discovery"]] <- netw[clust_prot, clust_prot]
+adjm_list[["discovery"]] <- adjm[clust_prot, clust_prot]
+data_list[["discovery"]] <- data[, clust_prot] # cols = prots
+part_list[["discovery"]] <- part[clust_prot]
 
 
-# Should data be log transformed?
-if (log_data == TRUE) {
-  data_list <- lapply(data_list, log2)
-  message("\nInput data was log2 transformed.")
-}
-
-#---------------------------------------------------------------------
-## Permutation testing.
-#---------------------------------------------------------------------
+## ---- status report
 
 # Module preservation stats.
 module_stats <- paste(c(
@@ -372,6 +314,9 @@ message(paste(
   "modules in the", test_data, "network..."
 ))
 
+
+## ---- Permutation testing
+
 # Check, if performing self-preservation test, then discovery == test.
 if (discovery_data == test_data) {
   self_preservation <- TRUE
@@ -383,8 +328,9 @@ if (discovery_data == test_data) {
   test <- "test"
 }
 
-# Perform permutation test for module preservation.
-suppressWarnings({ # Suppress warnings about missing values.
+
+# Perform permutation test for module preservation
+suppressWarnings({ # Suppress warnings about missing values
   results <- NetRep::modulePreservation(
     network = netw_list,
     data = data_list,
@@ -396,15 +342,15 @@ suppressWarnings({ # Suppress warnings about missing values.
     test = test,
     selfPreservation = self_preservation,
     nThreads = nThreads,
-    nPerm = nPerm, # If null then determined automatically by the function.
+    nPerm = nPerm, # If null then determined automatically by the function
     null = null,
-    alternative = alternative, # Greater for self-preservation.
+    alternative = alternative, # should be 'greater' for self-preservation
     simplify = TRUE,
     verbose = verbose
   )
 })
 
-# Collect permutation stats.
+# Collect permutation stats
 dt_pval <- results$p.values %>%
   as.data.table(keep.rownames = "Module") %>%
   melt(id.vars = "Module", variable.name = "Statistic", value.name = "p.value")

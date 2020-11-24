@@ -10,13 +10,16 @@ root <- "~/projects/SwipProteomics"
 # * msstats_prot and other R data in root/data
 
 ## Options:
-rm_poor <- TRUE
+rm_poor <- TRUE # rm proteins with poor fit?
 
 ## ---- Output:
-
+# NOTE: saved in root/rdata because these objects are large
 # adjm.rda
-# ne_adjm.rda
 # ppi_adjm.rda
+# ne_adjm.rda
+
+# ne_adjm.csv --> for leidenalg clustering!
+
 
 ## ---- prepare the working environment
 
@@ -30,15 +33,14 @@ devtools::load_all(root,quiet=TRUE)
 data(gene_map)
 data(poor_prots)
 data(msstats_prot)
-data(msstats_results)
 
 # imports
 suppressPackageStartupMessages({
   library(dplyr)
-  library(data.table)
   library(neten) # twesleyb/neten
   library(igraph)
   library(getPPIs)
+  library(data.table)
 })
 
 
@@ -48,12 +50,21 @@ data(musInteractome)
 
 ## ---- functions
 
+scaleAbundance <- function(data) {
+	# scale Abundance to maximum for each protein
+	# by scaling protein abundance to its maximum we align proteins with
+	# the same profile but different abundance
+	data %>% group_by(Protein) %>% 
+		mutate(scale_Abundance = Abundance/max(Abundance))
+}
+
 summarizeMix <- function(data) {
 	# summarize the median of the three mixtures
 	# cast into a matrix
 	data %>% group_by(Protein, Condition) %>% 
-		summarize(med_Abundance = median(Abundance),.groups="drop")
+		summarize(med_Abundance = median(scale_Abundance),.groups="drop")
 }
+
 
 cast2dm <- function(data) {
 	# cast the median Abundance data into a matrix
@@ -66,24 +77,32 @@ cast2dm <- function(data) {
 ## ---- create covariation network
 
 # cast the protein data into a matrix -- summarize the 3 replicates as median
-dm <- msstats_prot %>% summarizeMix() %>% cast2dm()
+dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
 
 # there are two proteins with some missing vals 
 # e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
 # remove these proteins
-idx <- apply(dm,1,function(x) any(is.na(x)))
-filt_dm <- dm[!idx,]
+idx1 <- apply(dm,1,function(x) any(is.na(x)))
+
+# remove proteins with negative values -- probably also low abundance negative
+# after log 
+idx2 <- apply(dm,1,function(x) any(x < 0))
+
+filt_dm <- dm[!(idx1|idx2), ]
+
 
 stopifnot(!any(is.na(filt_dm)))
 
-# calculate coorrelation matrix
+
+## calculate coorrelation matrix
 adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
+alpha_param = 0.9
+diffusion_param = 1.0
 
-# FIXME: Wang et al. 2017 (?)
-ne_adjm <- neten(adjm, alpha = 0.9, diffusion = 1.0)
+ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
 
 
 ## ---- create ppi network
@@ -106,7 +125,7 @@ ppi_dm <- ppi_df %>%
 	select(ProtA,ProtB) %>% as.matrix()
 
 # create igraph graph
-g <- igraph::graph_from_edgelist(ppi_dm,directed=FALSE)
+g <- igraph::graph_from_edgelist(ppi_dm, directed=FALSE)
 
 # simplify (weight=0,1) and get the adjacency matrix
 ppi_adjm <- as.matrix(igraph::as_adjacency_matrix(igraph::simplify(g)))
@@ -178,3 +197,4 @@ fwrite(ppi_dt, myfile)
 #} else {
 #	filt_dm <- nobatch_dm
 #}
+###############################################################################

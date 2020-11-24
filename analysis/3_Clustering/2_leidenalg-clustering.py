@@ -6,18 +6,22 @@ description: Leidenalg Clustering of the Enhanced Protein Covariation Network
 authors: Tyler W A Bradshaw
 '''
 
-## ---- Inputs
 
-## Input data:
-# Input adjacency matrix should be in root/rdata/
+## ---- Input
+
+# There is only one piece of input data, an input NxN adjacency matrix saved as
+# a csv file in  root/rdata/. 
 adjm_file = 'ne_adjm.csv' 
+
+## Output
+# * a partition of the network saved in root/rdata
 
 ## Project root:
 root = "~/projects/SwipProteomics"
 
+## NOTE: some params may not be used if not required by optimization_method
+
 ## Parameters for multiresolution methods:
-## NOTE: some parameters are not used if they are not required by the set 
-## optimization method
 rmin = 1 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
 nsteps = 1 # Number of steps to take between rmin and rmax.
