@@ -5,7 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_partition <- "ne_surprise_partition.csv"
+input_partition <- "ne_surprise_surprise_partition.csv"
 # output is [input_partition].rda
 
 

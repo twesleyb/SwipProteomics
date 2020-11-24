@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 
-# title: 
-# description: plot protein abundance
+# title: SwipProteomics
+# description: generate module-level profile plot
 # authors: Tyler W Bradshaw
 
-## Inputs --------------------------------------------------------------------
+## ---- Inputs
 
 # options:
 
@@ -12,19 +12,16 @@
 root = "~/projects/SwipProteomics"
 
 
-## Prepare environment --------------------------------------------------------
+## ---- Prepare the R environment
 
 renv::load(root,quiet=TRUE)
+
 devtools::load_all(root,quiet=TRUE)
 
 # load the data
-data(swip)
-data(gene_map)
 data(partition)
-data(module_gof) 
 data(msstats_prot)
 data(module_colors)
-data(msstats_results)
 
 # imports
 suppressPackageStartupMessages({
@@ -33,24 +30,6 @@ suppressPackageStartupMessages({
 	library(data.table)
 	library(doParallel)
 })
-
-# we will plot protein abundance adjusted for Batch effect (Mixture)
-#stopifnot("norm_Abundance" %in% colnames(msstats_prot))
-
-## load batch corrected data
-data(norm_prot)
-
-# munge to add norm_Abundance to msstats_prot
-df <- reshape2::melt(norm_prot)
-colnames(df) <- c("Protein","Mixture_Genotype_BioFraction","norm_Abundance")
-idy <- "Mixture_Genotype_BioFraction"
-df$Mixture <- sapply(strsplit(as.character(df[[idy]]),"_"),"[",1)
-df$Genotype <- sapply(strsplit(as.character(df[[idy]]),"_"),"[",2)
-df$BioFraction <- sapply(strsplit(as.character(df[[idy]]),"_"),"[",3)
-df[[idy]] <- NULL
-prot_df <- left_join(df,msstats_prot, by = intersect(colnames(df),colnames(msstats_prot)))
-
-## prot_df is input to plotting function
 
 # project dirs
 fontdir <- file.path(root, "fonts")
@@ -65,18 +44,15 @@ ggtheme(); set_font("Arial",font_path=fontdir)
 
 ## Function ------------------------------------------------------------------
 
-plot_profile <- function(module, prot_df, partition,
-			 module_colors, module_gof, wt_color = "#47b2a4") {
 
-	if (module %notin% module_gof$Module) {
-	       warning(module," is not in 'module_gof'.")
-	       return(NULL)
-	}
+plot_profile <- function(module, msstats_prot, module_colors) {
+	
+  # color for Control condition
+  wt_color = "#47b2a4"
 
   # Subset
-  subdat <- prot_df %>% filter(Protein %in% names(partition)) %>% 
-	  mutate(Module=paste0("M",partition[Protein])) %>% 
-	  filter(Module == module)
+  prots <- names(module[[1]])
+  subdat <- msstats_prot %>% subset(Protein %in% prots)
 
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
@@ -86,23 +62,22 @@ plot_profile <- function(module, prot_df, partition,
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  # calculate protein-wise mean of three replicates
-  df <- subdat %>% group_by(Protein, Genotype, BioFraction) %>% 
-        summarize(mean_Abundance = mean(norm_Abundance), # using norm_Abundance!
-	          SD = sd(norm_Abundance),
-	          N = length(norm_Abundance),
+  # scale to max, take median of three replicates
+  df <- subdat %>% group_by(Protein) %>%
+	  mutate(scale_Abundance = Abundance/max(Abundance)) %>%
+	  group_by(Protein, Genotype, BioFraction) %>% 
+	  summarize(med_Abundance = median(scale_Abundance), 
+	          SD = sd(scale_Abundance),
+	          N = length(scale_Abundance),
 	          .groups="drop")
 
   # calculate coefficient of variation (CV == unitless error) and scale to max
-  df <- df %>% mutate(CV = SD/mean_Abundance)
-  df <- df %>% group_by(Protein) %>%
-	mutate(scale_Abundance = mean_Abundance/max(mean_Abundance))
+  df <- df %>% mutate(CV = SD/med_Abundance)
 
   # get module fitted data by fitting linear model to scaled Abundance
-  fm <- lmerTest::lmer(scale_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
-  LT <- getContrast(fm,"Mutant","Control")
-  res <- lmerTestContrast(fm,LT) %>% mutate(Contrast = "Mutant-Control") %>% unique()
+  fm <- lmerTest::lmer(med_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
 
+  # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
 		       "fit_y" = lme4::fixef(fm)) %>%
     mutate(Genotype = gsub("Genotype","",sapply(strsplit(coef,"\\:"),"[",1))) %>%
@@ -116,25 +91,24 @@ plot_profile <- function(module, prot_df, partition,
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  # get r2 for annot plot title
-  # need to regen stats
-  r2 <- module_gof %>% filter(Module == module) %>% select(R2.fixef) %>% as.numeric() 
+  # get marginal r2 for annot plot title
+  r2 <- r.squaredGLMM.merMod(fm)[,"R2m"]
   r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),round(r2,3)),collapse=" | "),")")
 
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = scale_Abundance)
+  plot <- plot + aes(y = med_Abundance)
   plot <- plot + aes(group = interaction(Genotype,Protein))
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=scale_Abundance - CV)
-  plot <- plot + aes(ymax=scale_Abundance + CV)
+  plot <- plot + aes(ymin=med_Abundance - CV)
+  plot <- plot + aes(ymax=med_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
+  plot <- plot + ggtitle(paste0(names(module)," (n = ",nprots,")\n",r2_anno))
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -152,36 +126,11 @@ plot_profile <- function(module, prot_df, partition,
 			   linetype="dashed",alpha=1,size=0.75)
 
   # set colors
-  plot <- plot + scale_colour_manual(values=c(wt_color,module_colors[[module]]))
+  mut_color <- module_colors[[names(module)]]
+  plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
 
   return(plot)
 } #EOF
-
-#profile_lmer <- function(module, prot_df, partition){
-#  # Subset
-#  subdat <- prot_df %>% filter(Protein %in% names(partition)) %>% 
-#	  mutate(Module=paste0("M",partition[Protein])) %>% 
-#	  filter(Module == module)
-#  # set factor order (levels)
-#  subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
-#  subdat$BioFraction <- factor(subdat$BioFraction,
-#			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
-#  # calculate protein-wise mean of three replicates
-#  df <- subdat %>% group_by(Protein, Genotype, BioFraction) %>% 
-#        summarize(mean_Abundance = mean(norm_Abundance), # using norm_Abundance!
-#	          SD = sd(norm_Abundance),
-#	          N = length(norm_Abundance),
-#	          .groups="drop")
-#  # calculate coefficient of variation (CV == unitless error) and scale to max
-#  df <- df %>% mutate(CV = SD/mean_Abundance)
-#  df <- df %>% group_by(Protein) %>%
-#	mutate(scale_Abundance = mean_Abundance/max(mean_Abundance))
-#  # get module fitted data by fitting linear model to scaled Abundance
-#  fm <- lmerTest::lmer(scale_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
-#  LT <- getContrast(fm,"Mutant","Control")
-#  res <- lmerTestContrast(fm,LT) %>% mutate(Contrast = "Mutant-Control") %>% unique()
-#  return(res)
-#}
 
 
 ## generate plots -------------------------------------------------------------
@@ -197,8 +146,9 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
 message("\nGenerating profile plots of ", length(modules), " modules.")
-plot_list <- foreach(module = names(modules)) %dopar% {
-	plot_profile(module, prot_df, partition, module_colors, module_gof)
+
+plot_list <- foreach(module = modules) %dopar% {
+	plot_profile(module, msstats_prot, module_colors)
 }
 names(plot_list) <- names(modules)
 

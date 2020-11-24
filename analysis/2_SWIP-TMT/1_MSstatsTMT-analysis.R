@@ -17,11 +17,10 @@ FDR_alpha = 0.05 # FDR = Benjamini Hochberg FDR
 
 ## ---- prepare the working R environment
 
-#library(SwipProteomics)
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 
-# load functions in root/R and make data in root/data accessible
+#library(SwipProteomics)
 devtools::load_all(root)
 
 # load data in root/data
@@ -204,6 +203,12 @@ msstats_results <- msstats_results %>% group_by(Contrast) %>%
 	mutate(Padjust=p.adjust(Pvalue,method="bonferroni"))
 
 
+## ---- proteins with overall sig change
+
+df <- subset(msstats_results,Contrast=='Mutant-Control')
+sig_prots <- unique(as.character(df$Protein)[df$FDR < FDR_alpha])
+
+
 ## ---- save msstats_results as an excel document
 
 # format the data for saving
@@ -229,7 +234,7 @@ lapply(results_list, summarize, sum(Padjust<0.05)) %>%
 	bind_rows(.id="Contrast") %>% knitr::kable()
 
 # save as excel document
-myfile <- file.path(root,"tables","S2_SWIP_TMT_Results.xlsx")
+myfile <- file.path(root,"tables","SWIP_TMT_Results.xlsx")
 write_excel(results_list,myfile)
 
 
@@ -239,10 +244,10 @@ write_excel(results_list,myfile)
 myfile <- file.path(root, "data", "msstats_prot.rda")
 save(msstats_prot, file = myfile, version = 2)
 
-message("\nSaved ", basename(myfile), " in ", dirname(myfile))
-
 # save msstats_results
 myfile <- file.path(root, "data", "msstats_results.rda")
 save(msstats_results, file = myfile, version = 2)
 
-message("\nSaved ", basename(myfile), " in ", dirname(myfile))
+# save sig_prots
+myfile <- file.path(root, "data", "sig_prots.rda")
+save(sig_prots, file = myfile, version = 2)

@@ -5,25 +5,26 @@
 # authors: Tyler W A Bradshaw
 
 ## ---- INPUT data
+
 root <- "~/projects/SwipProteomics"
+
 adjm_file <- file.path(root, "rdata", "adjm.rda")
 netw_file <- file.path(root, "rdata", "ne_adjm.rda")
 data_file <- file.path(root, "data", "msstats_prot.rda")
-part_file <- file.path(root, "data", "ne_surprise_surprise_partition.rda")
+part_file <- file.path(root, "data", "ne_surprise_partition.rda")
 
 
 ## ---- OUTPUT saved in root/data
 # Partition of the network with preservation enforced.
 # Indices of modules that are not preserved are set to 0.
+
 # * partition.rda
 
 
 ## ---- OPTIONS
-# Names of discovery_data and test_data can be anything.
-# These names are used to generate the output filename.
-# If performing self-preservation, then discovery should be == test.
 
-stats <- c(1, 6, 7) # Statistics by which module preservation is enforced
+# Statistics by which module preservation is enforced
+pres_stats <- c(1, 6, 7) 
 
 ## ---- Description of NetRep Permutation Statistics:
 
@@ -66,6 +67,13 @@ inputDataMunge <- function(data) {
 }
 
 
+checkStat <- function(data) {
+	data %>% mutate("p.adjust"=p.adjust(p.value,method="bonferroni")) %>% 
+		# check if p.adjust < threshold and if observed > null
+		mutate(isSig = `p.adjust` < 0.05 & observed > null)
+}
+
+
 ## ---- Set-up the workspace
 
 # Load renv
@@ -95,7 +103,8 @@ nThreads <- parallel::detectCores() - 1
 
 # 1. Load expression data
 data(msstats_prot)
-data <- inputDataMunge(msstats_prot)
+data <- inputDataMunge(msstats_prot) 
+# a matrix in which rows are samples and columns are proteins
 
 # 2. Load correlation matrix
 load(adjm_file)
@@ -125,19 +134,6 @@ data_list <- list("discovery" = data[, clust_prot]) # cols = prots
 part_list <- list("discovery" = part[clust_prot])
 
 
-## ---- status report
-
-# Module preservation stats.
-module_stats <- paste(c(
-  "avg.weight", "coherence", "cor.cor", "cor.degree",
-  "cor.contrib", "avg.cor", "avg.contrib"
-)[stats], collapse = ", ")
-message(paste0(
-  "\nModule statistic(s) used to evaluate module preservation:\n",
-  module_stats
-), ".")
-
-
 ## ---- Permutation testing with NetRep
 
 # Perform permutation test for module preservation
@@ -157,58 +153,59 @@ suppressWarnings({ # Suppress warnings about missing values
     null = "overlap",
     alternative = 'greater', # should be 'greater' for self-preservation
     simplify = TRUE,
-    verbose = FALSE
+    verbose = TRUE
   )
 })
 
-# Collect permutation stats
+
+## ---- parse the response
+
+# collect permutation pvalues
 dt_pval <- results_list[["p.values"]] %>%
   as.data.table(keep.rownames = "Module") %>%
   data.table::melt(id.vars = "Module", variable.name = "Statistic", value.name = "p.value")
 
+# collect observed statistics
 dt_obs <- results_list[["observed"]] %>%
   as.data.table(keep.rownames = "Module") %>%
   data.table::melt(id.vars = "Module", variable.name = "Statistic", value.name = "observed")
 
+# collect permutation null values
 dt_nulls <- results_list[["nulls"]] %>% 
 	apply(2,function(x) apply(x,1,function(y) mean(y))) %>% 
 	as.data.table(keep.rownames = "Module") %>%
 	data.table::melt(id.vars = "Module", variable.name = "Statistic", value.name = "null")
 
-# combine
+# combine as dt_stats
 dt_tmp <- left_join(dt_pval, dt_obs, by = c("Module", "Statistic"))
 dt_stats <- left_join(dt_tmp, dt_nulls, by = c("Module", "Statistic"))
 
 
-##  work
-
-#all_stats <- c("avg.weight", "coherence", "cor.cor", "cor.degree", "cor.contrib", "avg.cor", "avg.contrib")
-
-checkStat <- function(data) {
-	data %>% mutate("p.adjust"=p.adjust(p.value,method="bonferroni")) %>% 
-		# check if p.adjust < threshold and if observed > null
-		mutate(isSig = `p.adjust` < 0.05 & observed > null)
-}
+# collect a list of results for each statistic
+stats_list <- dt_stats %>% group_by(Statistic) %>% group_split()
 
 # for each statistic, check if sig and obs > null
-stats_list <- dt_stats %>% group_by(Statistic) %>% group_split()
 stats_list <- lapply(stats_list, checkStat)
 
 # collect modules with preservation (all stats sig)
 pres_df <- bind_rows(stats_list) %>% 
 	group_by(Module) %>% 
-	summarize(isPres = sum(isSig) == length(isSig), .groups="drop")
+	summarize(isPres = all(isSig), .groups="drop")
 
+# if NA then FALSE
 pres_df$isPres[is.na(pres_df$isPres)] <- FALSE
 
-# set ns modules to 0
+# set ns modules to 0 in final partition
 final_part <- part_list[["discovery"]]
 not_preserved <- pres_df$Module[!pres_df$isPres]
 final_part[final_part %in% as.numeric(not_preserved)] <- 0
 
+# status
 message(sum(pres_df$isPres)," of ", nrow(pres_df), " modules are self-preserved.")
 
-# Save as rda
+
+## ---- Save partition as rda
+
 partition <- final_part
 myfile <- file.path(datadir, "partition.rda")
 save(partition, file = myfile, version = 2)
