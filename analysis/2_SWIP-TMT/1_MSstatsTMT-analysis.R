@@ -1,21 +1,21 @@
 #!/usr/bin/env Rscript 
 
-# title: MSstatsTMT analysis of SWIP-TMT Proteomics
-# description: analysis of protein-level comparisons with MSstatsTMT
+# title: SwipProteomics
+# description: MSstatsTMT analysis of SWIP-TMT Proteomics
 # author: twab
 
 ## MSstatsTMT options
-MBimpute <- TRUE
-rm_single <- TRUE
-global_norm <- TRUE
-reference_norm <- TRUE
-remove_norm_channel <- TRUE
+MBimpute <- TRUE # impute missing val within an MS run?
+rm_single <- TRUE # rm prots identified by single feature?
+global_norm <- TRUE # global peptide-level sample normalization?
+reference_norm <- TRUE # normalize to norm condition (SPQC) samples?
+remove_norm_channel <- TRUE # rm norm condition (SPQC) data?
 
-## threshold for significance
-FDR_alpha = 0.05
+## threshold for protein significance
+FDR_alpha = 0.05 # FDR = Benjamini Hochberg FDR
 
 
-## ---- prepare the working environment
+## ---- prepare the working R environment
 
 #library(SwipProteomics)
 root <- "~/projects/SwipProteomics"

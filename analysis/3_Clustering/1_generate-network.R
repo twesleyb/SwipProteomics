@@ -4,25 +4,27 @@
 # description: generate protein co-variation (correlation) network
 # author: twab
 
-## Input:
+## ---- Input:
 root <- "~/projects/SwipProteomics"
+
+# * msstats_prot and other R data in root/data
 
 ## Options:
 rm_poor <- TRUE
-rm_batch <- TRUE
-impute <- TRUE
 
-## Output:
-# * generates correlation matrix which is used as input for Leidenalg clustering
+## ---- Output:
 
+# adjm.rda
+# ne_adjm.rda
+# ppi_adjm.rda
 
 ## ---- prepare the working environment
 
 # load renv
-renv::load(root)
+renv::load(root,quiet=TRUE)
 
 # library(SwipProteomics)
-devtools::load_all(root)
+devtools::load_all(root,quiet=TRUE)
 
 # load data in root/data
 data(gene_map)
@@ -35,87 +37,101 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
   library(neten) # twesleyb/neten
+  library(igraph)
+  library(getPPIs)
 })
+
+
+# load mouse PPIs compiled from BioGRID
+data(musInteractome)
+
+
+## ---- functions
+
+summarizeMix <- function(data) {
+	# summarize the median of the three mixtures
+	# cast into a matrix
+	data %>% group_by(Protein, Condition) %>% 
+		summarize(med_Abundance = median(Abundance),.groups="drop")
+}
+
+cast2dm <- function(data) {
+	# cast the median Abundance data into a matrix
+	data %>% reshape2::dcast(Protein ~ Condition, 
+				 value.var="med_Abundance") %>% 
+		as.data.table() %>% as.matrix(rownames="Protein")
+}
 
 
 ## ---- create covariation network
 
-# cast the data into a matrix
-dm <- msstats_prot %>% 
-	reshape2::dcast(Protein ~ Mixture + Genotype + BioFraction, 
-			value.var="Abundance") %>% as.data.table() %>% 
-        as.matrix(rownames="Protein")
+# cast the protein data into a matrix -- summarize the 3 replicates as median
+dm <- msstats_prot %>% summarizeMix() %>% cast2dm()
 
+# there are two proteins with some missing vals 
+# e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
+# remove these proteins
+idx <- apply(dm,1,function(x) any(is.na(x)))
+filt_dm <- dm[!idx,]
 
-## examine missingness
-# there are a large number or proteins with some sort of missingness
-# many of these proteins are quantified in 2/3 experiments (mixtures)
-# in order to retain these proteins in the network, we impute protein-
-# level missing values using the KNN algorithm for MNAR data (missing-ness
-# is inferred to be related to the left-shifted distribution of these 
-# proteins -- they are less abundant, e.g. WASHC3)
-
-# sum(any_missing) ~ 563 proteins with missingness
-any_missing <- apply(dm,1,function(x) any(is.na(x)))
-
-# types of missingness
-n_missing <- apply(dm,1,function(x) sum(is.na(x)))
-
-# we cant work with proteins with more than 50% missing values
-# drop proteins with more than 50% missingness
-drop <- apply(dm, 1, function(x) sum(is.na(x))> 0.5 * ncol(dm))
-
-if (impute) {
-	# knn impute
-	knn_data <- impute::impute.knn(dm[!drop,])
-	no_missing_dm <- knn_data$data
-} else {
-	no_missing_dm <- dm[!any_missing,]
-}
-
-stopifnot(!any(is.na(no_missing_dm)))
-
-# build sample metadata
-namen <- colnames(dm)
-samples <- as.data.table(do.call(rbind,strsplit(namen,"_")))
-colnames(samples) <- c("Mixture","Genotype","BioFraction")
-samples$Condition <- interaction(samples$Genotype,samples$BioFraction)
-
-
-## ---- address effect of Mixture
-
-# we aim to identify proteins that covary together in biological space
-# (BioFraction); we remove the effect of Mixture using limma prior to building
-# the covariation network in order to mitigate the contribution of Mixture to
-# covariation modules
-
-# with complete cases, address effect of mixture before building network
-if (rm_batch) {
-	nobatch_dm <- limma::removeBatchEffect(no_missing_dm, batch=samples$Mixture,
-			 design=model.matrix(~Condition,data=samples))
-} else {
-	nobatch_dm <- no_missing_dm
-}
-
-## rm poor_prots 
-if (rm_poor) {
-	idx <- rownames(nobatch_dm) %in% poor_prots
-	warning("Removing ", sum(idx)," proteins before network construction.")
-	filt_dm <- nobatch_dm[!idx,]
-} else {
-	filt_dm <- nobatch_dm
-}
-
-# scale profiles before building network
-norm_dm <- apply(filt_dm,1,function(x) x/max(x))
+stopifnot(!any(is.na(filt_dm)))
 
 # calculate coorrelation matrix
-adjm <- cor(norm_dm, method="pearson",use="complete.obs")
+adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
 
+# FIXME: Wang et al. 2017 (?)
 ne_adjm <- neten(adjm, alpha = 0.9, diffusion = 1.0)
+
+
+## ---- create ppi network
+
+# map uniprot to entrez
+uniprot <- colnames(adjm)
+idx <- match(uniprot,gene_map$uniprot)
+entrez <- gene_map$entrez[idx]
+
+# given entrez, collect ppis from musInteractome
+ppi_df <- musInteractome %>% 
+	subset(osEntrezA %in% entrez & osEntrezB %in% entrez) %>% 
+	select(osEntrezA, osEntrezB)
+
+# map back to uniprot and cast to matrix for igraph
+idx <- match(ppi_df$osEntrezA,gene_map$entrez)
+idy <- match(ppi_df$osEntrezB,gene_map$entrez)
+ppi_dm <- ppi_df %>% 
+	mutate(ProtA = gene_map$uniprot[idx], ProtB = gene_map$uniprot[idy]) %>%
+	select(ProtA,ProtB) %>% as.matrix()
+
+# create igraph graph
+g <- igraph::graph_from_edgelist(ppi_dm,directed=FALSE)
+
+# simplify (weight=0,1) and get the adjacency matrix
+ppi_adjm <- as.matrix(igraph::as_adjacency_matrix(igraph::simplify(g)))
+
+# collect proteins that are missing
+missing_prots <- colnames(adjm)[colnames(adjm) %notin% colnames(ppi_adjm)]
+# these proteins are unconnected^, but we include them in the ppi_adjm so the
+# networks have matching vertex sets
+
+# add missing cols
+tmp_cols <- matrix(0, nrow=nrow(ppi_adjm),ncol=length(missing_prots))
+colnames(tmp_cols) <- missing_prots
+rownames(tmp_cols) <- rownames(ppi_adjm)
+tmp_dm <- cbind(ppi_adjm,tmp_cols)
+
+# add missing rows
+tmp_rows <- matrix(0, nrow=length(missing_prots),ncol=ncol(tmp_dm))
+colnames(tmp_rows) <- colnames(tmp_dm)
+rownames(tmp_rows) <- missing_prots
+
+# full(ppi)_adjm
+full_adjm <- rbind(tmp_dm,tmp_rows)
+
+# sort rows and cols to match adjm
+ppi_adjm <- full_adjm[colnames(adjm),rownames(adjm)]
 
 
 ## ---- save networks
@@ -130,16 +146,35 @@ ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
 fwrite(ne_adjm_dt, myfile)
 
+# coerce to data.table and save to file
+ppi_dt <- as.data.table(ppi_adjm,keep.rownames="Protein")
+myfile <- file.path(root,"rdata","ppi_adjm.csv")
+fwrite(ppi_dt, myfile)
 
-## ---- save norm_dm and other input to permutation testing
 
-norm_prot <- norm_dm
-myfile <- file.path(root,"data","norm_prot.rda")
-save(norm_prot,file=myfile,version=2)
+###############################################################################
+## ---- address effect of Mixture
 
-# root/rdata
-myfile <- file.path(root,"rdata","adjm.rda")
-save(adjm,file=myfile,version=2)
+# we aim to identify proteins that covary together in biological space
+# (BioFraction); we remove the effect of Mixture using limma prior to building
+# the covariation network in order to mitigate the contribution of Mixture to
+# covariation modules
 
-myfile <- file.path(root,"rdata","ne_adjm.rda")
-save(ne_adjm,file=myfile,version=2)
+# with complete cases, address effect of mixture before building network
+#if (rm_batch) {
+#	design_dm <- model.matrix(~Condition, data=samples)
+#	nobatch_dm <- limma::removeBatchEffect(no_missing_dm, 
+#					       batch=samples$Mixture,
+#					       design=design_dm)
+#} else {
+#	nobatch_dm <- no_missing_dm
+#}
+#
+### rm poor_prots 
+#if (rm_poor) {
+#	idx <- rownames(nobatch_dm) %in% poor_prots
+#	warning("Removing ", sum(idx)," proteins before network construction.")
+#	filt_dm <- nobatch_dm[!idx,]
+#} else {
+#	filt_dm <- nobatch_dm
+#}

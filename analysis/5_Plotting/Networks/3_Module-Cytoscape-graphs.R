@@ -1,32 +1,11 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title:
-#' description:
-#' authors: Tyler W Bradshaw
-#' ---
+# title: SwipProteomics
+# description: generate cytoscape networks
+# authors: Tyler W Bradshaw
 
 ## Analysis options:
 file_prefix  = ""
-
-#--------------------------------------------------------------------
-## misc function - getrd
-#--------------------------------------------------------------------
-
-# Get the repository's root directory.
-getrd <- function(here=getwd(), dpat= ".git") {
-	in_root <- function(h=here, dir=dpat) { 
-		check <- any(grepl(dir,list.dirs(h,recursive=FALSE))) 
-		return(check)
-	}
-	# Loop to find root.
-	while (!in_root(here)) { 
-		here <- dirname(here) 
-	}
-	root <- here
-	return(root)
-} # EOF
-
 
 ## function: create a cytoscpae graph of each module --------------------------
 
@@ -187,42 +166,39 @@ NODE_SIZE = mapVisualProperty("node size", "size", "c", size_range, c(35, 100)))
 } #EOF
 
 
-#--------------------------------------------------------------------
-## Set-up the workspace.
-#--------------------------------------------------------------------
+## ---- Set-up the workspace
 
-# Load renv.
-root <- getrd()
+# load renv
+root <- "~/projects/SwipProteomics"
 renv::load(root,quiet=TRUE)
 
-# Global imports.
+# global imports
 suppressPackageStartupMessages({
-  library(RCy3) # For talking to Cytoscape.
-  library(dplyr) # For manipulating data.
-  library(igraph) # For creating graphs.
-  library(data.table) # For working with tables.
+  library(RCy3) # For talking to Cytoscape
+  library(dplyr) # For manipulating data
+  library(igraph) # For creating graphs
+  library(data.table) # For working with tables
 })
 
-# Functions.
+# project functions and data
 suppressWarnings({ devtools::load_all() })
 
-# Project directories.
+# project directories
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 figsdir <- file.path(root, "figs","Networks")
 
-# Output directory for cytoscape networks.
+# Output directory for cytoscape networks
 netwdir <- file.path(root,"networks")
 if (!dir.exists(netwdir)) {
 	dir.create(netwdir)
 }
 
-#--------------------------------------------------------------------
-## Load the data.
-#--------------------------------------------------------------------
 
-# Load the data from root/data.
+## ---- Load the data
+
+# Load the data from root/data
 data(gene_map)
 data(sigprots)
 data(partition)
@@ -232,7 +208,7 @@ data(msstats_results)
 data(wash_interactome); wash_prots <- wash_interactome
 
 
-# Load networks.
+# Load networks
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 load(myfile) # ne_adjm
 myfile <- file.path(root,"rdata","adjm.rda")
@@ -241,19 +217,17 @@ myfile <- file.path(root,"rdata","ppi_adjm.rda")
 load(myfile) # ppi_adjm
 
 
-#--------------------------------------------------------------------
-## Create igraph graph objects.
-#--------------------------------------------------------------------
+## ---- Create igraph graph objects
 
 # Create a list of all modules. 
 module_list <- split(names(partition),partition)[-1] # drop M0
 names(module_list) <- paste0("M",names(module_list))
 
-# Insure that matrices are in matching order.
+# Insure that matrices are in matching order
 check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
-if (!check) { stop() }
+if (!check) { stop("input adjacency matrices should be of matching dimensions") }
 
-# Create igraph graph objects.
+# Create igraph graph objects
 # NOTE: graph edge weight is enhanced(cor)
 netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
