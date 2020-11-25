@@ -2,7 +2,7 @@
 
 # title: SwipProteomics
 # description: generate module-level profile plot
-# authors: Tyler W Bradshaw
+# author: Tyler W Bradshaw
 
 ## ---- Inputs
 
@@ -39,19 +39,19 @@ if (! dir.exists(figsdir)) {
 }
 
 # set plotting theme and font
-ggtheme(); set_font("Arial",font_path=fontdir)
+ggtheme()
+set_font("Arial",font_path=fontdir)
 
 
-## Function ------------------------------------------------------------------
+## ---- Function
 
 
-plot_profile <- function(module, msstats_prot, module_colors) {
-	
+plot_profile <- function(module, prots, msstats_prot, module_colors) {
+
   # color for Control condition
   wt_color = "#47b2a4"
 
   # Subset
-  prots <- names(module[[1]])
   subdat <- msstats_prot %>% subset(Protein %in% prots)
 
   # number of proteins in module
@@ -77,6 +77,10 @@ plot_profile <- function(module, msstats_prot, module_colors) {
   # get module fitted data by fitting linear model to scaled Abundance
   fm <- lmerTest::lmer(med_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
 
+  # assess overall contrast
+  LT <- getContrast(fm,"Mutant","Control")
+  res <- lmerTestContrast(fm,LT) %>% mutate(Contrast='Mutant-Control') %>% unique()
+
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
 		       "fit_y" = lme4::fixef(fm)) %>%
@@ -90,7 +94,7 @@ plot_profile <- function(module, msstats_prot, module_colors) {
   df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
-
+  
   # get marginal r2 for annot plot title
   r2 <- r.squaredGLMM.merMod(fm)[,"R2m"]
   r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),round(r2,3)),collapse=" | "),")")
@@ -108,7 +112,7 @@ plot_profile <- function(module, msstats_prot, module_colors) {
   plot <- plot + aes(ymax=med_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(names(module)," (n = ",nprots,")\n",r2_anno))
+  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -124,9 +128,8 @@ plot_profile <- function(module, msstats_prot, module_colors) {
   # add fitted lines
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
-
   # set colors
-  mut_color <- module_colors[[names(module)]]
+  mut_color <- module_colors[[module]]
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
 
   return(plot)
@@ -136,20 +139,21 @@ plot_profile <- function(module, msstats_prot, module_colors) {
 ## generate plots -------------------------------------------------------------
 
 # loop to generate plots for all modules
-modules <- split(partition,partition)[-1]
+modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-stopifnot(length(module_colors) >= length(modules)) # insufficient colors
+stopifnot(all(names(modules) %in% names(module_colors)))
 
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
-message("\nGenerating profile plots of ", length(modules), " modules.")
 
-plot_list <- foreach(module = modules) %dopar% {
-	plot_profile(module, msstats_prot, module_colors)
-}
+message("\nGenerating profile plots of ", length(modules), " modules.")
+plot_list <- foreach(module = names(modules)) %dopar% {
+	plot <- plot_profile(module, prots=modules[[module]], msstats_prot, module_colors)
+	return(plot)
+} #EOL
 names(plot_list) <- names(modules)
 
 # drop null

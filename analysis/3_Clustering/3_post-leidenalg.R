@@ -5,7 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_partition <- "ne_surprise_surprise_partition.csv"
+input_partition <- "ne_surprise_partition.csv"
 # output is [input_partition].rda
 
 
@@ -13,9 +13,6 @@ input_partition <- "ne_surprise_surprise_partition.csv"
 
 root <- "~/projects/SwipProteomics"
 renv::load(root)
-
-# library(SwipProteomics)
-#devtools::load_all(root)
 
 
 suppressPackageStartupMessages({
@@ -31,10 +28,17 @@ df <- data.table::fread(myfile,drop=1)
 partition_list <- unlist(apply(df,1,function(x) list(x)),recursive=F,use.names=F)
 
 
-## ---- save
+## ---- save as rda
 
-partition <- partition_list[[1]]
+# add 1 bc python is 0-based 
+part <- partition_list[[1]] + 1
 
-myfile <- paste0(tools::file_path_sans_ext(input_partition),".rda")
-output_file <- file.path(root,"data",myfile)
-save(partition, file = output_file, version = 2)
+# set small modules to 0
+modules <- split(names(part),part)
+too_small <- as.numeric(names(which(sapply(modules,length) < 5)))
+part[part %in% too_small] <- 0
+
+# save partition
+partition <- part
+myfile <- file.path(root,"data","partition.rda")
+save(partition, file = myfile, version = 2)
