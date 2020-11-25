@@ -5,7 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_partition <- "ne_surprise_partition.csv"
+input_partition <- "ne_surprise_surprise_partition.csv"
 # output is [input_partition].rda
 
 
@@ -37,6 +37,8 @@ part <- partition_list[[1]] + 1
 modules <- split(names(part),part)
 too_small <- as.numeric(names(which(sapply(modules,length) < 5)))
 part[part %in% too_small] <- 0
+
+message("Total number of modules: ", length(unique(part))-1)
 
 # save partition
 partition <- part

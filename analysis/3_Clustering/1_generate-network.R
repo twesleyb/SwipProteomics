@@ -155,46 +155,32 @@ ppi_adjm <- full_adjm[colnames(adjm),rownames(adjm)]
 
 ## ---- save networks
 
-# coerce to data.table and save to file
+# coerce to data.table and write to file
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","adjm.csv")
-fwrite(adjm_dt, myfile)
+data.table::fwrite(adjm_dt, myfile)
 
-# coerce to data.table and save to file
+# coerce to data.table and write to file
 ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
-fwrite(ne_adjm_dt, myfile)
+data.table::fwrite(ne_adjm_dt, myfile)
 
-# coerce to data.table and save to file
+# coerce to data.table and write to file
 ppi_dt <- as.data.table(ppi_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ppi_adjm.csv")
-fwrite(ppi_dt, myfile)
+data.table::fwrite(ppi_dt, myfile)
 
 
-###############################################################################
-## ---- address effect of Mixture
+## ---- save as rda
 
-# we aim to identify proteins that covary together in biological space
-# (BioFraction); we remove the effect of Mixture using limma prior to building
-# the covariation network in order to mitigate the contribution of Mixture to
-# covariation modules
+# adjm
+myfile <- file.path(root,"rdata","adjm.rda")
+save(adjm, file=myfile,version=2)
 
-# with complete cases, address effect of mixture before building network
-#if (rm_batch) {
-#	design_dm <- model.matrix(~Condition, data=samples)
-#	nobatch_dm <- limma::removeBatchEffect(no_missing_dm, 
-#					       batch=samples$Mixture,
-#					       design=design_dm)
-#} else {
-#	nobatch_dm <- no_missing_dm
-#}
-#
-### rm poor_prots 
-#if (rm_poor) {
-#	idx <- rownames(nobatch_dm) %in% poor_prots
-#	warning("Removing ", sum(idx)," proteins before network construction.")
-#	filt_dm <- nobatch_dm[!idx,]
-#} else {
-#	filt_dm <- nobatch_dm
-#}
-###############################################################################
+# ne adjm
+myfile <- file.path(root,"rdata","ne_adjm.rda")
+save(ne_adjm, file=myfile,version=2)
+
+# ppi adjm
+myfile <- file.path(root,"rdata","ppi_adjm.rda")
+save(ppi_adjm, file=myfile,version=2)

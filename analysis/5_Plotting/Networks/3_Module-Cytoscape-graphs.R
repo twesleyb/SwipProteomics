@@ -4,31 +4,33 @@
 # description: generate cytoscape networks
 # authors: Tyler W Bradshaw
 
-## Analysis options:
-file_prefix  = ""
-
-## function: create a cytoscpae graph of each module --------------------------
+## function: create a cytoscape graph of each module --------------------------
 
 createCytoscapeGraph <- function(netw_g, ppi_g, nodes, module_name,
 			  n_cutoffs=5000, netwdir=getwd(),
-			  imgsdir=getwd(), 
-			  netw_layout='force-directed edgeAttribute=weight') {
+			  imgsdir=getwd()) {
+
 	# Imports
 	suppressPackageStartupMessages({
 		library(RCy3)
 	})
+
 	# Default layout.
-	if (is.null(netw_layout)) { 
-		netw_layout <- 'force-directed edgeAttribute=weight' 
-	}
+	netw_layout='force-directed edgeAttribute=weight'
+
+
 	# Subset graph: keep nodes in module.
 	graph <- netw_g
 	idx <- match(nodes, names(V(graph)))
-	subg <- induced_subgraph(graph, vids = V(graph)[idx])
+	if (sum(is.na(idx))>0) { warning("missing nodes") }
+	vids <- idx[!is.na(idx)]
+	subg <- induced_subgraph(graph, vids)
+
 	# Node Size ~ hubbiness or importance in its subgraph.
 	adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
 	node_importance <- apply(adjm,2,sum)
 	subg <- set_vertex_attr(subg,"size",value=node_importance[names(V(subg))])
+
 	# Prune weak edges.
 	# Seq from min(edge.weight) to max to generate cutoffs.
 	n_edges <- length(E(subg))
@@ -36,6 +38,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, module_name,
 	max_weight <- max(E(subg)$weight)
 	n_cutoffs = 5000
 	cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
+
 	# Define a function that checks if graph is connnected at a 
 	# given edge weight threshold.
 	is_connected <- function(graph,threshold) {
@@ -43,26 +46,34 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, module_name,
 				       which(E(graph)$weight <= threshold))
 		return(is.connected(filt_graph))
 	}
+
 	# Check if graph is connected or not at various thresholds.
 	# NOTE: this can take a little time if n is high
+	# FIXME: parallelize
 	checks <- sapply(cutoffs, function(threshold) {
 				 is_connected(subg,threshold)
 				       })
+
 	# Limit is max(cutoff) at which the graph is still connected.
 	limit <- cutoffs[max(which(checks==TRUE))]
 	if (all(checks)) { stop("Error thesholding graph.") }
+
 	# Prune edges. NOTE: This removes all edge types.
 	g <- delete.edges(subg, which(E(subg)$weight <= limit))
 	n_edges <- length(E(g))
+
 	# Write graph to file this is faster than sending to cytoscape.
-	myfile <- file.path(netwdir, paste0(module_name, ".gml"))
+	myfile <- file.path(netwdir, paste0(module, ".gml"))
 	write_graph(g, myfile, format = "gml")
+
 	# Send to Cytoscape.
 	# NOTE: underscores in attribute names are removed. 
 	winfile <- gsub("/mnt/d/", "D:/", myfile)
 	cysnetw <- importNetworkFromFile(winfile)
-	# keep getting errors with keys -- make sure they are there!
+
+	# if you keep getting errors with keys -- make sure they are there!
 	Sys.sleep(2); unlink(myfile)
+
 	####################################################################
 	## VISUAL STYLE DEFAULTS:
 	####################################################################
@@ -181,7 +192,7 @@ suppressPackageStartupMessages({
 })
 
 # project functions and data
-suppressWarnings({ devtools::load_all() })
+devtools::load_all(root, quiet=TRUE)
 
 # project directories
 datadir <- file.path(root, "data")
@@ -200,7 +211,7 @@ if (!dir.exists(netwdir)) {
 
 # Load the data from root/data
 data(gene_map)
-data(sigprots)
+data(sig_prots)
 data(partition)
 data(msstats_prot)
 data(module_colors)
@@ -234,6 +245,7 @@ netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
 				     weighted=TRUE)
 
+
 # Annotate graph's with protein names.
 proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
 netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
@@ -241,9 +253,7 @@ proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
 ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
 
 
-#--------------------------------------------------------------------
-## Annotate graphs with additional meta data.
-#--------------------------------------------------------------------
+## ---- Annotate graphs with additional meta data
 
 # Collect meta data from tmt_protein.
 tmp_dt <- data.table(Protein = names(V(netw_g)),
@@ -251,14 +261,14 @@ tmp_dt <- data.table(Protein = names(V(netw_g)),
 noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
 	filter(Contrast == "Mutant-Control")
 
-# Add module colors.
+# add module colors
 noa$Color <- module_colors[noa$Module]
 
-# Add WASH annotation.
+# add WASH iBioID annotation
 noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
 
-# Add sig prot annotations.
-noa$sigprot <- as.numeric(noa$Protein %in% sigprots)
+# Add sig prot annotations
+noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
 
 # Loop to add node attributes to netw_graph.
 for (i in c(1:ncol(noa))) {
@@ -267,17 +277,16 @@ for (i in c(1:ncol(noa))) {
 	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
 }
 
-#--------------------------------------------------------------------
-## Create Cytoscape graphs.
-#--------------------------------------------------------------------
+
+## ---- Create Cytoscape graphs
 
 # Network images will be saved in networks/Modules:
 imgsdir <- file.path(figsdir,"SVG")
 if (!dir.exists(imgsdir)) {
-	# Create the directory.
+	# Create the directory
 	dir.create(imgsdir,recursive=TRUE)
 } else {
-	# Remove any existing figures.
+	# Remove any existing figures
 	invisible({ file.remove(list.files(imgsdir,full.name=TRUE)) })
 }
 
@@ -285,17 +294,21 @@ if (!dir.exists(imgsdir)) {
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-# Check that we are connected to Cytoscape.
+# Check that we are connected to Cytoscape
 cytoscapePing()
 
 ## Loop to create graphs:
 message("\nCreating Cytoscape graphs!")
 pbar <- txtProgressBar(max=length(module_list),style=3)
 for (module in names(modules)){ 
+
 	nodes <- modules[[module]]
+
 	createCytoscapeGraph(netw_g, ppi_g, nodes, module, 
 			     netwdir=netwdir,imgsdir=imgsdir)
+
 	setTxtProgressBar(pbar, value = match(module,names(modules)))
+
 }
 close(pbar)
 
