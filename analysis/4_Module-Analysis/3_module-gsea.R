@@ -4,12 +4,19 @@
 # description: analysis of modules for GSE
 # author: Tyler W Bradshaw
 
-## Optional parameters:
-FDR_alpha <- 0.05 # Threshold for protein significance
+## ---- Optional parameters
 BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
+## ---- Input data in root/data
+input_gene = "gene_map"
+input_data = "msstats_prot"
+input_resu = "msstats_results"
+input_wash = "wash_interactome"
+input_part = "ne_surprise_partition"
+input_sigp = "sig_prots"
 
-## Set-up the workspace -------------------------------------------------------
+
+## ---- Set-up the workspace 
 
 # Load renv
 root <- "~/projects/SwipProteomics"
@@ -23,16 +30,24 @@ suppressPackageStartupMessages({
 })
 
 # Load functions in root/R and data in root/data
-devtools::load_all()
+devtools::load_all(root, quiet = TRUE)
+
+# Load the data from root/data
+data(list=input_part)
+data(list=input_gene)
+data(list=input_data)
+data(list=input_resu)
+data(list=input_wash) 
+data(list=input_sigp)
 
 # Project Directories
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
 
-# Load the gene lists from geneLists.
+# Load the gene lists from twesleyb/geneLists
 # FIXME: geneLists need Pubmed IDs!
-data(list = "corum") # CORUM protein complexes. [1]
+data(list = "corum") # CORUM protein complexes [1]
 data(list = "lopitDCpredictions") # Predicted subcellular locations from Geledaki. [2]
 data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. [3]
 data(list = "ePSD") # Uezu et al., 2016 [4]
@@ -42,21 +57,8 @@ data(list = "iPSD") # Uezu et al., 2016 [5]
 # Retriever complex from McNally et al., 2017. [6]
 retriever <- c("Vps35l", "Vps26c", "Vps29")
 
-# Load the data from root/data.
-data(gene_map) # gene mapping data
-data(partition) # the graph partition
-data(msstats_prot) # the proteomics data
-data(msstats_results) # protein stats
-data(wash_interactome) # WASH1 BioID from this study, Courtland et al., 2020. [7]
 
-
-## add sigprots
-sig_prots <- list("SigProts" = msstats_results %>% ungroup() %>%
-	filter(Contrast == "Mutant-Control", FDR < FDR_alpha) %>% 
-	select(Entrez) %>% unlist() %>% as.character() %>% unique())
-
-
-## Do work --------------------------------------------------------------------
+## ---- Do work 
 
 # get entrez ids for retriever prots
 names(retriever) <- gene_map$entrez[match(retriever, gene_map$symbol)]
@@ -79,7 +81,7 @@ names(lopitDCpredictions) <- paste("LopitDC:", names(lopitDCpredictions))
 # Clean-up corum names
 names(corum) <- paste("CORUM:", names(corum))
 
-# Clean-up takamori names
+# Clean-up Takamori et al pathway names
 names(takamori2006SV) <- paste("Takamori et al., 2006:", names(takamori2006SV))
 
 # Clean-up iPSD names
@@ -170,20 +172,35 @@ for (experiment in names(gene_lists)) {
 }
 close(pbar)
 
-# Collect the results in a single data.table
+
+## ----Collect the results in a single data.table
+
 dt <- bind_rows(results)
 
 # only sig + enriched results:
 sig_dt <- dt %>% filter(Padjust < BF_alpha) %>% 
 	filter(`Fold enrichment` > 1) 
 
+
+## ---- status
+m <- length(unique(sig_dt$Module))
+M <- length(modules)
+message(m, " of ", M, " modules exhibit some significant GSE.")
+
 # modules that are enriched for sig_prots
-sig_mods <- sig_dt %>% filter(Pathway == "SigProts") %>% 
+sig_gsea <- sig_dt %>% filter(Pathway == "SigProts") %>% 
 	select(Module) %>% unlist() %>% unique()
 
-# save sig_mods as rda
-myfile <- file.path(root,"data","sig_mods.rda")
-save(sig_mods,file=myfile,version=2)
+# modules with sig lopitDC enrichment
+idx <- grepl("LopitDC", sig_dt$Pathway)
+sig_dt %>% filter(idx) %>% select(Module, Pathway, Padjust, `Fold enrichment`) %>% knitr::kable()
+
+
+## ---- save results
+
+# save sig_gsea as rda
+myfile <- file.path(root,"data","sig_gsea.rda")
+save(sig_gsea,file=myfile,version=2)
 
 # save as rda
 module_gsea <- sig_dt

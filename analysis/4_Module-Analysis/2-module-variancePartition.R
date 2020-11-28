@@ -4,18 +4,20 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-# prepare the env
+input_part <- "ne_surprise_partition"
+
+## ---- prepare the env
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 devtools::load_all(root)
 
-# load the data
+## ---- load the data
 data(swip)
 data(gene_map)
-data(partition)
 data(msstats_prot)
+data(list=input_part)
 
-# imports
+## ---- requirements
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
@@ -24,39 +26,52 @@ suppressPackageStartupMessages({
 })
 
 
-## functions ------------------------------------------------------------------
+## ---- function
 
-moduleGOF <- function(module,partition,msstats_prot){
+moduleGOF <- function(module, partition, msstats_prot){
   # a function the evaluates gof of modules with variancePartition
   # NOTE: variancePartition expects all factors to be modeled as mixed effects
-  # FIXME: add lmerControl!
+
+  # subset the data, annotate with module membership
   prot_df <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
 	  mutate(Module=paste0("M",partition[Protein]))
+
+  # the formula for variancePartition
   form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
-  # fit the model for variancePartition
+
+  # fit the model with some lmerControl
   lmer_control <- lme4::lmerControl(check.conv.singular = "ignore")
   fm1 <- lme4::lmer(form1, data = prot_df %>% filter(Module==module), control=lmer_control)
+
+  # do the variancePartition bit == vp=getVariance(fm); pve=vp/sum(vp)
   vpart <- variancePartition::calcVarPart(fm1)
+
   # fit the model for calculating Nakagawa R2
   form2 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)
   fm2 <- lme4::lmer(form2, data = prot_df %>% filter(Module==module), control = lmer_control)
+
+  # r.squaredGLMM.merMod
   r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
 		 nm=c("R2.fixef","R2.total"))
+
+  # combine gof stats
   rho <- c(vpart,r2)
-  # fit 1 is the model for variancePartition; fit2 is the fit used for stats
-  rho[["vp.isSingular"]] <- lme4::isSingular(fm1)
-  rho[["lmer.isSingular"]] <- lme4::isSingular(fm2)
+
+  # fit1 is the model for variancePartition; fit2 is the fit used for stats
+  #rho[["vp.isSingular"]] <- lme4::isSingular(fm1)
+  rho[["isSingular"]] <- lme4::isSingular(fm2)
+
   return(rho) # gof stats
 } #EOF
 
 
-## fit all module models -------------------------------------------------------
+## ---- fit all module-level models 
 
 # analysis of intra-module variance
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-# loop to evaluate gof
+# loop with pbar to evaluate gof for every module
 message("\nEvaluating goodness-of-fit of modules.")
 results_list <- list()
 pbar <- txtProgressBar(max=length(modules),style=3)
@@ -70,32 +85,28 @@ for (module in names(modules)) {
 close(pbar)
 
 # NOTE: the numerous messages about boundary/singular fits comes from the 
-# from the variancePartition side of things.
+# from the variancePartition side of things. 
 # From inspection this arises because Mixture often doesn't contribute much 
 # to the module-level variance. This is not problematic.
+# These warnings are suppressed with lmerControl.
 
-# check for null results
+# check for NULL results
 idx <- sapply(results_list,is.null)
 message("There were problems fitting ", sum(idx), " models.")
 
-# collect results
+# collect results from loop
 module_sizes <- sapply(modules,length)
 df <- as.data.table(do.call(rbind,results_list[!idx]),keep.rownames="Module")
 df <- df %>% arrange(desc(Genotype))
 df <- df %>% mutate(Size = module_sizes[Module])
-df$"vp.isSingular" <- NULL
-df$"lmer.isSingular" <- NULL
 module_gof <- df %>% 
-	select(Module, Size, BioFraction, Genotype,
-	       Mixture, Protein, Residuals, R2.fixef, R2.total)
-
-module_gof <- module_gof %>% mutate(Quality = R2.total * sum(BioFraction, Genotype)/sum(Protein,Residuals))
+	mutate(Quality = R2.total * sum(BioFraction, Genotype)/sum(Protein,Residuals))
 
 q <- sum(module_gof$Quality)/length(modules)
 message("Partition Quality: ", round(q,5))
 
 
-## save results -----------------------------------------------------------------
+## ---- save results 
 
 # save as rda
 myfile <- file.path(root,"data","module_gof.rda")

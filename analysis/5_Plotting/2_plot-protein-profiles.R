@@ -6,7 +6,7 @@
 
 ## ---- Inputs
 
-# Input data in root/data/
+# input data in root/data/
 root = "~/projects/SwipProteomics"
 
 ## ---- Prepare environment 
@@ -19,7 +19,6 @@ devtools::load_all(root, quiet=TRUE)
 data(swip)
 data(gene_map)
 data(partition)
-#data(norm_prot)
 data(protein_gof)
 data(msstats_prot)
 data(module_colors)
@@ -189,5 +188,5 @@ close(pbar)
 
 # save
 message("\nSaving plots as a single pdf, this will take several minutes.")
-myfile = file.path(figsdir,"Protein_profiles.pdf")
+myfile = file.path(figsdir,"protein_profiles.pdf")
 ggsavePDF(plots, file=myfile)

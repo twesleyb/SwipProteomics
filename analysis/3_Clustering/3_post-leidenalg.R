@@ -5,11 +5,13 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_partition <- "ne_surprise_surprise_partition.csv"
-# output is [input_partition].rda
+input_part <- "ne_surprise_partition.csv"
+
+## output is [input_part].rda
+output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
 
 
-## ---- prepare the env
+## ---- prepare the R env
 
 root <- "~/projects/SwipProteomics"
 renv::load(root)
@@ -23,12 +25,9 @@ suppressPackageStartupMessages({
 
 ## ---- load partition
 
-myfile <- file.path(root,"rdata",input_partition)
+myfile <- file.path(root,"rdata",input_part)
 df <- data.table::fread(myfile,drop=1)
 partition_list <- unlist(apply(df,1,function(x) list(x)),recursive=F,use.names=F)
-
-
-## ---- save as rda
 
 # add 1 bc python is 0-based 
 part <- partition_list[[1]] + 1
@@ -38,9 +37,14 @@ modules <- split(names(part),part)
 too_small <- as.numeric(names(which(sapply(modules,length) < 5)))
 part[part %in% too_small] <- 0
 
+## status
+
 message("Total number of modules: ", length(unique(part))-1)
+
+
+## ---- save as rda
 
 # save partition
 partition <- part
-myfile <- file.path(root,"data","partition.rda")
+myfile <- file.path(root,"data", output_part)
 save(partition, file = myfile, version = 2)

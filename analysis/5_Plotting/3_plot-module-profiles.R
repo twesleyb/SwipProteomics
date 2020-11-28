@@ -6,11 +6,12 @@
 
 ## ---- Inputs
 
-# options:
-
-# Input data in root/data/
+# input data in root/data/
 root = "~/projects/SwipProteomics"
 
+input_colo = "module_colors"
+input_data = "msstats_prot"
+input_part = "ne_surprise_partition"
 
 ## ---- Prepare the R environment
 
@@ -19,9 +20,9 @@ renv::load(root,quiet=TRUE)
 devtools::load_all(root,quiet=TRUE)
 
 # load the data
-data(partition)
-data(msstats_prot)
-data(module_colors)
+data(list=input_part)
+data(list=input_data)
+data(list=input_colo)
 
 # imports
 suppressPackageStartupMessages({
@@ -163,5 +164,5 @@ idx <- names(plot_list) %notin% bad_modules
 
 message("\nSaving plots as a single pdf.")
 
-myfile <- file.path(figsdir,"Module_Profiles.pdf")
+myfile <- file.path(figsdir,"module_profiles.pdf")
 ggsavePDF(plot_list[idx],myfile)
