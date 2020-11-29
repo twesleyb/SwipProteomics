@@ -8,13 +8,7 @@
 BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
 ## ---- Input data in root/data
-input_gene = "gene_map"
-input_part = "partition"
-input_sigp = "sig_prots"
-input_data = "msstats_prot"
-input_resu = "msstats_results"
-input_wash = "wash_interactome"
-
+input_part = "ne_surprise_partition"
 
 ## ---- Set-up the workspace 
 
@@ -34,11 +28,12 @@ devtools::load_all(root, quiet = TRUE)
 
 # Load the data from root/data
 data(list=input_part)
-data(list=input_gene)
-data(list=input_data)
-data(list=input_resu)
-data(list=input_wash) 
-data(list=input_sigp)
+
+data(gene_map)
+data(sig_prots)
+data(msstats_prot)
+data(msstats_results)
+data(wash_interactome) 
 
 # Project Directories
 datadir <- file.path(root, "data")

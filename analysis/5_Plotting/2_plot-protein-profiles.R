@@ -9,7 +9,7 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-part_file = "partition"
+part_file = "ne_surprise_partition"
 
 ## ---- Prepare environment 
 

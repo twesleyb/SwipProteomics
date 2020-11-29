@@ -5,7 +5,7 @@
 # author: twab
 
 ## ---- INPUTs 
-input_part = "partition"
+input_part = "ne_surprise_partition"
 
 # * msstats_prot
 # * partition

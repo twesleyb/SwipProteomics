@@ -53,14 +53,13 @@ data(musInteractome)
 scaleAbundance <- function(data) {
 	# scale Abundance to maximum for each protein
 	# by scaling protein abundance to its maximum we align proteins with
-	# the same profile but different abundance
+	# the same profile but different overall abundance
 	data %>% group_by(Protein) %>% 
 		mutate(scale_Abundance = Abundance/max(Abundance))
 }
 
 summarizeMix <- function(data) {
-	# summarize the median of the three mixtures
-	# cast into a matrix
+	# summarize the three mixtures as median
 	data %>% group_by(Protein, Condition) %>% 
 		summarize(med_Abundance = median(scale_Abundance),.groups="drop")
 }
@@ -85,8 +84,9 @@ dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
 idx1 <- apply(dm,1,function(x) any(is.na(x)))
 filt_dm <- dm[!idx1,]
 
-# remove proteins with negative values -- probably also low abundance negative
-# after log 
+# remove proteins with negative values 
+# these seem to arise because of low abundance which becomes negative after log
+# w/in MSstats
 idx2 <- apply(filt_dm,1,function(x) any(x < 0))
 filt_dm <- filt_dm[!idx2, ]
 

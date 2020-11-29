@@ -4,7 +4,7 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-input_part <- "partition"
+input_part <- "ne_surprise_partition"
 
 ## ---- prepare the env
 root <- "~/projects/SwipProteomics"

@@ -4,8 +4,11 @@
 # description: generate cytoscape networks for each module
 # author: Tyler W Bradshaw
 
+## ---- input
+input_part = "ne_surprise_partition"
 
-## ---- Set-up the workspace
+
+## ---- set-up the workspace
 
 # load renv
 root <- "~/projects/SwipProteomics"
@@ -40,9 +43,10 @@ if (!dir.exists(netwdir)) {
 ## ---- Load the data in root/data
 
 # Load the data from root/data
+data(list=input_part)
+
 data(gene_map)
 data(sig_prots)
-data(partition)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
@@ -188,7 +192,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	## find a suitable cutoff for thresholding the graph
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
 	is_single_component <- foreach(threshold=cutoffs) %dopar% {
-		myfun(subg, threshold, pclust = 0.75) # pclust = 1
+		myfun(subg, threshold, pclust = 0.80) # pclust = 1
 	} %>% unlist()
 
 
