@@ -5,7 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_part <- "ne_surprise_partition.csv"
+input_part <- "cpm1_partition.csv"
 
 ## output is [input_part].rda
 output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
@@ -24,7 +24,6 @@ suppressPackageStartupMessages({
 
 
 ## ---- load partition
-
 myfile <- file.path(root,"rdata",input_part)
 df <- data.table::fread(myfile,drop=1)
 partition_list <- unlist(apply(df,1,function(x) list(x)),recursive=F,use.names=F)

@@ -160,7 +160,7 @@ myfun <- function(graph, threshold, pclust=1.0, too_small=1) {
 } #EOF
 
 
-createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
+createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000) {
   # create a cytoscape graph of each module 
 
 	## define Cytoscape layout
@@ -209,7 +209,8 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 	## write graph to file
 	# NOTE: This is faster than sending to cytoscape via
-	myfile <- "subgraph.gml"
+	myfile <- paste0(subg_name,".gml")
+
 	igraph::write_graph(g, myfile, format = "gml")
 
 	stopifnot(file.exists(myfile))
@@ -386,7 +387,7 @@ for (module in names(modules)){
 
 	nodes <- modules[[module]]
 
-	createCytoscapeGraph(netw_g, ppi_g, nodes, n_cutoffs=5000)
+	createCytoscapeGraph(module, netw_g, ppi_g, nodes, n_cutoffs=5000)
 
 	setTxtProgressBar(pbar, value = match(module,names(modules)))
 
