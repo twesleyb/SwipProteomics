@@ -37,7 +37,7 @@ if (!dir.exists(netwdir)) {
 }
 
 
-## ---- Load the data
+## ---- Load the data in root/data
 
 # Load the data from root/data
 data(gene_map)
@@ -49,14 +49,14 @@ data(msstats_results)
 data(wash_interactome); wash_prots <- wash_interactome
 
 
-## Load networks
-
-# ne_adjm
-myfile <- file.path(root,"rdata","ne_adjm.rda")
-load(myfile) 
+## ---- Load networks in root/rdata
 
 # adjm
 myfile <- file.path(root,"rdata","adjm.rda")
+load(myfile) 
+
+# ne_adjm
+myfile <- file.path(root,"rdata","ne_adjm.rda")
 load(myfile) 
 
 # ppi_adjm
@@ -70,11 +70,11 @@ load(myfile)
 modules <- split(names(partition),partition)[-1] # drop M0
 names(modules) <- paste0("M",names(modules))
 
-# Insure that matrices are in matching order
+# insure that matrices are in matching order
 check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
 if (!check) { stop("input adjacency matrices should be of matching dimensions") }
 
-# Create igraph graph objects
+# create igraph graph objects
 # NOTE: graph edge weight is enhanced(pearson.cor)
 netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
 				      weighted=TRUE)
@@ -82,14 +82,14 @@ ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
 				     weighted=TRUE)
 
 
-# annotate graphs with protein names
+# annotate graphs with protein NAMES
 proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
 netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
 proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
 ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
 
 
-## ---- Annotate graphs with additional meta data
+## ---- annotate graphs with additional metadata
 
 # collect meta data from msstats_results as noa data.table
 tmp_dt <- data.table(Protein = names(V(netw_g)),
@@ -111,6 +111,7 @@ noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
 noa <- as.data.frame(apply(noa, 2, function(x) as.character(x)))
 
 # Loop to add node attributes to igraph netw_graph
+# NOTE: this can take a couple seconds
 for (i in c(1:ncol(noa))) {
 	namen <- colnames(noa)[i]
 	col_data <- setNames(noa[[i]],nm=noa$Protein)
@@ -130,9 +131,29 @@ is_connected <- function(graph, threshold) {
 
 
 mapParam <- function(visual_params) {
+  # a helper function for RCy3::mapVisualProperty
   mapped_param <- do.call(RCy3::mapVisualProperty, visual_params)
   return(mapped_param)
 }
+
+
+myfun <- function(graph, threshold, pclust=1.0, too_small=1) {
+  # just iterate through cutoffs and calc n_compoents, set threshold for
+  # percent clustered to be high -- 95% 
+	to_drop <- which(E(graph)$weight <= threshold)
+	thresh_graph <- igraph::delete.edges(graph, to_drop)
+	graph_comp <- igraph::components(thresh_graph)
+	partition <- graph_comp$membership
+	ncomp <- length(unique(partition))
+	m_sizes <- table(partition)
+	to_rm <- as.numeric(names(which(m_sizes <= too_small)))
+	if (length(to_rm != 0)) {
+		# set membership to 0
+		partition[partition %in% to_rm] <- 0
+	}
+	percent_clust <- 1-sum(partition==0)/length(partition)
+	return(percent_clust >= pclust)
+} #EOF
 
 
 createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
@@ -141,6 +162,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	## define Cytoscape layout
 	netw_layout='force-directed edgeAttribute=weight'
 
+
 	## subset graph: keep defined nodes
 	graph <- netw_g
 	idx <- match(nodes, names(V(graph)))
@@ -148,49 +170,38 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	vids <- idx[!is.na(idx)]
 	subg <- igraph::induced_subgraph(graph, vids)
 
+
 	## set node size ~ hubbiness or importance in its subgraph
 	adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
 	namen <- names(V(subg))
 	node_importance <- apply(adjm,2,sum)
 	subg <- igraph::set_vertex_attr(subg, "size", value=node_importance[namen])
 
-	## Seq from min(edge.weight) to max to generate cutoffs
+
+	## Seq from min(edge weight) to max() to generate cutoffs
 	n_edges <- length(E(subg))
 	min_weight <- min(E(subg)$weight)
 	max_weight <- max(E(subg)$weight)
 	cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
 
-	## check if graph is connected or not at various thresholds
-	# NOTE: this can take a little time if n_cutoffs is large and/or the
-	# module is large.
-	# NOTE: this seems to be pretty slow if your module is large... I've
-	# tried matrix / graph theory math ways to try and speed this up, but
-	# was unsuccessful. 
+
+	## find a suitable cutoff for thresholding the graph
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
 	is_single_component <- foreach(threshold=cutoffs) %dopar% {
-		is_connected(subg, threshold)
+		myfun(subg, threshold, pclust = 0.75) # pclust = 1
 	} %>% unlist()
 
-	# FIXME: ^ need to adapt thresholding method to account for large
-	# modules
-
-	#######################################################################
-
-	# just iterate through cutoffs and calc n_compoents, set threshold for
-	# percent clustered to be high -- 95% 
-
-	#######################################################################
 
 	## define limit as max(cutoff) at which the graph is still connected
 	if (all(is_single_component)) { stop("Error thesholding graph.") }
 	weight_limit <- cutoffs[max(which(is_single_component == TRUE))]
 
+
 	## prune edges
 	# NOTE: This removes all edge types connecting two nodes
 	g <- delete.edges(subg, which(E(subg)$weight <= weight_limit))
 	n_edges <- length(E(g)) # final number of edges
-
-	ncomp <- igraph::count_components(g)
+	n_comp <- igraph::count_components(g)
 
 	## write graph to file
 	# NOTE: This is faster than sending to cytoscape via
@@ -209,26 +220,30 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	Sys.sleep(2)
 	unlink(myfile)
 
+	stopifnot(!file.exists(myfile))
+
+	# for large networks, you man need to manually create a view
         #RCy3::getNetworkViews()
 	#RCy3::commandsPOST("view create")
+
 
 	## visual style defaults
 	style.name <- "RCy3.style"
 	visual_defaults <- list(
 		 NETWORK_TITLE = "RCy3.network",
-		 NODE_FILL_COLOR = "#BEBEBE",
+		 NODE_FILL_COLOR = "#BEBEBE", # gray
 		 NODE_TRANSPARENCY = 255,
 		 NODE_SIZE = 35,
 		 NODE_SHAPE = "ellipse",
 		 NODE_LABEL_TRANSPARENCY = 255,
 		 NODE_LABEL_FONT_SIZE = 12,
-		 NODE_LABEL_COLOR = "#000000",
+		 NODE_LABEL_COLOR = "#000000", # black
 		 NODE_BORDER_TRANSPARENCY = 200,
 		 NODE_BORDER_WIDTH = 4,
-		 NODE_BORDER_PAINT = "#000000",
-		 EDGE_STROKE_UNSELECTED_PAINT = "#000000",
+		 NODE_BORDER_PAINT = "#000000", # black
+		 EDGE_STROKE_UNSELECTED_PAINT = "#000000", # black
 		 EDGE_WIDTH = 2,
-		 NETWORK_BACKGROUND_PAINT = "#FFFFFF"
+		 NETWORK_BACKGROUND_PAINT = "#FFFFFF" # white
 		)
 
 
@@ -237,7 +252,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	# some ranges for mapped params
         weight_range <- c(min(E(g)$weight), max(E(g)$weight))
 	size_range <- c(min(V(g)$size),max(V(g)$size))
-	edge_colors <- c("#BEBEBE", "#8B0000")
+	edge_colors <- c("#BEBEBE", "#8B0000") # gray, 'dark red'
 	mapped_params <- list()
 
 	# EDGE TRANSPARENCY
@@ -278,50 +293,51 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 
 	## Collect PPI edges
-	idx <- match(nodes, names(V(ppi_g)))
-		subg <- igraph::induced_subgraph(ppi_g, 
-					 vids = V(ppi_g)[idx])
-	edge_list <- apply(igraph::as_edgelist(subg, names = TRUE), 1, as.list)
+	#idx <- match(nodes, names(V(ppi_g)))
+	#	subg <- igraph::induced_subgraph(ppi_g, 
+	#				 vids = V(ppi_g)[idx])
+	#edge_list <- apply(igraph::as_edgelist(subg, names = TRUE), 1, as.list)
 
-	# If edge list is only of length 1, unnest it to avoid problems
-	if (length(edge_list) == 1) {
-		edge_list <- unlist(edge_list, recursive = FALSE)
-	}
+	## If edge list is only of length 1, unnest it to avoid problems
+	#if (length(edge_list) == 1) {
+	#	edge_list <- unlist(edge_list, recursive = FALSE)
+	#}
 
-	# we add edges like this bc Cytoscape really only supports 1 type of
-	# edge in a graph. We manually add additional PPI edges to create a
-	# network with both co-variation and ppi edges.
-	# NOTE: this can take a couple minutes if there is a large number of
-	# ppis
-	if (length(edge_list) > 0) {
-		ppi_edges <- RCy3::addCyEdges(edge_list)
-		# add PPIs and set to black
-		selected_edges <- RCy3::selectEdges(ppi_edges, by.col = "SUID")
-		# set edge bend to help distinguish ppi edges
-		namen <- "EDGE_STROKE_UNSELECTED_PAINT"
-		RCy3::setEdgePropertyBypass(
-				      edge.names = selected_edges$edges,
-				      new.values = "#000000", # black 
-				      visual.property = namen,
-				      bypass = TRUE
-				      )
-		RCy3::setEdgePropertyBypass(
-				      edge.names = selected_edges$edges,
-				      new.values = TRUE,
-				      visual.property = "EDGE_BEND",
-				      bypass = TRUE
-				      )
-	} # EIS
+	## we add edges like this bc Cytoscape really only supports 1 type of
+	## edge in a graph. We manually add additional PPI edges to create a
+	## network with both co-variation and ppi edges.
+	## NOTE: this can take a couple minutes if there is a large number of
+	## ppis
+	#if (length(edge_list) > 0) {
+	#	ppi_edges <- RCy3::addCyEdges(edge_list)
+	#	# add PPIs and set to black
+	#	selected_edges <- RCy3::selectEdges(ppi_edges, by.col = "SUID")
+	#	# set edge bend to help distinguish ppi edges
+	#	namen <- "EDGE_STROKE_UNSELECTED_PAINT"
+	#	RCy3::setEdgePropertyBypass(
+	#			      edge.names = selected_edges$edges,
+	#			      new.values = "#000000", # black 
+	#			      visual.property = namen,
+	#			      bypass = TRUE
+	#			      )
+	#	RCy3::setEdgePropertyBypass(
+	#			      edge.names = selected_edges$edges,
+	#			      new.values = TRUE,
+	#			      visual.property = "EDGE_BEND",
+	#			      bypass = TRUE
+	#			      )
+	#} # EIS
 
 
-	##  clean-up and apply network layout
-
+	##  clean-up
 	RCy3::clearSelection()
 	Sys.sleep(2) 
 
+	## apply layout
 	RCy3::layoutNetwork(netw_layout)
 	Sys.sleep(2)
 
+	## fit to screen
 	RCy3::fitContent()
 	Sys.sleep(2)
 
@@ -337,12 +353,12 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	## set bold border of BioID proteins
 	# FIXME: report error in setNodeBorderWidthBypass 
         # Error in .cyFinally(res) : object 'res' not found
-	wash_nodes <- names(V(g))[V(g)$isWASH==1]
-	if (length(wash_nodes) > 0) {
-		RCy3::setNodeBorderWidthBypass(wash_nodes,new.sizes=10)
-	}
+	#wash_nodes <- names(V(g))[V(g)$isWASH==1]
+	#if (length(wash_nodes) > 0) {
+	#	RCy3::setNodeBorderWidthBypass(wash_nodes,new.sizes=10)
+	#}
 
-	# free up some memory
+	## free up some memory
 	RCy3::cytoscapeFreeMemory()
 
 } #EOF
