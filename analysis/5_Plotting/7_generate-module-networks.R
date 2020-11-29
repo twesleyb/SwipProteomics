@@ -4,6 +4,120 @@
 # description: generate cytoscape networks for each module
 # author: Tyler W Bradshaw
 
+
+## ---- Set-up the workspace
+
+# load renv
+root <- "~/projects/SwipProteomics"
+renv::load(root, quiet=TRUE)
+
+# global imports
+suppressPackageStartupMessages({
+  library(RCy3) 
+  library(dplyr) 
+  library(igraph) 
+  library(data.table) 
+  library(doParallel)
+})
+
+
+# project functions and data
+devtools::load_all(root, quiet=TRUE)
+
+# project directories
+datadir <- file.path(root, "data")
+rdatdir <- file.path(root, "rdata")
+tabsdir <- file.path(root, "tables")
+figsdir <- file.path(root, "figs","Networks")
+
+# Output directory for cytoscape networks
+netwdir <- file.path(root,"networks")
+if (!dir.exists(netwdir)) {
+	dir.create(netwdir)
+}
+
+
+## ---- Load the data
+
+# Load the data from root/data
+data(gene_map)
+data(sig_prots)
+data(partition)
+data(msstats_prot)
+data(module_colors)
+data(msstats_results)
+data(wash_interactome); wash_prots <- wash_interactome
+
+
+## Load networks
+
+# ne_adjm
+myfile <- file.path(root,"rdata","ne_adjm.rda")
+load(myfile) 
+
+# adjm
+myfile <- file.path(root,"rdata","adjm.rda")
+load(myfile) 
+
+# ppi_adjm
+myfile <- file.path(root,"rdata","ppi_adjm.rda")
+load(myfile) 
+
+
+## ---- Create igraph graph to be passed to Cytoscape
+
+# create a list of all modules
+modules <- split(names(partition),partition)[-1] # drop M0
+names(modules) <- paste0("M",names(modules))
+
+# Insure that matrices are in matching order
+check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
+if (!check) { stop("input adjacency matrices should be of matching dimensions") }
+
+# Create igraph graph objects
+# NOTE: graph edge weight is enhanced(pearson.cor)
+netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
+				      weighted=TRUE)
+ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
+				     weighted=TRUE)
+
+
+# annotate graphs with protein names
+proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
+netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
+proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
+ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
+
+
+## ---- Annotate graphs with additional meta data
+
+# collect meta data from msstats_results as noa data.table
+tmp_dt <- data.table(Protein = names(V(netw_g)),
+		  Module = paste0("M",partition[names(V(netw_g))]))
+noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
+	filter(Contrast == "Mutant-Control")
+
+# add module colors
+noa$Color <- module_colors[noa$Module]
+
+# add WASH iBioID annotation
+noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
+
+# add sig prot annotations
+noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
+
+# NOTE: seems like all attributes should be strings to make it into Cytoscape
+# convert each col to character
+noa <- as.data.frame(apply(noa, 2, function(x) as.character(x)))
+
+# Loop to add node attributes to igraph netw_graph
+for (i in c(1:ncol(noa))) {
+	namen <- colnames(noa)[i]
+	col_data <- setNames(noa[[i]],nm=noa$Protein)
+	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
+}
+
+
 ## ---- functions 
 
 is_connected <- function(graph, threshold) {
@@ -24,12 +138,6 @@ mapParam <- function(visual_params) {
 createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
   # create a cytoscape graph of each module 
 
-	## dependencies
-	suppressPackageStartupMessages({
-		library(RCy3)
-	        library(doParallel)
-	})
-
 	## define Cytoscape layout
 	netw_layout='force-directed edgeAttribute=weight'
 
@@ -46,33 +154,43 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	node_importance <- apply(adjm,2,sum)
 	subg <- igraph::set_vertex_attr(subg, "size", value=node_importance[namen])
 
-	## Prune weak edges
-	# Seq from min(edge.weight) to max to generate cutoffs
+	## Seq from min(edge.weight) to max to generate cutoffs
 	n_edges <- length(E(subg))
 	min_weight <- min(E(subg)$weight)
 	max_weight <- max(E(subg)$weight)
 	cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
 
-	# check if graph is connected or not at various thresholds
+	## check if graph is connected or not at various thresholds
 	# NOTE: this can take a little time if n_cutoffs is large and/or the
-	# module is large
+	# module is large.
+	# NOTE: this seems to be pretty slow if your module is large... I've
+	# tried matrix / graph theory math ways to try and speed this up, but
+	# was unsuccessful. 
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
 	is_single_component <- foreach(threshold=cutoffs) %dopar% {
 		is_connected(subg, threshold)
 	} %>% unlist()
 
+	# FIXME: ^ need to adapt thresholding method to account for large
+	# modules
 
-	# limit is max(cutoff) at which the graph is still connected
+	#######################################################################
+
+	# just iterate through cutoffs and calc n_compoents, set threshold for
+	# percent clustered to be high -- 95% 
+
+	#######################################################################
+
+	## define limit as max(cutoff) at which the graph is still connected
 	if (all(is_single_component)) { stop("Error thesholding graph.") }
 	weight_limit <- cutoffs[max(which(is_single_component == TRUE))]
 
-	# prune edges
+	## prune edges
 	# NOTE: This removes all edge types connecting two nodes
-	weight_limit = 70
 	g <- delete.edges(subg, which(E(subg)$weight <= weight_limit))
 	n_edges <- length(E(g)) # final number of edges
 
-	igraph::count_components(g)
+	ncomp <- igraph::count_components(g)
 
 	## write graph to file
 	# NOTE: This is faster than sending to cytoscape via
@@ -86,7 +204,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	# NOTE: if you keep getting errors with keys -- make sure they are there!
         # FIXME: this is OS specific!
 	winfile <- gsub("/mnt/d/|\\~/", "D:/", file.path(getwd(), myfile))
-	cysnetw <- importNetworkFromFile(winfile)
+	cysnetw <- RCy3::importNetworkFromFile(winfile)
 
 	Sys.sleep(2)
 	unlink(myfile)
@@ -151,31 +269,30 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 
 	## create a visual style
-	createVisualStyle(style.name, defaults = visual_defaults, 
+	RCy3::createVisualStyle(style.name, defaults = visual_defaults, 
 			  mappings = mapped_params)
 
 	# apply to graph
-	setVisualStyle(style.name)
+	RCy3::setVisualStyle(style.name)
 	Sys.sleep(3)
 
 
 	## Collect PPI edges
 	idx <- match(nodes, names(V(ppi_g)))
-		subg <- induced_subgraph(ppi_g, 
+		subg <- igraph::induced_subgraph(ppi_g, 
 					 vids = V(ppi_g)[idx])
-	edge_list <- apply(as_edgelist(subg, names = TRUE), 1, as.list)
+	edge_list <- apply(igraph::as_edgelist(subg, names = TRUE), 1, as.list)
 
-	# If edge list is only of length 1, unnest it to avoid problems.
+	# If edge list is only of length 1, unnest it to avoid problems
 	if (length(edge_list) == 1) {
 		edge_list <- unlist(edge_list, recursive = FALSE)
 	}
 
-
-	## loop to add PPI edges to Cytoscape graph
-
 	# we add edges like this bc Cytoscape really only supports 1 type of
 	# edge in a graph. We manually add additional PPI edges to create a
 	# network with both co-variation and ppi edges.
+	# NOTE: this can take a couple minutes if there is a large number of
+	# ppis
 	if (length(edge_list) > 0) {
 		ppi_edges <- RCy3::addCyEdges(edge_list)
 		# add PPIs and set to black
@@ -184,11 +301,11 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 		namen <- "EDGE_STROKE_UNSELECTED_PAINT"
 		RCy3::setEdgePropertyBypass(
 				      edge.names = selected_edges$edges,
-				      new.values = col2hex("black"), 
+				      new.values = "#000000", # black 
 				      visual.property = namen,
 				      bypass = TRUE
 				      )
-		setEdgePropertyBypass(
+		RCy3::setEdgePropertyBypass(
 				      edge.names = selected_edges$edges,
 				      new.values = TRUE,
 				      visual.property = "EDGE_BEND",
@@ -197,7 +314,7 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	} # EIS
 
 
-	##  clean-up and apply layout
+	##  clean-up and apply network layout
 
 	RCy3::clearSelection()
 	Sys.sleep(2) 
@@ -218,6 +335,8 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 
 	## set bold border of BioID proteins
+	# FIXME: report error in setNodeBorderWidthBypass 
+        # Error in .cyFinally(res) : object 'res' not found
 	wash_nodes <- names(V(g))[V(g)$isWASH==1]
 	if (length(wash_nodes) > 0) {
 		RCy3::setNodeBorderWidthBypass(wash_nodes,new.sizes=10)
@@ -228,116 +347,6 @@ createCytoscapeGraph <- function(netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 } #EOF
 
-
-## ---- Set-up the workspace
-
-# load renv
-root <- "~/projects/SwipProteomics"
-renv::load(root, quiet=TRUE)
-
-# global imports
-suppressPackageStartupMessages({
-  library(RCy3) 
-  library(dplyr) 
-  library(igraph) 
-  library(data.table) 
-})
-
-# project functions and data
-devtools::load_all(root, quiet=TRUE)
-
-# project directories
-datadir <- file.path(root, "data")
-rdatdir <- file.path(root, "rdata")
-tabsdir <- file.path(root, "tables")
-figsdir <- file.path(root, "figs","Networks")
-
-# Output directory for cytoscape networks
-netwdir <- file.path(root,"networks")
-if (!dir.exists(netwdir)) {
-	dir.create(netwdir)
-}
-
-
-## ---- Load the data
-
-# Load the data from root/data
-data(gene_map)
-data(sig_prots)
-data(partition)
-data(msstats_prot)
-data(module_colors)
-data(msstats_results)
-data(wash_interactome); wash_prots <- wash_interactome
-
-
-## Load networks
-
-# ne_adjm
-myfile <- file.path(root,"rdata","ne_adjm.rda")
-load(myfile) 
-
-# adjm
-myfile <- file.path(root,"rdata","adjm.rda")
-load(myfile) 
-
-# ppi_adjm
-myfile <- file.path(root,"rdata","ppi_adjm.rda")
-load(myfile) 
-
-
-## ---- Create igraph graph to be passed to Cytoscape
-
-# create a list of all modules
-modules <- split(names(partition),partition)[-1] # drop M0
-names(modules) <- paste0("M",names(modules))
-
-# Insure that matrices are in matching order
-check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
-if (!check) { stop("input adjacency matrices should be of matching dimensions") }
-
-# Create igraph graph objects
-# NOTE: graph edge weight is enhanced(cor)
-netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
-				      weighted=TRUE)
-ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
-				     weighted=TRUE)
-
-
-# annotate graphs with protein names
-proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
-netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
-proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
-ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
-
-
-## ---- Annotate graphs with additional meta data
-
-# collect meta data from msstats_results as noa data.table
-tmp_dt <- data.table(Protein = names(V(netw_g)),
-		  Module = paste0("M",partition[names(V(netw_g))]))
-noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
-	filter(Contrast == "Mutant-Control")
-
-# add module colors
-noa$Color <- module_colors[noa$Module]
-
-# add WASH iBioID annotation
-noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
-
-# Add sig prot annotations
-noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
-
-# NOTE: seems like all attributes should be strings to make it into Cytoscape
-# convert each col to character
-noa <- as.data.frame(apply(noa, 2, function(x) as.character(x)))
-
-# Loop to add node attributes to igraph netw_graph
-for (i in c(1:ncol(noa))) {
-	namen <- colnames(noa)[i]
-	col_data <- setNames(noa[[i]],nm=noa$Protein)
-	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
-}
 
 
 ## ---- Create Cytoscape graphs
@@ -352,12 +361,12 @@ cytoscapePing()
 ## Loop to create graphs:
 message("\nCreating Cytoscape graphs!")
 pbar <- txtProgressBar(max=length(modules),style=3)
+
 for (module in names(modules)){ 
 
 	nodes <- modules[[module]]
 
-	createCytoscapeGraph(netw_g, ppi_g, nodes, module, 
-			     netwdir=netwdir,imgsdir=imgsdir)
+	createCytoscapeGraph(netw_g, ppi_g, nodes, n_cutoffs=5000)
 
 	setTxtProgressBar(pbar, value = match(module,names(modules)))
 
@@ -365,10 +374,10 @@ for (module in names(modules)){
 close(pbar)
 
 ## When done, save Cytoscape session.
-## NOTE: When on WSL, need to use Windows path format bc
-## Cytoscape is a Windows program.
-myfile <- file.path(netwdir,paste0(file_prefix,"Modules.cys"))
-winfile <- gsub("/mnt/d/","D:/",myfile) 
-saveSession(winfile)
+# NOTE: When on WSL, need to use Windows path format bc
+# Cytoscape is a Windows program.
 
-message("\nDone!")
+myfile <- file.path(netwdir,"Modules.cys")
+winfile <- gsub("/mnt/d/|\\~/","D:/",myfile) 
+
+RCy3::saveSession(winfile)
