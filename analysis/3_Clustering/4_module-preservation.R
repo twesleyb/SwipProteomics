@@ -11,7 +11,7 @@ root <- "~/projects/SwipProteomics"
 adjm_file <- file.path(root, "rdata", "adjm.rda")
 netw_file <- file.path(root, "rdata", "ne_adjm.rda")
 data_file <- file.path(root, "data", "msstats_prot.rda")
-part_file <- file.path(root, "data", "ne_surprise_surprise_partition.rda")
+part_file <- file.path(root, "data", "ne_surprise_partition.rda")
 
 
 ## ---- OUTPUT saved in root/data

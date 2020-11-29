@@ -9,11 +9,11 @@ BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
 ## ---- Input data in root/data
 input_gene = "gene_map"
+input_part = "partition"
+input_sigp = "sig_prots"
 input_data = "msstats_prot"
 input_resu = "msstats_results"
 input_wash = "wash_interactome"
-input_part = "ne_surprise_partition"
-input_sigp = "sig_prots"
 
 
 ## ---- Set-up the workspace 

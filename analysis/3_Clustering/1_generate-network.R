@@ -13,21 +13,21 @@ root <- "~/projects/SwipProteomics"
 rm_poor <- TRUE # rm proteins with poor fit?
 
 ## ---- Output:
-# NOTE: saved in root/rdata because these objects are large
 # adjm.rda
 # ppi_adjm.rda
 # ne_adjm.rda
-
 # ne_adjm.csv --> for leidenalg clustering!
+
+# NOTE: large ouput files saved in root/rdata bc too big to be tracked by git
 
 
 ## ---- prepare the working environment
 
 # load renv
-renv::load(root,quiet=TRUE)
+renv::load(root, quiet=TRUE)
 
 # library(SwipProteomics)
-devtools::load_all(root,quiet=TRUE)
+devtools::load_all(root, quiet=TRUE)
 
 # load data in root/data
 data(gene_map)
@@ -39,7 +39,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(neten) # twesleyb/neten
   library(igraph)
-  library(getPPIs)
+  library(getPPIs) # twesleyb/getPPIs
   library(data.table)
 })
 
@@ -79,16 +79,16 @@ cast2dm <- function(data) {
 # cast the protein data into a matrix -- summarize the 3 replicates as median
 dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
 
-# there are two proteins with some missing vals 
+# there are a small number proteins with some missing vals 
 # e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
 # remove these proteins
 idx1 <- apply(dm,1,function(x) any(is.na(x)))
+filt_dm <- dm[!idx1,]
 
 # remove proteins with negative values -- probably also low abundance negative
 # after log 
-idx2 <- apply(dm,1,function(x) any(x < 0))
-
-filt_dm <- dm[!(idx1|idx2), ]
+idx2 <- apply(filt_dm,1,function(x) any(x < 0))
+filt_dm <- filt_dm[!idx2, ]
 
 
 stopifnot(!any(is.na(filt_dm)))
@@ -99,6 +99,7 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
+# REF: Wang et al., 2018 (Nature Communications)
 alpha_param = 0.9
 diffusion_param = 1.0
 
@@ -106,6 +107,8 @@ ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
 
 
 ## ---- create ppi network
+
+# NOTE: PPIs are NOT used to identify communities
 
 # map uniprot to entrez
 uniprot <- colnames(adjm)

@@ -4,68 +4,176 @@
 # description: 
 # author: twab
 
-# prepare renv
-root <- "~/projects/SwipProteomics"
-renv::load(root,quiet=TRUE)
+## ---- Inputs
 
-# library(SwipProteomics)
+# input data in root/data/
+root = "~/projects/SwipProteomics"
+
+## ---- Prepare the R environment
+
+renv::load(root, quiet=TRUE)
+
 devtools::load_all(root,quiet=TRUE)
+
+# load the data
+data(gene_map)
 data(msstats_prot)
+data(module_colors)
+data(ne_surprise_partition)
 
 # imports
+suppressPackageStartupMessages({
+	library(dplyr)
+	library(ggplot2)
+	library(data.table)
+	library(doParallel)
+})
+
+# project dirs
+fontdir <- file.path(root, "fonts")
+figsdir <- file.path(root, "figs", "Modules")
+if (! dir.exists(figsdir)) {
+	dir.create(figsdir,recursive=TRUE)
+}
+
+# set plotting theme and font
+ggtheme()
+set_font("Arial",font_path=fontdir)
+
+
+## ---- load geneLists
+
 library(geneLists)
 
 data(corum) 
 
-## ---- function 
 
-calcPercentID <- function(pathway) {
-  # requires: entrez
-  genes <- unlist(pathway,use.names=FALSE)
-  percent_id <- sum(genes %in% entrez)/length(genes)
-  return(percent_id)
-}
+## ---- convert corum pathways to uniprot IDs
 
-# percent identified 
-entrez <- unique(msstats_prot$Entrez)
-pid <- sapply(corum, calcPercentID)
+# create df mapping partition uniprot to entrez
+df <- data.table(uniprot = names(partition))
+idx <- match(df$uniprot,gene_map$uniprot)
+df <- df %>% mutate(entrez = gene_map$entrez[idx])
 
-df <- data.frame("Pathway" = names(corum), 
-		 "Size" = sapply(corum,length), 
-		 "percentID" = pid)
+# loop through corum complexes, map entrez to uniprot, drop NA
+corum_prots <- lapply(corum, function(x) {
+			      idx <- match(x, df$entrez)
+			      uniprot <- df$uniprot[idx[!is.na(idx)]]
+			      return(uniprot)
+})
 
-subdf <- df %>% filter(Size>3,percentID>(2/3))
-paths <- unique(subdf$Pathway)
+# drop small complexes
+corum_sizes <- sapply(corum_prots,length)
+idx <- corum_sizes < 3
+corum_filt <- corum_prots[!idx]
 
-corum_paths <- corum[paths]
-entrez <- unlist(corum_paths,use.names=FALSE)
-uniprot <- getPPIs::getIDs(entrez,from="entrez",to="uniprot",species="mouse")
-corum_prots <- lapply(corum_paths, function(x) as.character(uniprot[x]))
-
-proteins <- unique(msstats_prot$Protein)
-mylist <- sapply(corum_prots, function(x) x[x %in% proteins])
-idy <- sapply(idx,length)>2
-foo = mylist[idy]
-
-data(gene_map)
-
-# fit the module and test the overall contrast
+# FIXME: parallelize
 results_list <- list()
-for (i in c(1:length(foo))) {
-	results_list[[i]] <- fit_module(foo[[i]], msstats_prot, gene_map)
+for (path in names(corum_filt)){
+  prots <- corum_filt[[path]]
+  lmer_args <- list()
+  fx <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)
+  #FIXME: should do scale and summarize?
+  #FIXME: what about proteins split over multiple modules?
+  #FIXME: what about problems?
+  lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots)
+  lmer_args[["formula"]] <- fx
+  lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- do.call(lmerTest::lmer,lmer_args)
+  LT <- getContrast(fm, "Mutant","Control")
+  res <- lmerTestContrast(fm, LT) %>% mutate(Contrast="Mutant-Control") %>% unique()
+  res$nProts <- length(prots)
+  results_list[[path]] <- res
 }
 
-results_df$Pathway <- names(foo)
+# collect results
+results_df <- bind_rows(results_list,.id="Pathway") %>% 
+	mutate(Padjust = p.adjust(Pvalue, method="bonferroni"))
 
-results_df <- do.call(rbind, results_list)
-results_df$Padjust <- p.adjust(results_df$Pvalue,method="bonferroni")
+
+## ---- Function
 
 
-fwrite(results_df,"foo.csv")
+plot_profile <- function(prots, msstats_prots) {
+  # color for Control condition
+  wt_color = "#47b2a4"
+  mut_color = sample(module_colors,1)
+  # Subset
+  subdat <- msstats_prot %>% subset(Protein %in% prots)
+  # number of proteins in module
+  nprots <- length(unique(subdat$Protein))
+  # set factor order (levels)
+  subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
+  subdat$BioFraction <- factor(subdat$BioFraction,
+			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
+  # scale to max, take median of three replicates
+  df <- subdat %>% group_by(Protein) %>%
+	  mutate(scale_Abundance = Abundance/max(Abundance)) %>%
+	  group_by(Protein, Genotype, BioFraction) %>% 
+	  summarize(med_Abundance = median(scale_Abundance), 
+	          SD = sd(scale_Abundance),
+	          N = length(scale_Abundance),
+	          .groups="drop")
+  # calculate coefficient of variation (CV == unitless error) and scale to max
+  df <- df %>% mutate(CV = SD/med_Abundance)
+  # get module fitted data by fitting linear model to scaled Abundance
+  fm <- lmerTest::lmer(med_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
+  # collect coefficients
+  fit_df <- data.table("coef" = names(lme4::fixef(fm)),
+		       "fit_y" = lme4::fixef(fm)) %>%
+    mutate(Genotype = gsub("Genotype","",sapply(strsplit(coef,"\\:"),"[",1))) %>%
+    mutate(BioFraction=gsub("BioFraction","",sapply(strsplit(coef,"\\:"),"[",2)))
+  # combine module data and fitted values
+  df <- left_join(df, fit_df,by=c("Genotype","BioFraction"))
+  # again, insure factor order is correct
+  df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
+  df$BioFraction <- factor(df$BioFraction,
+			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
+  # get marginal r2 for annot plot title
+  r2 <- r.squaredGLMM.merMod(fm)[,"R2m"]
+  r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),
+			     round(r2,3)),collapse=" | "),")")
+  # Generate the plot
+  plot <- ggplot(df)
+  plot <- plot + aes(x = BioFraction)
+  plot <- plot + aes(y = med_Abundance)
+  plot <- plot + aes(group = interaction(Genotype,Protein))
+  plot <- plot + aes(colour = Genotype)
+  plot <- plot + aes(shape = Genotype)
+  plot <- plot + aes(fill = Genotype)
+  plot <- plot + aes(shade = Genotype)
+  plot <- plot + aes(ymin=med_Abundance - CV)
+  plot <- plot + aes(ymax=med_Abundance + CV)
+  plot <- plot + geom_line(alpha=0.25)
+  plot <- plot + theme(legend.position = "none")
+  plot <- plot + ggtitle(paste0("n = ",nprots,"\n",r2_anno))
+  plot <- plot + ylab("Scaled Abundance")
+  plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
+  plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
+  plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
+  plot <- plot + theme(axis.text.x = element_text(family = "Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black", size=11))
+  plot <- plot + theme(axis.text.y = element_text(angle = 0, hjust = 1)) 
+  plot <- plot + theme(axis.text.y = element_text(family = "Arial"))
+  plot <- plot + theme(panel.background = element_blank())
+  plot <- plot + theme(axis.line.x=element_line())
+  plot <- plot + theme(axis.line.y=element_line())
+  # add fitted lines
+  plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
+			   linetype="dashed",alpha=1,size=0.75)
+  # set colors
+  plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+  return(plot)
+} #EOF
 
-prots = corum_prots[["CCT complex (chaperonin containing TCP1 complex)"]]
-res = fit_module(prots,msstats_prot,gene_map)
 
-data(sig_prots)
+## ---- generate plots 
 
-sum(prots %in% sig_prots)
+plot_list <- list()
+for (path in names(corum_filt)){
+	prots <- corum_filt[[path]]
+	plot <- plot_profile(prots, msstats_prot)
+	plot_list[[path]] <- plot
+} #EOL
+
+ggsavePDF(plot_list,"plots.pdf")

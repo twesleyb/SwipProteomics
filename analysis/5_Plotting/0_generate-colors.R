@@ -9,9 +9,9 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-part_file = "ne_surprise_partition"
+part_file = "partition"
 
-NC_color = "#BEBEBE" # not clustered
+NC_color = "#BEBEBE" # not clustered == "gray"
 
 ## ---- OUTPUT 
 # * color assignments for every module in graph partition
@@ -40,7 +40,7 @@ suppressPackageStartupMessages({
 })
 
 # Local Imports 
-devtools::load_all(root,quiet=TRUE)
+devtools::load_all(root, quiet=TRUE)
 
 # Load TMT data and partition
 data(swip)
@@ -60,7 +60,7 @@ n_colors <- length(modules) # NOTE: M0 will be gray. M(Swip) will be purple.
 script <- file.path(root,"Py","random_color.py")
 
 # Generate n random colors
-cmd <- paste(script,"--count", n_colors)
+cmd <- paste(script,"--count", n_colors, "--luminosity", "bright")
 response <- system(cmd, intern = TRUE)
 
 #  Parse the response

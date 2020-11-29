@@ -9,9 +9,8 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-input_colo = "module_colors"
-input_data = "msstats_prot"
-input_part = "ne_surprise_partition"
+input_part = "partition"
+
 
 ## ---- Prepare the R environment
 
@@ -20,9 +19,9 @@ renv::load(root,quiet=TRUE)
 devtools::load_all(root,quiet=TRUE)
 
 # load the data
+data(msstats_prot)
+data(module_colors)
 data(list=input_part)
-data(list=input_data)
-data(list=input_colo)
 
 # imports
 suppressPackageStartupMessages({
@@ -41,10 +40,10 @@ if (! dir.exists(figsdir)) {
 
 # set plotting theme and font
 ggtheme()
-set_font("Arial",font_path=fontdir)
+set_font("Arial", font_path=fontdir)
 
 
-## ---- Function
+## ---- function 
 
 
 plot_profile <- function(module, prots, msstats_prot, module_colors) {
@@ -110,7 +109,9 @@ plot_profile <- function(module, prots, msstats_prot, module_colors) {
   plot <- plot + aes(ymax=med_Abundance + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
+
   plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
+
   plot <- plot + ylab("Scaled Abundance")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -128,6 +129,7 @@ plot_profile <- function(module, prots, msstats_prot, module_colors) {
 			   linetype="dashed",alpha=1,size=0.75)
   # set colors
   mut_color <- module_colors[[module]]
+
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
 
   return(plot)

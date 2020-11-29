@@ -6,10 +6,10 @@
 
 ## ---- Inputs 
 
-# options:
-
 # Input data in root/data/
 # * msstats_prot
+
+part_file <- "partition"
 
 
 ## ---- Output 
@@ -110,11 +110,12 @@ devtools::load_all(root, quiet=TRUE)
 data(swip)
 data(gene_map)
 data(sig_prots)
-data(partition)
 data(protein_gof)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
+
+data(list=part_file)
 
 # imports
 suppressPackageStartupMessages({

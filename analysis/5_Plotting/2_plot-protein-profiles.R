@@ -1,28 +1,32 @@
 #!/usr/bin/env Rscript
 
-# title: 
+# title: SwipProteomics
 # description: plot protein abundance
-# authors: Tyler W Bradshaw
+# author: Tyler W Bradshaw
 
 ## ---- Inputs
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
+part_file = "partition"
+
 ## ---- Prepare environment 
 
 renv::load(root,quiet=TRUE)
 
+# library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip)
 data(gene_map)
-data(partition)
 data(protein_gof)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
+
+data(list=part_file)
 
 # other imports
 suppressPackageStartupMessages({
@@ -35,7 +39,7 @@ suppressPackageStartupMessages({
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs","Proteins")
 if (! dir.exists(figsdir)) {
-	dir.create(figsdir,recursive=TRUE)
+	dir.create(figsdir, recursive=TRUE)
 }
 
 # set plotting theme
@@ -74,22 +78,18 @@ prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
 
 plot_profile <- function(protein, gene_map, msstats_prot, msstats_results, 
 			 protein_gof, prot_colors) {
-
-  gene = gene_map$symbol[match(protein,gene_map$uniprot)]
-  wt_color = "#47b2a4"
-  mut_color = prot_colors[protein]
-
+  wt_color <- "#47b2a4"
+  mut_color <- prot_colors[protein]
+  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   # proteins with overall sig change
   sig_prots <- msstats_results %>% 
 	filter(Contrast == 'Mutant-Control' & FDR<0.05) %>%  ungroup() %>%
 	select(Protein) %>% unlist() %>% as.character() %>% unique()
-
   # plot title and color
   r2 <- protein_gof %>% filter(Protein == protein) %>% select(R2.fixef) %>% as.numeric()
   title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
   title_color <- names(which(title_colors==protein %in% sig_prots))
-
   # prepare stats for labeling
   stats_df <- prot_df %>% filter(Protein == protein) %>% 
   	select(Protein,BioFraction,FDR) %>% unique()
@@ -97,42 +97,39 @@ plot_profile <- function(protein, gene_map, msstats_prot, msstats_results,
   stats_df$stars[stats_df$FDR < 0.05] <- "*"
   stats_df$stars[stats_df$FDR < 0.005] <- "**"
   stats_df$stars[stats_df$FDR < 0.0005] <- "***"
-
   # prepare the data 
   df <- prot_df %>% 
     # subset -- keep data from single protein
     filter(Protein == protein) %>% 
+    # scale profile
+    mutate(scale_Abundance = Abundance/max(Abundance)) %>%
     # group by Genotype.BioFraction.Protein
     group_by(Condition,Protein) %>%
     # calculate the average of the three mixtures
-    summarize(mean_Abundance = mean(Abundance),
-	      SD = sd(Abundance),
+    summarize(med_Abundance = median(scale_Abundance),
+	      SD = sd(scale_Abundance),
 	      SE = unique(SE),
-	      N = length(Abundance),
+	      N = length(scale_Abundance),
 	      .groups="drop") %>%
     # calculate coefficient of variation
-    mutate(CV = SD/mean_Abundance) %>%
-    # scale profile
-    mutate(scale_Abundance = mean_Abundance/max(mean_Abundance))
-
+    mutate(CV = SD/med_Abundance) 
     # munge to annotate with Genotype and BioFraction
     condition <- as.character(df$Condition)
     df$Genotype <- factor(sapply(strsplit(condition,"\\."),"[",1),
 		        levels=c("Control","Mutant"))
     df$BioFraction <- factor(sapply(strsplit(condition,"\\."),"[",2),
 		        levels=c("F4","F5","F6","F7","F8","F9","F10"))
-
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = scale_Abundance)
+  plot <- plot + aes(y = med_Abundance)
   plot <- plot + aes(group = Genotype)
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=scale_Abundance - CV)
-  plot <- plot + aes(ymax=scale_Abundance + CV)
+  plot <- plot + aes(ymin=med_Abundance - CV)
+  plot <- plot + aes(ymax=med_Abundance + CV)
   plot <- plot + geom_line()
   plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
   plot <- plot + geom_point(size=2)
@@ -152,21 +149,22 @@ plot_profile <- function(protein, gene_map, msstats_prot, msstats_results,
   plot <- plot + scale_colour_manual(values=c(wt_color,prot_colors[protein]))
   plot <- plot + scale_fill_manual(values=c(wt_color,prot_colors[protein]))
   plot <- plot + theme(legend.position = "none")
-
   # annotate with module membership and significance stars
-  yrange <- setNames(range(df$scale_Abundance),nm=c("min","max"))
+  yrange <- setNames(range(df$med_Abundance),nm=c("min","max"))
   ypos1 <- yrange["min"]  + 0.05 * diff(yrange) # Module#
   ypos2 <- yrange["max"] + 0.05 * diff(yrange) # stars
   module_label <- paste0("M",partition[protein])
   plot <- plot + annotate(geom="label",x=7.25,y=ypos1,label=module_label)
   plot <- plot + annotate("text",x=stats_df$BioFraction,y=ypos2,
 		label=stats_df$stars,size=7)
-
   return(plot)
 } #EOF
 
 
 ## generate plots -------------------------------------------------------------
+
+#data(swip)
+#plot_profile(swip, gene_map, msstats_prot, msstats_results, protein_gof, prot_colors)
 
 # protein names sorted by module membership
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
@@ -182,7 +180,6 @@ for (protein in sorted_prots) {
 				         msstats_results, protein_gof, 
 					 prot_colors) 
         setTxtProgressBar(pbar,value=match(protein,sorted_prots))
-
 } # EOL for proteins
 close(pbar)
 
