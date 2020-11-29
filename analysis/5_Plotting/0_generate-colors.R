@@ -9,7 +9,7 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-part_file = "ne_surprise_partition"
+part_file = "ne_surprise_surprise_partition"
 
 NC_color = "#BEBEBE" # not clustered == "gray"
 
@@ -88,5 +88,6 @@ module_colors[idx] <- sample(colors,sum(idx))
 message(paste("\nSaving colors."))
 
 # Save updated module colors
-myfile <- file.path(root,"data","module_colors.rda")
+namen <- paste0(gsub("partition","colors",part_file),".rda")
+myfile <- file.path(root,"data", namen)
 save(module_colors,file=myfile,version=2)

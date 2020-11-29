@@ -9,7 +9,7 @@
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
 
-input_part = "ne_surprise_partition"
+input_part = "cpm1_partition"
 
 input_gene = "gene_map"
 input_data = "msstats_prot"

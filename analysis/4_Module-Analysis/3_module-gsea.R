@@ -8,7 +8,7 @@
 BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
 ## ---- Input data in root/data
-input_part = "ne_surprise_partition"
+input_part = "cpm1_partition"
 
 ## ---- Set-up the workspace 
 

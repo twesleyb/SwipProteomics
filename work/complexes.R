@@ -9,7 +9,9 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-part_file = "ne_surprise_surprise_partition"
+input_part = "ne_surprise_surprise_partition"
+input_colors = "ne_surprise_surprise_colors"
+
 
 ## ---- Prepare the R environment
 
@@ -19,8 +21,8 @@ devtools::load_all(root,quiet=TRUE)
 # load the data
 data(gene_map)
 data(msstats_prot)
-data(module_colors)
-data(list=part_file)
+data(list=input_part)
+data(list=input_colors)
 
 # imports
 suppressPackageStartupMessages({
@@ -49,7 +51,6 @@ library(geneLists)
 
 data(corum) 
 
-data(list=part_file)
 
 ## ---- convert corum pathways to uniprot IDs
 
@@ -89,16 +90,9 @@ idx <- sizes < 3
 filt_list <- prot_list[!idx]
 
 
-cbind(n=length(filt_list), median_size=median(sapply(filt_list,length))) %>%
-	knitr::kable()
-
-
-head(names(filt_list))
-
-
-# FIXME: parallelize
 results_list <- list()
 pbar <- txtProgressBar(max=length(filt_list),style=3)
+
 for (path in names(filt_list)){
   prots <- filt_list[[path]]
   lmer_args <- list()
@@ -122,7 +116,9 @@ results_df <- bind_rows(results_list,.id="Pathway") %>%
 	mutate(Padjust = p.adjust(Pvalue, method="bonferroni")) %>% arrange(Pvalue)
 
 
-nsig = sum(results_df$Padjust<0.05)
+## save to file
+myfile <- file.path(root,"rdata","complex_results.csv")
+fwrite(results_df, myfile)
 
 
 ## ---- Function
@@ -213,5 +209,7 @@ for (path in names(filt_list)){
 
 ## ---- save as pdf
 
-# FIXME: why so many warnings about missing vals?
-ggsavePDF(plot_list,"complex-plots.pdf")
+myfile <- file.path(root,"figs","Modules","complex_profiles.pdf")
+ggsavePDF(plot_list, myfile)
+
+warnings()

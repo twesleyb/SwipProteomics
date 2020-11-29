@@ -9,7 +9,8 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-input_part = "ne_surprise_partition"
+input_colors = "cpm1_colors"
+input_part = "cpm1_partition"
 
 
 ## ---- Prepare the R environment
@@ -20,8 +21,8 @@ devtools::load_all(root,quiet=TRUE)
 
 # load the data
 data(msstats_prot)
-data(module_colors)
 data(list=input_part)
+data(list=input_colors)
 
 # imports
 suppressPackageStartupMessages({

@@ -8,7 +8,9 @@
 
 ggsavePDF <- function(plots, file) {
 
-  require(ggplotify)
+  suppressPackageStartupMessages({
+	  library(ggplotify)
+  })
 
   # If not a list, coerce to list.
   if (!inherits(plots, "list")) {
