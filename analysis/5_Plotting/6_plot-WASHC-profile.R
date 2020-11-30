@@ -73,8 +73,11 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   # calculate coefficient of variation (CV == unitless error) and scale to max
   df <- df %>% mutate(CV = SD/med_Intensity)
 
-  # get module fitted data by fitting linear model to scaled Abundance
-  fm <- lmerTest::lmer(med_Intensity ~ 0 + Genotype:BioFraction + (1|Protein), df)
+  df$scale_Intensity <- scale01(df$med_Intensity)
+
+  # get module fitted data by fitting linear model to scaled Intensity
+  fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
+  fm <- lmerTest::lmer(fx, df)
 
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
@@ -98,18 +101,18 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = med_Intensity)
+  plot <- plot + aes(y = scale_Intensity)
   plot <- plot + aes(group = interaction(Genotype,Protein))
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=med_Intensity - CV)
-  plot <- plot + aes(ymax=med_Intensity + CV)
+  plot <- plot + aes(ymin=scale_Intensity - CV)
+  plot <- plot + aes(ymax=scale_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0("WASH Complex ", "(n = ",nprots,")\n",r2_anno))
-  plot <- plot + ylab("Scaled Abundance")
+  plot <- plot + ylab("Scaled Protein Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 

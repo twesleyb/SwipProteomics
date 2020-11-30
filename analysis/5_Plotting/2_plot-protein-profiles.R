@@ -128,7 +128,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     df$BioFraction <- factor(sapply(strsplit(condition,"\\."),"[",2),
 		        levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-    # Generate the plot
+    # generate the plot
     plot <- ggplot(df)
     plot <- plot + aes(x = BioFraction)
     plot <- plot + aes(y = med_Abundance)
@@ -143,7 +143,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
     plot <- plot + ggtitle(paste(gene," | ",protein,title_anno))
-    plot <- plot + ylab("Scaled Protein Abundance")
+    plot <- plot + ylab("Protein Intensity")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
     plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 

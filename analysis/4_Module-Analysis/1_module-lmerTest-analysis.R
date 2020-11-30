@@ -8,7 +8,6 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-
 input_part = "ne_surprise_partition"
 
 
@@ -34,19 +33,17 @@ suppressPackageStartupMessages({
 
 ## ---- Function
 
-
 fitModule <- function(prots, msstats_prot) {
   # fitting mixed-model to log2 relative Intensity
-  fx <- "log2(rel_Intensity) ~ 1 + Condition + (1|Protein) + (1|Mixture)"
+  fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
   # build list of input args for lmerTest
   lmer_args <- list()
   lmer_args[["formula"]] <- fx
-  # prepare the data -- scaled (relative) Intensity
-  lmer_args[["data"]] <- msstats_prot %>% 
-	  mutate(Intensity = 2^Abundance) %>% 
-	  group_by(Protein) %>% 
-	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
-	  subset(Protein %in% prots)
+  lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 
+	  group_by(Protein) %>% mutate(Intensity = 2^Abundance) %>%
+	  mutate(rel_Intensity=Intensity/sum(Intensity))
+  # fit the model with some lmer control
+  lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- do.call(lmerTest::lmer, lmer_args)
   # assess overall contrast and collect results
   LT <- getContrast(fm,"Mutant","Control")
@@ -96,8 +93,21 @@ myfile <- file.path(root,"data","sig_modules.rda")
 save(sig_modules, file=myfile,version=2)
 
 # write results to excel 
+results_df$isSingular <- NULL
+results_df <- results_df %>% 
+	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
+
+results_list <- list()
+idx <- match(names(partition),gene_map$uniprot)
+df =  data.table(UniProt = names(partition), 
+		 Entrez = gene_map$entrez[idx],
+		 Symbol = gene_map$symbol[idx],
+		 Membership = partition)
+results_list[["Partition"]] <- df %>% arrange(Membership)
+results_list[["Module Results"]] <- results_df 
+
 res_file <- file.path(root,"tables","S4_SWIP-TMT_Module_Results.xlsx")
-write_excel(list("Module Results" = results_df), res_file)
+write_excel(results_list, res_file)
 
 # save results as rda
 module_results <- results_df

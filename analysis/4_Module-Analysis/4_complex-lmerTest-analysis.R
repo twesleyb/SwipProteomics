@@ -174,9 +174,7 @@ plotComplex <- function(path, prots, msstats_prot) {
 	          N = length(rel_Intensity),
 	          .groups="drop")
 
-  range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
-  # https://stackoverflow.com/questions/5665599/range-standardization-0-to-1-in-r
-  df$scale_Intensity <- range01(df$med_Intensity)
+  df$scale_Intensity <- scale01(df$med_Intensity)
 
   stopifnot(min(df$scale_Intensity)==0)
   stopifnot(max(df$scale_Intensity)==1)
@@ -220,7 +218,7 @@ plotComplex <- function(path, prots, msstats_prot) {
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")\n", r2_anno))
-  plot <- plot + ylab("Scaled Intensity")
+  plot <- plot + ylab("Scaled Protein Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
