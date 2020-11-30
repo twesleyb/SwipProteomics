@@ -4,24 +4,23 @@
 # description: generate an overview graph of the network
 # author: Tyler W Bradshaw
 
-## ---- input
-save_image = FALSE
-root = "~/projects/SwipProteomics"
+## ---- inputs
 
+root = "~/projects/SwipProteomics"
 input_part <- "ne_surprise_partition"
 input_colors <- "ne_surprise_colors"
 
 
 ## ---- functions
 
-mask <- function(dm, threshold) {
-	# Apply a mask (threshold) to a matrix.
-       	mask_ <- matrix(as.numeric(dm > threshold),nrow=nrow(dm), ncol=nrow(dm))
-	return(mask_ * dm)
+maskAdjm <- function(dm, threshold) {
+	# apply a mask (threshold) to an adjacency matrix
+       	mask <- matrix(as.numeric(dm > threshold),nrow=nrow(dm), ncol=nrow(dm))
+	return(mask * dm)
 }
 
 
-is_connected <- function(adjm,weighted=TRUE,diag=FALSE,mode="undirected",...) {
+is_connected <- function(adjm, weighted=TRUE, diag=FALSE, mode="undirected",...) {
 	# Check if the graph of an adjacency matrix is connected.
 	g <- graph_from_adjacency_matrix(adjm,
 					 weighted=weighted,
@@ -38,10 +37,10 @@ renv::load(root, quiet=TRUE)
 
 # Global imports
 suppressPackageStartupMessages({
-  library(RCy3) # For talking to Cytoscape
-  library(dplyr) # For manipulating data
-  library(igraph) # For creating graphs
-  library(data.table) # For working with tables
+  library(RCy3) 
+  library(dplyr) 
+  library(igraph) 
+  library(data.table) 
 })
 
 # project specific functions and data
@@ -55,14 +54,18 @@ figsdir <- file.path(root, "figs","Networks")
 
 # Output directory for cytoscape networks
 netwdir <- file.path(root,"networks")
+
 if (!dir.exists(netwdir)) {
 	dir.create(netwdir)
 }
 
+
 ## ---- Load the data
 
-data(list=input_part)
-data(list=input_colors)
+# data in root/data
+data(list=input_part) # partition
+data(list=input_colors) # module_colors
+
 # ne_adjm in root/rdata
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 load(myfile)
@@ -70,7 +73,7 @@ load(myfile)
 
 ## ---- Create igraph graph
 
-# Drop M0 from graph.
+# Drop M0 from graph
 M0 <- names(which(partition==0))
 idx <- colnames(ne_adjm) %in% M0
 sub_adjm <- ne_adjm[!idx,!idx]
@@ -78,17 +81,18 @@ sub_adjm <- ne_adjm[!idx,!idx]
 # Threshold the graph
 # Search for an appropriate threshold
 # By manual search the 'best' threshold is ...
-#is_connected(mask(sub_adjm, threshold = 35.034))
+#is_connected(maskAdjm(sub_adjm, threshold = 38.77))
 
 # Create igraph graph from thresholded adjm
-threshold = 35.034
-stopifnot(is_connected(mask(sub_adjm, threshold)))
-
-adjm <- mask(sub_adjm, threshold)
+threshold = 125
+#stopifnot(is_connected(maskAdjm(sub_adjm, threshold)))
+adjm <- maskAdjm(sub_adjm, threshold)
 g <- graph_from_adjacency_matrix(adjm, mode="undirected", diag=F, weighted=T)
+#sizes = table(igraph::components(g)$membership)
+#sum(sizes[sizes>5])/sum(sizes)
 
 # Stop if graph is not connected
-if (!is.connected(g)) { stop("The graph is not connected!") }
+#if (!is.connected(g)) { stop("The graph is not connected!") }
 
 # Add module and color attributes
 g <- set_vertex_attr(g,"Module",value=paste0("M",partition[names(V(g))]))
@@ -169,14 +173,6 @@ invisible({ layoutNetwork(netw_layout) })
 Sys.sleep(3)
 fitContent()
 
-# Save network image
-if (save_image) {
-  netw_image <- file.path(figsdir, "Network_Overview")
-  winfile <- gsub("/mnt/d/", "D:/", netw_image)
-  exportImage(winfile, "svg")
-  message("\nConvert svg image to tiff before pushing to git (too big)!")
-}
-
 # Free up some memory
 invisible({ cytoscapeFreeMemory() })
 
@@ -185,6 +181,4 @@ invisible({ cytoscapeFreeMemory() })
 # Cytoscape is a Windows program.
 myfile <- file.path(netwdir,"Network")
 winfile <- gsub("/mnt/d/|\\~/","D:/",myfile) 
-saveSession(winfile)
-
-message("\nDone!")
+RCy3::saveSession(winfile)

@@ -9,8 +9,8 @@
 # Input data in root/data/
 # * msstats_prot
 
-part_file <- "ne_surprise_partition"
-
+input_part <- "ne_surprise_partition"
+input_colors <- "ne_surprise_colors"
 
 ## ---- Output 
 # * a single pdf with plots of all proteins
@@ -18,9 +18,9 @@ part_file <- "ne_surprise_partition"
 
 ## ---- Functions 
 
-plot_protein <- function(protein, prot_df, gene_map,
+plotProtein <- function(protein, prot_df, gene_map,
 			 sig_prots, protein_gof, legend=FALSE) {
-  #
+  
   # a function that generates the plot
   # annotate title in red if protein has sig change in 'Mutant-Control' contrast
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
@@ -29,18 +29,18 @@ plot_protein <- function(protein, prot_df, gene_map,
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
 	select(R2.fixef) %>% as.numeric()
   title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
-  #
+  
   # subset the data
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
   title_color <- names(which(title_colors == (protein %in% sig_prots)))
   df <- subset(prot_df,Protein == protein)
-  #
+  
   # insure factor levels are set correctly
   df$BioFraction <- factor(df$BioFraction,
   			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
   df$Mixture <- factor(df$Mixture, levels=c("M1","M2","M3"))
   df$Genotype <- factor(df$Genotype, levels=c("Control","Mutant"))
-  #
+  
   # collect FDR stats
   stats_df <- df %>% group_by(Genotype,BioFraction) %>% 
   		summarize(`Max Abundance` = max(Abundance),
@@ -52,7 +52,7 @@ plot_protein <- function(protein, prot_df, gene_map,
   stats_df$symbol[stats_df$FDR<0.05] <- "*"
   stats_df$symbol[stats_df$FDR<0.005] <- "**"
   stats_df$symbol[stats_df$FDR<0.0005] <- "***"
-  #
+  
   # generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction, y = Abundance)
@@ -66,7 +66,7 @@ plot_protein <- function(protein, prot_df, gene_map,
   plot <- plot + ggtitle(paste(gene,"|",protein,title_anno))
   plot <- plot + theme(plot.title=element_text(color=title_color))
   plot <- plot + ylab("Normalized Protein Abundance")
-  #
+  
   # annotate with significance stars
   check <- all(is.na(stats_df$FDR))
   any_sig <- any(stats_df$FDR<0.1)
@@ -76,7 +76,7 @@ plot_protein <- function(protein, prot_df, gene_map,
 			    y=max(stats_df$ypos), 
 			    label=stats_df$symbol,size=7)
   }
-  #
+  
   # add custom colors and modify legend title and labels
   mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
   plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
@@ -87,12 +87,12 @@ plot_protein <- function(protein, prot_df, gene_map,
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-  #
+ 
   # remove legend
   if (!legend) {
 	  plot <- plot + theme(legend.position = "none")
   }
-  #
+ 
   return(plot)
 } #EOF
 
@@ -112,10 +112,10 @@ data(gene_map)
 data(sig_prots)
 data(protein_gof)
 data(msstats_prot)
-data(module_colors)
 data(msstats_results)
 
-data(list=part_file)
+data(list=input_colors)
+data(list=input_part)
 
 # imports
 suppressPackageStartupMessages({
@@ -140,7 +140,8 @@ set_font("Arial", font_path=fontdir)
 
 ## ---- main 
 
-# combine protein data and statistical results
+## combine protein data and statistical results
+
 # we will use stats to annotate plots with stars
 msstats_results <- msstats_results %>% filter(Contrast != 'Mutant-Control') %>% 
 	mutate(BioFraction = sapply(strsplit(Contrast,"\\."),"[",3))
@@ -151,25 +152,25 @@ prot_df <- left_join(msstats_prot,msstats_results,by=shared_cols)
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
 prot_df$Module <- paste0("M",partition[prot_df$Protein])
 
-
-## ---- generate the plots 
-
 # sort proteins by module membership, drop M0
 sorted_prots <- as.character(unlist(split(names(partition),partition)[-1]))
 
-# Loop to generate plots for all_proteins
+stopifnot(all(sorted_prots %in% prot_df$Protein))
+
 message("\nGenerating plots for ", 
 	formatC(length(sorted_prots),big.mark=","), " proteins.")
 
-stopifnot(all(sorted_prots %in% prot_df$Protein))
+
+## ---- loop to generate plots
 
 plot_list <- list()
+
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 
 for (protein in sorted_prots) {
 
 	# generate a proteins plot
-        plot <- plot_protein(protein, prot_df, gene_map, sig_prots, protein_gof)
+        plot <- plotProtein(protein, prot_df, gene_map, sig_prots, protein_gof)
 
 	# annotate with module assignment
 	plot_label <- paste("Module:", partition[protein])
@@ -180,6 +181,7 @@ for (protein in sorted_prots) {
 
 	# store in list
 	plot_list[[protein]] <- plot
+
 	# update pbar
 	setTxtProgressBar(pbar, value=match(protein, sorted_prots))
 } #EOL
@@ -187,7 +189,7 @@ close(pbar)
 
 
 # Generate a plot with a legend
-plot <- plot_protein(swip, prot_df, gene_map, sig_prots, protein_gof, legend = TRUE)
+plot <- plotProtein(swip, prot_df, gene_map, sig_prots, protein_gof, legend = TRUE)
 plot_legend <- cowplot::get_legend(plot) 
 
 

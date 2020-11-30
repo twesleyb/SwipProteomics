@@ -5,7 +5,9 @@
 # author: Tyler W Bradshaw
 
 ## ---- input
+
 input_part = "ne_surprise_partition"
+input_colors = "ne_surprise_colors"
 
 
 ## ---- set-up the workspace

@@ -103,6 +103,7 @@ pbar <- txtProgressBar(max=length(filt_list),style=3)
 for (path in names(filt_list)){
   lmer_args <- list()
   prots <- filt_list[[path]]
+  # the formula to be fit
   fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Protein)
   lmer_args[["formula"]] <- fx
   lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 

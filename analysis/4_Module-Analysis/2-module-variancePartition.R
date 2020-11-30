@@ -6,16 +6,19 @@
 
 input_part <- "ne_surprise_partition"
 
+
 ## ---- prepare the env
 root <- "~/projects/SwipProteomics"
 renv::load(root)
 devtools::load_all(root)
+
 
 ## ---- load the data
 data(swip)
 data(gene_map)
 data(msstats_prot)
 data(list=input_part)
+
 
 ## ---- requirements
 suppressPackageStartupMessages({
@@ -28,38 +31,47 @@ suppressPackageStartupMessages({
 
 ## ---- function
 
+#module = "M1"
+#table(partition)
+#head(msstats_prot)
+
 moduleGOF <- function(module, partition, msstats_prot){
-  # a function the evaluates gof of modules with variancePartition
+  # a function the evaluates gof of a module with variancePartition
   # NOTE: variancePartition expects all factors to be modeled as mixed effects
 
-  # subset the data, annotate with module membership
+  ## subset the data, annotate with module membership, calc rel_Intensity
   prot_df <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
-	  mutate(Module=paste0("M",partition[Protein]))
+	  mutate(Module=paste0("M",partition[Protein])) %>% 
+	  group_by(Protein) %>% 
+	  mutate(Intensity = 2^Abundance) %>% 
+	  mutate(rel_Intensity = Intensity/sum(Intensity))
 
-  # the formula for variancePartition
-  form1 <- Abundance ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
+
+  ## the formula for variancePartition -- all effects modeled as random effects
+  form <- log2(rel_Intensity) ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
 
   # fit the model with some lmerControl
   lmer_control <- lme4::lmerControl(check.conv.singular = "ignore")
-  fm1 <- lme4::lmer(form1, data = prot_df %>% filter(Module==module), control=lmer_control)
+  vpart_fm <- lme4::lmer(form, data = prot_df %>% filter(Module==module), control=lmer_control)
 
   # do the variancePartition bit == vp=getVariance(fm); pve=vp/sum(vp)
-  vpart <- variancePartition::calcVarPart(fm1)
+  vpart <- variancePartition::calcVarPart(vpart_fm)
 
-  # fit the model for calculating Nakagawa R2
-  form2 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Protein)
-  fm2 <- lme4::lmer(form2, data = prot_df %>% filter(Module==module), control = lmer_control)
 
-  # r.squaredGLMM.merMod
-  r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm2)),
+  ## fit the model for calculating Nakagawa R2 with lmer_control
+  fx <- log2(rel_Intensity) ~ 1 + Condition + (1|Mixture) + (1|Protein)
+  fm <- lme4::lmer(fx, prot_df %>% filter(Module==module), 
+		    control = lmer_control)
+
+
+  ## r.squaredGLMM.merMod
+  r2 <- setNames(as.numeric(r.squaredGLMM.merMod(fm)),
 		 nm=c("R2.fixef","R2.total"))
 
   # combine gof stats
-  rho <- c(vpart,r2)
+  rho <- c(vpart, r2)
 
-  # fit1 is the model for variancePartition; fit2 is the fit used for stats
-  #rho[["vp.isSingular"]] <- lme4::isSingular(fm1)
-  rho[["isSingular"]] <- lme4::isSingular(fm2)
+  rho[["isSingular"]] <- lme4::isSingular(fm)
 
   return(rho) # gof stats
 } #EOF

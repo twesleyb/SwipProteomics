@@ -31,6 +31,7 @@ suppressPackageStartupMessages({
 # project dirs
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Modules")
+
 if (! dir.exists(figsdir)) {
 	dir.create(figsdir,recursive=TRUE)
 }

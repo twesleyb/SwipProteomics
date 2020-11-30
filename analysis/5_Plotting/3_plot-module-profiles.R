@@ -17,12 +17,12 @@ input_part = "ne_surprise_partition"
 
 renv::load(root,quiet=TRUE)
 
-devtools::load_all(root,quiet=TRUE)
+devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(msstats_prot)
-data(list=input_part)
-data(list=input_colors)
+data(list=input_part) # partition
+data(list=input_colors) # module_colors
 
 # imports
 suppressPackageStartupMessages({
@@ -35,6 +35,7 @@ suppressPackageStartupMessages({
 # project dirs
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Modules")
+
 if (! dir.exists(figsdir)) {
 	dir.create(figsdir,recursive=TRUE)
 }
@@ -46,8 +47,10 @@ set_font("Arial", font_path=fontdir)
 
 ## ---- function 
 
+module = "M1"
+prots = names(partition[partition==1])
 
-plot_profile <- function(module, prots, msstats_prot, module_colors) {
+plotModule <- function(module, prots, msstats_prot, module_colors) {
 
   # color for Control condition
   wt_color = "#47b2a4"
@@ -63,20 +66,20 @@ plot_profile <- function(module, prots, msstats_prot, module_colors) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  # scale to max, take median of three replicates
+  # prepare the data
   df <- subdat %>% group_by(Protein) %>%
-	  mutate(scale_Abundance = Abundance/max(Abundance)) %>%
+	  mutate(Intensity = 2^Abundance) %>% 
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Abundance = median(scale_Abundance), 
-	          SD = sd(scale_Abundance),
-	          N = length(scale_Abundance),
-	          .groups="drop")
-
-  # calculate coefficient of variation (CV == unitless error) and scale to max
-  df <- df %>% mutate(CV = SD/med_Abundance)
+	  summarize(med_Intensity = log2(median(rel_Intensity)),
+	          SD = sd(log2(rel_Intensity)),
+	          N = length(rel_Intensity),
+	          .groups="drop") %>%
+	  mutate(CV = SD/med_Intensity)
 
   # get module fitted data by fitting linear model to scaled Abundance
-  fm <- lmerTest::lmer(med_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
+  # NOTE: no Mixture
+  fm <- lmerTest::lmer(med_Intensity ~ 0 + Genotype:BioFraction + (1|Protein), df)
 
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
@@ -93,27 +96,25 @@ plot_profile <- function(module, prots, msstats_prot, module_colors) {
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
   
   # get marginal r2 for annot plot title
-  r2 <- r.squaredGLMM.merMod(fm)[,"R2m"]
+  r2 <- r.squaredGLMM.merMod(fm)
   r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),
-			     round(r2,3)),collapse=" | "),")")
+			     round(r2[,"R2m"],3)),collapse=" | "),")")
 
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = med_Abundance)
+  plot <- plot + aes(y = med_Intensity)
   plot <- plot + aes(group = interaction(Genotype,Protein))
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=med_Abundance - CV)
-  plot <- plot + aes(ymax=med_Abundance + CV)
+  plot <- plot + aes(ymin=med_Intensity - CV)
+  plot <- plot + aes(ymax=med_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-
   plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
-
-  plot <- plot + ylab("Scaled Abundance")
+  plot <- plot + ylab("Median Relative Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
@@ -128,6 +129,7 @@ plot_profile <- function(module, prots, msstats_prot, module_colors) {
   # add fitted lines
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
+
   # set colors
   mut_color <- module_colors[[module]]
 
@@ -145,16 +147,16 @@ names(modules) <- paste0("M",names(modules))
 
 stopifnot(all(names(modules) %in% names(module_colors)))
 
+message("\nGenerating profile plots of ", length(modules), " modules.")
+
+
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
-## loop to generate plots
-
-message("\nGenerating profile plots of ", length(modules), " modules.")
+# loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plot <- plot_profile(module, prots=modules[[module]], 
+	plotModule(module, prots=modules[[module]], 
 			     msstats_prot, module_colors)
-	return(plot)
 } #EOL
 names(plot_list) <- names(modules)
 
