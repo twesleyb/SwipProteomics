@@ -9,8 +9,8 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-input_part = "ne_surprise_surprise_partition"
-input_colors = "ne_surprise_surprise_colors"
+input_part = "ne_surprise_partition"
+input_colors = "ne_surprise_colors"
 
 
 ## ---- Prepare the R environment
@@ -131,8 +131,9 @@ results_df <- bind_rows(results_list,.id="Pathway") %>%
 
 
 ## save to file
-myfile <- file.path(root,"rdata","complex_results.csv")
-fwrite(results_df, myfile)
+
+myfile <- file.path(root,"tables","S7_SWIP-TMT_Complex_Results.xlsx")
+write_excel(list("complexes"=results_df), myfile)
 
 
 ## ---- Function

@@ -96,7 +96,7 @@ myfile <- file.path(root,"data","sig_modules.rda")
 save(sig_modules, file=myfile,version=2)
 
 # write results to excel 
-res_file <- file.path(root,"tables","SWIP_Module_Results.xlsx")
+res_file <- file.path(root,"tables","S4_SWIP-TMT_Module_Results.xlsx")
 write_excel(list("Module Results" = results_df), res_file)
 
 # save results as rda
