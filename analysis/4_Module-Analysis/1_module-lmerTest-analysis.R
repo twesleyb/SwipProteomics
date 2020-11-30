@@ -92,10 +92,18 @@ sig_modules <- m
 myfile <- file.path(root,"data","sig_modules.rda")
 save(sig_modules, file=myfile,version=2)
 
-# write results to excel 
+# # write results to excel 
+
+# drop singular col -- there are none
 results_df$isSingular <- NULL
+
+# re-arrange column order
 results_df <- results_df %>% 
 	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
+
+# annotate candidate sig modules
+results_df$candidate <- results_df$percentControl > 1.05 | results_df$percentControl < 0.95
+results_df <- results_df %>% arrange(desc(candidate))
 
 results_list <- list()
 idx <- match(names(partition),gene_map$uniprot)
