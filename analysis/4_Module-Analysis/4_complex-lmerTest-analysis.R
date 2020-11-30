@@ -1,14 +1,13 @@
 #!/usr/bin/env Rscript
 
 # title: SwipProteomics
-# description:
+# description: examine some protein complexes
 # author: twab
 
 ## ---- Inputs
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-
 input_part = "ne_surprise_partition"
 input_colors = "ne_surprise_colors"
 
@@ -35,6 +34,7 @@ suppressPackageStartupMessages({
 # project dirs
 fontdir <- file.path(root, "fonts")
 figsdir <- file.path(root, "figs", "Modules")
+
 if (! dir.exists(figsdir)) {
 	dir.create(figsdir,recursive=TRUE)
 }
@@ -46,7 +46,7 @@ set_font("Arial",font_path=fontdir)
 
 ## ---- load geneLists
 
-library(geneLists)
+library(geneLists) # twesleyb/geneLists
 
 # load corum protein complexes (mapped to mouse entrez)
 data(corum) 
@@ -85,6 +85,9 @@ names(prot_list) <- names(corum_prots)
 idx <- unlist(sapply(prot_list,is.na))
 prot_list <- prot_list[!idx]
 
+# Warnings are bc complexes may be split between modules. We collect the
+# proteins that are all assigned to the same module
+
 # drop small complexes
 sizes <- sapply(prot_list,length)
 idx <- sizes < 3
@@ -94,6 +97,9 @@ filt_list <- prot_list[!idx]
 ## ---- add RAVE complex just for kicks
 
 filt_list[["RAVE"]] <- mapID(c("Rogdi","Dmxl2","Wdr7"))
+
+cbind(k = length(filt_list), med_size = median(sapply(filt_list,length))) %>%
+	knitr::kable()
 
 
 ## ---- loop to do work
@@ -123,22 +129,24 @@ for (path in names(filt_list)){
 }
 close(pbar)
 
-# FIXME: which model fails to converge?
+
+#results_list[["Vacuolar ATPase"]] %>% knitr::kable()
 
 # collect results
 results_df <- bind_rows(results_list,.id="Pathway") %>% 
 	mutate(Padjust = p.adjust(Pvalue, method="bonferroni")) %>% arrange(Pvalue)
 
-
-## save to file
-
-myfile <- file.path(root,"tables","S7_SWIP-TMT_Complex_Results.xlsx")
-write_excel(list("complexes"=results_df), myfile)
+# summary sig
+results_df %>% 
+	summarize(nSig= sum(Padjust < 0.05), Total = length(unique(Pathway))) %>% 
+	knitr::kable()
 
 
 ## ---- Function
 
 # now generate plots
+path = sample(names(filt_list),1)
+prots = filt_list[[path]]
 
 plotComplex <- function(path, prots, msstats_prot) {
 
@@ -157,6 +165,7 @@ plotComplex <- function(path, prots, msstats_prot) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
+  # prepare the data
   df <- subdat %>% mutate(Intensity = 2^Abundance) %>% group_by(Protein) %>%
 	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>% 
 	  group_by(Protein, Genotype, BioFraction) %>% 
@@ -165,11 +174,18 @@ plotComplex <- function(path, prots, msstats_prot) {
 	          N = length(rel_Intensity),
 	          .groups="drop")
 
+  range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
+  # https://stackoverflow.com/questions/5665599/range-standardization-0-to-1-in-r
+  df$scale_Intensity <- range01(df$med_Intensity)
+
+  stopifnot(min(df$scale_Intensity)==0)
+  stopifnot(max(df$scale_Intensity)==1)
+
   # calculate coefficient of variation (CV == unitless error) and scale to max
   df <- df %>% mutate(CV = SD/med_Intensity)
 
   # get module fitted data by fitting linear model to scaled Abundance
-  fm <- lmerTest::lmer(med_Intensity ~ 0 + Genotype:BioFraction + (1|Protein), df)
+  fm <- lmerTest::lmer(scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein), df)
 
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
@@ -193,18 +209,18 @@ plotComplex <- function(path, prots, msstats_prot) {
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = med_Intensity)
+  plot <- plot + aes(y = scale_Intensity)
   plot <- plot + aes(group = interaction(Genotype,Protein))
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=med_Intensity - CV)
-  plot <- plot + aes(ymax=med_Intensity + CV)
+  plot <- plot + aes(ymin=scale_Intensity - CV)
+  plot <- plot + aes(ymax=scale_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")\n", r2_anno))
-  plot <- plot + ylab("Relative Intensity")
+  plot <- plot + ylab("Scaled Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
   plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
@@ -237,7 +253,13 @@ for (path in names(filt_list)){
 } #EOL
 
 
-## ---- save as a single pdf
+## ---- save results to file
 
+# save stats
+myfile <- file.path(root,"tables","S7_SWIP-TMT_Complex_Results.xlsx")
+write_excel(list("complexes"=results_df), myfile)
+
+
+# save plots
 myfile <- file.path(root,"figs","Modules","complex_profiles.pdf")
 ggsavePDF(plot_list, myfile)

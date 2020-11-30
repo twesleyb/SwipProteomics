@@ -1,6 +1,5 @@
 renv
 data(modularity_partition)
-partition)
 partition
 table
 class(partition)
