@@ -6,6 +6,7 @@
 
 ## ---- INPUTs 
 input_part = "ne_surprise_partition"
+input_colors = "ne_surprise_colors"
 
 # * msstats_prot
 # * partition
@@ -55,7 +56,7 @@ data(list=input_part)
 data(msstats_prot)
 
 # load colors
-data(module_colors)
+data(list=input_colors)
 
 # all modules
 modules <- split(names(partition),partition)

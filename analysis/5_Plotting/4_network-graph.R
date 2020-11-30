@@ -8,6 +8,9 @@
 save_image = FALSE
 root = "~/projects/SwipProteomics"
 
+input_part <- "ne_surprise_partition"
+input_colors <- "ne_surprise_colors"
+
 
 ## ---- functions
 
@@ -58,9 +61,8 @@ if (!dir.exists(netwdir)) {
 
 ## ---- Load the data
 
-data(module_colors)
-data(ne_surprise_partition)
-
+data(list=input_part)
+data(list=input_colors)
 # ne_adjm in root/rdata
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 load(myfile)

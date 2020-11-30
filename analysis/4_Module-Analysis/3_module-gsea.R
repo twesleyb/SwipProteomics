@@ -8,7 +8,7 @@
 BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
 ## ---- Input data in root/data
-input_part = "cpm1_partition"
+input_part = "ne_surprise_partition"
 
 ## ---- Set-up the workspace 
 
@@ -31,6 +31,7 @@ data(list=input_part)
 
 data(gene_map)
 data(sig_prots)
+data(sig_modules)
 data(msstats_prot)
 data(msstats_results)
 data(wash_interactome) 
@@ -188,8 +189,14 @@ sig_gsea <- sig_dt %>% filter(Pathway == "SigProts") %>%
 
 # modules with sig lopitDC enrichment
 idx <- grepl("LopitDC", sig_dt$Pathway)
-sig_dt %>% filter(idx) %>% select(Module, Pathway, Padjust, `Fold enrichment`) %>% knitr::kable()
+sig_dt %>% filter(idx) %>% 
+	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	knitr::kable()
 
+# sig modules
+sig_dt %>% filter(Module %in% sig_modules) %>% 
+	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	knitr::kable()
 
 ## ---- save results
 

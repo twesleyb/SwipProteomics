@@ -44,7 +44,7 @@ set_font("Arial", font_path=fontdir)
 
 prots = washc_prots
 
-plot_profile <- function(prots, msstats_prot) {
+plotWASHC <- function(msstats_prot, prots=washc_prots) {
 
   # color for Control condition
   wt_color = "#47b2a4"
@@ -61,20 +61,19 @@ plot_profile <- function(prots, msstats_prot) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  # scale to max, take median of three replicates
-  df <- subdat %>% group_by(Protein) %>%
-	  mutate(scale_Abundance = Abundance/max(Abundance)) %>%
+  df <- subdat %>% mutate(Intensity = 2^Abundance) %>% group_by(Protein) %>%
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Abundance = median(scale_Abundance), 
-	          SD = sd(scale_Abundance),
-	          N = length(scale_Abundance),
+	  summarize(med_Intensity = median(log2(rel_Intensity)), 
+	          SD = sd(log2(rel_Intensity)),
+	          N = length(rel_Intensity),
 	          .groups="drop")
 
   # calculate coefficient of variation (CV == unitless error) and scale to max
-  df <- df %>% mutate(CV = SD/med_Abundance)
+  df <- df %>% mutate(CV = SD/med_Intensity)
 
   # get module fitted data by fitting linear model to scaled Abundance
-  fm <- lmerTest::lmer(med_Abundance ~ 0 + Genotype:BioFraction + (1|Protein), df)
+  fm <- lmerTest::lmer(med_Intensity ~ 0 + Genotype:BioFraction + (1|Protein), df)
 
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
@@ -98,14 +97,14 @@ plot_profile <- function(prots, msstats_prot) {
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
-  plot <- plot + aes(y = med_Abundance)
+  plot <- plot + aes(y = med_Intensity)
   plot <- plot + aes(group = interaction(Genotype,Protein))
   plot <- plot + aes(colour = Genotype)
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=med_Abundance - CV)
-  plot <- plot + aes(ymax=med_Abundance + CV)
+  plot <- plot + aes(ymin=med_Intensity - CV)
+  plot <- plot + aes(ymax=med_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0("WASH Complex ", "(n = ",nprots,")\n",r2_anno))
@@ -133,10 +132,10 @@ plot_profile <- function(prots, msstats_prot) {
 
 ## ---- generate plot
 
-plot <- plot_profile(washc_prots, msstats_prot)
+plot <- plotWASHC(msstats_prot)
 
 
-## ---- save plots as a single pdf
+## ---- save as pdf
 
 myfile <- file.path(figsdir,"WASHC_profile.pdf")
 ggsave(myfile, plot, height=5, width=5)

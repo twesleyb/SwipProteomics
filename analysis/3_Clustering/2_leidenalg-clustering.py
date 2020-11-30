@@ -11,7 +11,7 @@ authors: Tyler W A Bradshaw
 
 # There is only one piece of input data, an input NxN adjacency matrix saved as
 # a csv file in  root/rdata/. 
-adjm_file = 'adjm.csv' 
+adjm_file = 'ne_adjm.csv' 
 
 ## Output
 # * a partition of the network saved in root/rdata
@@ -28,7 +28,7 @@ nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
 ## General optimization methods:
-optimization_method = 'CPM'
+optimization_method = 'Surprise'
 n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
@@ -37,7 +37,7 @@ recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 # Prefix out output partition, saved as .csv.
-output_name = 'cpm0' 
+output_name = 'ne_surprise' 
 
 ## Output:
 # Saved in root/rdata/

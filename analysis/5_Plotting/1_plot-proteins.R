@@ -9,7 +9,7 @@
 # Input data in root/data/
 # * msstats_prot
 
-part_file <- "partition"
+part_file <- "ne_surprise_partition"
 
 
 ## ---- Output 

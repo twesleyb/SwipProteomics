@@ -9,8 +9,8 @@
 # input data in root/data/
 root = "~/projects/SwipProteomics"
 
-input_colors = "cpm1_colors"
-input_part = "cpm1_partition"
+input_colors = "ne_surprise_colors"
+input_part = "ne_surprise_partition"
 
 
 ## ---- Prepare the R environment

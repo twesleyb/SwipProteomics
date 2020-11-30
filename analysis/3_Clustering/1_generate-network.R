@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript 
 
-# title:  SwipProteomics
+# title: SwipProteomics
 # description: generate protein co-variation (correlation) network
 # author: twab
 
@@ -50,49 +50,51 @@ data(musInteractome)
 
 ## ---- functions
 
-scaleAbundance <- function(data) {
-	# scale Abundance to maximum for each protein
-	# by scaling protein abundance to its maximum we align proteins with
-	# the same profile but different overall abundance
-	data %>% group_by(Protein) %>% 
-		mutate(scale_Abundance = Abundance/max(Abundance))
-}
+#scaleAbundance <- function(data) {
+#	# scale Abundance to maximum for each protein
+#	# by scaling protein abundance to its maximum we align proteins with
+#	# the same profile but different overall abundance
+#	data %>% group_by(Protein) %>% 
+#		mutate(scale_Abundance = Abundance/max(Abundance))
+#}
 
-summarizeMix <- function(data) {
-	# summarize the three mixtures as median
-	data %>% group_by(Protein, Condition) %>% 
-		summarize(med_Abundance = median(scale_Abundance),.groups="drop")
-}
+#summarizeMix <- function(data) {
+#	# summarize the three mixtures as median
+#	data %>% group_by(Protein, Condition) %>% 
+#		summarize(Abundance = median(Abundance),.groups="drop")
+#}
 
 
-cast2dm <- function(data) {
-	# cast the median Abundance data into a matrix
-	data %>% reshape2::dcast(Protein ~ Condition, 
-				 value.var="med_Abundance") %>% 
-		as.data.table() %>% as.matrix(rownames="Protein")
-}
+#cast2dm <- function(data) {
+#	# cast the median Abundance data into a matrix
+#	data %>% reshape2::dcast(Protein ~ Condition, 
+#				 value.var="Abundance") %>% 
+#		as.data.table() %>% as.matrix(rownames="Protein")
+#}
 
 
 ## ---- create covariation network
 
+# scale -> median
 # cast the protein data into a matrix -- summarize the 3 replicates as median
-dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
+#dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
+
+dm <- msstats_prot %>% 
+	mutate(Intensity = 2^Abundance) %>% 
+	group_by(Protein) %>% 
+	mutate(rel_Intensity = Intensity/sum(Intensity)) %>% 
+	group_by(Protein, Condition) %>%
+	summarize(med_Intensity = median(log2(rel_Intensity)), .groups="drop") %>% 
+	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
+	as.data.table() %>%
+	as.matrix(rownames="Protein")
 
 # there are a small number proteins with some missing vals 
 # e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
 # remove these proteins
 idx1 <- apply(dm,1,function(x) any(is.na(x)))
+warning(sum(idx1)," proteins with any missing values are removed.")
 filt_dm <- dm[!idx1,]
-
-# remove proteins with negative values 
-# these seem to arise because of low abundance which becomes negative after log
-# w/in MSstats
-idx2 <- apply(filt_dm,1,function(x) any(x < 0))
-filt_dm <- filt_dm[!idx2, ]
-
-
-stopifnot(!any(is.na(filt_dm)))
-
 
 ## calculate coorrelation matrix
 adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
