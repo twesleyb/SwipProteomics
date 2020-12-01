@@ -60,14 +60,13 @@ names(modules) <- paste0("M",names(modules))
 
 # coerce tidy data to a matrix
 # summarize three replicates as median
-dm <- msstats_prot %>% 
+dm <- msstats_prot %>% mutate(Intensity = 2^Abundance) %>%
 	filter(Protein %in% names(partition)) %>%
-	group_by(Protein) %>%
-	mutate(Intensity = 2^Abundance) %>%
-	mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	group_by(Protein, Condition) %>% 
-	summarize(med_Intensity = median(log2(rel_Intensity)),.groups="drop") %>%
-	reshape2::dcast(Protein ~ Condition, value.var= "med_Intensity") %>%
+	summarize(med_Intensity = median(Intensity),.groups="drop") %>%
+	group_by(Protein) %>%
+	mutate(scale_Intensity = log2(med_Intensity/sum(med_Intensity))) %>%
+	reshape2::dcast(Protein ~ Condition, value.var= "scale_Intensity") %>%
 	as.data.table() %>% as.matrix(rownames="Protein")
 
 # Drop un-clustered proteins

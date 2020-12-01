@@ -8,6 +8,7 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
+renv::load(root,quiet=TRUE)
 
 input_colors = "ne_surprise_colors"
 input_part = "ne_surprise_partition"
@@ -15,11 +16,12 @@ input_part = "ne_surprise_partition"
 
 ## ---- Prepare the R environment
 
-renv::load(root,quiet=TRUE)
-
+# library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
+data(module_gof)
+data(sig_modules)
 data(msstats_prot)
 data(list=input_part) # partition
 data(list=input_colors) # module_colors
@@ -47,13 +49,26 @@ set_font("Arial", font_path=fontdir)
 
 ## ---- function 
 
-module = "M1"
-prots = names(partition[partition==1])
 
-plotModule <- function(module, prots, msstats_prot, module_colors) {
+plotModule <- function(module, prots, msstats_prot, 
+		       module_colors, module_gof, title_color="black") {
+
+  ##############################################################################
+  #module = "M1"
+  #prots = names(partition[partition==1])
+  #if (module %in% sig_modules) { 
+  #	title_color <- col2hex("dark red") 
+  #}
+  ##############################################################################
 
   # color for Control condition
   wt_color = "#47b2a4"
+
+  # plot title annot
+  r2 <- module_gof %>% filter(Module == module) %>% 
+	  select(R2.fixef, R2.total) %>% as.numeric()
+  title_anno <- paste(paste0(c("(R2_fixef = ","(R2_fixef = "), 
+			     round(r2,3),")"),collapse=" ")
 
   # Subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
@@ -67,22 +82,19 @@ plotModule <- function(module, prots, msstats_prot, module_colors) {
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
   # prepare the data
-  df <- subdat %>% group_by(Protein) %>%
+  df <- subdat %>% 
 	  mutate(Intensity = 2^Abundance) %>% 
-	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Intensity = log2(median(rel_Intensity)),
-	          SD = sd(log2(rel_Intensity)),
-	          N = length(rel_Intensity),
+	  summarize(med_Intensity = median(Intensity),
 	          .groups="drop") %>%
-	  mutate(CV = SD/med_Intensity)
-
-  df$scale_Intensity <- scale01(df$med_Intensity)
+	  group_by(Protein) %>%
+	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
 
   # get module fitted data by fitting linear model to scaled Intensity
-  # NOTE: no Mixture
+  # explicitly estimate all coeff by setting intercept to 0
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
-  fm <- lmerTest::lmer(fx, df)
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, df, control=lmer_control)
 
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
@@ -98,11 +110,6 @@ plotModule <- function(module, prots, msstats_prot, module_colors) {
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
   
-  # get marginal r2 for annot plot title
-  r2 <- r.squaredGLMM.merMod(fm)
-  r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),
-			     round(r2[,"R2m"],3)),collapse=" | "),")")
-
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
@@ -112,11 +119,8 @@ plotModule <- function(module, prots, msstats_prot, module_colors) {
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=scale_Intensity - CV)
-  plot <- plot + aes(ymax=scale_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",r2_anno))
   plot <- plot + ylab("Scaled Protein Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -128,15 +132,13 @@ plotModule <- function(module, prots, msstats_prot, module_colors) {
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-
-  # add fitted lines
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
-
-  # set colors
   mut_color <- module_colors[[module]]
-
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+  # title and annot
+  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",title_anno))
+  plot <- plot + theme(plot.title = element_text(color=title_color))
 
   return(plot)
 } #EOF
@@ -158,8 +160,11 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plotModule(module, prots=modules[[module]], 
-			     msstats_prot, module_colors)
+	if (module %in% sig_modules) { 
+		title_color <- col2hex("dark red") 
+	}
+	plotModule(module, prots=modules[[module]], msstats_prot, 
+		   module_colors, module_gof, title_color)
 } #EOL
 names(plot_list) <- names(modules)
 

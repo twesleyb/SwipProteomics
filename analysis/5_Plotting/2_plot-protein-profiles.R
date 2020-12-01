@@ -4,6 +4,8 @@
 # description: plot protein abundance
 # author: Tyler W Bradshaw
 
+# plot median Abundance
+
 ## ---- Inputs
 
 # input data in root/data/
@@ -111,10 +113,6 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
   stats_df$stars[stats_df$FDR < 0.0005] <- "***"
 
   # prepare the data 
-  #  * subset -- keep data from single protein
-  #  * group by Genotype.BioFraction.Protein
-  #  * calculate the median of the three mixtures
-  #  * calculate (robust) coefficient of variation
   df <- prot_df %>% 
     filter(Protein == protein) %>% 
     group_by(Condition, Protein) %>%
@@ -145,7 +143,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
     plot <- plot + ggtitle(paste(gene," | ",protein,title_anno))
-    plot <- plot + ylab("Normalized Protein Abundance")
+    plot <- plot + ylab("log2(Protein Intensity)")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
     plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 

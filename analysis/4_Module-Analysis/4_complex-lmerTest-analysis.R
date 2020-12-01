@@ -106,7 +106,7 @@ cbind(k = length(filt_list), med_size = median(sapply(filt_list,length))) %>%
 
 ## ---- loop to do work
 
-# loop to do module-level lmer analysis
+# loop to do module-level lmer statistical analysis
 
 results_list <- list()
 pbar <- txtProgressBar(max=length(filt_list),style=3)
@@ -149,13 +149,13 @@ results_df %>%
 
 ## ---- Function
 
-# now generate plots
-path = sample(names(filt_list),1)
-prots = filt_list[[path]]
-
-#plotComplex(path,prots,msstats_prot)
 
 plotComplex <- function(path, prots, msstats_prot) {
+  #############################################################################
+  #path = sample(names(filt_list),1)
+  #prots = filt_list[[path]]
+  #plotComplex(path,prots,msstats_prot)
+  #############################################################################
   # color for Control condition
   wt_color = "#47b2a4"
   mut_color = "#b671af"
@@ -168,19 +168,16 @@ plotComplex <- function(path, prots, msstats_prot) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
   # prepare the data for plotting
-  df <- subdat %>% group_by(Protein) %>% 
+  df <- subdat %>% 
 	  mutate(Intensity = 2^Abundance) %>% 
-	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>%
-	  summarize(med_Intensity = log2(median(rel_Intensity)),
-		    CV = sd(rel_Intensity)/mean(rel_Intensity),
-		    .groups="drop")
-  df$scale_Intensity <- scale01(df$med_Intensity)
-  stopifnot(min(df$scale_Intensity)==0)
-  stopifnot(max(df$scale_Intensity)==1)
+	  summarize(med_Intensity = median(Intensity), .groups="drop") %>%
+	  group_by(Protein) %>% 
+	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
   # get module fitted data by fitting linear model to scaled Abundance
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
-  fm <- lmerTest::lmer(fx, df)
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, df, control = lmer_control)
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
 		       "fit_y" = lme4::fixef(fm)) %>%
@@ -192,10 +189,6 @@ plotComplex <- function(path, prots, msstats_prot) {
   df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
-  # get marginal r2 for annot plot title
-  r2 <- r.squaredGLMM.merMod(fm)[,"R2m"]
-  r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),
-			     round(r2,3)),collapse=" | "),")")
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
@@ -205,11 +198,9 @@ plotComplex <- function(path, prots, msstats_prot) {
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=scale_Intensity - CV)
-  plot <- plot + aes(ymax=scale_Intensity + CV)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
-  plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")\n", r2_anno))
+  plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")"))
   plot <- plot + ylab("Scaled Protein Intensity")
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
   plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -221,10 +212,8 @@ plotComplex <- function(path, prots, msstats_prot) {
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-  # add fitted lines
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
-  # set colors
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   return(plot)
 } #EOF
@@ -233,11 +222,14 @@ plotComplex <- function(path, prots, msstats_prot) {
 ## ---- generate plots 
 
 plot_list <- list()
+pbar <- txtProgressBar(max=length(filt_list),style=3)
 for (path in names(filt_list)){
 	prots <- filt_list[[path]]
 	plot <- plotComplex(path, prots, msstats_prot)
 	plot_list[[path]] <- plot
+	setTxtProgressBar(pbar, value=match(path,names(filt_list)))
 } #EOL
+close(pbar)
 
 
 ## ---- save results to file

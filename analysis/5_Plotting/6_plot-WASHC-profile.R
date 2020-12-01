@@ -51,7 +51,7 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   wt_color = "#47b2a4"
   mut_color = "#b671af"
 
-  # Subset
+  # subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
 
   # number of proteins in module
@@ -62,18 +62,13 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  df <- subdat %>% mutate(Intensity = 2^Abundance) %>% group_by(Protein) %>%
-	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
+  df <- subdat %>% mutate(Intensity = 2^Abundance) %>% 
 	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Intensity = median(log2(rel_Intensity)), 
-	          SD = sd(log2(rel_Intensity)),
-	          N = length(rel_Intensity),
-	          .groups="drop")
-
-  # calculate coefficient of variation (CV == unitless error) and scale to max
-  df <- df %>% mutate(CV = SD/med_Intensity)
-
-  df$scale_Intensity <- scale01(df$med_Intensity)
+	  summarize(med_Intensity = median(Intensity), 
+	          ymin = min(log2(Intensity)),
+	          ymax = max(log2(Intensity)),
+	          .groups="drop") %>% group_by(Protein) %>%
+	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
 
   # get module fitted data by fitting linear model to scaled Intensity
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
@@ -98,7 +93,7 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   r2_anno <- paste("(",paste(paste(c("R2.Fixef = "),
 			     round(r2,3)),collapse=" | "),")")
 
-  # Generate the plot
+  # generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
   plot <- plot + aes(y = scale_Intensity)
@@ -107,8 +102,8 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  plot <- plot + aes(ymin=scale_Intensity - CV)
-  plot <- plot + aes(ymax=scale_Intensity + CV)
+  #plot <- plot + aes(ymin=ymin)
+  #plot <- plot + aes(ymax=ymax)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0("WASH Complex ", "(n = ",nprots,")\n",r2_anno))
@@ -123,11 +118,8 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())
-
-  # add fitted lines
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
-
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
 
   return(plot)
