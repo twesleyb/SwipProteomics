@@ -60,12 +60,13 @@ names(modules) <- paste0("M",names(modules))
 
 # coerce tidy data to a matrix
 # summarize three replicates as median
-dm <- msstats_prot %>% mutate(Intensity = 2^Abundance) %>%
+dm <- msstats_prot %>% 
 	filter(Protein %in% names(partition)) %>%
-	group_by(Protein, Condition) %>% 
-	summarize(med_Intensity = median(Intensity),.groups="drop") %>%
+	mutate(Intensity = 2^Abundance) %>%
 	group_by(Protein) %>%
-	mutate(scale_Intensity = log2(med_Intensity/sum(med_Intensity))) %>%
+	mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
+	group_by(Protein, Condition) %>% 
+	summarize(scale_Intensity = log2(median(rel_Intensity)),.groups="drop") %>%
 	reshape2::dcast(Protein ~ Condition, value.var= "scale_Intensity") %>%
 	as.data.table() %>% as.matrix(rownames="Protein")
 

@@ -114,6 +114,7 @@ for (path in names(filt_list)){
   # build input args list for lmerTest
   lmer_args <- list()
   prots <- filt_list[[path]]
+  # formula for statistical comparisons
   fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
   lmer_args[["formula"]] <- fx
   lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 

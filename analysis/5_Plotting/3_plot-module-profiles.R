@@ -8,7 +8,7 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-renv::load(root,quiet=TRUE)
+renv::load(root, quiet=TRUE)
 
 input_colors = "ne_surprise_colors"
 input_part = "ne_surprise_partition"
@@ -53,14 +53,6 @@ set_font("Arial", font_path=fontdir)
 plotModule <- function(module, prots, msstats_prot, 
 		       module_colors, module_gof, title_color="black") {
 
-  ##############################################################################
-  #module = "M1"
-  #prots = names(partition[partition==1])
-  #if (module %in% sig_modules) { 
-  #	title_color <- col2hex("dark red") 
-  #}
-  ##############################################################################
-
   # color for Control condition
   wt_color = "#47b2a4"
 
@@ -84,11 +76,12 @@ plotModule <- function(module, prots, msstats_prot,
   # prepare the data
   df <- subdat %>% 
 	  mutate(Intensity = 2^Abundance) %>% 
-	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Intensity = median(Intensity),
-	          .groups="drop") %>%
 	  group_by(Protein) %>%
-	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
+	  group_by(Protein, Genotype, BioFraction) %>% 
+	  summarize(med_Intensity = median(rel_Intensity),
+	          .groups="drop") %>%
+	  mutate(scale_Intensity = scale01(log2(med_Intensity)))
 
   # get module fitted data by fitting linear model to scaled Intensity
   # explicitly estimate all coeff by setting intercept to 0
@@ -109,7 +102,7 @@ plotModule <- function(module, prots, msstats_prot,
   df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
-  
+
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
@@ -136,7 +129,6 @@ plotModule <- function(module, prots, msstats_prot,
 			   linetype="dashed",alpha=1,size=0.75)
   mut_color <- module_colors[[module]]
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
-  # title and annot
   plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",title_anno))
   plot <- plot + theme(plot.title = element_text(color=title_color))
 
@@ -161,16 +153,14 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
 	if (module %in% sig_modules) { 
-		title_color <- col2hex("dark red") 
+		title_color <- "#8B0000" #col2hex("dark red") 
+	} else {
+		title_color <- "black" 
 	}
 	plotModule(module, prots=modules[[module]], msstats_prot, 
-		   module_colors, module_gof, title_color)
+		   module_colors, module_gof, title_color=title_color)
 } #EOL
 names(plot_list) <- names(modules)
-
-# drop null
-bad_modules <- names(which(sapply(plot_list,is.null)))
-idx <- names(plot_list) %notin% bad_modules
 
 
 ## ---- save plots as a single pdf
@@ -178,4 +168,4 @@ idx <- names(plot_list) %notin% bad_modules
 message("\nSaving plots as a single pdf.")
 
 myfile <- file.path(figsdir,"module_profiles.pdf")
-ggsavePDF(plot_list[idx],myfile)
+ggsavePDF(plot_list,myfile)

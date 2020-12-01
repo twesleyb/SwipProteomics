@@ -33,10 +33,9 @@ devtools::load_all(root, quiet=TRUE)
 datadir <- file.path(root, "data")
 rdatdir <- file.path(root, "rdata")
 tabsdir <- file.path(root, "tables")
-figsdir <- file.path(root, "figs","Networks")
 
 # Output directory for cytoscape networks
-netwdir <- file.path(root,"networks")
+netwdir <- file.path(root,"figs","Networks")
 if (!dir.exists(netwdir)) {
 	dir.create(netwdir)
 }

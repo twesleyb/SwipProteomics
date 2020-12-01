@@ -58,12 +58,11 @@ data(musInteractome)
 
 dm <- msstats_prot %>% 
 	mutate(Intensity = 2^Abundance) %>% 
-	group_by(Protein) %>% 
-	group_by(Protein, Condition) %>%
-	summarize(med_Intensity = median(Intensity), .groups="drop") %>% 
 	group_by(Protein) %>%
-	mutate(scale_Intensity = log2(med_Intensity/sum(med_Intensity))) %>%
-	reshape2::dcast(Protein ~ Condition, value.var = "scale_Intensity") %>% 
+	mutate(scale_Intensity = Intensity/sum(Intensity)) %>%
+	group_by(Protein, Condition) %>%
+	summarize(med_Intensity = log2(median(scale_Intensity)), .groups="drop") %>% 
+	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
 

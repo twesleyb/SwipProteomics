@@ -35,7 +35,7 @@ suppressPackageStartupMessages({
 
 fitModule <- function(prots, msstats_prot) {
   # fitting mixed-model to log2 relative Intensity
-  fx <- log2(scale_Intensity) ~ 0 + Condition + (1|Protein)
+  fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
   # build list of input args for lmerTest
   lmer_args <- list()
   lmer_args[["formula"]] <- fx
