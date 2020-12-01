@@ -188,15 +188,16 @@ sig_gsea <- sig_dt %>% filter(Pathway == "SigProts") %>%
 	select(Module) %>% unlist() %>% unique()
 
 # modules with sig lopitDC enrichment
+message("Modules enriched for LopitDC subcellular compartments:")
 idx <- grepl("LopitDC", sig_dt$Pathway)
 sig_dt %>% filter(idx) %>% 
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 
 # sig modules
-sig_dt %>% filter(Module %in% sig_modules) %>% 
-	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
-	knitr::kable()
+#sig_dt %>% filter(Module %in% sig_modules) %>% 
+#	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+#	knitr::kable()
 
 ## ---- save results
 
