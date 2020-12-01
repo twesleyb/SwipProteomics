@@ -167,7 +167,6 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	## define Cytoscape layout
 	netw_layout='force-directed edgeAttribute=weight'
 
-
 	## subset graph: keep defined nodes
 	graph <- netw_g
 	idx <- match(nodes, names(V(graph)))
@@ -175,13 +174,11 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	vids <- idx[!is.na(idx)]
 	subg <- igraph::induced_subgraph(graph, vids)
 
-
 	## set node size ~ hubbiness or importance in its subgraph
 	adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
 	namen <- names(V(subg))
 	node_importance <- apply(adjm,2,sum)
 	subg <- igraph::set_vertex_attr(subg, "size", value=node_importance[namen])
-
 
 	## Seq from min(edge weight) to max() to generate cutoffs
 	n_edges <- length(E(subg))
@@ -189,18 +186,15 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	max_weight <- max(E(subg)$weight)
 	cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
 
-
 	## find a suitable cutoff for thresholding the graph
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
 	is_single_component <- foreach(threshold=cutoffs) %dopar% {
-		myfun(subg, threshold, pclust = 0.80) # pclust = 1
+		myfun(subg, threshold, pclust = 0.80) 
 	} %>% unlist()
-
 
 	## define limit as max(cutoff) at which the graph is still connected
 	if (all(is_single_component)) { stop("Error thesholding graph.") }
 	weight_limit <- cutoffs[max(which(is_single_component == TRUE))]
-
 
 	## prune edges
 	# NOTE: This removes all edge types connecting two nodes
@@ -232,7 +226,6 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
         #RCy3::getNetworkViews()
 	#RCy3::commandsPOST("view create")
 
-
 	## visual style defaults
 	style.name <- "RCy3.style"
 	visual_defaults <- list(
@@ -251,7 +244,6 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 		 EDGE_WIDTH = 2,
 		 NETWORK_BACKGROUND_PAINT = "#FFFFFF" # white
 		)
-
 
 	## mapped visual style parameters
 
@@ -297,43 +289,41 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	RCy3::setVisualStyle(style.name)
 	Sys.sleep(3)
 
-
 	## Collect PPI edges
-	#idx <- match(nodes, names(V(ppi_g)))
-	#	subg <- igraph::induced_subgraph(ppi_g, 
-	#				 vids = V(ppi_g)[idx])
-	#edge_list <- apply(igraph::as_edgelist(subg, names = TRUE), 1, as.list)
+	idx <- match(nodes, names(V(ppi_g)))
+		subg <- igraph::induced_subgraph(ppi_g, 
+					 vids = V(ppi_g)[idx])
+	edge_list <- apply(igraph::as_edgelist(subg, names = TRUE), 1, as.list)
 
 	## If edge list is only of length 1, unnest it to avoid problems
-	#if (length(edge_list) == 1) {
-	#	edge_list <- unlist(edge_list, recursive = FALSE)
-	#}
+	if (length(edge_list) == 1) {
+		edge_list <- unlist(edge_list, recursive = FALSE)
+	}
 
 	## we add edges like this bc Cytoscape really only supports 1 type of
 	## edge in a graph. We manually add additional PPI edges to create a
 	## network with both co-variation and ppi edges.
 	## NOTE: this can take a couple minutes if there is a large number of
 	## ppis
-	#if (length(edge_list) > 0) {
-	#	ppi_edges <- RCy3::addCyEdges(edge_list)
-	#	# add PPIs and set to black
-	#	selected_edges <- RCy3::selectEdges(ppi_edges, by.col = "SUID")
-	#	# set edge bend to help distinguish ppi edges
-	#	namen <- "EDGE_STROKE_UNSELECTED_PAINT"
-	#	RCy3::setEdgePropertyBypass(
-	#			      edge.names = selected_edges$edges,
-	#			      new.values = "#000000", # black 
-	#			      visual.property = namen,
-	#			      bypass = TRUE
-	#			      )
-	#	RCy3::setEdgePropertyBypass(
-	#			      edge.names = selected_edges$edges,
-	#			      new.values = TRUE,
-	#			      visual.property = "EDGE_BEND",
-	#			      bypass = TRUE
-	#			      )
-	#} # EIS
-
+	if (length(edge_list) > 0) {
+		ppi_edges <- RCy3::addCyEdges(edge_list)
+		# add PPIs and set to black
+		selected_edges <- RCy3::selectEdges(ppi_edges, by.col = "SUID")
+		# set edge bend to help distinguish ppi edges
+		namen <- "EDGE_STROKE_UNSELECTED_PAINT"
+		RCy3::setEdgePropertyBypass(
+				      edge.names = selected_edges$edges,
+				      new.values = "#000000", # black 
+				      visual.property = namen,
+				      bypass = TRUE
+				      )
+		RCy3::setEdgePropertyBypass(
+				      edge.names = selected_edges$edges,
+				      new.values = TRUE,
+				      visual.property = "EDGE_BEND",
+				      bypass = TRUE
+				      )
+	} # EIS
 
 	##  clean-up
 	RCy3::clearSelection()
@@ -346,7 +336,6 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	## fit to screen
 	RCy3::fitContent()
 	Sys.sleep(2)
-
 
 	## Mask color of non-significant nodes
 	sig <- names(V(g))[V(g)$sigprot == 1]

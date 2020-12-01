@@ -59,11 +59,11 @@ modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
 
 # generate named vector of protein module colors
-color_list <- sapply(names(module_colors),function(x) {
-		       setNames(rep(module_colors[x],length(modules[[x]])),
-				nm=modules[[x]]) })
-prot_colors <- unlist(color_list)
-names(prot_colors) <- sapply(strsplit(names(prot_colors),"\\."),"[",2)
+#color_list <- sapply(names(module_colors),function(x) {
+#		       setNames(rep(module_colors[x],length(modules[[x]])),
+#				nm=modules[[x]]) })
+#prot_colors <- unlist(color_list)
+#names(prot_colors) <- sapply(strsplit(names(prot_colors),"\\."),"[",2)
 
 # drop 'Mutant-Control' contrasts from results and then
 # combine msstats_results with msstats_prot
@@ -84,10 +84,10 @@ prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
 protein = sample(unique(msstats_prot$Protein),1)
 
 plotProfile <- function(protein, gene_map, msstats_prot, msstats_results, 
-			 protein_gof, prot_colors) {
+			 protein_gof) {
 
   wt_color <- "#47b2a4"
-  mut_color <- prot_colors[protein]
+  mut_color <- "#b671af"
 
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
 
@@ -155,8 +155,8 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + theme(axis.line.x=element_line())
     plot <- plot + theme(plot.title = element_text(color=title_color))
     plot <- plot + theme(axis.line.y=element_line())
-    plot <- plot + scale_colour_manual(values=c(wt_color,prot_colors[protein]))
-    plot <- plot + scale_fill_manual(values=c(wt_color,prot_colors[protein]))
+    plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+    plot <- plot + scale_fill_manual(values=c(wt_color,mut_color))
     plot <- plot + theme(legend.position = "none")
 
     # annotate with module membership and significance stars
@@ -185,8 +185,7 @@ plots <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 for (protein in sorted_prots) {
 	plots[[protein]] <- plotProfile(protein, gene_map, msstats_prot, 
-				         msstats_results, protein_gof, 
-					 prot_colors) 
+				         msstats_results, protein_gof)
         setTxtProgressBar(pbar,value=match(protein,sorted_prots))
 } # EOL for proteins
 close(pbar)

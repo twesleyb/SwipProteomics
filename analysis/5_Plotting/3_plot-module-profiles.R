@@ -55,6 +55,7 @@ plotModule <- function(module, prots, msstats_prot,
 
   # color for Control condition
   wt_color = "#47b2a4"
+  mut_color = "#b671af"
 
   # plot title annot
   #r2 <- module_gof %>% filter(Module == module) %>% 
@@ -127,7 +128,6 @@ plotModule <- function(module, prots, msstats_prot,
   plot <- plot + theme(axis.line.y=element_line())
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
-  mut_color <- module_colors[[module]]
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   #plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",title_anno))
   plot <- plot + ggtitle(paste0(module," (n = ",nprots,")"))
