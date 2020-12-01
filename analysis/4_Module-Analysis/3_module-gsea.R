@@ -212,6 +212,6 @@ save(module_gsea, file = myfile, version = 2)
 # Save as excel
 tmp_df <- data.table(Pathway=names(gene_lists),
 		Entrez = sapply(gene_lists,paste,collapse=";"))
-tmp_list <- list("Pathways" = tmp_df,"Module GSEA" = sig_dt)
+tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
 myfile <- file.path(root,"tables","S6_SWIP-TMT_Module_GSEA.xlsx")
 write_excel(tmp_list,myfile)

@@ -78,20 +78,15 @@ idx <- colnames(ne_adjm) %in% M0
 sub_adjm <- ne_adjm[!idx,!idx]
 
 # Threshold the graph
-# Search for an appropriate threshold
+
 # By manual search the 'best' threshold is ...
 #is_connected(maskAdjm(sub_adjm, threshold = 38.77))
 
 # Create igraph graph from thresholded adjm
 threshold = 125
-#stopifnot(is_connected(maskAdjm(sub_adjm, threshold)))
+
 adjm <- maskAdjm(sub_adjm, threshold)
 g <- graph_from_adjacency_matrix(adjm, mode="undirected", diag=F, weighted=T)
-#sizes = table(igraph::components(g)$membership)
-#sum(sizes[sizes>5])/sum(sizes)
-
-# Stop if graph is not connected
-#if (!is.connected(g)) { stop("The graph is not connected!") }
 
 # Add module and color attributes
 g <- set_vertex_attr(g,"Module",value=paste0("M",partition[names(V(g))]))
