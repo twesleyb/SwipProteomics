@@ -9,10 +9,6 @@ root <- "~/projects/SwipProteomics"
 
 # * msstats_prot and other R data in root/data
 
-## Options:
-# rm proteins with poor fit?
-rm_poor <- TRUE 
-
 # network enhancement params
 alpha_param = 0.9
 diffusion_param = 1.0
@@ -37,7 +33,6 @@ devtools::load_all(root, quiet=TRUE)
 
 # load data in root/data
 data(gene_map)
-data(poor_prots)
 data(msstats_prot)
 
 # imports

@@ -99,8 +99,8 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
   # plot title and color
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
 	  select(R2.fixef) %>% as.numeric()
-
   title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
+
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
   title_color <- names(which(title_colors==protein %in% sig_prots))
 
@@ -142,7 +142,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + geom_line()
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
-    plot <- plot + ggtitle(paste(gene," | ",protein,title_anno))
+    plot <- plot + ggtitle(paste(gene," | ",protein)) # title_anno?
     plot <- plot + ylab("log2(Protein Intensity)")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))

@@ -57,10 +57,10 @@ plotModule <- function(module, prots, msstats_prot,
   wt_color = "#47b2a4"
 
   # plot title annot
-  r2 <- module_gof %>% filter(Module == module) %>% 
-	  select(R2.fixef, R2.total) %>% as.numeric()
-  title_anno <- paste(paste0(c("(R2_fixef = ","(R2_fixef = "), 
-			     round(r2,3),")"),collapse=" ")
+  #r2 <- module_gof %>% filter(Module == module) %>% 
+  #	  select(R2.fixef, R2.total) %>% as.numeric()
+  #title_anno <- paste(paste0(c("(R2_fixef = ","(R2_fixef = "), 
+  #			     round(r2,3),")"),collapse=" ")
 
   # Subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
@@ -129,7 +129,8 @@ plotModule <- function(module, prots, msstats_prot,
 			   linetype="dashed",alpha=1,size=0.75)
   mut_color <- module_colors[[module]]
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
-  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",title_anno))
+  #plot <- plot + ggtitle(paste0(module," (n = ",nprots,")\n",title_anno))
+  plot <- plot + ggtitle(paste0(module," (n = ",nprots,")"))
   plot <- plot + theme(plot.title = element_text(color=title_color))
 
   return(plot)
@@ -152,13 +153,8 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	if (module %in% sig_modules) { 
-		title_color <- "#8B0000" #col2hex("dark red") 
-	} else {
-		title_color <- "black" 
-	}
 	plotModule(module, prots=modules[[module]], msstats_prot, 
-		   module_colors, module_gof, title_color=title_color)
+		   module_colors, module_gof)
 } #EOL
 names(plot_list) <- names(modules)
 

@@ -111,16 +111,12 @@ module_sizes <- sapply(modules,length)
 df <- as.data.table(do.call(rbind,results_list[!idx]),keep.rownames="Module")
 df <- df %>% arrange(desc(Genotype))
 df <- df %>% mutate(Size = module_sizes[Module])
-module_gof <- df %>% 
-	mutate(Quality = R2.total * sum(BioFraction, Genotype)/sum(Protein,Residuals))
-
-q <- sum(module_gof$Quality)/length(modules)
-message("Partition Quality: ", round(q,5))
 
 
 ## ---- save results 
 
 # save as rda
+module_gof <- df
 myfile <- file.path(root,"data","module_gof.rda")
 save(module_gof, file=myfile, version=2)
 

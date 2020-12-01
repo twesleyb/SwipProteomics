@@ -210,6 +210,8 @@ myfile <- file.path(root, "data", "module_gsea.rda")
 save(module_gsea, file = myfile, version = 2)
 
 # Save as excel
+idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
+sig_dt <- sig_dt[idx,] # sort by module
 tmp_df <- data.table(Pathway=names(gene_lists),
 		Entrez = sapply(gene_lists,paste,collapse=";"))
 tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)

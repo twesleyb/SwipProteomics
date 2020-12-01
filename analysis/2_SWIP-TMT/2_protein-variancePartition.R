@@ -149,6 +149,8 @@ poor_prots <- protein_gof$Protein[protein_gof$R2.total < r2_threshold]
 message("\nNumber of proteins with poor fit: ", 
 	formatC(length(poor_prots),big.mark=","))
 
+# we can examine these models
+
 # wash prots
 message("\nWASHC* protein goodness-of-fit statistics:")
 protein_gof %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()

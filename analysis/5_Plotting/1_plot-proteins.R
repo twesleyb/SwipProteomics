@@ -65,7 +65,7 @@ plotProtein <- function(protein, prot_df, gene_map,
   plot <- plot + geom_line()
   plot <- plot + ggtitle(paste(gene,"|",protein,title_anno))
   plot <- plot + theme(plot.title=element_text(color=title_color))
-  plot <- plot + ylab("Normalized Protein Abundance")
+  plot <- plot + ylab("log2(Protein Intensity)")
   
   # annotate with significance stars
   check <- all(is.na(stats_df$FDR))
