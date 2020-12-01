@@ -10,7 +10,13 @@ root <- "~/projects/SwipProteomics"
 # * msstats_prot and other R data in root/data
 
 ## Options:
-rm_poor <- TRUE # rm proteins with poor fit?
+# rm proteins with poor fit?
+rm_poor <- TRUE 
+
+# network enhancement params
+alpha_param = 0.9
+diffusion_param = 1.0
+
 
 ## ---- Output:
 # adjm.rda
@@ -44,48 +50,20 @@ suppressPackageStartupMessages({
 })
 
 
-# load mouse PPIs compiled from BioGRID
-data(musInteractome)
-
-
-## ---- functions
-
-#scaleAbundance <- function(data) {
-#	# scale Abundance to maximum for each protein
-#	# by scaling protein abundance to its maximum we align proteins with
-#	# the same profile but different overall abundance
-#	data %>% group_by(Protein) %>% 
-#		mutate(scale_Abundance = Abundance/max(Abundance))
-#}
-
-#summarizeMix <- function(data) {
-#	# summarize the three mixtures as median
-#	data %>% group_by(Protein, Condition) %>% 
-#		summarize(Abundance = median(Abundance),.groups="drop")
-#}
-
-
-#cast2dm <- function(data) {
-#	# cast the median Abundance data into a matrix
-#	data %>% reshape2::dcast(Protein ~ Condition, 
-#				 value.var="Abundance") %>% 
-#		as.data.table() %>% as.matrix(rownames="Protein")
-#}
+# load mouse PPIs compiled from HitPredict
+data(musInteractome) 
 
 
 ## ---- create covariation network
 
-# scale -> median
-# cast the protein data into a matrix -- summarize the 3 replicates as median
-#dm <- msstats_prot %>% scaleAbundance() %>% summarizeMix() %>% cast2dm()
-
 dm <- msstats_prot %>% 
 	mutate(Intensity = 2^Abundance) %>% 
 	group_by(Protein) %>% 
-	mutate(rel_Intensity = Intensity/sum(Intensity)) %>% 
 	group_by(Protein, Condition) %>%
-	summarize(med_Intensity = median(log2(rel_Intensity)), .groups="drop") %>% 
-	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
+	summarize(med_Intensity = median(Intensity), .groups="drop") %>% 
+	group_by(Protein) %>%
+	mutate(scale_Intensity = log2(med_Intensity/sum(med_Intensity))) %>%
+	reshape2::dcast(Protein ~ Condition, value.var = "scale_Intensity") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
 
@@ -102,8 +80,6 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
-alpha_param = 0.9
-diffusion_param = 1.0
 
 ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
 

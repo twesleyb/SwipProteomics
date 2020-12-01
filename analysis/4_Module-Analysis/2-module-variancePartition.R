@@ -39,16 +39,16 @@ moduleGOF <- function(module, partition, msstats_prot){
   # a function the evaluates gof of a module with variancePartition
   # NOTE: variancePartition expects all factors to be modeled as mixed effects
 
-  ## subset the data, annotate with module membership, calc rel_Intensity
+  ## subset the data, annotate with module membership, calc scale_Intensity
   prot_df <- msstats_prot %>% filter(Protein %in% names(partition)) %>% 
 	  mutate(Module=paste0("M",partition[Protein])) %>% 
 	  group_by(Protein) %>% 
 	  mutate(Intensity = 2^Abundance) %>% 
-	  mutate(rel_Intensity = Intensity/sum(Intensity))
+	  mutate(scale_Intensity = Intensity/sum(Intensity))
 
 
   ## the formula for variancePartition -- all effects modeled as random effects
-  form <- log2(rel_Intensity) ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
+  form <- log2(scale_Intensity) ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
 
   # fit the model with some lmerControl
   lmer_control <- lme4::lmerControl(check.conv.singular = "ignore")
@@ -59,7 +59,7 @@ moduleGOF <- function(module, partition, msstats_prot){
 
 
   ## fit the model for calculating Nakagawa R2 with lmer_control
-  fx <- log2(rel_Intensity) ~ 1 + Condition + (1|Mixture) + (1|Protein)
+  fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
   fm <- lme4::lmer(fx, prot_df %>% filter(Module==module), 
 		    control = lmer_control)
 

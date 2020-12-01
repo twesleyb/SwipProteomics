@@ -79,6 +79,8 @@ prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
 
 # a function to generate protein profile plot:
 
+protein = sample(unique(msstats_prot$Protein),1)
+
 plotProfile <- function(protein, gene_map, msstats_prot, msstats_results, 
 			 protein_gof, prot_colors) {
 
@@ -93,7 +95,9 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
 	select(Protein) %>% unlist() %>% as.character() %>% unique()
 
   # plot title and color
-  r2 <- protein_gof %>% filter(Protein == protein) %>% select(R2.fixef) %>% as.numeric()
+  r2 <- protein_gof %>% filter(Protein == protein) %>% 
+	  select(R2.fixef) %>% as.numeric()
+
   title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
   title_color <- names(which(title_colors==protein %in% sig_prots))
@@ -113,13 +117,11 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
   #  * calculate (robust) coefficient of variation
   df <- prot_df %>% 
     filter(Protein == protein) %>% 
-    group_by(Condition,Protein) %>%
+    group_by(Condition, Protein) %>%
     summarize(med_Abundance = median(Abundance),
-	      SD = sd(Abundance),
-	      SE = unique(SE),
-	      N = length(Abundance),
-	      .groups="drop") %>%
-    mutate(CV = SD/med_Abundance) 
+	      ymin = min(Abundance),
+	      ymax = max(Abundance),
+	      .groups="drop") 
 
     # munge to annotate with Genotype and BioFraction
     condition <- as.character(df$Condition)
@@ -137,13 +139,13 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + aes(shape = Genotype)
     plot <- plot + aes(fill = Genotype)
     plot <- plot + aes(shade = Genotype)
-    plot <- plot + aes(ymin=med_Abundance - CV)
-    plot <- plot + aes(ymax=med_Abundance + CV)
+    plot <- plot + aes(ymin=ymin)
+    plot <- plot + aes(ymax=ymax)
     plot <- plot + geom_line()
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
     plot <- plot + ggtitle(paste(gene," | ",protein,title_anno))
-    plot <- plot + ylab("Protein Intensity")
+    plot <- plot + ylab("Normalized Protein Abundance")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
     plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 

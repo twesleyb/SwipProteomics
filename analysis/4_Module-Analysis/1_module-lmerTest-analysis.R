@@ -35,13 +35,14 @@ suppressPackageStartupMessages({
 
 fitModule <- function(prots, msstats_prot) {
   # fitting mixed-model to log2 relative Intensity
-  fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
+  fx <- log2(scale_Intensity) ~ 0 + Condition + (1|Protein)
   # build list of input args for lmerTest
   lmer_args <- list()
   lmer_args[["formula"]] <- fx
+  # prepare the data
   lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 
 	  group_by(Protein) %>% mutate(Intensity = 2^Abundance) %>%
-	  mutate(rel_Intensity=Intensity/sum(Intensity))
+	  mutate(scale_Intensity=Intensity/sum(Intensity))
   # fit the model with some lmer control
   lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- do.call(lmerTest::lmer, lmer_args)
@@ -102,7 +103,7 @@ results_df <- results_df %>%
 	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
 
 # annotate candidate sig modules
-results_df$candidate <- results_df$percentControl > 1.05 | results_df$percentControl < 0.95
+results_df$candidate <- results_df$percentControl > 1.10 | results_df$percentControl < 0.90
 results_df <- results_df %>% arrange(desc(candidate))
 
 results_list <- list()
