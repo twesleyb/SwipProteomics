@@ -56,7 +56,8 @@ dm <- msstats_prot %>%
 	group_by(Protein) %>%
 	mutate(scale_Intensity = Intensity/sum(Intensity)) %>%
 	group_by(Protein, Condition) %>%
-	summarize(med_Intensity = log2(median(scale_Intensity)), .groups="drop") %>% 
+	summarize(med_Intensity = log2(median(scale_Intensity)),
+		  .groups="drop") %>% 
 	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
