@@ -4,7 +4,8 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-input_part <- "ne_surprise_surprise_partition"
+#input_part <- "ne_surprise_surprise_partition"
+input_part <- "ne_surprise_partition"
 
 save_results = TRUE
 

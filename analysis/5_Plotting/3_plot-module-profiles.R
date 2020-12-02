@@ -10,7 +10,7 @@
 root = "~/projects/SwipProteomics"
 renv::load(root, quiet=TRUE)
 
-input_part = "ne_surprise_surprise_partition"
+input_part = "ne_surprise_partition"
 
 
 ## ---- Prepare the R environment

@@ -13,8 +13,8 @@ save_results = TRUE
 
 
 ## ---- Input data in root/data
-input_part = "ne_surprise_surprise_partition"
-#input_part = "ne_surprise_partition"
+#input_part = "ne_surprise_surprise_partition"
+input_part = "ne_surprise_partition"
 #input_part = "cpm1_partition"
 
 
