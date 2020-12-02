@@ -10,7 +10,7 @@
 root = "~/projects/SwipProteomics"
 input_part = "ne_surprise_surprise_partition"
 
-save_results = FALSE
+save_results = TRUE
 
 ## ---- Prepare the R environment
 

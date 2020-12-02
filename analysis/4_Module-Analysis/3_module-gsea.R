@@ -6,13 +6,16 @@
 
 ## ---- Optional parameters
 
-save_results = TRUE
+# Significance threshold for GSEA enrichment
+BF_alpha <- 0.05 
 
-BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
+save_results = TRUE
 
 
 ## ---- Input data in root/data
 input_part = "ne_surprise_surprise_partition"
+#input_part = "ne_surprise_partition"
+#input_part = "cpm1_partition"
 
 
 ## ---- Set-up the workspace 

@@ -10,9 +10,7 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-
 input_part = "ne_surprise_partition"
-input_colors = "ne_surprise_colors"
 
 
 ## ---- Prepare environment 
@@ -24,13 +22,14 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip)
+data(lysosome)
 data(gene_map)
+data(sig_prots)
 data(protein_gof)
 data(msstats_prot)
 data(msstats_results)
-
 data(list=input_part) # partition
-data(list=input_colors) # module colors
+
 
 # other imports
 suppressPackageStartupMessages({
@@ -195,6 +194,10 @@ close(pbar)
 
 
 ## ---- save results 
+
+sig_lyso <- lysosome[lysosome %in% sig_prots]
+myfile = file.path(figsdir,"lysosome_protein_profiles.pdf")
+ggsavePDF(plots[sig_lyso], file=myfile)
 
 message("\nSaving plots as a single pdf, this will take several minutes.")
 myfile = file.path(figsdir,"protein_profiles.pdf")

@@ -4,9 +4,9 @@
 # author: twab
 # description: generate some gof statistics for protein and module-level models
 
-input_part <- "ne_surprise_partition"
+input_part <- "ne_surprise_surprise_partition"
 
-save_results = FALSE
+save_results = TRUE
 
 ## ---- prepare the env
 root <- "~/projects/SwipProteomics"
@@ -107,7 +107,7 @@ close(pbar)
 
 # check for NULL results
 idx <- sapply(results_list,is.null)
-message("There were problems fitting ", sum(idx), " models.")
+stopifnot(!any(idx))
 
 # collect results from loop
 module_sizes <- sapply(modules,length)
