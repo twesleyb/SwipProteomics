@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
 # title: SwipProteomics
-# description: plot protein abundance
 # author: Tyler W Bradshaw
+# description: plot protein abundance
 
 # plot median Abundance
 
@@ -58,15 +58,10 @@ set_font("Arial",font_path=fontdir)
 modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
 
-# generate named vector of protein module colors
-#color_list <- sapply(names(module_colors),function(x) {
-#		       setNames(rep(module_colors[x],length(modules[[x]])),
-#				nm=modules[[x]]) })
-#prot_colors <- unlist(color_list)
-#names(prot_colors) <- sapply(strsplit(names(prot_colors),"\\."),"[",2)
-
 # drop 'Mutant-Control' contrasts from results and then
 # combine msstats_results with msstats_prot
+# we use statistical results from intra-BioFraction comparisons to annotate
+# the plots
 filt_results <- msstats_results %>% filter(Contrast != "Mutant-Control") %>%
 	mutate(BioFraction = sapply(strsplit(Contrast, "\\."),"[",3))
 shared_cols <- intersect(colnames(msstats_prot),colnames(filt_results))
@@ -86,9 +81,11 @@ protein = sample(unique(msstats_prot$Protein),1)
 plotProfile <- function(protein, gene_map, msstats_prot, msstats_results, 
 			 protein_gof) {
 
+  # colors for plot
   wt_color <- "#47b2a4"
   mut_color <- "#b671af"
 
+  # map uniprot to gene name
   gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
 
   # proteins with overall sig change
@@ -96,11 +93,12 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
 	filter(Contrast == 'Mutant-Control' & FDR<0.05) %>%  ungroup() %>%
 	select(Protein) %>% unlist() %>% as.character() %>% unique()
 
-  # plot title and color
+  # plot title and annotation
   r2 <- protein_gof %>% filter(Protein == protein) %>% 
 	  select(R2.fixef) %>% as.numeric()
   title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
 
+  # title = darkred if significant difference for overall comparison 
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
   title_color <- names(which(title_colors==protein %in% sig_prots))
 
@@ -112,14 +110,19 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
   stats_df$stars[stats_df$FDR < 0.005] <- "**"
   stats_df$stars[stats_df$FDR < 0.0005] <- "***"
 
-  # prepare the data 
+  # prepare the data for plotting
+  # * Abundance = log2(Intensity)
+  # * calc scaled intensity
+  # * summarize median of 3x mix
   df <- prot_df %>% 
-    filter(Protein == protein) %>% 
-    group_by(Condition, Protein) %>%
-    summarize(med_Abundance = median(Abundance),
-	      ymin = min(Abundance),
-	      ymax = max(Abundance),
-	      .groups="drop") 
+	  filter(Protein == protein) %>% 
+	  mutate(Intensity = 2^Abundance) %>% 
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
+	  mutate(scale_Intensity = scale01(log2(rel_Intensity))) %>%
+	  group_by(Protein,Condition) %>% 
+	  summarize(med_Intensity = median(scale_Intensity),
+		    ymin = min(scale_Intensity),
+		    ymax = max(scale_Intensity), .groups="drop")
 
     # munge to annotate with Genotype and BioFraction
     condition <- as.character(df$Condition)
@@ -131,7 +134,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     # generate the plot
     plot <- ggplot(df)
     plot <- plot + aes(x = BioFraction)
-    plot <- plot + aes(y = med_Abundance)
+    plot <- plot + aes(y = med_Intensity)
     plot <- plot + aes(group = Genotype)
     plot <- plot + aes(colour = Genotype)
     plot <- plot + aes(shape = Genotype)
@@ -143,7 +146,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
     plot <- plot + ggtitle(paste(gene," | ",protein)) # title_anno?
-    plot <- plot + ylab("log2(Protein Intensity)")
+    plot <- plot + ylab("Scaled Intensity")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
     plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
@@ -160,7 +163,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + theme(legend.position = "none")
 
     # annotate with module membership and significance stars
-    yrange <- setNames(range(df$med_Abundance),nm=c("min","max"))
+    yrange <- setNames(range(df$med_Intensity),nm=c("min","max"))
     ypos1 <- yrange["min"]  + 0.05 * diff(yrange) # Module#
     ypos2 <- yrange["max"] + 0.05 * diff(yrange) # stars
     module_label <- paste0("M",partition[protein])

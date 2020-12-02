@@ -6,6 +6,7 @@
 
 input_part <- "ne_surprise_partition"
 
+save_results = FALSE
 
 ## ---- prepare the env
 root <- "~/projects/SwipProteomics"
@@ -48,17 +49,19 @@ moduleGOF <- function(module, partition, msstats_prot){
 
 
   ## the formula for variancePartition -- all effects modeled as random effects
-  form <- log2(scale_Intensity) ~ (1|Mixture) + (1|Genotype) + (1|BioFraction) + (1|Protein)
+  form <- log2(scale_Intensity) ~ (1|Mixture) + (1|Genotype) + 
+	  (1|BioFraction) + (1|Protein)
 
   # fit the model with some lmerControl
   lmer_control <- lme4::lmerControl(check.conv.singular = "ignore")
-  vpart_fm <- lme4::lmer(form, data = prot_df %>% filter(Module==module), control=lmer_control)
+  vpart_fm <- lme4::lmer(form, data = prot_df %>% filter(Module==module), 
+			 control=lmer_control)
 
   # do the variancePartition bit == vp=getVariance(fm); pve=vp/sum(vp)
   vpart <- variancePartition::calcVarPart(vpart_fm)
 
 
-  ## fit the model for calculating Nakagawa R2 with lmer_control
+  ## fit the model for calculating Nakagawa R2
   fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
   fm <- lme4::lmer(fx, prot_df %>% filter(Module==module), 
 		    control = lmer_control)
@@ -115,11 +118,15 @@ df <- df %>% mutate(Size = module_sizes[Module])
 
 ## ---- save results 
 
-# save as rda
-module_gof <- df
-myfile <- file.path(root,"data","module_gof.rda")
-save(module_gof, file=myfile, version=2)
+if (save_results) {
 
-# save the data
-results_list <- list("Module GOF"=module_gof)
-write_excel(results_list,file.path(root,"tables","S5_SWIP-TMT_Module_GOF.xlsx"))
+  # save as rda
+  module_gof <- df
+  myfile <- file.path(root,"data","module_gof.rda")
+  save(module_gof, file=myfile, version=2)
+  
+  # save the data
+  results_list <- list("Module GOF"=module_gof)
+  write_excel(results_list,file.path(root,"tables","S5_SWIP-TMT_Module_GOF.xlsx"))
+
+}

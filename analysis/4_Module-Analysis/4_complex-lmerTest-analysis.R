@@ -8,8 +8,8 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise_partition"
-input_colors = "ne_surprise_colors"
+input_part = "ne_surprise_surprise_partition"
+save_results = FALSE
 
 
 ## ---- Prepare the R environment
@@ -22,7 +22,6 @@ data(gene_map)
 data(washc_prots)
 data(msstats_prot)
 data(list=input_part)
-data(list=input_colors)
 
 # imports
 suppressPackageStartupMessages({
@@ -50,7 +49,7 @@ set_font("Arial", font_path=fontdir)
 library(geneLists) # twesleyb/geneLists
 
 # load corum protein complexes (mapped to mouse entrez)
-data(corum) 
+data(corum)
 
 
 ## ---- convert corum pathways to uniprot IDs
@@ -113,38 +112,46 @@ cbind(k = length(filt_list), med_size = median(sapply(filt_list,length))) %>%
 	knitr::kable()
 
 
-## ---- loop to do work
+## ---- module-level statistical analysis
 
 # loop to do module-level lmer statistical analysis
 results_list <- list()
+
 pbar <- txtProgressBar(max=length(filt_list),style=3)
 for (path in names(filt_list)){
+
   # build input args list for lmerTest
   lmer_args <- list()
   prots <- names(filt_list[[path]])
+
   # formula for statistical comparisons
-  fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
+  fx <- log2(rel_Intensity) ~ 1 + Condition + (1|Protein)
   lmer_args[["formula"]] <- fx
   lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 
 	  group_by(Protein) %>% mutate(Intensity = 2^Abundance) %>%
-	  mutate(scale_Intensity=Intensity/sum(Intensity))
+	  mutate(rel_Intensity=Intensity/sum(Intensity))
   lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- do.call(lmerTest::lmer,lmer_args)
+
+  # assess contrast
   LT <- getContrast(fm, "Mutant","Control")
   res <- lmerTestContrast(fm, LT) %>% 
 	  mutate(Contrast="Mutant-Control") %>% unique()
+
+  # calc R2
   r2 <- r.squaredGLMM.merMod(fm)
   res$R2.fixef <- r2[,"R2m"]
   res$R2.total <- r2[,"R2c"]
   res$nProts <- length(prots)
   res$Module <- paste0("M",unique(filt_list[[path]]))
+
   results_list[[path]] <- res
   setTxtProgressBar(pbar,value=match(path,names(filt_list)))
 }
 close(pbar)
 
 
-# check the WASH Complex result
+## check WASH Complex result
 results_list[["WASHC"]] %>% knitr::kable()
 
 
@@ -158,48 +165,54 @@ results_df %>%
 	knitr::kable()
 
 
-## ---- Function
+## ---- Function to plot a profile
 
 
 plotComplex <- function(path, prots, msstats_prot) {
-  #############################################################################
-  #path = sample(names(filt_list),1)
-  #prots = filt_list[[path]]
-  #plotComplex(path,prots,msstats_prot)
-  #############################################################################
-  # color for Control condition
+
+  # colors
   wt_color = "#47b2a4"
   mut_color = "#b671af"
-  # Subset
+
+  # subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
+
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
+
   # set factor order (levels)
   subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
   # prepare the data for plotting
   df <- subdat %>% 
 	  mutate(Intensity = 2^Abundance) %>% 
-	  group_by(Protein, Genotype, BioFraction) %>%
-	  summarize(med_Intensity = median(Intensity), .groups="drop") %>%
 	  group_by(Protein) %>% 
-	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
-  # get module fitted data by fitting linear model to scaled Abundance
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
+	  group_by(Protein, Genotype, BioFraction) %>%
+	  summarize(med_Intensity = median(rel_Intensity), .groups="drop") %>%
+	  mutate(scale_Intensity = scale01(log2(med_Intensity)))
+
+  # get module fitted data by fitting linear model to median scaled Intensity
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
   lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- lmerTest::lmer(fx, df, control = lmer_control)
+
   # collect coefficients
   fit_df <- data.table("coef" = names(lme4::fixef(fm)),
 		       "fit_y" = lme4::fixef(fm)) %>%
     mutate(Genotype = gsub("Genotype","",sapply(strsplit(coef,"\\:"),"[",1))) %>%
     mutate(BioFraction=gsub("BioFraction","",sapply(strsplit(coef,"\\:"),"[",2)))
+
   # combine module data and fitted values
   df <- left_join(df, fit_df,by=c("Genotype","BioFraction"))
+
   # again, insure factor order is correct
   df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
   df$BioFraction <- factor(df$BioFraction,
 			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
   # Generate the plot
   plot <- ggplot(df)
   plot <- plot + aes(x = BioFraction)
@@ -226,6 +239,7 @@ plotComplex <- function(path, prots, msstats_prot) {
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+
   return(plot)
 } #EOF
 
@@ -245,80 +259,97 @@ close(pbar)
 
 ## ---- save results to file
 
-# save stats
-myfile <- file.path(root,"tables","S7_SWIP-TMT_Complex_Results.xlsx")
-write_excel(list("complexes"=results_df), myfile)
+if (save_results) {
+
+  # save stats
+  myfile <- file.path(root,"tables","S7_SWIP-TMT_Complex_Results.xlsx")
+  write_excel(list("complexes"=results_df), myfile)
+  
+  # save plots
+  myfile <- file.path(root,"figs","Modules","complex_profiles.pdf")
+  ggsavePDF(plot_list, myfile)
+
+}
 
 
-# save plots
-myfile <- file.path(root,"figs","Modules","complex_profiles.pdf")
-ggsavePDF(plot_list, myfile)
-
+quit()
 
 ## ---- examine multi
 
 
+
 plotComplex2 <- function(path,prots, msstats_prot){
+
   # color for Control condition
   wt_color = "#47b2a4"
   mut_color = "#b671af"
+
   # Subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
+
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
+
   # set factor order (levels)
   subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
   subdat$BioFraction <- factor(subdat$BioFraction,
   		    	     levels=c("F4","F5","F6","F7","F8","F9","F10"))
-    # prepare the data for plotting
-    df <- subdat %>% 
+
+  # prepare the data for plotting
+  df <- subdat %>% 
   	  mutate(Intensity = 2^Abundance) %>% 
+	  group_by(Protein) %>%
+  	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
   	  group_by(Protein, Genotype, BioFraction) %>%
-  	  summarize(med_Intensity = median(Intensity), .groups="drop") %>%
-  	  group_by(Protein) %>% 
+  	  summarize(med_Intensity = median(rel_Intensity), .groups="drop") %>%
   	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
-    # get module fitted data by fitting linear model to scaled Abundance
-    fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
-    lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
-    fm <- lmerTest::lmer(fx, df, control = lmer_control)
-    # collect coefficients
-    fit_df <- data.table("coef" = names(lme4::fixef(fm)),
+
+  # get module fitted data by fitting linear model to scaled Abundance
+  fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, df, control = lmer_control)
+
+  # collect coefficients
+  fit_df <- data.table("coef" = names(lme4::fixef(fm)),
   		       "fit_y" = lme4::fixef(fm)) %>%
-      mutate(Genotype = gsub("Genotype","",sapply(strsplit(coef,"\\:"),"[",1))) %>%
-      mutate(BioFraction=gsub("BioFraction","",sapply(strsplit(coef,"\\:"),"[",2)))
-    # combine module data and fitted values
-    df <- left_join(df, fit_df,by=c("Genotype","BioFraction"))
-    # again, insure factor order is correct
-    df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
-    df$BioFraction <- factor(df$BioFraction,
+    mutate(Genotype = gsub("Genotype","",sapply(strsplit(coef,"\\:"),"[",1))) %>%
+    mutate(BioFraction=gsub("BioFraction","",sapply(strsplit(coef,"\\:"),"[",2)))
+
+  # combine module data and fitted values
+  df <- left_join(df, fit_df,by=c("Genotype","BioFraction"))
+
+  # again, insure factor order is correct
+  df$Genotype <- factor(df$Genotype,levels=c("Control","Mutant"))
+  df$BioFraction <- factor(df$BioFraction,
   			   levels=c("F4","F5","F6","F7","F8","F9","F10"))
-    # Generate the plot
-    plot <- ggplot(df)
-    plot <- plot + aes(x = BioFraction)
-    plot <- plot + aes(y = scale_Intensity)
-    plot <- plot + aes(group = interaction(Genotype,Protein))
-    plot <- plot + aes(colour = Genotype)
-    plot <- plot + aes(shape = Genotype)
-    plot <- plot + aes(fill = Genotype)
-    plot <- plot + aes(shade = Genotype)
-    plot <- plot + geom_line(alpha=0.25)
-    plot <- plot + theme(legend.position = "none")
-    plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")"))
-    plot <- plot + ylab("Scaled Protein Intensity")
-    plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-    plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
-    plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
-    plot <- plot + theme(axis.text.x = element_text(family = "Arial"))
-    plot <- plot + theme(axis.text.y = element_text(color="black", size=11))
-    plot <- plot + theme(axis.text.y = element_text(angle = 0, hjust = 1)) 
-    plot <- plot + theme(axis.text.y = element_text(family = "Arial"))
-    plot <- plot + theme(panel.background = element_blank())
-    plot <- plot + theme(axis.line.x=element_line())
-    plot <- plot + theme(axis.line.y=element_line())
-    plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
-  			   linetype="dashed",alpha=1,size=0.75)
-    plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
-    return(plot)
+  
+  # Generate the plot
+  plot <- ggplot(df)
+  plot <- plot + aes(x = BioFraction)
+  plot <- plot + aes(y = scale_Intensity)
+  plot <- plot + aes(group = interaction(Genotype,Protein))
+  plot <- plot + aes(colour = Genotype)
+  plot <- plot + aes(shape = Genotype)
+  plot <- plot + aes(fill = Genotype)
+  plot <- plot + aes(shade = Genotype)
+  plot <- plot + geom_line(alpha=0.25)
+  plot <- plot + theme(legend.position = "none")
+  plot <- plot + ggtitle(paste0(path, " (n = ",nprots,")"))
+  plot <- plot + ylab("Scaled Protein Intensity")
+  plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
+  plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
+  plot <- plot + theme(axis.text.x = element_text(angle = 0, hjust = 1)) 
+  plot <- plot + theme(axis.text.x = element_text(family = "Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black", size=11))
+  plot <- plot + theme(axis.text.y = element_text(angle = 0, hjust = 1)) 
+  plot <- plot + theme(axis.text.y = element_text(family = "Arial"))
+  plot <- plot + theme(panel.background = element_blank())
+  plot <- plot + theme(axis.line.x=element_line())
+  plot <- plot + theme(axis.line.y=element_line())
+  plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
+ 			   linetype="dashed",alpha=1,size=0.75)
+  plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
+  return(plot)
 } #EOF
 
 mylist <- list()
@@ -328,5 +359,9 @@ for (path in names(multi_list)){
 }
 
 # save
-myfile <- file.path(root,"figs","Modules","split-complexes.pdf")
-ggsavePDF(mylist,myfile)
+if (save_results) {
+
+  myfile <- file.path(root,"figs","Modules","split-complexes.pdf")
+  ggsavePDF(mylist,myfile)
+
+}

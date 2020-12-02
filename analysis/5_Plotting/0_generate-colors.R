@@ -9,7 +9,7 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-part_file = "ne_surprise_partition"
+part_file = "ne_surprise_surprise_partition"
 
 NC_color = "#BEBEBE" # not clustered == "gray"
 
@@ -75,7 +75,9 @@ names(module_colors) <- names(modules)
 
 # Insure that M0 is gray and WASH community/module is #B86FAD
 module_colors["M0"] <- NC_color
+
 wash_module <- names(which(sapply(modules, function(x) swip %in% x)))
+
 module_colors[wash_module] <- mut_color
 
 # The reamining colors are random

@@ -10,8 +10,7 @@
 root = "~/projects/SwipProteomics"
 renv::load(root, quiet=TRUE)
 
-input_colors = "ne_surprise_colors"
-input_part = "ne_surprise_partition"
+input_part = "ne_surprise_surprise_partition"
 
 
 ## ---- Prepare the R environment
@@ -24,7 +23,6 @@ data(module_gof)
 data(sig_modules)
 data(msstats_prot)
 data(list=input_part) # partition
-data(list=input_colors) # module_colors
 
 # imports
 suppressPackageStartupMessages({
@@ -50,8 +48,7 @@ set_font("Arial", font_path=fontdir)
 ## ---- function 
 
 
-plotModule <- function(module, prots, msstats_prot, 
-		       module_colors, module_gof, title_color="black") {
+plotModule <- function(module, prots, msstats_prot, module_gof, title_color="black") {
 
   # color for Control condition
   wt_color = "#47b2a4"
@@ -143,7 +140,6 @@ plotModule <- function(module, prots, msstats_prot,
 modules <- split(names(partition),partition)[-1]
 names(modules) <- paste0("M",names(modules))
 
-stopifnot(all(names(modules) %in% names(module_colors)))
 
 message("\nGenerating profile plots of ", length(modules), " modules.")
 
@@ -153,8 +149,8 @@ doParallel::registerDoParallel(parallel::detectCores() -1)
 
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plotModule(module, prots=modules[[module]], msstats_prot, 
-		   module_colors, module_gof)
+	plotModule(module, prots=modules[[module]], 
+		   msstats_prot, module_gof)
 } #EOL
 names(plot_list) <- names(modules)
 

@@ -6,8 +6,8 @@
 
 ## ---- input
 
-input_part = "ne_surprise_partition"
-input_colors = "ne_surprise_colors"
+input_part = "ne_surprise_surprise_partition"
+input_colors = "ne_surprise_surprise_colors"
 
 
 ## ---- set-up the workspace
@@ -51,8 +51,10 @@ data(sig_prots)
 data(msstats_prot)
 data(module_colors)
 data(msstats_results)
-data(wash_interactome); wash_prots <- wash_interactome
+data(wash_interactome)
+#data(module_membership)
 
+wash_prots <- wash_interactome
 
 ## ---- Load networks in root/rdata
 
@@ -161,7 +163,7 @@ myfun <- function(graph, threshold, pclust=1.0, too_small=1) {
 } #EOF
 
 
-createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000) {
+createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
   # create a cytoscape graph of each module 
 
 	## define Cytoscape layout
@@ -174,8 +176,10 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	vids <- idx[!is.na(idx)]
 	subg <- igraph::induced_subgraph(graph, vids)
 
+	## NODE SIZE IS MODULE MEMBERSHIP
 	## set node size ~ hubbiness or importance in its subgraph
-	adjm <- as.matrix(as_adjacency_matrix(subg,attr="weight"))
+	#node_importance <- module_membership[[module]]
+	adjm <- as.matrix(as_adjacency_matrix(subg, attr="weight"))
 	namen <- names(V(subg))
 	node_importance <- apply(adjm,2,sum)
 	subg <- igraph::set_vertex_attr(subg, "size", value=node_importance[namen])
@@ -189,7 +193,7 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 	## find a suitable cutoff for thresholding the graph
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
 	is_single_component <- foreach(threshold=cutoffs) %dopar% {
-		myfun(subg, threshold, pclust = 0.80) 
+		myfun(subg, threshold, pclust = 0.95) 
 	} %>% unlist()
 
 	## define limit as max(cutoff) at which the graph is still connected
@@ -204,7 +208,7 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 
 	## write graph to file
 	# NOTE: This is faster than sending to cytoscape via
-	myfile <- paste0(subg_name,".gml")
+	myfile <- paste0(module,".gml")
 
 	igraph::write_graph(g, myfile, format = "gml")
 
@@ -257,29 +261,23 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
         params <- list("edge transparency", "weight", "c", 
 		       weight_range, c(155, 255))
         mapped_params[["EDGE_TRANSPARENCY"]] <- mapParam(params)
-
 	# NODE FILL
 	params <- list("node fill color","Color","p")
         mapped_params[["NODE_FILL_COLOR"]] <- mapParam(params)
-
 	# NODE LABEL
         params <- list("node label","Protein", "p")
         mapped_params[["NODE_LABEL"]] <- mapParam(params)
-
 	# EDGE TRANSPARENCY
 	params <- list("edge transparency", "weight", "c", 
 		       weight_range, c(155, 255))
 	mapped_params[["EDGE_TRANSPARENCY"]] <- mapParam(params)
-
 	# EDGE STROKE COLOR
         params <- list("edge stroke unselected paint", "weight", "c", 
 		       weight_range, edge_colors)
 	mapped_params[["EDGE_STROKE_UNSELECTED_PAINT"]] <- mapParam(params)
-
 	# NODE SIZE
 	params <- list("node size", "size", "c", size_range, c(35, 100))
 	mapped_params[["NODE_SIZE"]] <- mapParam(params)
-
 
 	## create a visual style
 	RCy3::createVisualStyle(style.name, defaults = visual_defaults, 
@@ -344,7 +342,6 @@ createCytoscapeGraph <- function(subg_name, netw_g, ppi_g, nodes, n_cutoffs=5000
 		RCy3::setNodeColorBypass(ns,new.colors="#BEBEBE")
 	}
 
-
 	## set bold border of BioID proteins
 	# FIXME: report error in setNodeBorderWidthBypass 
         # Error in .cyFinally(res) : object 'res' not found
@@ -377,7 +374,7 @@ for (module in names(modules)){
 
 	nodes <- modules[[module]]
 
-	createCytoscapeGraph(module, netw_g, ppi_g, nodes, n_cutoffs=5000)
+	createCytoscapeGraph(module, netw_g, ppi_g, nodes)
 
 	setTxtProgressBar(pbar, value = match(module,names(modules)))
 

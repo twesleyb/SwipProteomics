@@ -8,8 +8,9 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise_partition"
+input_part = "ne_surprise_surprise_partition"
 
+save_results = FALSE
 
 ## ---- Prepare the R environment
 
@@ -34,7 +35,7 @@ suppressPackageStartupMessages({
 ## ---- Function
 
 fitModule <- function(prots, msstats_prot) {
-  # fitting mixed-model to log2 relative Intensity
+  # fit mixed-model to log2 relative (scaled) Intensity
   fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
   # build list of input args for lmerTest
   lmer_args <- list()
@@ -81,44 +82,51 @@ results_df = bind_rows(results_list, .id="Module") %>%
 	arrange(Pvalue)
 
 # nSig modules
-m <- results_df %>% filter(Padjust < 0.05) %>% select(Module) %>% unlist(use.names=FALSE)
+m <- results_df %>% 
+	filter(Padjust < 0.05) %>% 
+	select(Module) %>% 
+	unlist(use.names=FALSE)
 
 message("n Sig Modules: ", length(m), " (Padjust < 0.05)")
 
 
 ## ---- save results
 
-# save sig modules
-sig_modules <- m
-myfile <- file.path(root,"data","sig_modules.rda")
-save(sig_modules, file=myfile,version=2)
+if (save_results) {
 
-# # write results to excel 
-
-# drop singular col -- there are none
-results_df$isSingular <- NULL
-
-# re-arrange column order
-results_df <- results_df %>% 
-	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
-
-# annotate candidate sig modules
-results_df$candidate <- results_df$percentControl > 1.10 | results_df$percentControl < 0.90
-results_df <- results_df %>% arrange(desc(candidate))
-
-results_list <- list()
-idx <- match(names(partition),gene_map$uniprot)
-df =  data.table(UniProt = names(partition), 
-		 Entrez = gene_map$entrez[idx],
-		 Symbol = gene_map$symbol[idx],
-		 Membership = partition)
-results_list[["Partition"]] <- df %>% arrange(Membership)
-results_list[["Module Results"]] <- results_df 
-
-res_file <- file.path(root,"tables","S4_SWIP-TMT_Module_Results.xlsx")
-write_excel(results_list, res_file)
-
-# save results as rda
-module_results <- results_df
-myfile <- file.path(root,"data","module_results.rda")
-save(module_results, file=myfile, version=2)
+  # save sig modules
+  sig_modules <- m
+  myfile <- file.path(root,"data","sig_modules.rda")
+  save(sig_modules, file=myfile,version=2)
+  
+  # # write results to excel 
+  
+  # drop singular col -- there are none
+  results_df$isSingular <- NULL
+  
+  # re-arrange column order
+  results_df <- results_df %>% 
+  	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
+  
+  # annotate candidate sig modules
+  results_df$candidate <- results_df$percentControl > 1.10 | results_df$percentControl < 0.90
+  results_df <- results_df %>% arrange(desc(candidate))
+  
+  results_list <- list()
+  idx <- match(names(partition),gene_map$uniprot)
+  df =  data.table(UniProt = names(partition), 
+  		 Entrez = gene_map$entrez[idx],
+  		 Symbol = gene_map$symbol[idx],
+  		 Membership = partition)
+  results_list[["Partition"]] <- df %>% arrange(Membership)
+  results_list[["Module Results"]] <- results_df 
+  
+  res_file <- file.path(root,"tables","S4_SWIP-TMT_Module_Results.xlsx")
+  write_excel(results_list, res_file)
+  
+  # save results as rda
+  module_results <- results_df
+  myfile <- file.path(root,"data","module_results.rda")
+  save(module_results, file=myfile, version=2)
+ 
+}

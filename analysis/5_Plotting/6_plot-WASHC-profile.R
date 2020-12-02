@@ -62,13 +62,14 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
 
-  df <- subdat %>% mutate(Intensity = 2^Abundance) %>% 
+  # prepare the data
+  df <- subdat %>% 
+	  mutate(Intensity = 2^Abundance) %>% 
+	  group_by(Protein) %>%
+	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
-	  summarize(med_Intensity = median(Intensity), 
-	          ymin = min(log2(Intensity)),
-	          ymax = max(log2(Intensity)),
-	          .groups="drop") %>% group_by(Protein) %>%
-	  mutate(scale_Intensity = scale01(log2(med_Intensity/sum(med_Intensity))))
+	  summarize(med_Intensity = median(rel_Intensity), .groups="drop") %>% 
+	  mutate(scale_Intensity = scale01(log2(med_Intensity)))
 
   # get module fitted data by fitting linear model to scaled Intensity
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
@@ -102,8 +103,6 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
   plot <- plot + aes(shape = Genotype)
   plot <- plot + aes(fill = Genotype)
   plot <- plot + aes(shade = Genotype)
-  #plot <- plot + aes(ymin=ymin)
-  #plot <- plot + aes(ymax=ymax)
   plot <- plot + geom_line(alpha=0.25)
   plot <- plot + theme(legend.position = "none")
   plot <- plot + ggtitle(paste0("WASH Complex ", "(n = ",nprots,")\n",r2_anno))

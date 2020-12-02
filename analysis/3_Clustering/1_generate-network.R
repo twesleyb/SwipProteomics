@@ -13,6 +13,7 @@ root <- "~/projects/SwipProteomics"
 alpha_param = 0.9
 diffusion_param = 1.0
 
+os_keep <- c(9606, 10116, 10090)
 
 ## ---- Output:
 # adjm.rda
@@ -91,6 +92,8 @@ entrez <- gene_map$entrez[idx]
 # given entrez, collect ppis from musInteractome
 ppi_df <- musInteractome %>% 
 	subset(osEntrezA %in% entrez & osEntrezB %in% entrez) %>% 
+	subset(Interactor_A_Taxonomy %in% os_keep) %>%
+	subset(Interactor_B_Taxonomy %in% os_keep) %>%
 	select(osEntrezA, osEntrezB)
 
 # map back to uniprot and cast to matrix for igraph

@@ -5,10 +5,15 @@
 # author: Tyler W Bradshaw
 
 ## ---- Optional parameters
+
+save_results = TRUE
+
 BF_alpha <- 0.05 # Significance threshold for GSEA enrichment
 
+
 ## ---- Input data in root/data
-input_part = "ne_surprise_partition"
+input_part = "ne_surprise_surprise_partition"
+
 
 ## ---- Set-up the workspace 
 
@@ -194,27 +199,27 @@ sig_dt %>% filter(idx) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 
-# sig modules
-#sig_dt %>% filter(Module %in% sig_modules) %>% 
-#	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
-#	knitr::kable()
 
 ## ---- save results
 
-# save sig_gsea as rda
-myfile <- file.path(root,"data","sig_gsea.rda")
-save(sig_gsea,file=myfile,version=2)
+if (save_results) {
 
-# save as rda
-module_gsea <- sig_dt
-myfile <- file.path(root, "data", "module_gsea.rda")
-save(module_gsea, file = myfile, version = 2)
+  # save sig_gsea as rda
+  myfile <- file.path(root,"data","sig_gsea.rda")
+  save(sig_gsea,file=myfile,version=2)
 
-# Save as excel
-idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
-sig_dt <- sig_dt[idx,] # sort by module
-tmp_df <- data.table(Pathway=names(gene_lists),
-		Entrez = sapply(gene_lists,paste,collapse=";"))
-tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
-myfile <- file.path(root,"tables","S6_SWIP-TMT_Module_GSEA.xlsx")
-write_excel(tmp_list,myfile)
+  # save as rda
+  module_gsea <- sig_dt
+  myfile <- file.path(root, "data", "module_gsea.rda")
+  save(module_gsea, file = myfile, version = 2)
+
+  # Save as excel
+  idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
+  sig_dt <- sig_dt[idx,] # sort by module
+  tmp_df <- data.table(Pathway=names(gene_lists),
+ 		  Entrez = sapply(gene_lists,paste,collapse=";"))
+  tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
+  myfile <- file.path(root,"tables","S6_SWIP-TMT_Module_GSEA.xlsx")
+  write_excel(tmp_list,myfile)
+
+}
