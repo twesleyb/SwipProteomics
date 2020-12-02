@@ -8,7 +8,6 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-#input_part = "ne_surprise_partition"
 input_part = "ne_surprise2_partition"
 
 save_results = TRUE
@@ -39,7 +38,7 @@ suppressPackageStartupMessages({
 fitModule <- function(prots, msstats_prot) {
 
   # fit mixed-model to log2 relative (scaled to sum) Intensity
-  fx <- log2(rel_Intensity) ~ 1 + Condition + (1|Protein)
+  fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
 
   # build list of input args for lmerTest
   lmer_args <- list()

@@ -6,7 +6,8 @@
 
 ## ---- inputs
 
-input_part <- "ne_surprise2_partition"
+#input_part <- "ne_surprise2_partition"
+input_part <- "ne_surprise_partition"
 save_results <- TRUE
 
 

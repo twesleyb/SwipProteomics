@@ -6,127 +6,14 @@
 
 ## ---- inputs
 
+#input_part = "ne_surprise_partition"
+#input_colors = "ne_surprise_colors"
+
 input_part = "ne_surprise2_partition"
 input_colors = "ne_surprise2_colors"
 
 
-## ---- set-up the workspace
-
-# load renv
-root <- "~/projects/SwipProteomics"
-renv::load(root, quiet=TRUE)
-
-# global imports
-suppressPackageStartupMessages({
-  library(RCy3) 
-  library(dplyr) 
-  library(igraph) 
-  library(data.table) 
-  library(doParallel)
-})
-
-
-# project functions and data
-devtools::load_all(root, quiet=TRUE)
-
-# project directories
-datadir <- file.path(root, "data")
-rdatdir <- file.path(root, "rdata")
-tabsdir <- file.path(root, "tables")
-
-# Output directory for cytoscape networks
-netwdir <- file.path(root,"figs","Networks")
-if (!dir.exists(netwdir)) {
-	dir.create(netwdir)
-}
-
-
-## ---- Load the data in root/data
-
-# Load the data from root/data
-data(gene_map)
-data(sig_prots)
-data(msstats_prot)
-data(msstats_results)
-data(wash_interactome)
-data(list=input_part)
-data(list=input_colors)
-wash_prots <- wash_interactome
-
-
-## ---- Load networks in root/rdata
-
-# adjm
-myfile <- file.path(root,"rdata","adjm.rda")
-load(myfile) 
-
-# ne_adjm
-myfile <- file.path(root,"rdata","ne_adjm.rda")
-load(myfile) 
-
-# ppi_adjm
-myfile <- file.path(root,"rdata","ppi_adjm.rda")
-load(myfile) 
-
-
-## ---- Create igraph graph to be passed to Cytoscape
-
-# create a list of all modules
-modules <- split(names(partition),partition)[-1] # drop M0
-names(modules) <- paste0("M",names(modules))
-
-# insure that matrices are in matching order
-check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
-if (!check) { stop("input adjacency matrices should be of matching dimensions") }
-
-# create igraph graph objects
-# NOTE: graph edge weight is enhanced(pearson.cor)
-netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
-				      weighted=TRUE)
-ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
-				     weighted=TRUE)
-
-
-# annotate graphs with protein NAMES
-proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
-netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
-proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
-ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
-
-
-## ---- annotate graphs with additional metadata
-
-# collect meta data from msstats_results as noa data.table
-tmp_dt <- data.table(Protein = names(V(netw_g)),
-		  Module = paste0("M",partition[names(V(netw_g))]))
-noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
-	filter(Contrast == "Mutant-Control")
-
-# add module colors
-noa$Color <- module_colors[noa$Module]
-
-stopifnot(!any(is.na(noa$Color)))
-
-# add WASH iBioID annotation
-noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
-
-# add sig prot annotations
-noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
-
-# NOTE: seems like all attributes should be strings to make it into Cytoscape
-# convert each col to character
-noa <- as.data.frame(apply(noa, 2, function(x) as.character(x)))
-
-# Loop to add node attributes to igraph netw_graph
-# NOTE: this can take a couple seconds
-for (i in c(1:ncol(noa))) {
-	namen <- colnames(noa)[i]
-	col_data <- setNames(noa[[i]],nm=noa$Protein)
-	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
-}
-
-
-## ---- function
+## ---- functions
 
 is_connected <- function(graph, threshold) {
   # a helper function that checks if graph is connnected at a 
@@ -350,6 +237,121 @@ createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes) {
 
 } #EOF
 
+
+## ---- set-up the workspace
+
+# load renv
+root <- "~/projects/SwipProteomics"
+renv::load(root, quiet=TRUE)
+
+# global imports
+suppressPackageStartupMessages({
+  library(RCy3) 
+  library(dplyr) 
+  library(igraph) 
+  library(data.table) 
+  library(doParallel)
+})
+
+
+# project functions and data
+devtools::load_all(root, quiet=TRUE)
+
+# project directories
+datadir <- file.path(root, "data")
+rdatdir <- file.path(root, "rdata")
+tabsdir <- file.path(root, "tables")
+
+# Output directory for cytoscape networks
+netwdir <- file.path(root,"figs","Networks")
+if (!dir.exists(netwdir)) {
+	dir.create(netwdir)
+}
+
+
+## ---- Load the data in root/data
+
+# Load the data from root/data
+data(gene_map)
+data(sig_prots)
+data(msstats_prot)
+data(msstats_results)
+data(wash_interactome)
+data(list=input_part)
+data(list=input_colors)
+wash_prots <- wash_interactome
+
+
+## ---- Load networks in root/rdata
+
+# adjm
+myfile <- file.path(root,"rdata","adjm.rda")
+load(myfile) 
+
+# ne_adjm
+myfile <- file.path(root,"rdata","ne_adjm.rda")
+load(myfile) 
+
+# ppi_adjm
+myfile <- file.path(root,"rdata","ppi_adjm.rda")
+load(myfile) 
+
+
+## ---- Create igraph graph to be passed to Cytoscape
+
+# create a list of all modules
+modules <- split(names(partition),partition)[-1] # drop M0
+names(modules) <- paste0("M",names(modules))
+
+# insure that matrices are in matching order
+check <- all(colnames(ne_adjm) == colnames(ppi_adjm))
+if (!check) { stop("input adjacency matrices should be of matching dimensions") }
+
+# create igraph graph objects
+# NOTE: graph edge weight is enhanced(pearson.cor)
+netw_g <- graph_from_adjacency_matrix(ne_adjm,mode="undirected",diag=FALSE,
+				      weighted=TRUE)
+ppi_g <- graph_from_adjacency_matrix(ppi_adjm,mode="undirected",diag=FALSE,
+				     weighted=TRUE)
+
+
+# annotate graphs with protein NAMES
+proteins <- toupper(gene_map$symbol[match(names(V(netw_g)),gene_map$uniprot)])
+netw_g <- set_vertex_attr(netw_g,"protein",value = proteins)
+proteins <- toupper(gene_map$symbol[match(names(V(ppi_g)),gene_map$uniprot)])
+ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
+
+
+## ---- annotate graphs with additional metadata
+
+# collect meta data from msstats_results as noa data.table
+tmp_dt <- data.table(Protein = names(V(netw_g)),
+		  Module = paste0("M",partition[names(V(netw_g))]))
+noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
+	filter(Contrast == "Mutant-Control")
+
+# add module colors
+noa$Color <- module_colors[noa$Module]
+
+stopifnot(!any(is.na(noa$Color)))
+
+# add WASH iBioID annotation
+noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
+
+# add sig prot annotations
+noa$sigprot <- as.numeric(noa$Protein %in% sig_prots)
+
+# NOTE: seems like all attributes should be strings to make it into Cytoscape
+# convert each col to character
+noa <- as.data.frame(apply(noa, 2, function(x) as.character(x)))
+
+# Loop to add node attributes to igraph netw_graph
+# NOTE: this can take a couple seconds
+for (i in c(1:ncol(noa))) {
+	namen <- colnames(noa)[i]
+	col_data <- setNames(noa[[i]],nm=noa$Protein)
+	netw_g <- set_vertex_attr(netw_g,namen,value=col_data[names(V(netw_g))])
+}
 
 
 ## ---- Create Cytoscape graphs
