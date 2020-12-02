@@ -93,3 +93,34 @@ message(paste("\nSaving colors."))
 namen <- paste0(gsub("partition","colors",part_file),".rda")
 myfile <- file.path(root,"data", namen)
 save(module_colors,file=myfile,version=2)
+
+
+################################################################################
+## save colors for ne_surprise2 partition
+################################################################################
+
+
+## ---- load the data
+
+data(ne_surprise2_partition); subpart <- partition
+
+data(ne_surprise_colors) # module_colors
+data(ne_surprise_partition) # partition
+
+
+## ---- color mapping
+
+# prepare module color vector
+part <- setNames(paste0("M",partition), nm = names(partition))
+prot_colors <- setNames(module_colors[part], nm = names(part))
+color_list <- split(prot_colors, subpart)
+new_colors <- sapply(color_list, function(x) (unique(x)))
+names(new_colors) <- paste0("M",names(new_colors))
+new_colors[["M0"]] <- "#BEBEBE" 
+module_colors <- unlist(new_colors)
+
+
+## ---- save
+
+myfile <- file.path(root,"data","ne_surprise2_colors.rda")
+save(module_colors, file=myfile, version=2)

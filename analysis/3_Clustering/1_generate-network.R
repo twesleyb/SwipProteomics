@@ -52,6 +52,8 @@ data(musInteractome)
 
 ## ---- create covariation network
 
+message("Generating covariation network...")
+
 dm <- msstats_prot %>% 
 	mutate(Intensity = 2^Abundance) %>% 
 	group_by(Protein) %>%

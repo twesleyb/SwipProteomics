@@ -8,10 +8,11 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-#input_part = "ne_surprise_surprise_partition"
-input_part = "ne_surprise_partition"
+#input_part = "ne_surprise_partition"
+input_part = "ne_surprise2_partition"
 
 save_results = TRUE
+
 
 ## ---- Prepare the R environment
 
@@ -36,23 +37,27 @@ suppressPackageStartupMessages({
 ## ---- Function
 
 fitModule <- function(prots, msstats_prot) {
-  # fit mixed-model to log2 relative (scaled) Intensity
-  fx <- log2(scale_Intensity) ~ 1 + Condition + (1|Protein)
+
+  # fit mixed-model to log2 relative (scaled to sum) Intensity
+  fx <- log2(rel_Intensity) ~ 1 + Condition + (1|Protein)
+
   # build list of input args for lmerTest
   lmer_args <- list()
   lmer_args[["formula"]] <- fx
-  # prepare the data
   lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 
 	  group_by(Protein) %>% mutate(Intensity = 2^Abundance) %>%
-	  mutate(scale_Intensity=Intensity/sum(Intensity))
+	  mutate(rel_Intensity=Intensity/sum(Intensity))
+
   # fit the model with some lmer control
   lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- do.call(lmerTest::lmer, lmer_args)
+
   # assess overall contrast and collect results
   LT <- getContrast(fm,"Mutant","Control")
   result <- lmerTestContrast(fm,LT) %>% 
 	  mutate(Contrast='Mutant-Control') %>% unique() %>% 
 	  mutate('nProts'=length(prots)) 
+
   return(result)
 } #EOF
 
@@ -71,6 +76,7 @@ message("k Modules: ", length(modules))
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
+# loop to do module-level analysis
 results_list <- foreach(module = names(modules)) %dopar% {
   fitModule(modules[[module]], msstats_prot)
 } # EOL
@@ -88,8 +94,6 @@ m <- results_df %>%
 	select(Module) %>% 
 	unlist(use.names=FALSE)
 
-message("n Sig Modules: ", length(m), " (Padjust < 0.05)")
-
 
 ## ---- save results
 
@@ -97,7 +101,8 @@ if (save_results) {
 
   # save sig modules
   sig_modules <- m
-  myfile <- file.path(root,"data","sig_modules.rda")
+  namen <- gsub("partition","sig_modules.rda",input_part) # e.g. ne_surprise2_S4[...].xlsx
+  myfile <- file.path(root,"data",namen)
   save(sig_modules, file=myfile,version=2)
   
   # # write results to excel 
@@ -107,27 +112,36 @@ if (save_results) {
   
   # re-arrange column order
   results_df <- results_df %>% 
-  	dplyr::select(Module, nProts, Contrast, log2FC, percentControl, SE, Tstatistic, Pvalue, FDR, Padjust, DF, S2)
+  	dplyr::select(Module, nProts, Contrast, log2FC, 
+			percentControl, SE, Tstatistic, 
+			Pvalue, FDR, Padjust, DF, S2)
   
   # annotate candidate sig modules
   results_df$candidate <- results_df$percentControl > 1.10 | results_df$percentControl < 0.90
   results_df <- results_df %>% arrange(desc(candidate))
-  
+
+  # list of results
   results_list <- list()
+
+  # data.frame describing network partition
   idx <- match(names(partition),gene_map$uniprot)
-  df =  data.table(UniProt = names(partition), 
+  df <-  data.table(UniProt = names(partition), 
   		 Entrez = gene_map$entrez[idx],
   		 Symbol = gene_map$symbol[idx],
   		 Membership = partition)
+
   results_list[["Partition"]] <- df %>% arrange(Membership)
   results_list[["Module Results"]] <- results_df 
   
-  res_file <- file.path(root,"tables","S4_SWIP-TMT_Module_Results.xlsx")
-  write_excel(results_list, res_file)
+  # save in root/tables
+  namen <- gsub("partition","S4_SWIP-TMT_Module_Results.xlsx",input_part)
+  myfile <- file.path(root,"tables",namen)
+  write_excel(results_list, myfile)
   
-  # save results as rda
+  # save results as rda in root/data
   module_results <- results_df
-  myfile <- file.path(root,"data","module_results.rda")
+  namen <- gsub("partition","module_results.rda",input_part) # e.g. ne_surprise2_module_results.rda
+  myfile <- file.path(root,"data", namen)
   save(module_results, file=myfile, version=2)
  
 }

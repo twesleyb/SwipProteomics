@@ -4,19 +4,11 @@
 # description: analysis of modules for GSE
 # author: Tyler W Bradshaw
 
-## ---- Optional parameters
+## ---- Input parameters
 
-# Significance threshold for GSEA enrichment
 BF_alpha <- 0.05 
-
-save_results = TRUE
-
-
-## ---- Input data in root/data
-#input_part = "ne_surprise_surprise_partition"
-input_part = "ne_surprise_partition"
-#input_part = "cpm1_partition"
-
+save_results <- TRUE
+input_part <- "ne_surprise_partition"
 
 ## ---- Set-up the workspace 
 
@@ -52,7 +44,7 @@ tabsdir <- file.path(root, "tables")
 # Load the gene lists from twesleyb/geneLists
 # FIXME: geneLists need Pubmed IDs!
 data(list = "corum") # CORUM protein complexes [1]
-data(list = "lopitDCpredictions") # Predicted subcellular locations from Geledaki. [2]
+data(list = "lopitDCpredictions") # protein predicted subcellular loc [2]
 data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. [3]
 data(list = "ePSD") # Uezu et al., 2016 [4]
 data(list = "iPSD") # Uezu et al., 2016 [5]
@@ -85,7 +77,7 @@ names(lopitDCpredictions) <- paste("LopitDC:", names(lopitDCpredictions))
 # Clean-up corum names
 names(corum) <- paste("CORUM:", names(corum))
 
-# Clean-up Takamori et al pathway names
+# Clean-up Takamori et al. pathway names
 names(takamori2006SV) <- paste("Takamori et al., 2006:", names(takamori2006SV))
 
 # Clean-up iPSD names
@@ -177,7 +169,7 @@ for (experiment in names(gene_lists)) {
 close(pbar)
 
 
-## ----Collect the results in a single data.table
+## ---- Collect the results in a single data.table
 
 dt <- bind_rows(results)
 
@@ -187,6 +179,7 @@ sig_dt <- dt %>% filter(Padjust < BF_alpha) %>%
 
 
 ## ---- status
+
 m <- length(unique(sig_dt$Module))
 M <- length(modules)
 message(m, " of ", M, " modules exhibit some significant GSE.")
@@ -208,21 +201,24 @@ sig_dt %>% filter(idx) %>%
 if (save_results) {
 
   # save sig_gsea as rda
-  myfile <- file.path(root,"data","sig_gsea.rda")
+  namen <- gsub("partition","sig_gsea.rda",input_part)
+  myfile <- file.path(root,"data", namen)
   save(sig_gsea,file=myfile,version=2)
 
   # save as rda
   module_gsea <- sig_dt
-  myfile <- file.path(root, "data", "module_gsea.rda")
+  namen <- gsub("partition","module_gsea.rda",input_part)
+  myfile <- file.path(root, "data", namen)
   save(module_gsea, file = myfile, version = 2)
 
-  # Save as excel
+  # save as excel
   idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
   sig_dt <- sig_dt[idx,] # sort by module
   tmp_df <- data.table(Pathway=names(gene_lists),
  		  Entrez = sapply(gene_lists,paste,collapse=";"))
   tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
-  myfile <- file.path(root,"tables","S6_SWIP-TMT_Module_GSEA.xlsx")
+  namen <- gsub("partition","S6_SWIP-TMT_Module_GSEA.xlsx",input_part)
+  myfile <- file.path(root,"tables", namen)
   write_excel(tmp_list,myfile)
 
-}
+} # EIS

@@ -4,10 +4,10 @@
 # description: generate cytoscape networks for each module
 # author: Tyler W Bradshaw
 
-## ---- input
+## ---- inputs
 
-input_part = "ne_surprise_partition"
-input_colors = "ne_surprise_colors"
+input_part = "ne_surprise2_partition"
+input_colors = "ne_surprise2_colors"
 
 
 ## ---- set-up the workspace
@@ -44,17 +44,15 @@ if (!dir.exists(netwdir)) {
 ## ---- Load the data in root/data
 
 # Load the data from root/data
-data(list=input_part)
-
 data(gene_map)
 data(sig_prots)
 data(msstats_prot)
-data(module_colors)
 data(msstats_results)
 data(wash_interactome)
-#data(module_membership)
-
+data(list=input_part)
+data(list=input_colors)
 wash_prots <- wash_interactome
+
 
 ## ---- Load networks in root/rdata
 
@@ -107,6 +105,8 @@ noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>%
 # add module colors
 noa$Color <- module_colors[noa$Module]
 
+stopifnot(!any(is.na(noa$Color)))
+
 # add WASH iBioID annotation
 noa$isWASH <- as.numeric(noa$Protein %in% wash_prots)
 
@@ -126,7 +126,7 @@ for (i in c(1:ncol(noa))) {
 }
 
 
-## ---- functions 
+## ---- function
 
 is_connected <- function(graph, threshold) {
   # a helper function that checks if graph is connnected at a 
@@ -163,7 +163,7 @@ myfun <- function(graph, threshold, pclust=1.0, too_small=1) {
 } #EOF
 
 
-createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
+createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes) {
   # create a cytoscape graph of each module 
 
 	## define Cytoscape layout
@@ -176,19 +176,17 @@ createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	vids <- idx[!is.na(idx)]
 	subg <- igraph::induced_subgraph(graph, vids)
 
-	## NODE SIZE IS MODULE MEMBERSHIP
 	## set node size ~ hubbiness or importance in its subgraph
-	#node_importance <- module_membership[[module]]
 	adjm <- as.matrix(as_adjacency_matrix(subg, attr="weight"))
 	namen <- names(V(subg))
 	node_importance <- apply(adjm,2,sum)
 	subg <- igraph::set_vertex_attr(subg, "size", value=node_importance[namen])
 
 	## Seq from min(edge weight) to max() to generate cutoffs
-	n_edges <- length(E(subg))
+	#n_edges <- length(E(subg))
 	min_weight <- min(E(subg)$weight)
 	max_weight <- max(E(subg)$weight)
-	cutoffs <- seq(min_weight, max_weight, length.out = n_cutoffs)
+	cutoffs <- seq(min_weight, max_weight, length.out = 5000)
 
 	## find a suitable cutoff for thresholding the graph
 	doParallel::registerDoParallel(parallel::detectCores() - 1)
@@ -203,8 +201,6 @@ createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	## prune edges
 	# NOTE: This removes all edge types connecting two nodes
 	g <- delete.edges(subg, which(E(subg)$weight <= weight_limit))
-	n_edges <- length(E(g)) # final number of edges
-	n_comp <- igraph::count_components(g)
 
 	## write graph to file
 	# NOTE: This is faster than sending to cytoscape via
@@ -214,7 +210,7 @@ createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
 
 	stopifnot(file.exists(myfile))
 
-	# Send to Cytoscape
+	# send to Cytoscape
 	# NOTE: underscores in attribute names are removed
 	# NOTE: if you keep getting errors with keys -- make sure they are there!
         # FIXME: this is OS specific!
@@ -301,8 +297,7 @@ createCytoscapeGraph <- function(module, netw_g, ppi_g, nodes, n_cutoffs=5000) {
 	## we add edges like this bc Cytoscape really only supports 1 type of
 	## edge in a graph. We manually add additional PPI edges to create a
 	## network with both co-variation and ppi edges.
-	## NOTE: this can take a couple minutes if there is a large number of
-	## ppis
+	## NOTE: this can take several minutes if there are a large number of PPIs
 	if (length(edge_list) > 0) {
 		ppi_edges <- RCy3::addCyEdges(edge_list)
 		# add PPIs and set to black

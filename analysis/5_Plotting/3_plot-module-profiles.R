@@ -159,5 +159,6 @@ names(plot_list) <- names(modules)
 
 message("\nSaving plots as a single pdf.")
 
-myfile <- file.path(figsdir,"module_profiles.pdf")
+namen <- gsub("partition", "module_profiles.pdf", input_part)
+myfile <- file.path(figsdir, namen)
 ggsavePDF(plot_list,myfile)
