@@ -33,11 +33,11 @@ n_iterations = -1  # Not the number of recursive iterations, but the number
 # of optimization iterations.
 
 ## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
+recursive = False # If module_size > max_size, then cluster recursively.
 recursive_method = 'Surprise'
 
 # Prefix out output partition, saved as .csv.
-output_name = 'ne_surprise2' 
+output_name = 'ne_surprise' 
 
 ## Output:
 # Saved in root/rdata/

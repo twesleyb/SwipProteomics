@@ -4,11 +4,6 @@
 # author: twab
 # description: generate some gof statistics for protein-wise models
 
-## ---- options
-
-# R2 conditional (total) threshold for defining proteins with poor fit
-r2_threshold = 0.70
-
 
 ## ---- prepare the env
 root = "~/projects/SwipProteomics"
@@ -130,38 +125,13 @@ protein_gof %>% head() %>% knitr::kable()
 # highly spatially cohesive proteins
 protein_gof %>% arrange(desc(BioFraction)) %>% head() %>% knitr::kable()
 
-
-## ---- identify proteins with poor fit 
-
-# use overall R2 -- the percent of variance explained by the model as a natural
-# description of the overall quality of the fit
-message("\nR2.total threshold: ", r2_threshold)
-
-# Summary
-total <- length(unique(protein_gof$Protein))
-out <- sum(protein_gof$R2.total < 0.7)
-percent <- round(out/total,3)
-final <- total-out
-cbind(r2_threshold, out, percent, total,final) %>% knitr::kable()
-
-# proteins with R2 less than threshold are poor_prots
-poor_prots <- protein_gof$Protein[protein_gof$R2.total < r2_threshold]
-message("\nNumber of proteins with poor fit: ", 
-	formatC(length(poor_prots),big.mark=","))
-
-# we can examine these models
-
-# wash prots
+# examine wash prots
 message("\nWASHC* protein goodness-of-fit statistics:")
 protein_gof %>% filter(Protein %in% mapID("Washc*")) %>% knitr::kable()
 
 
 ## ---- save results
 
-# save character vector of poor_prots
-myfile <- file.path(root,"data","poor_prots.rda")
-save(poor_prots,file=myfile,version=2)
-  
 # save protein_gof data.table as rda --> used to annotate plots
 myfile <- file.path(root,"data","protein_gof.rda")
 save(protein_gof, file=myfile, version=2)

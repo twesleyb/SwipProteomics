@@ -54,12 +54,6 @@ plotModule <- function(module, prots, msstats_prot, module_gof, title_color="bla
   wt_color = "#47b2a4"
   mut_color = "#b671af"
 
-  # plot title annot
-  #r2 <- module_gof %>% filter(Module == module) %>% 
-  #	  select(R2.fixef, R2.total) %>% as.numeric()
-  #title_anno <- paste(paste0(c("(R2_fixef = ","(R2_fixef = "), 
-  #			     round(r2,3),")"),collapse=" ")
-
   # Subset
   subdat <- msstats_prot %>% subset(Protein %in% prots)
 

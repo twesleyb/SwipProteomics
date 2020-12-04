@@ -59,23 +59,24 @@ modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
 
 # coerce tidy data to a matrix
-# summarize three replicates as median
 dm <- msstats_prot %>% 
 	filter(Protein %in% names(partition)) %>%
 	mutate(Intensity = 2^Abundance) %>%
 	group_by(Protein) %>%
 	mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
-	group_by(Protein, Condition) %>% 
-	summarize(scale_Intensity = log2(median(rel_Intensity)),.groups="drop") %>%
-	reshape2::dcast(Protein ~ Condition, value.var= "scale_Intensity") %>%
+	reshape2::dcast(Protein ~ Mixture + Condition, value.var= "rel_Intensity") %>%
 	as.data.table() %>% as.matrix(rownames="Protein")
 
 # Drop un-clustered proteins
 idx <- rownames(dm) %in% modules[["M0"]]
 filt_dm <- dm[!idx,]
 
+# insure there are no missing vals
+idx <- apply(dm, 1, function(x) any(is.na(x)))
+filt_dm <- dm[!idx,]
+
 # do pca
-pca <- prcomp(filt_dm)
+pca <- prcomp(log2(filt_dm))
 pca_summary <- as.data.frame(t(summary(pca)$importance))
 
 # get top 2 components

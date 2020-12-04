@@ -87,26 +87,14 @@ results_df = bind_rows(results_list, .id="Module") %>%
 	mutate(Padjust = p.adjust(Pvalue,method="bonferroni")) %>% 
 	arrange(Pvalue)
 
-# nSig modules
-m <- results_df %>% 
-	filter(Padjust < 0.05) %>% 
-	select(Module) %>% 
-	unlist(use.names=FALSE)
-
 
 ## ---- save results
 
 if (save_results) {
 
-  # save sig modules
-  sig_modules <- m
-  namen <- gsub("partition","sig_modules.rda",input_part) # e.g. ne_surprise2_S4[...].xlsx
-  myfile <- file.path(root,"data",namen)
-  save(sig_modules, file=myfile,version=2)
+  # write results to excel 
   
-  # # write results to excel 
-  
-  # drop singular col -- there are none
+  # drop singular col 
   results_df$isSingular <- NULL
   
   # re-arrange column order
@@ -118,6 +106,9 @@ if (save_results) {
   # annotate candidate sig modules
   results_df$candidate <- results_df$percentControl > 1.05 | results_df$percentControl < 0.95
   results_df <- results_df %>% arrange(desc(candidate))
+  
+  # summary
+  message("n Sig modules: ", sum(results_df$candidate))
 
   # list of results
   results_list <- list()
