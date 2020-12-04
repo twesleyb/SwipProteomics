@@ -227,18 +227,19 @@ results_list <- results_list[idx]
 
 class(results_list) <- "list"
 
+# summarize results
 lapply(results_list, summarize, sum(FDR<0.05)) %>% 
 	bind_rows(.id="Contrast") %>% knitr::kable()
 
-lapply(results_list, summarize, sum(Padjust<0.05)) %>% 
-	bind_rows(.id="Contrast") %>% knitr::kable()
 
-# save as excel document
+## ---- save results 
+
+# save results as excel document
 myfile <- file.path(root,"tables","S2-SWIP_MSstatsTMT_Results.xlsx")
 write_excel(results_list,myfile)
 
 
-## ---- save results as rda in root/data
+## save data in root/data
 
 # save msstats_prot -- the normalized protein data
 myfile <- file.path(root, "data", "msstats_prot.rda")

@@ -6,9 +6,8 @@
 
 ## ---- Input parameters
 
-BF_alpha <- 0.05 
 save_results <- TRUE
-#input_part <- "ne_surprise_partition"
+BF_alpha <- 0.05 # thresh for sig GSE
 input_part <- "ne_surprise2_partition"
 
 ## ---- Set-up the workspace 

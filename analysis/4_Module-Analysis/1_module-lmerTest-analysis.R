@@ -8,7 +8,7 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise2_partition"
+input_part = "ne_surprise_partition"
 
 save_results = TRUE
 
@@ -116,7 +116,7 @@ if (save_results) {
 			Pvalue, FDR, Padjust, DF, S2)
   
   # annotate candidate sig modules
-  results_df$candidate <- results_df$percentControl > 1.10 | results_df$percentControl < 0.90
+  results_df$candidate <- results_df$percentControl > 1.05 | results_df$percentControl < 0.95
   results_df <- results_df %>% arrange(desc(candidate))
 
   # list of results
