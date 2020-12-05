@@ -222,3 +222,26 @@ if (save_results) {
   write_excel(tmp_list,myfile)
 
 } # EIS
+
+
+quit()
+
+## 
+
+
+uniprot <- lapply(lopitDCpredictions,getIDs,'entrez','uniprot','mouse')
+lopit_prots <- sapply(uniprot, function(x) as.character(x[!is.na(x)]))
+names(lopit_prots) <- gsub("LopitDC: ","",names(lopit_prots))
+peroxisome <- lopit_prots[["PEROXISOME"]]
+
+data(ne_surprise2_partition)
+
+x = partition[peroxisome]
+table(x[!is.na(x)])
+
+partition[mapID('Pex6')]
+
+
+
+
+

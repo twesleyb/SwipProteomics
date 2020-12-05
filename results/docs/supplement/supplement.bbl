@@ -1,0 +1,96 @@
+\begin{thebibliography}{9}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\urlprefix}{}
+\providecommand{\doiprefix}{doi: }
+
+\bibitem[{Bates et~al.(2015)Douglas Bates and Martin Mächler and Ben Bolker
+  and Steve Walker}]{Bates2015}
+\textbf{\color{eLifeMediumGrey} Bates D}, Mächler M, Bolker B, Walker S.
+\newblock Fitting Linear Mixed-Effects Models Usinglme4.
+\newblock Journal of Statistical Software.  2015; 67(1).
+\newblock \urlprefix\url{https://doi.org/10.18637%2Fjss.v067.i01},
+  \href{10.18637/jss.v067.i01}{\doiprefix \detokenize{10.18637/jss.v067.i01}}.
+
+\bibitem[{Geladaki et~al.(2019)Aikaterini Geladaki and Nina Ko{\v{c}}evar
+  Britov{\v{s}}ek and Lisa M. Breckels and Tom S. Smith and Owen L. Vennard and
+  Claire M. Mulvey and Oliver M. Crook and Laurent Gatto and Kathryn S.
+  Lilley}]{Geladaki2019}
+\textbf{\color{eLifeMediumGrey} Geladaki A}, Britov{\v{s}}ek NK, Breckels LM,
+  Smith TS, Vennard OL, Mulvey CM, Crook OM, Gatto L, Lilley KS.
+\newblock Combining {LOPIT} with differential ultracentrifugation for
+  high-resolution spatial proteomics.
+\newblock Nature Communications.  2019 jan; 10(1).
+\newblock \urlprefix\url{https://doi.org/10.1038%2Fs41467-018-08191-w},
+  \href{10.1038/s41467-018-08191-w}{\doiprefix
+  \detokenize{10.1038/s41467-018-08191-w}}.
+
+\bibitem[{Huang et~al.(2020)Ting Huang and Meena Choi and Manuel Tzouros and
+  Sabrina Golling and Nikhil Janak Pandya and Balazs Banfai and Tom Dunkley and
+  Olga Vitek}]{Huang2020}
+\textbf{\color{eLifeMediumGrey} Huang T}, Choi M, Tzouros M, Golling S, Pandya
+  NJ, Banfai B, Dunkley T, Vitek O.
+\newblock {MSstatsTMT}: Statistical Detection of Differentially Abundant
+  Proteins in Experiments with Isobaric Labeling and Multiple Mixtures.
+\newblock Molecular {\&} Cellular Proteomics.  2020 Jul; 19(10):1706--1723.
+\newblock \urlprefix\url{https://doi.org/10.1074/mcp.ra120.002105},
+  \href{10.1074/mcp.ra120.002105}{\doiprefix
+  \detokenize{10.1074/mcp.ra120.002105}}.
+
+\bibitem[{Kuznetsova et~al.(2017)Alexandra Kuznetsova and Per B. Brockhoff and
+  Rune H. B. Christensen}]{Kuznetsova2017}
+\textbf{\color{eLifeMediumGrey} Kuznetsova A}, Brockhoff PB, Christensen RHB.
+\newblock {lmerTest} Package: Tests in Linear Mixed Effects Models.
+\newblock Journal of Statistical Software.  2017; 82(13).
+\newblock \urlprefix\url{https://doi.org/10.18637/jss.v082.i13},
+  \href{10.18637/jss.v082.i13}{\doiprefix \detokenize{10.18637/jss.v082.i13}}.
+
+\bibitem[{McCarthy et~al.(2012)Davis J. McCarthy and Yunshun Chen and Gordon K.
+  Smyth}]{McCarthy2012}
+\textbf{\color{eLifeMediumGrey} McCarthy DJ}, Chen Y, Smyth GK.
+\newblock Differential expression analysis of multifactor {RNA}-Seq experiments
+  with respect to biological variation.
+\newblock Nucleic Acids Research.  2012 jan; 40(10):4288--4297.
+\newblock \urlprefix\url{https://doi.org/10.1093%2Fnar%2Fgks042},
+  \href{10.1093/nar/gks042}{\doiprefix \detokenize{10.1093/nar/gks042}}.
+
+\bibitem[{Nakagawa and Schielzeth(2012)Shinichi Nakagawa and Holger
+  Schielzeth}]{Nakagawa2012}
+\textbf{\color{eLifeMediumGrey} Nakagawa S}, Schielzeth H.
+\newblock A general and simple method for {obtainingR}2from generalized linear
+  mixed-effects models.
+\newblock Methods in Ecology and Evolution.  2012 dec; 4(2):133--142.
+\newblock \urlprefix\url{https://doi.org/10.1111%2Fj.2041-210x.2012.00261.x},
+  \href{10.1111/j.2041-210x.2012.00261.x}{\doiprefix
+  \detokenize{10.1111/j.2041-210x.2012.00261.x}}.
+
+\bibitem[{Plubell et~al.(2017)Deanna L. Plubell and Phillip A. Wilmarth and
+  Yuqi Zhao and Alexandra M. Fenton and Jessica Minnier and Ashok P. Reddy and
+  John Klimek and Xia Yang and Larry L. David and Nathalie Pamir}]{Plubell2017}
+\textbf{\color{eLifeMediumGrey} Plubell DL}, Wilmarth PA, Zhao Y, Fenton AM,
+  Minnier J, Reddy AP, Klimek J, Yang X, David LL, Pamir N.
+\newblock Extended Multiplexing of Tandem Mass Tags ({TMT}) Labeling Reveals
+  Age and High Fat Diet Specific Proteome Changes in Mouse Epididymal Adipose
+  Tissue.
+\newblock Molecular {\&} Cellular Proteomics.  2017 Mar; 16(5):873--890.
+\newblock \urlprefix\url{https://doi.org/10.1074/mcp.m116.065524},
+  \href{10.1074/mcp.m116.065524}{\doiprefix
+  \detokenize{10.1074/mcp.m116.065524}}.
+
+\bibitem[{Traag et~al.(2019)V. A. Traag and L. Waltman and N. J. van
+  Eck}]{Traag2019}
+\textbf{\color{eLifeMediumGrey} Traag VA}, Waltman L, van Eck NJ.
+\newblock From Louvain to Leiden: guaranteeing well-connected communities.
+\newblock Scientific Reports.  2019 mar; 9(1).
+\newblock \urlprefix\url{https://doi.org/10.1038%2Fs41598-019-41695-z},
+  \href{10.1038/s41598-019-41695-z}{\doiprefix
+  \detokenize{10.1038/s41598-019-41695-z}}.
+
+\bibitem[{Wang and Merkle(2018)Ting Wang and Edgar C. Merkle}]{WangMerkle2018}
+\textbf{\color{eLifeMediumGrey} Wang T}, Merkle EC.
+\newblock {merDeriv}: Derivative Computations for Linear Mixed Effects Models
+  with Application to Robust Standard Errors.
+\newblock Journal of Statistical Software.  2018; 87(Code Snippet 1).
+\newblock \urlprefix\url{https://doi.org/10.18637%2Fjss.v087.c01},
+  \href{10.18637/jss.v087.c01}{\doiprefix \detokenize{10.18637/jss.v087.c01}}.
+
+\end{thebibliography}

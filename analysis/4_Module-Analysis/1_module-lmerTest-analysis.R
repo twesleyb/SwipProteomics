@@ -104,7 +104,8 @@ if (save_results) {
 			Pvalue, FDR, Padjust, DF, S2)
   
   # annotate candidate sig modules
-  results_df$candidate <- results_df$percentControl > 1.05 | results_df$percentControl < 0.95
+  results_df <- results_df %>% 
+	  mutate(candidate = Padjust < 0.05 & (percentControl > 1.05 | percentControl < 0.95))
   results_df <- results_df %>% arrange(desc(candidate))
   
   # summary

@@ -20,7 +20,6 @@ datafile = "BioID_raw_protein.csv"
 ## Output in root/data:
 # * wash_interactome.rda -- the WASH iBioID proteome (sig enriched prots)
 
-
 ## ---- renv
 
 root <- "~/projects/SwipProteomics"
@@ -310,13 +309,19 @@ data(mitocarta2)
 
 # map entrez to uniprot
 mito_entrez <- unlist(mitocarta2, use.names=FALSE)
-mito_prot <- getPPIs::getIDs(mito_entrez, from="entrez", to="uniprot", 
-			     species="mouse")
+hand_anno_mito <- c("Mtres1", "Gcdh", "Clpx", "Pdk3", "Mrps36","Hscb",
+	  "Aldh2","Shmt2","Ciapin1","Ssbp1","Bckdha","Dap3")
+mito <- c(mito_entrez, 
+	  getPPIs::getIDs(hand_anno_mito, 'symbol', 'entrez', 'mouse'))
 
-nMito <- sum(mito_prot %in% tidy_prot$Accession)
+# add some manually currated  mito prots
+tidy_prot <- tidy_prot <- tidy_prot %>% 
+	mutate(Entrez = getPPIs::getIDs(Accession,'uniprot','entrez','mouse'))
+
+nMito <- sum(mito %in% tidy_prot$Entrez)
 warning(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
 
-tidy_prot <- tidy_prot %>% dplyr::filter(Accession %notin% mito_prot)
+tidy_prot <- tidy_prot %>% dplyr::filter(Entrez %notin% mito)
 nProt <- length(unique(tidy_prot$Accession))
 
 message(paste0("\nTotal number of proteins quantified: ",
@@ -503,10 +508,10 @@ for (prot in proteins) {
 # collect results
 results_df <- dplyr::bind_rows(result_list,.id="Protein")
 
-# p.adjust
+# calc FDR
 results_df <- results_df %>% mutate(FDR = p.adjust(Pvalue, method="BH"))
 
-# sig and up
+# anno with sig and up
 results_df <- results_df %>% 
 	mutate(up = log2FC > enrichment_threshold) %>% 
 	mutate(sig = FDR < FDR_alpha) %>%
@@ -525,6 +530,7 @@ results_df <- results_df %>%
 
 # summary
 data.table("nSig"=sum(results_df$candidate)) %>% knitr::kable()
+
 
 ## ---- save results
 bioid_results <- results_df
