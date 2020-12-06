@@ -9,6 +9,7 @@
 save_results <- TRUE
 BF_alpha <- 0.05 # thresh for sig GSE
 input_part <- "ne_surprise2_partition"
+#input_part <- "ne_surprise_partition"
 
 ## ---- Set-up the workspace 
 
@@ -30,6 +31,7 @@ devtools::load_all(root, quiet = TRUE)
 data(list=input_part)
 
 data(gene_map)
+data(endosome)
 data(sig_prots)
 data(sig_modules)
 data(msstats_prot)
@@ -86,6 +88,9 @@ names(iPSD) <- paste("Uezu et al., 2016:", names(iPSD))
 # Clean-up ePSD names
 names(ePSD) <- paste("Uezu et al., 2016:", names(ePSD))
 
+# map endosome uniprot to entrez
+endo <- list("UniProt: Endosome" = mapID(endosome,"uniprot","entrez"))
+
 # Collect list of entrez ids for pathways of interest
 gene_lists <- c(
   list("WASH-iBioID" = wash_genes), # 1
@@ -95,7 +100,7 @@ gene_lists <- c(
   takamori2006SV, # 5
   iPSD, # 6
   ePSD, # 7
-  sig_prots
+  endo # endosome
 )
 
 # Remove lists with less than 3 proteins
@@ -171,6 +176,7 @@ close(pbar)
 
 ## ---- Collect the results in a single data.table
 
+
 dt <- bind_rows(results)
 
 # only sig + enriched results:
@@ -184,10 +190,6 @@ m <- length(unique(sig_dt$Module))
 M <- length(modules)
 message(m, " of ", M, " modules exhibit some significant GSE.")
 
-# modules that are enriched for sig_prots
-sig_gsea <- sig_dt %>% filter(Pathway == "SigProts") %>% 
-	select(Module) %>% unlist() %>% unique()
-
 # modules with sig lopitDC enrichment
 message("Modules enriched for LopitDC subcellular compartments:")
 idx <- grepl("LopitDC", sig_dt$Pathway)
@@ -195,15 +197,15 @@ sig_dt %>% filter(idx) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 
+# modules with endosome enrichment
+sig_dt %>% filter(grepl("Endosome",Pathway)) %>%
+	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	knitr::kable()
+
 
 ## ---- save results
 
 if (save_results) {
-
-  # save sig_gsea as rda
-  namen <- gsub("partition","sig_gsea.rda",input_part)
-  myfile <- file.path(root,"data", namen)
-  save(sig_gsea,file=myfile,version=2)
 
   # save as rda
   module_gsea <- sig_dt
@@ -222,26 +224,3 @@ if (save_results) {
   write_excel(tmp_list,myfile)
 
 } # EIS
-
-
-quit()
-
-## 
-
-
-uniprot <- lapply(lopitDCpredictions,getIDs,'entrez','uniprot','mouse')
-lopit_prots <- sapply(uniprot, function(x) as.character(x[!is.na(x)]))
-names(lopit_prots) <- gsub("LopitDC: ","",names(lopit_prots))
-peroxisome <- lopit_prots[["PEROXISOME"]]
-
-data(ne_surprise2_partition)
-
-x = partition[peroxisome]
-table(x[!is.na(x)])
-
-partition[mapID('Pex6')]
-
-
-
-
-

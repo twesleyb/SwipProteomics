@@ -1,10 +1,8 @@
 #!/usr/bin/env Rscript
 
-#' ---
-#' title: Swip Proteomics Plotting
-#' description: Plot an overview of the network.
-#' authors: Tyler W Bradshaw
-#' ---
+# title: Swip Proteomics Plotting
+# description: Plot an overview of the network.
+# authors: Tyler W Bradshaw
 
 ## ---- input 
 root <- "~/projects/SwipProteomics"
@@ -23,39 +21,44 @@ suppressPackageStartupMessages({
 	library(grid)
 })
 
+# library(SwipProteomics)
 devtools::load_all()
 
-# Set plotting theme.
-set_font("Arial",font_path=file.path(root,"fonts"))
+# Set plotting theme
+set_font("Arial", font_path=file.path(root,"fonts"))
 
 # Load the data
 data(msstats_prot)
 data(ne_surprise_partition)
 
-# Summarize key module statistics
+# summarize key module statistics
 n_nodes <- formatC(length(unique(msstats_prot$Protein)),big.mark=",")
 n_modules <- length(unique(partition))-1 # M0 is not a module
 p_clustered <- round(100*sum(partition!=0)/length(partition),2)
 median_size <- median(sapply(split(partition,partition)[-1],length))
 
+# make a data.frame
 df <- data.table("Nodes" = n_nodes,
 		 "Modules" = n_modules,
 		 "Percent Clustered" = p_clustered,
 		 "Median Module Size" = median_size)
 
-# Create table.
+# create table
 gtab <- tableGrob(df, rows=NULL, theme=ttheme_default())
 
-# Save.
-myfile <- file.path(root,"figs","Networks","Network_Summary.pdf")
-ggsaveTable(gtab,myfile)
+# Save
+#myfile <- file.path(root,"figs","Networks","Network_Summary.pdf")
+#ggsaveTable(gtab,myfile)
 
 
 
+###############################################################################
+# live action
 
 data(swip)
 data(msstats_results)
-df = msstats_results %>% filter(Protein == swip) %>% filter(Contrast == 'Mutant-Control')
+df = msstats_results %>% 
+	filter(Protein == swip) %>% filter(Contrast == 'Mutant-Control')
 
 df %>% tibble::add_column(percentControl = 2^df$log2FC, .after="log2FC")
 
@@ -68,23 +71,33 @@ df = df %>% dplyr::select(-Padjust, -Entrez)
 gtab <- tableGrob(df, rows=NULL, theme=ttheme_default())
 plot(gtab)
 
+data(ne_surprise2_module_results)
 
-m = "M310"
+###############################################################################
+## ---- create a table
+#data(ne_surprise_module_results)
+data(ne_surprise2_module_results)
+
+##
+
+data(swip)
+#data(msstats_results)
+
+m = "M55"
 df = module_results %>% filter(Module == m)
-colnames(df)[colnames(df)=="nProts"] <- "n"
+#df = msstats_results %>% filter(Protein == swip) %>%  filter(Contrast=='Mutant-Control')
+#colnames(df)[colnames(df)=="nProts"] <- "n"
 df = df %>% dplyr::mutate(Pvalue = formatC(Pvalue,digits=3))
 df = df %>% dplyr::mutate(SE = formatC(SE,digits=3))
-df = df %>% dplyr::mutate(percentControl = formatC(percentControl,digits=3))
+df = df %>% dplyr::mutate(percentControl = formatC(2^log2FC,digits=3))
 df = df %>% dplyr::mutate(Padjust = formatC(Padjust,digits=3))
 df = df %>% dplyr::mutate(DF = formatC(DF,big.mark=","))
 df = df %>% dplyr::mutate(log2FC = formatC(log2FC,digits=3))
 df = df %>% dplyr::mutate(S2 = formatC(S2,digits=3))
 df = df %>% dplyr::mutate(Tstatistic = formatC(Tstatistic,digits=3))
-df = df %>% select(Contrast, log2FC, Tstatistic, DF, Padjust)
+df = df %>% dplyr::select(Contrast, log2FC, Tstatistic, DF, Padjust)
 gtab <- tableGrob(df, rows=NULL, theme=ttheme_default())
-ggsaveTable(gtab,"tab.pdf")
-
-plot(gtab)
+ggsaveTable(gtab,paste0(m,".pdf"))
 
 
 data(ne_surprise2_partition)
@@ -114,36 +127,35 @@ lmerTestContrast(fm, LT) %>% mutate(Contrast = "Mutant-Control") %>%
 
 ###############################################################################
 ## THESE STATISTICS MATCH WHAT WE PLOT
+###############################################################################
 
 data(washc_prots)
+data(msstats_prot)
 
-## Input
-m = "M310"
-#prots <- washc_prots
-prots <- modules[[m]]
-data.table(nProts = length(prots)) %>% knitr::kable()
+## ---- input
+m = 216
+prots <- names(partition[partition==m])
+
+## ---- fun
+cleanRes <- function(data) {
+	data %>% dplyr::mutate(Contrast = 'Mutant-Control') %>% 
+		unique()
+}
+
 
 lmer_args <- list()
 lmer_args[["formula"]] <- log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
 lmer_args[["data"]] <- msstats_prot %>% subset(Protein %in% prots) %>% 
-	mutate(Intensity = 2^Abundance) %>%
-	group_by(Protein) %>%
-	mutate(rel_Intensity = Intensity / sum (Intensity) )
+	dplyr::mutate(Intensity = 2^Abundance) %>%
+	dplyr::group_by(Protein) %>%
+	dplyr::mutate(rel_Intensity = Intensity / sum (Intensity) )
 fm <- do.call(lmerTest::lmer, lmer_args)
-#summary(fm, ddf="Satterthwaite")
+
 LT <- getContrast(fm, "Mutant","Control")
 res <- lmerTestContrast(fm, LT) %>% cleanRes() 
+
 res %>% knitr::kable()
 
-cleanRes <- function(data) {
-	data %>% mutate(Contrast = 'Mutant-Control') %>% 
-		unique()
-}
-
-qqnorm(residuals(fm))
-qqline(residuals(fm))
-
-r.squaredGLMM.merMod(fm)
 
 ## i fear the the variance estimate for protein may be shrunk
 
