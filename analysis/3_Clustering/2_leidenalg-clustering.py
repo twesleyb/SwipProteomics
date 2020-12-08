@@ -9,39 +9,34 @@ authors: Tyler W A Bradshaw
 
 ## ---- Input
 
+root = "~/projects/SwipProteomics"
+
 # There is only one piece of input data, an input NxN adjacency matrix saved as
 # a csv file in  root/rdata/. 
 adjm_file = 'ne_adjm.csv' 
 
-## Output
-# * a partition of the network saved in root/rdata
+# Optimization methods:
+optimization_method = recursive_method = 'Surprise'
+recursive = True  # If module_size > max_size, then cluster recursively.
+output_name = 'ne_surprise' # Prefix out output partition, saved as .csv.
 
-## Project root:
-root = "~/projects/SwipProteomics"
-
-## NOTE: some params may not be used if not required by optimization_method
-
-## Parameters for multiresolution methods:
+# Parameters for multiresolution methods:
 rmin = 1 # Min resolution for multi-resolution methods.
 rmax = 1 # Max resolution for multi-resolution methods.
 nsteps = 1 # Number of steps to take between rmin and rmax.
 max_size = 100 # Maximum allowable size of a module.
 
-## General optimization methods:
-optimization_method = 'Surprise'
-n_iterations = -1  # Not the number of recursive iterations, but the number
+## Optimization parameters
+# Not the number of recursive iterations, but the number
 # of optimization iterations.
+n_iterations = -1  
 
-## Recursive option:
-recursive = True # If module_size > max_size, then cluster recursively.
-recursive_method = 'Surprise'
-
-# Prefix out output partition, saved as .csv.
-output_name = 'ne_surprise' 
-
-## Output:
+## Output
 # Saved in root/rdata/
 # [output_name]_partitions.csv
+# * a partition of the network saved in root/rdata
+
+## NOTE: some params may not be used if not required by optimization_method
 
 
 ## ---- Prepare the workspace

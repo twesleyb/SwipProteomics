@@ -16,9 +16,10 @@ diffusion_param = 1.0
 
 ## ---- Output:
 
-# adjm.rda
-# ne_adjm.rda
-# ne_adjm.csv --> for leidenalg clustering!
+# * adjm.rda
+# * ne_adjm.rda
+
+# * ne_adjm.csv --> for leidenalg clustering!
 
 # NOTE: large ouput files saved in root/rdata bc too big to be tracked by git
 
@@ -40,13 +41,8 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(neten) # twesleyb/neten
   library(igraph)
-  library(getPPIs) # twesleyb/getPPIs
   library(data.table)
 })
-
-
-# load mouse PPIs compiled from HitPredict
-data(musInteractome) 
 
 
 ## ---- create covariation network
@@ -102,7 +98,8 @@ filt_dm <- dm[!idx,]
 
 
 ## calculate coorrelation matrix
-adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
+adjm <- WGCNA::bicor(t(filt_dm), use="all.obs")
+#adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
