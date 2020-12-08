@@ -5,6 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
+#input_part <- "ne_surprise2_partition.csv"
 input_part <- "ne_surprise_partition.csv"
 
 ## output is [input_part].rda
@@ -50,3 +51,4 @@ message("Total number of modules: ", length(unique(part))-1)
 partition <- part
 myfile <- file.path(root,"data", output_part)
 save(partition, file = myfile, version = 2)
+message("saved: ", myfile)

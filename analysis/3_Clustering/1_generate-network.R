@@ -7,13 +7,6 @@
 ## ---- Input:
 root <- "~/projects/SwipProteomics"
 
-# * msstats_prot and other R data in root/data
-
-# network enhancement params
-alpha_param = 0.9
-diffusion_param = 1.0
-
-
 ## ---- Output:
 
 # * adjm.rda
@@ -61,32 +54,32 @@ message("Generating covariation network...")
 #	as.matrix(rownames="Protein")
 
 # summarize median of three mixtures
-dm <- msstats_prot %>%  
-	group_by(Protein, Condition) %>%
-	summarize(med_Abundance = median(Abundance),
-		  .groups="drop") %>% 
-	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
-	as.data.table() %>%
-	as.matrix(rownames="Protein")
+#dm <- msstats_prot %>%  
+#	group_by(Protein, Condition) %>%
+#	summarize(med_Abundance = median(Abundance),
+#		  .groups="drop") %>% 
+#	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein")
 
 #dm <- msstats_prot %>%  
 #	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
 #	as.data.table() %>%
 #	as.matrix(rownames="Protein")
 
-# do the naughty thing number 1
+# impute missing vals
 #data_knn = impute::impute.knn(dm)
 #dm_knn = data_knn$data
 #dm=dm_knn
 
-# do the naughty thing number 2
-#data(swip_tmt)
+# try old data
+data(swip_tmt)
 
-#dm <- swip_tmt %>%  
-#	reshape2::dcast(Protein ~ Sample, value.var = "Intensity") %>% 
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein") %>%
-#	log2()
+dm <- swip_tmt %>% 
+	mutate(Abundance = log2(Intensity)) %>%
+	reshape2::dcast(Protein ~ Sample, value.var = "Abundance") %>% 
+	as.data.table() %>%
+	as.matrix(rownames="Protein")
 
 
 # there are a small number proteins with some missing vals 
@@ -98,15 +91,17 @@ filt_dm <- dm[!idx,]
 
 
 ## calculate coorrelation matrix
-adjm <- WGCNA::bicor(t(filt_dm), use="all.obs")
-#adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
+#adjm <- WGCNA::bicor(t(filt_dm), use="all.obs")
+adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
 
+message("Performing network enhancement")
+
 #ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
-ne_adjm <- neten(adjm)
+ne_adjm <- neten(adjm) # result is robust to neten parameters
 
 
 ## ---- save network

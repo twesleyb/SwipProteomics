@@ -6,8 +6,11 @@
 
 ## ---- Input parameters
 
-input_part <- "ne_surprise_partition"
 #input_part <- "ne_surprise2_partition"
+#input_results <- "ne_surprise2_module_results"
+
+input_part <- "ne_surprise_partition"
+input_results <- "ne_surprise_module_results"
 
 BF_alpha <- 0.05 
 FE_threshold <- 2
@@ -33,6 +36,7 @@ devtools::load_all(root, quiet = TRUE)
 # load the data from root/data
 
 data(list=input_part)
+data(list=input_results)
 
 data(gene_map)
 data(sig_prots)
@@ -48,19 +52,19 @@ tabsdir <- file.path(root, "tables")
 
 # Load the gene lists from twesleyb/geneLists
 # FIXME: geneLists need Pubmed IDs!
-data(list = "corum") # CORUM protein complexes [1]
-data(list = "lopitDCpredictions") # protein predicted subcellular loc [2]
-data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. [3]
 data(list = "ePSD") # Uezu et al., 2016 [4]
 data(list = "iPSD") # Uezu et al., 2016 [5]
+data(list = "corum") # CORUM protein complexes [1]
+data(list = "takamori2006SV") # presynaptic proteome from Takamori et al. [3]
 data(list = "uniprotSubcell") # uniprot subcellular anno for network prots
+data(list = "lopitDCpredictions") # protein predicted subcellular locations [2]
+
+
+## ---- Do work 
 
 # Add retriever complex
 # Retriever complex from McNally et al., 2017. [6]
 retriever <- c("Vps35l", "Vps26c", "Vps29")
-
-
-## ---- Do work 
 
 # get entrez ids for retriever prots
 names(retriever) <- gene_map$entrez[match(retriever, gene_map$symbol)]
@@ -112,7 +116,6 @@ gene_lists <- gene_lists[-idx]
 
 # these are the pathways
 #sapply(gene_lists,length) %>% knitr::kable()
-
 
 # Loop to perform GSE for each pathway
 message("\nPerforming GSE analysis for all modules:")
@@ -205,6 +208,14 @@ sig_dt %>% filter(idx) %>%
 # modules with uniprot enrichment
 sig_dt %>% filter(grepl("Uniprot",Pathway)) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	knitr::kable()
+
+# sig modules (lmerTest)
+sig_modules <- unique(module_results$Module[module_results$candidate])
+sig_dt %>% 
+	subset(Module %in% sig_modules) %>%
+	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	arrange(as.numeric(gsub("M","",Module))) %>%
 	knitr::kable()
 
 

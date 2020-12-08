@@ -112,3 +112,4 @@ data.table::fwrite(ppi_dt, myfile)
 # ppi adjm
 myfile <- file.path(root,"rdata","ppi_adjm.rda")
 save(ppi_adjm, file=myfile,version=2)
+message("saved: ", myfile)

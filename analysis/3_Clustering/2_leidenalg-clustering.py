@@ -17,7 +17,7 @@ adjm_file = 'ne_adjm.csv'
 
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
-recursive = True  # If module_size > max_size, then cluster recursively.
+recursive = False  # If module_size > max_size, then cluster recursively.
 output_name = 'ne_surprise' # Prefix out output partition, saved as .csv.
 
 # Parameters for multiresolution methods:
@@ -294,3 +294,4 @@ for i in range(len(profile)):
 # save the data as csv
 myfile = os.path.join(rdatdir, output_name + "_partition.csv")
 df.to_csv(myfile)
+print("saved: {}".format(myfile), file=stderr)
