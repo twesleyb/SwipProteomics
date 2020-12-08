@@ -13,11 +13,10 @@ root <- "~/projects/SwipProteomics"
 alpha_param = 0.9
 diffusion_param = 1.0
 
-os_keep <- c(9606, 10116, 10090)
 
 ## ---- Output:
+
 # adjm.rda
-# ppi_adjm.rda
 # ne_adjm.rda
 # ne_adjm.csv --> for leidenalg clustering!
 
@@ -54,23 +53,53 @@ data(musInteractome)
 
 message("Generating covariation network...")
 
+#dm <- msstats_prot %>%  
+#	mutate(Intensity = 2^Abundance) %>% 
+#	group_by(Protein) %>%
+#	mutate(scale_Intensity = Intensity/sum(Intensity)) %>%
+#	group_by(Protein, Condition) %>%
+#	summarize(med_Intensity = log2(median(scale_Intensity)),
+#		  .groups="drop") %>% 
+#	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein")
+
+# summarize median of three mixtures
 dm <- msstats_prot %>%  
-	mutate(Intensity = 2^Abundance) %>% 
-	group_by(Protein) %>%
-	mutate(scale_Intensity = Intensity/sum(Intensity)) %>%
 	group_by(Protein, Condition) %>%
-	summarize(med_Intensity = log2(median(scale_Intensity)),
+	summarize(med_Abundance = median(Abundance),
 		  .groups="drop") %>% 
-	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
+	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
+
+#dm <- msstats_prot %>%  
+#	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein")
+
+# do the naughty thing number 1
+#data_knn = impute::impute.knn(dm)
+#dm_knn = data_knn$data
+#dm=dm_knn
+
+# do the naughty thing number 2
+#data(swip_tmt)
+
+#dm <- swip_tmt %>%  
+#	reshape2::dcast(Protein ~ Sample, value.var = "Intensity") %>% 
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein") %>%
+#	log2()
+
 
 # there are a small number proteins with some missing vals 
 # e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
 # remove these proteins
-idx1 <- apply(dm,1,function(x) any(is.na(x)))
-warning(sum(idx1)," proteins with any missing values are removed.")
-filt_dm <- dm[!idx1,]
+idx <- apply(dm,1,function(x) any(is.na(x)))
+warning(sum(idx)," proteins with any missing values are removed.")
+filt_dm <- dm[!idx,]
+
 
 ## calculate coorrelation matrix
 adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
@@ -79,62 +108,11 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
 
-ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
+#ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
+ne_adjm <- neten(adjm)
 
 
-## ---- create ppi network
-
-# NOTE: PPIs are NOT used to identify communities
-
-# map uniprot to entrez
-uniprot <- colnames(adjm)
-idx <- match(uniprot,gene_map$uniprot)
-entrez <- gene_map$entrez[idx]
-
-# given entrez, collect ppis from musInteractome
-ppi_df <- musInteractome %>% 
-	subset(osEntrezA %in% entrez & osEntrezB %in% entrez) %>% 
-	subset(Interactor_A_Taxonomy %in% os_keep) %>%
-	subset(Interactor_B_Taxonomy %in% os_keep) %>%
-	select(osEntrezA, osEntrezB)
-
-# map back to uniprot and cast to matrix for igraph
-idx <- match(ppi_df$osEntrezA,gene_map$entrez)
-idy <- match(ppi_df$osEntrezB,gene_map$entrez)
-ppi_dm <- ppi_df %>% 
-	mutate(ProtA = gene_map$uniprot[idx], ProtB = gene_map$uniprot[idy]) %>%
-	select(ProtA,ProtB) %>% as.matrix()
-
-# create igraph graph
-g <- igraph::graph_from_edgelist(ppi_dm, directed=FALSE)
-
-# simplify (weight=0,1) and get the adjacency matrix
-ppi_adjm <- as.matrix(igraph::as_adjacency_matrix(igraph::simplify(g)))
-
-# collect proteins that are missing
-missing_prots <- colnames(adjm)[colnames(adjm) %notin% colnames(ppi_adjm)]
-# these proteins are unconnected^, but we include them in the ppi_adjm so the
-# networks have matching vertex sets
-
-# add missing cols
-tmp_cols <- matrix(0, nrow=nrow(ppi_adjm),ncol=length(missing_prots))
-colnames(tmp_cols) <- missing_prots
-rownames(tmp_cols) <- rownames(ppi_adjm)
-tmp_dm <- cbind(ppi_adjm,tmp_cols)
-
-# add missing rows
-tmp_rows <- matrix(0, nrow=length(missing_prots),ncol=ncol(tmp_dm))
-colnames(tmp_rows) <- colnames(tmp_dm)
-rownames(tmp_rows) <- missing_prots
-
-# full(ppi)_adjm
-full_adjm <- rbind(tmp_dm,tmp_rows)
-
-# sort rows and cols to match adjm
-ppi_adjm <- full_adjm[colnames(adjm),rownames(adjm)]
-
-
-## ---- save networks
+## ---- save network
 
 # coerce to data.table and write to file
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")
@@ -146,11 +124,6 @@ ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
 data.table::fwrite(ne_adjm_dt, myfile)
 
-# coerce to data.table and write to file
-ppi_dt <- as.data.table(ppi_adjm,keep.rownames="Protein")
-myfile <- file.path(root,"rdata","ppi_adjm.csv")
-data.table::fwrite(ppi_dt, myfile)
-
 
 ## ---- save as rda
 
@@ -161,7 +134,3 @@ save(adjm, file=myfile,version=2)
 # ne adjm
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 save(ne_adjm, file=myfile,version=2)
-
-# ppi adjm
-myfile <- file.path(root,"rdata","ppi_adjm.rda")
-save(ppi_adjm, file=myfile,version=2)

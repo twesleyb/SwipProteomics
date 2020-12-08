@@ -8,7 +8,8 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise_partition"
+#input_part = "ne_surprise_partition"
+input_part = "ne_surprise2_partition"
 
 save_results = TRUE
 

@@ -6,32 +6,35 @@
 
 ## ---- Input parameters
 
+input_part <- "ne_surprise_partition"
+#input_part <- "ne_surprise2_partition"
+
+BF_alpha <- 0.05 
+FE_threshold <- 2
 save_results <- TRUE
-BF_alpha <- 0.05 # thresh for sig GSE
-input_part <- "ne_surprise2_partition"
-#input_part <- "ne_surprise_partition"
+
 
 ## ---- Set-up the workspace 
 
-# Load renv
+# load renv
 root <- "~/projects/SwipProteomics"
 renv::load(root, quiet = TRUE)
 
-# Global imports
+# imports
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
   library(geneLists) # for gene lists (pathways) and hyperTest function
 })
 
-# Load functions in root/R and data in root/data
+# load functions in root/R and data in root/data
 devtools::load_all(root, quiet = TRUE)
 
-# Load the data from root/data
+# load the data from root/data
+
 data(list=input_part)
 
 data(gene_map)
-data(endosome)
 data(sig_prots)
 data(sig_modules)
 data(msstats_prot)
@@ -50,6 +53,7 @@ data(list = "lopitDCpredictions") # protein predicted subcellular loc [2]
 data(list = "takamori2006SV") # Presynaptic proteome from Takamori et al. [3]
 data(list = "ePSD") # Uezu et al., 2016 [4]
 data(list = "iPSD") # Uezu et al., 2016 [5]
+data(list = "uniprotSubcell") # uniprot subcellular anno for network prots
 
 # Add retriever complex
 # Retriever complex from McNally et al., 2017. [6]
@@ -88,9 +92,6 @@ names(iPSD) <- paste("Uezu et al., 2016:", names(iPSD))
 # Clean-up ePSD names
 names(ePSD) <- paste("Uezu et al., 2016:", names(ePSD))
 
-# map endosome uniprot to entrez
-endo <- list("UniProt: Endosome" = mapID(endosome,"uniprot","entrez"))
-
 # Collect list of entrez ids for pathways of interest
 gene_lists <- c(
   list("WASH-iBioID" = wash_genes), # 1
@@ -100,7 +101,7 @@ gene_lists <- c(
   takamori2006SV, # 5
   iPSD, # 6
   ePSD, # 7
-  endo # endosome
+  uniprotSubcell 
 )
 
 # Remove lists with less than 3 proteins
@@ -108,6 +109,10 @@ part_entrez <- setNames(partition,
 			nm=mapID(names(partition),"uniprot","entrez"))
 idx <- which(sapply(gene_lists, function(x) sum(x %in% names(part_entrez))<3))
 gene_lists <- gene_lists[-idx]
+
+# these are the pathways
+#sapply(gene_lists,length) %>% knitr::kable()
+
 
 # Loop to perform GSE for each pathway
 message("\nPerforming GSE analysis for all modules:")
@@ -176,12 +181,12 @@ close(pbar)
 
 ## ---- Collect the results in a single data.table
 
-
-dt <- bind_rows(results)
+# collect results
+dt <- dplyr::bind_rows(results)
 
 # only sig + enriched results:
 sig_dt <- dt %>% filter(Padjust < BF_alpha) %>% 
-	filter(`Fold enrichment` > 1) 
+	filter(`Fold enrichment` > FE_threshold) 
 
 
 ## ---- status
@@ -197,8 +202,8 @@ sig_dt %>% filter(idx) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 
-# modules with endosome enrichment
-sig_dt %>% filter(grepl("Endosome",Pathway)) %>%
+# modules with uniprot enrichment
+sig_dt %>% filter(grepl("Uniprot",Pathway)) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 

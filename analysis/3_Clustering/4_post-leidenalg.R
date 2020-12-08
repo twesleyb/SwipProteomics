@@ -24,9 +24,12 @@ suppressPackageStartupMessages({
 
 
 ## ---- load partition
+
 myfile <- file.path(root,"rdata",input_part)
 df <- data.table::fread(myfile,drop=1)
-partition_list <- unlist(apply(df,1,function(x) list(x)),recursive=F,use.names=F)
+
+partition_list <- unlist(apply(df,1,function(x) list(x)),
+			 recursive=FALSE, use.names=FALSE)
 
 # add 1 bc python is 0-based 
 part <- partition_list[[1]] + 1
