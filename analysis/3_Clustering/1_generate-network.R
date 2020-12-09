@@ -27,7 +27,7 @@ devtools::load_all(root, quiet=TRUE)
 
 # load data in root/data
 data(gene_map)
-data(msstats_prot)
+data(swip_tmt)
 
 # imports
 suppressPackageStartupMessages({
@@ -42,7 +42,6 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-# try old data
 data(swip_tmt)
 
 dm <- swip_tmt %>% 

@@ -13,9 +13,6 @@ zip_file = "TMT.zip"
 input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
 
-## OPTIONS:
-fig_height = 5.0 # in
-fig_width = 5.0 # in
 FDR_alpha = 0.05 # FDR threshold for differential abundance
 
 
@@ -220,7 +217,6 @@ irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 # biological replicates.
 message(paste("\nAccounting for experimental batch effect by",
 	      "performing sample pool normalization."))
-
 spn_protein <- normSP(irs_protein,pool=c("Control","Mutant"))
 
 # Check, the mean of sample pool and biological replicates are now equal.
@@ -274,11 +270,12 @@ swip_tmt <- filt_protein %>%
 	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Intensity,Abundance)
 
 
-## ---- statistical analysis with linear mixed models
+## ---- statistical analysis for overall Mutant-Controll contrast
 
-
+# register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() - 1)
 
+# loop through all proteins
 proteins <- unique(swip_tmt$Protein)
 results_list <- foreach(prot = proteins) %dopar% {
   fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
@@ -304,15 +301,14 @@ df <- dplyr::bind_rows(results_list) %>%
 	dplyr::select(Protein,Symbol,Entrez,Contrast,log2FC,percentControl,SE,Tstatistic,Pvalue,DF,S2,FDR,Padjust,isSingular)
 
 
+# check washc prot results
 washc_prots <- gene_map$uniprot[grepl("Washc*",gene_map$symbol)]
 df %>% filter(Protein %in% washc_prots) %>% 
 	mutate(FDR=formatC(FDR)) %>% 
 	mutate(Padjust=formatC(Padjust)) %>% 
 	knitr::kable()
 
-
-lmer_results <- list()
-lmer_results[["Mutant-Control"]] <- df
+mut_wt_results <- df
 
 
 ## ---- intra-BioFraction statistical analysis
@@ -350,37 +346,56 @@ results_list <- foreach(prot = proteins) %dopar% {
 } #EOL
 
 
-## ---- collect and clean-up results for all intra-Biofraction comparisons
+## ---- collect results for all intra-Biofraction comparisons
 
 # collect results
 df <- dplyr::bind_rows(results_list) %>%
 	group_by(Contrast) %>% 
-	mutate(FDR = p.adjust(Pvalue,method="BH"))
-
+	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>% 
+	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
+	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
+	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
+	dplyr::select(Protein,Symbol,Entrez,Contrast,log2FC,percentControl,SE,Tstatistic,Pvalue,DF,S2,FDR,Padjust,isSingular)
 
 # collect as named list
 results <- df %>% group_by(Contrast) %>% group_split()
 names(results) <- sapply(results,function(x) unique(x$Contrast))
-
 
 # shorten names
 namen <- names(results)
 shorter <- gsub("ConditionMutant\\.F[0-9]{1,2}-|ConditionControl\\.","",namen)
 names(results) <- shorter 
 
+# sort and combine with overall Mutant-Control results
+all_results <- results[biofractions]
+class(all_results) <- "list"
+all_results[["Mutant-Control"]] <- mut_wt_results
 
 # summary of sig results
-sapply(results,function(x) sum(x$FDR<0.05))[biofractions] %>% 
+sapply(all_results,function(x) sum(x$FDR<FDR_alpha)) %>% 
 	t() %>% knitr::kable()
 
-# sort and save as excel
-myfile <- file.path(root,"rdata","SWIP_TMT_Protein_Results.xlsx")
-write_excel(results[biofractions], myfile)
+swip_results <-  do.call(rbind, all_results)
 
 
 ## ----  Save key results
 
-# Save tidy_protein (final normalized protein in tidy format) as rda object
+# save results as rda
+myfile <- file.path(root,"data","swip_results.rda")
+save(swip_results,file=myfile,version=2)
+message("saved: ", myfile)
+
+# write as excel
+myfile <- file.path(root,"tables","SWIP_TMT_Protein_Results.xlsx")
+write_excel(all_results, myfile)
+message("wrote: ", myfile)
+
+# final normalized protein in tidy format as rda object
 myfile <- file.path(datadir,"swip_tmt.rda")
 save(swip_tmt,file=myfile,version=2)
+message("saved: ", myfile)
+
+# save gene_map
+myfile <- file.path(datadir,"gene_map.rda")
+save(gene_map,file=myfile,version=2)
 message("saved: ", myfile)

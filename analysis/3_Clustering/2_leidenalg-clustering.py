@@ -18,7 +18,7 @@ adjm_file = 'ne_adjm.csv'
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
 recursive = False  # If module_size > max_size, then cluster recursively.
-output_name = 'alt' # Prefix out output partition, saved as .csv.
+output_name = 'swip' # Prefix out output partition, saved as .csv.
 
 # Parameters for multiresolution methods:
 rmin = 1 # Min resolution for multi-resolution methods.

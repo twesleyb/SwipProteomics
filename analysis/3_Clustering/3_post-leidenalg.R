@@ -5,8 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-#input_part <- "ne_surprise2_partition.csv"
-input_part <- "alt_partition.csv"
+input_part <- "swip_partition.csv"
 
 ## output is [input_part].rda
 output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")

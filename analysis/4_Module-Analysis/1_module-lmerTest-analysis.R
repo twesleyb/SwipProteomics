@@ -8,7 +8,7 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise2_partition"
+input_part = "swip_partition"
 
 
 ## ---- Prepare the R environment
@@ -19,9 +19,9 @@ renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
-data(gene_map) # gene_map
-data(msstats_prot) # msstats_prot
-data(list=input_part) # partition
+data(gene_map) 
+data(swip_tmt) 
+data(list=input_part) 
 
 # imports
 suppressPackageStartupMessages({
@@ -32,6 +32,9 @@ suppressPackageStartupMessages({
 
 
 ## ---- Function
+
+# fit mixed-model to log2 relative (scaled to sum) Intensity
+fx <-  log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
 
 fitModule <- function(prots, tidy_prot, fx) {
   # build list of input args for lmerTest
@@ -61,13 +64,9 @@ message("k Modules: ", length(modules))
 
 ## ---- loop to fit module-level models and assess contrast
 
-tidy_prot <- msstats_prot %>% 
-	mutate(Intensity = 2^Abundance) %>%
+tidy_prot <- swip_tmt %>% 
 	group_by(Protein) %>% 
 	mutate(rel_Intensity=Intensity/sum(Intensity))
-
-# fit mixed-model to log2 relative (scaled to sum) Intensity
-fx <-  log2(rel_Intensity) ~ 0 + Condition + (1|Protein)
 
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
@@ -86,9 +85,6 @@ results_df <- bind_rows(results_list, .id="Module") %>%
 
 
 ## ---- save results
-
-
-# write results to excel 
 
 # drop singular col 
 results_df$isSingular <- NULL
@@ -117,6 +113,7 @@ df <-  data.table(UniProt = names(partition),
 	 Symbol = gene_map$symbol[idx],
 	 Membership = partition)
 
+# results list:
 results_list[["Partition"]] <- df %>% arrange(Membership)
 results_list[["Module Results"]] <- results_df 
 
@@ -124,14 +121,17 @@ results_list[["Module Results"]] <- results_df
 namen <- gsub("partition","S4_SWIP-TMT_Module_Results.xlsx",input_part)
 myfile <- file.path(root,"tables",namen)
 write_excel(results_list, myfile)
+message("wrote :", myfile)
 
 # save results as rda in root/data
 module_results <- results_df
 namen <- gsub("partition","module_results.rda",input_part) # e.g. ne_surprise2_module_results.rda
 myfile <- file.path(root,"data", namen)
 save(module_results, file=myfile, version=2)
+message("saved :", myfile)
 
 # save sig modules
 sig_modules <- module_results$Module[module_results$candidate]
 myfile <- file.path(root,"data", "sig_modules.rda")
 save(sig_modules, file=myfile, version=2)
+message("saved :", myfile)
