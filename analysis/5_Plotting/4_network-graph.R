@@ -7,8 +7,8 @@
 ## ---- inputs
 
 root = "~/projects/SwipProteomics"
-input_part <- "ne_surprise_partition"
-input_colors <- "ne_surprise_colors"
+input_part <- "swip_partition"
+input_colors <- "swip_colors"
 
 
 ## ---- functions
@@ -79,11 +79,11 @@ sub_adjm <- ne_adjm[!idx,!idx]
 
 # Threshold the graph
 
-# By manual search the 'best' threshold is ...
-#is_connected(maskAdjm(sub_adjm, threshold = 38.77))
+#uBy manual search the 'best' threshold is ...
+is_connected(maskAdjm(sub_adjm, threshold = 29.38))
 
 # Create igraph graph from thresholded adjm
-threshold = 125
+threshold = 29.38
 
 adjm <- maskAdjm(sub_adjm, threshold)
 g <- graph_from_adjacency_matrix(adjm, mode="undirected", diag=F, weighted=T)

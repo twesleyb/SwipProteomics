@@ -5,8 +5,8 @@
 # author: twab
 
 ## ---- INPUTs 
-input_part = "ne_surprise_partition"
-input_colors = "ne_surprise_colors"
+input_part = "swip_partition"
+input_colors = "swip_colors"
 
 
 ## ---- OPTIONs 
@@ -46,7 +46,7 @@ if (!dir.exists(figsdir)) {
 ## ---- Prepare the data for ploting 
 
 # load the data
-data(msstats_prot)
+data(swip_tmt)
 
 # load partition
 data(list=input_part)
@@ -59,9 +59,8 @@ modules <- split(names(partition),partition)
 names(modules) <- paste0("M",names(modules))
 
 # coerce tidy data to a matrix
-dm <- msstats_prot %>% 
+dm <- swip_tmt %>% 
 	filter(Protein %in% names(partition)) %>%
-	mutate(Intensity = 2^Abundance) %>%
 	group_by(Protein) %>%
 	mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	reshape2::dcast(Protein ~ Mixture + Condition, value.var= "rel_Intensity") %>%

@@ -10,7 +10,8 @@
 root = "~/projects/SwipProteomics"
 renv::load(root, quiet=TRUE)
 
-input_part = "ne_surprise_partition"
+input_part = "swip_partition"
+input_results = "swip_module_results"
 
 
 ## ---- Prepare the R environment
@@ -19,9 +20,10 @@ input_part = "ne_surprise_partition"
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
-data(msstats_prot)
+data(swip_tmt)
 
 data(list=input_part) # partition
+data(list=input_results) # swip_module_results
 
 # imports
 suppressPackageStartupMessages({
@@ -51,7 +53,7 @@ plotModule <- function(module, prots, tidy_prot) {
   wt_color = "#47b2a4"
   mut_color = "#b671af"
   # subset
-  subdat <- msstats_prot %>% subset(Protein %in% prots)
+  subdat <- tidy_prot %>% subset(Protein %in% prots)
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
   # set factor order (levels)
@@ -60,7 +62,6 @@ plotModule <- function(module, prots, tidy_prot) {
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
   # prepare the data
   df <- subdat %>% 
-	  mutate(Intensity = 2^Abundance) %>% 
 	  group_by(Protein) %>%
 	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
@@ -122,26 +123,15 @@ names(modules) <- paste0("M",names(modules))
 
 message("\nGenerating profile plots of ", length(modules), " modules.")
 
-
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
-###############################################################################
-data(swip_tmt)
-data(ne_surprise2_module_results)
-
-tidy_prot = swip_tmt %>% 
-	mutate(Abundance = log2(Intensity)) %>% 
-	mutate(Condition = interaction(Genotype,BioFraction))
-
-sig_modules <- unique(module_results$Module[module_results$candidate])
 #FIXME: title darkred if  sig
-
-###############################################################################
+sig_modules <- unique(module_results$Module[module_results$candidate])
 
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plotModule(module, prots=modules[[module]], tidy_prot)
+	plotModule(module, prots=modules[[module]], swip_tmt)
 } #EOL
 names(plot_list) <- names(modules)
 
