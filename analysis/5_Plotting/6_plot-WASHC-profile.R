@@ -18,7 +18,7 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(washc_prots)
-data(msstats_prot)
+data(swip_tmt)
 
 # imports
 suppressPackageStartupMessages({
@@ -43,16 +43,14 @@ set_font("Arial", font_path=fontdir)
 
 ## ---- function 
 
-prots = washc_prots
-
-plotWASHC <- function(msstats_prot, prots=washc_prots) {
+plotWASHC <- function(swip_tmt, prots=washc_prots) {
 
   # color for Control condition
   wt_color = "#47b2a4"
   mut_color = "#b671af"
 
   # subset
-  subdat <- msstats_prot %>% subset(Protein %in% prots)
+  subdat <- swip_tmt %>% subset(Protein %in% prots)
 
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
@@ -64,7 +62,6 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
 
   # prepare the data
   df <- subdat %>% 
-	  mutate(Intensity = 2^Abundance) %>% 
 	  group_by(Protein) %>%
 	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  group_by(Protein, Genotype, BioFraction) %>% 
@@ -127,7 +124,7 @@ plotWASHC <- function(msstats_prot, prots=washc_prots) {
 
 ## ---- generate plot
 
-plot <- plotWASHC(msstats_prot)
+plot <- plotWASHC(swip_tmt)
 
 
 ## ---- save as pdf
