@@ -377,6 +377,10 @@ sapply(all_results,function(x) sum(x$FDR<FDR_alpha)) %>%
 
 swip_results <-  do.call(rbind, all_results)
 
+# sig_prots
+temp_df <- swip_results %>% filter(Contrast=='Mutant-Control')
+sig_prots <- unique(temp_df$Protein[temp_df$FDR<FDR_alpha])
+
 
 ## ----  Save key results
 
@@ -398,4 +402,9 @@ message("saved: ", myfile)
 # save gene_map
 myfile <- file.path(datadir,"gene_map.rda")
 save(gene_map,file=myfile,version=2)
+message("saved: ", myfile)
+
+# save sig_prots
+myfile <- file.path(datadir,"sig_prots.rda")
+save(sig_prots, file=myfile,version=2)
 message("saved: ", myfile)

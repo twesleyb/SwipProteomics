@@ -64,9 +64,22 @@ message("k Modules: ", length(modules))
 
 ## ---- loop to fit module-level models and assess contrast
 
+# scale Intensity
 tidy_prot <- swip_tmt %>% 
 	group_by(Protein) %>% 
 	mutate(rel_Intensity=Intensity/sum(Intensity))
+
+# examine fit of wash complex proteins
+washc_prots <- mapID("Washc*")
+prots = washc_prots[washc_prots %in% tidy_prot$Protein]
+fm = lmerTest::lmer(fx, tidy_prot %>% subset(Protein %in% prots))
+LT = getContrast(fm,"Mutant","Control")
+lmerTestContrast(fm,LT) %>% 
+	mutate(Contrast = 'Mutant-Control') %>% 
+	mutate(Pvalue = formatC(Pvalue)) %>%
+	mutate(nProts = length(prots)) %>%
+	unique() %>% knitr::kable()
+
 
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
@@ -97,14 +110,13 @@ dplyr::select(Module, nProts, Contrast, log2FC,
 
 # annotate candidate sig modules
 results_df <- results_df %>% 
-  mutate(candidate = Padjust < 0.05 & (percentControl > 1.10 | percentControl < 0.90))
-results_df <- results_df %>% arrange(desc(candidate))
+	mutate(candidate = Padjust < 0.05) %>%
+	arrange(desc(candidate))
 
 # summary
 message("n Sig modules: ", sum(results_df$candidate))
 
 # list of results
-results_list <- list()
 
 # data.frame describing network partition
 idx <- match(names(partition),gene_map$uniprot)
@@ -114,6 +126,7 @@ df <-  data.table(UniProt = names(partition),
 	 Membership = partition)
 
 # results list:
+results_list <- list()
 results_list[["Partition"]] <- df %>% arrange(Membership)
 results_list[["Module Results"]] <- results_df 
 
@@ -125,7 +138,7 @@ message("wrote :", myfile)
 
 # save results as rda in root/data
 module_results <- results_df
-namen <- gsub("partition","module_results.rda",input_part) # e.g. ne_surprise2_module_results.rda
+namen <- gsub("partition","module_results.rda",input_part) 
 myfile <- file.path(root,"data", namen)
 save(module_results, file=myfile, version=2)
 message("saved :", myfile)

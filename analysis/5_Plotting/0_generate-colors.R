@@ -9,7 +9,7 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-part_file = "ne_surprise_partition"
+part_file = "swip_partition"
 
 NC_color = "#BEBEBE" # not clustered == "gray"
 

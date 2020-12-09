@@ -6,11 +6,8 @@
 
 ## ---- Input parameters
 
-#input_part <- "ne_surprise2_partition"
-#input_results <- "ne_surprise2_module_results"
-
-input_part <- "ne_surprise2_partition"
-input_results <- "ne_surprise2_module_results"
+input_part <- "swip_partition"
+input_results <- "swip_module_results"
 
 BF_alpha <- 0.05 
 FE_threshold <- 2
@@ -34,15 +31,12 @@ suppressPackageStartupMessages({
 devtools::load_all(root, quiet = TRUE)
 
 # load the data from root/data
-
 data(list=input_part)
 data(list=input_results)
-
 data(gene_map)
-data(sig_prots)
 data(sig_modules)
-data(msstats_prot)
-data(msstats_results)
+data(swip_tmt)
+data(swip_results)
 data(wash_interactome) 
 
 # Project Directories
@@ -221,22 +215,18 @@ sig_dt %>%
 
 ## ---- save results
 
-if (save_results) {
+# save as rda
+module_gsea <- sig_dt
+namen <- gsub("partition","module_gsea.rda",input_part)
+myfile <- file.path(root, "data", namen)
+save(module_gsea, file = myfile, version = 2)
 
-  # save as rda
-  module_gsea <- sig_dt
-  namen <- gsub("partition","module_gsea.rda",input_part)
-  myfile <- file.path(root, "data", namen)
-  save(module_gsea, file = myfile, version = 2)
-
-  # save as excel
-  idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
-  sig_dt <- sig_dt[idx,] # sort by module
-  tmp_df <- data.table(Pathway=names(gene_lists),
- 		  Entrez = sapply(gene_lists,paste,collapse=";"))
-  tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
-  namen <- gsub("partition","S6_SWIP-TMT_Module_GSEA.xlsx",input_part)
-  myfile <- file.path(root,"tables", namen)
-  write_excel(tmp_list,myfile)
-
-} # EIS
+# save as excel
+idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
+sig_dt <- sig_dt[idx,] # sort by module
+tmp_df <- data.table(Pathway=names(gene_lists),
+	  Entrez = sapply(gene_lists,paste,collapse=";"))
+tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
+namen <- gsub("partition","S6_SWIP-TMT_Module_GSEA.xlsx",input_part)
+myfile <- file.path(root,"tables", namen)
+write_excel(tmp_list,myfile)

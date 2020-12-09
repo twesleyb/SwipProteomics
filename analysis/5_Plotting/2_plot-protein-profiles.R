@@ -10,7 +10,7 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "ne_surprise_partition"
+input_part = "swip_partition"
 
 
 ## ---- Prepare environment 
@@ -22,14 +22,11 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip)
-data(lysosome)
 data(gene_map)
 data(sig_prots)
-data(protein_gof)
-data(msstats_prot)
-data(msstats_results)
+data(swip_tmt)
+data(swip_results)
 data(list=input_part) # partition
-
 
 # other imports
 suppressPackageStartupMessages({
@@ -61,10 +58,10 @@ names(modules) <- paste0("M",names(modules))
 # combine msstats_results with msstats_prot
 # we use statistical results from intra-BioFraction comparisons to annotate
 # the plots
-filt_results <- msstats_results %>% filter(Contrast != "Mutant-Control") %>%
+filt_results <- swip_results %>% filter(Contrast != "Mutant-Control") %>%
 	mutate(BioFraction = sapply(strsplit(Contrast, "\\."),"[",3))
-shared_cols <- intersect(colnames(msstats_prot),colnames(filt_results))
-prot_df <- left_join(msstats_prot,filt_results,by=shared_cols)
+shared_cols <- intersect(colnames(swip_tmt),colnames(filt_results))
+prot_df <- left_join(swip_tmt,filt_results,by=shared_cols)
 
 # annotate with module membership
 prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
@@ -75,27 +72,21 @@ prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
 
 # a function to generate protein profile plot:
 
-protein = sample(unique(msstats_prot$Protein),1)
+protein = sample(unique(swip_tmt$Protein),1)
 
-plotProfile <- function(protein, gene_map, msstats_prot, msstats_results, 
-			 protein_gof) {
+plotProfile <- function(protein, gene_map, swip_tmt, swip_results) {
 
   # colors for plot
   wt_color <- "#47b2a4"
   mut_color <- "#b671af"
 
   # map uniprot to gene name
-  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
+  gene <- gene_map$symbol[match(protein, gene_map$uniprot)]
 
   # proteins with overall sig change
-  sig_prots <- msstats_results %>% 
+  sig_prots <- swip_results %>% 
 	filter(Contrast == 'Mutant-Control' & FDR<0.05) %>%  ungroup() %>%
 	select(Protein) %>% unlist() %>% as.character() %>% unique()
-
-  # plot title and annotation
-  r2 <- protein_gof %>% filter(Protein == protein) %>% 
-	  select(R2.fixef) %>% as.numeric()
-  title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
 
   # title = darkred if significant difference for overall comparison 
   title_colors <- c("darkred"=TRUE,"black"=FALSE)
@@ -115,7 +106,6 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
   # * summarize median of 3x mix
   df <- prot_df %>% 
 	  filter(Protein == protein) %>% 
-	  mutate(Intensity = 2^Abundance) %>% 
 	  mutate(rel_Intensity = Intensity/sum(Intensity)) %>%
 	  mutate(scale_Intensity = scale01(log2(rel_Intensity))) %>%
 	  group_by(Protein,Condition) %>% 
@@ -144,7 +134,7 @@ plotProfile <- function(protein, gene_map, msstats_prot, msstats_results,
     plot <- plot + geom_line()
     plot <- plot + geom_ribbon(alpha=0.1, linetype="blank")
     plot <- plot + geom_point(size=2)
-    plot <- plot + ggtitle(paste(gene," | ",protein)) # title_anno?
+    plot <- plot + ggtitle(paste(gene," | ",protein))
     plot <- plot + ylab("Scaled Intensity")
     plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
     plot <- plot + theme(axis.text.x = element_text(color="black", size=11))
@@ -186,18 +176,13 @@ message("\nGenerating plots for ",
 plots <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 for (protein in sorted_prots) {
-	plots[[protein]] <- plotProfile(protein, gene_map, msstats_prot, 
-				         msstats_results, protein_gof)
+	plots[[protein]] <- plotProfile(protein, gene_map, swip_tmt, swip_results)
         setTxtProgressBar(pbar,value=match(protein,sorted_prots))
 } # EOL for proteins
 close(pbar)
 
 
 ## ---- save results 
-
-sig_lyso <- lysosome[lysosome %in% sig_prots]
-myfile = file.path(figsdir,"lysosome_protein_profiles.pdf")
-ggsavePDF(plots[sig_lyso], file=myfile)
 
 message("\nSaving plots as a single pdf, this will take several minutes.")
 myfile = file.path(figsdir,"protein_profiles.pdf")
