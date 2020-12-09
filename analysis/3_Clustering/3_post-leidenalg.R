@@ -6,7 +6,7 @@
 
 ## input in root/rdata
 #input_part <- "ne_surprise2_partition.csv"
-input_part <- "ne_surprise_partition.csv"
+input_part <- "alt_partition.csv"
 
 ## output is [input_part].rda
 output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
@@ -39,6 +39,7 @@ part <- partition_list[[1]] + 1
 modules <- split(names(part),part)
 too_small <- as.numeric(names(which(sapply(modules,length) < 5)))
 part[part %in% too_small] <- 0
+
 
 ## status
 

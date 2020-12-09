@@ -8,8 +8,7 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-#input_part = "ne_surprise2_partition"
-input_part = "ne_surprise_partition"
+input_part = "ne_surprise2_partition"
 
 
 ## ---- Prepare the R environment
@@ -30,9 +29,6 @@ suppressPackageStartupMessages({
 	library(data.table)
 	library(doParallel)
 })
-
-
-data(swip_tmt)
 
 
 ## ---- Function
@@ -65,9 +61,8 @@ message("k Modules: ", length(modules))
 
 ## ---- loop to fit module-level models and assess contrast
 
-tidy_prot = swip_tmt %>% 
-	mutate(Condition = interaction(Genotype, BioFraction)) %>% 
-	mutate(Abundance = log2(Intensity)) %>%
+tidy_prot <- msstats_prot %>% 
+	mutate(Intensity = 2^Abundance) %>%
 	group_by(Protein) %>% 
 	mutate(rel_Intensity=Intensity/sum(Intensity))
 
@@ -106,7 +101,7 @@ dplyr::select(Module, nProts, Contrast, log2FC,
 
 # annotate candidate sig modules
 results_df <- results_df %>% 
-  mutate(candidate = Padjust < 0.05 & (percentControl > 1.05 | percentControl < 0.95))
+  mutate(candidate = Padjust < 0.05 & (percentControl > 1.10 | percentControl < 0.90))
 results_df <- results_df %>% arrange(desc(candidate))
 
 # summary
@@ -135,3 +130,8 @@ module_results <- results_df
 namen <- gsub("partition","module_results.rda",input_part) # e.g. ne_surprise2_module_results.rda
 myfile <- file.path(root,"data", namen)
 save(module_results, file=myfile, version=2)
+
+# save sig modules
+sig_modules <- module_results$Module[module_results$candidate]
+myfile <- file.path(root,"data", "sig_modules.rda")
+save(sig_modules, file=myfile, version=2)

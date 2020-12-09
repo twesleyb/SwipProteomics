@@ -42,42 +42,12 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-#dm <- msstats_prot %>%  
-#	mutate(Intensity = 2^Abundance) %>% 
-#	group_by(Protein) %>%
-#	mutate(scale_Intensity = Intensity/sum(Intensity)) %>%
-#	group_by(Protein, Condition) %>%
-#	summarize(med_Intensity = log2(median(scale_Intensity)),
-#		  .groups="drop") %>% 
-#	reshape2::dcast(Protein ~ Condition, value.var = "med_Intensity") %>% 
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein")
-
 # summarize median of three mixtures
-#dm <- msstats_prot %>%  
-#	group_by(Protein, Condition) %>%
-#	summarize(med_Abundance = median(Abundance),
-#		  .groups="drop") %>% 
-#	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein")
-
-#dm <- msstats_prot %>%  
-#	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein")
-
-# impute missing vals
-#data_knn = impute::impute.knn(dm)
-#dm_knn = data_knn$data
-#dm=dm_knn
-
-# try old data
-data(swip_tmt)
-
-dm <- swip_tmt %>% 
-	mutate(Abundance = log2(Intensity)) %>%
-	reshape2::dcast(Protein ~ Sample, value.var = "Abundance") %>% 
+dm <- msstats_prot %>%  
+	group_by(Protein, Condition) %>%
+	summarize(med_Abundance = median(Abundance),
+		  .groups="drop") %>% 
+	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
 
@@ -91,16 +61,14 @@ filt_dm <- dm[!idx,]
 
 
 ## calculate coorrelation matrix
-#adjm <- WGCNA::bicor(t(filt_dm), use="all.obs")
 adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
 
-message("Performing network enhancement")
+message("\nPerforming network enhancement...")
 
-#ne_adjm <- neten(adjm, alpha = alpha_param, diffusion = diffusion_param)
 ne_adjm <- neten(adjm) # result is robust to neten parameters
 
 

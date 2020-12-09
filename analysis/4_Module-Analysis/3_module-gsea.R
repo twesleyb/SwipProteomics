@@ -9,8 +9,8 @@
 #input_part <- "ne_surprise2_partition"
 #input_results <- "ne_surprise2_module_results"
 
-input_part <- "ne_surprise_partition"
-input_results <- "ne_surprise_module_results"
+input_part <- "ne_surprise2_partition"
+input_results <- "ne_surprise2_module_results"
 
 BF_alpha <- 0.05 
 FE_threshold <- 2
