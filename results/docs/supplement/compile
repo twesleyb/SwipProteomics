@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-./knit.R && \
-	pdflatex-quiet supplement.tex && \
-	bibtex supplement.aux && \
-	pdflatex-quiet supplement.tex && \
-	pdflatex-quiet supplement.tex

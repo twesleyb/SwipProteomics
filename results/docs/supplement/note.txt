@@ -1,3 +1,0 @@
-we retained proteins that were quantified in 1 or more mixtures in the network
-by imputing these protein-level values with the KNN algorithm, but do not
-consider these proteins for hypothesis testing.
