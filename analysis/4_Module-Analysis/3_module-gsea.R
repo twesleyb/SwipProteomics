@@ -217,6 +217,10 @@ sig_dt %>%
 
 ## ---- save results
 
+# save gene lists
+myfile <- file.path(root,"data","gene_lists.rda")
+save(gene_lists, file=myfile,version=2)
+
 # save as rda
 module_gsea <- sig_dt
 namen <- gsub("partition","module_gsea.rda",input_part)
