@@ -42,12 +42,11 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-# summarize median of three mixtures
-dm <- msstats_prot %>%  
-	group_by(Protein, Condition) %>%
-	summarize(med_Abundance = median(Abundance),
-		  .groups="drop") %>% 
-	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>% 
+# try old data
+data(swip_tmt)
+
+dm <- swip_tmt %>% 
+	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
 
@@ -67,7 +66,7 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
 
-message("\nPerforming network enhancement...")
+message("Performing network enhancement")
 
 ne_adjm <- neten(adjm) # result is robust to neten parameters
 
