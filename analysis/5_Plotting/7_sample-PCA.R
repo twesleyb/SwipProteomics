@@ -39,10 +39,10 @@ if (!dir.exists(figsdir)) {
 ## ---- Prepare the data for ploting 
 
 # load the proteomics data
-data(msstats_prot)
+data(swip_tmt)
 
 # cast into a matrix
-dm <- msstats_prot %>%
+dm <- swip_tmt %>%
 	reshape2::dcast(Protein ~ interaction(Mixture, Genotype, BioFraction), 
 			value.var= "Abundance") %>%
 		as.data.table() %>% as.matrix(rownames="Protein")

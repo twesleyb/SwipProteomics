@@ -34,6 +34,7 @@ devtools::load_all(root, quiet = TRUE)
 data(list=input_part)
 data(list=input_results)
 data(gene_map)
+data(sig_prots)
 data(sig_modules)
 data(swip_tmt)
 data(swip_results)
@@ -99,7 +100,8 @@ gene_lists <- c(
   takamori2006SV, # 5
   iPSD, # 6
   ePSD, # 7
-  uniprotSubcell 
+  uniprotSubcell,
+  list("SigProts" = sig_prots)
 )
 
 # Remove lists with less than 3 proteins
