@@ -6,11 +6,8 @@
 
 ## ---- inputs
 
-#input_part = "ne_surprise_partition"
-#input_colors = "ne_surprise_colors"
-
-input_part = "ne_surprise2_partition"
-input_colors = "ne_surprise2_colors"
+input_part = "swip_partition"
+input_colors = "swip_colors"
 
 
 ## ---- functions
@@ -274,8 +271,8 @@ if (!dir.exists(netwdir)) {
 # Load the data from root/data
 data(gene_map)
 data(sig_prots)
-data(msstats_prot)
-data(msstats_results)
+data(swip_tmt)
+data(swip_results)
 data(wash_interactome)
 data(list=input_part)
 data(list=input_colors)
@@ -327,7 +324,7 @@ ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
 # collect meta data from msstats_results as noa data.table
 tmp_dt <- data.table(Protein = names(V(netw_g)),
 		  Module = paste0("M",partition[names(V(netw_g))]))
-noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
+noa <- left_join(tmp_dt, swip_results, by = "Protein") %>% 
 	filter(Contrast == "Mutant-Control")
 
 # add module colors

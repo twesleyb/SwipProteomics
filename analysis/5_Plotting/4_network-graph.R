@@ -80,10 +80,10 @@ sub_adjm <- ne_adjm[!idx,!idx]
 # Threshold the graph
 
 #uBy manual search the 'best' threshold is ...
-is_connected(maskAdjm(sub_adjm, threshold = 29.38))
+#is_connected(maskAdjm(sub_adjm, threshold = 29.38))
 
 # Create igraph graph from thresholded adjm
-threshold = 29.38
+threshold = 100
 
 adjm <- maskAdjm(sub_adjm, threshold)
 g <- graph_from_adjacency_matrix(adjm, mode="undirected", diag=F, weighted=T)
