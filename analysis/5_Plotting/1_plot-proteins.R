@@ -23,10 +23,12 @@ devtools::load_all(root, quiet=TRUE)
 # load the data
 data(swip)
 data(swip_tmt) 
-data(msstats_results) 
 data(swip_colors) # module_colors
 data(swip_gene_map) # gene_map
 data(swip_partition)  # partition
+
+# we annotate the plots with MSstatsTMT stats
+data(msstats_results) 
 data(msstats_sig_prots) # sig_prots
 
 
@@ -137,11 +139,11 @@ plotProtein <- function(protein, prot_df, gene_map,
 ## combine protein data and statistical results
 
 # we will use stats to annotate plots with stars
-results <- swip_results %>% filter(Contrast != 'Mutant-Control') %>% 
+results <- msstats_results %>% filter(Contrast != 'Mutant-Control') %>% 
 	mutate(BioFraction = sapply(strsplit(Contrast,"\\."),"[",3))
 shared_cols <- intersect(colnames(swip_tmt),colnames(results))
 
-prot_df <- left_join(swip_tmt,results,by=shared_cols)
+prot_df <- left_join(swip_tmt, results, by=shared_cols)
 
 # annotate with module membership
 prot_dt <- prot_df %>% filter(Protein %in% names(partition))
@@ -157,9 +159,6 @@ message("\nGenerating plots for ",
 
 
 ## ---- loop to generate plots
-
-temp_df <- swip_results %>% filter(Contrast=="Mutant-Control") 
-sig_prots <- unique(temp_df$Protein[temp_df$FDR<0.05])
 
 plot_list <- list()
 
@@ -194,12 +193,12 @@ plot_legend <- cowplot::get_legend(plot)
 ## ---- save as pdf
 
 # legend
-myfile <- file.path(figsdir,"legend.pdf")
+myfile <- file.path(figsdir,"SWIP-Protein-Abundance-legend.pdf")
 ggsave(plot_legend, file=myfile, width=4.5, height=4.5)
 message("saved: ", myfile)
 
 # plot list
 message("\nSaving plots as a single pdf, this will take several minutes.")
-myfile <- file.path(figsdir, "proteins.pdf")
+myfile <- file.path(figsdir, "SWIP-Protein-Abundance.pdf")
 ggsavePDF(plot_list, myfile)
 message("saved: ", myfile)

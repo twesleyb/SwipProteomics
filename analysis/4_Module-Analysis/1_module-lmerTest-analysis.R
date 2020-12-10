@@ -107,7 +107,7 @@ dplyr::select(Module, nProts, Contrast, log2FC,
 		percentControl, SE, Tstatistic, 
 		Pvalue, FDR, Padjust, DF, S2)
 
-# annotate candidate sig modules
+# annotate candidate sig modules (Bonferroni padjust < 0.05)
 results_df <- results_df %>% 
 	mutate(candidate = Padjust < 0.05) %>%
 	arrange(desc(candidate))
@@ -130,15 +130,13 @@ results_list[["Partition"]] <- df %>% arrange(Membership)
 results_list[["Module Results"]] <- results_df 
 
 # save in root/tables
-namen <- gsub("partition","S4_SWIP-TMT_Module_Results.xlsx",input_part)
-myfile <- file.path(root,"tables",namen)
+myfile <- file.path(root,"tables","SWIP-TMT-Module-Results.xlsx")
 write_excel(results_list, myfile)
-message("wrote :", myfile)
+message("saved :", myfile)
 
 # save results as rda in root/data
 module_results <- results_df
-namen <- gsub("partition","module_results.rda",input_part) 
-myfile <- file.path(root,"data", namen)
+myfile <- file.path(root,"data", "module_results.rda")
 save(module_results, file=myfile, version=2)
 message("saved :", myfile)
 

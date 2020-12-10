@@ -5,8 +5,6 @@
 # author: twab
 
 ## ---- INPUTs 
-input_part = "swip_partition"
-input_colors = "swip_colors"
 
 
 ## ---- OPTIONs 
@@ -49,10 +47,10 @@ if (!dir.exists(figsdir)) {
 data(swip_tmt)
 
 # load partition
-data(list=input_part)
+data(swip_partition)
 
-# load colors
-data(list=input_colors)
+# load module_colors
+data(swip_colors)
 
 # all modules
 modules <- split(names(partition),partition)

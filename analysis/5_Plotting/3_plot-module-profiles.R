@@ -18,7 +18,7 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip_tmt)
-data(swip_module_results) # module_results
+data(module_results) 
 data(swip_partition) # partition
 
 # imports
@@ -44,18 +44,23 @@ set_font("Arial", font_path=fontdir)
 
 ## ---- function 
 
-plotModule <- function(module, prots, tidy_prot) {
+plotModule <- function(module, prots, tidy_prot, title_color="black") {
+
   # color for Control condition
   wt_color = "#47b2a4"
   mut_color = "#b671af"
+
   # subset
   subdat <- tidy_prot %>% subset(Protein %in% prots)
+
   # number of proteins in module
   nprots <- length(unique(subdat$Protein))
+
   # set factor order (levels)
   subdat$Genotype <- factor(subdat$Genotype,levels= c("Control","Mutant"))
   subdat$BioFraction <- factor(subdat$BioFraction,
 			 levels=c("F4","F5","F6","F7","F8","F9","F10"))
+
   # prepare the data
   df <- subdat %>% 
 	  group_by(Protein) %>%
@@ -64,6 +69,7 @@ plotModule <- function(module, prots, tidy_prot) {
 	  summarize(med_Intensity = median(rel_Intensity),
 	          .groups="drop") %>%
 	  mutate(scale_Intensity = scale01(log2(med_Intensity)))
+
   # get module fitted data by fitting linear model to scaled Intensity
   # explicitly estimate all coeff by setting intercept to 0
   fx <- scale_Intensity ~ 0 + Genotype:BioFraction + (1|Protein)
@@ -104,7 +110,7 @@ plotModule <- function(module, prots, tidy_prot) {
   plot <- plot + geom_line(aes(y=fit_y, group=interaction("fit",Genotype)),
 			   linetype="dashed",alpha=1,size=0.75)
   plot <- plot + ggtitle(paste0(module," (n = ",nprots,")"))
-  plot <- plot + theme(plot.title = element_text(color="black"))
+  plot <- plot + theme(plot.title = element_text(color=title_color))
   plot <- plot + scale_colour_manual(values=c(wt_color,mut_color))
   plot <- plot + theme(legend.position = "none")
   return(plot)
@@ -122,7 +128,7 @@ message("\nGenerating profile plots of ", length(modules), " modules.")
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
-#FIXME: title darkred if sig
+# title darkred if sig  (Bonferroni Padjust < 0.05)
 sig_modules <- unique(module_results$Module[module_results$candidate])
 
 # title = darkred if significant difference for overall comparison 
@@ -140,6 +146,6 @@ names(plot_list) <- names(modules)
 
 message("\nSaving plots as a single pdf.")
 
-namen <- gsub("partition", "module_profiles.pdf", input_part)
-myfile <- file.path(figsdir, namen)
+myfile <- file.path(figsdir, "SWIP-Module-Profiles.pdf")
 ggsavePDF(plot_list,myfile)
+message("saved: ", myfile)

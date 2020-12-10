@@ -266,15 +266,17 @@ if (!dir.exists(netwdir)) {
 
 # Load the data from root/data
 data(swip_tmt)
-data(swip_results)
 data(wash_interactome)
-data(msstats_sig_prots)
+wash_prots <- wash_interactome
+
 data(swip_partition) # partition
 data(swip_gene_map) # gene_map
 data(swip_colors) # module_colors
 
+# we label sig_prots from MSstatsTMT
+data(msstats_results)
+data(msstats_sig_prots)
 
-wash_prots <- wash_interactome
 
 
 ## ---- Load networks in root/rdata
@@ -322,7 +324,7 @@ ppi_g <- set_vertex_attr(ppi_g,"protein",value = proteins)
 # collect meta data from msstats_results as noa data.table
 tmp_dt <- data.table(Protein = names(V(netw_g)),
 		  Module = paste0("M",partition[names(V(netw_g))]))
-noa <- left_join(tmp_dt, swip_results, by = "Protein") %>% 
+noa <- left_join(tmp_dt, msstats_results, by = "Protein") %>% 
 	filter(Contrast == "Mutant-Control")
 
 # add module colors
