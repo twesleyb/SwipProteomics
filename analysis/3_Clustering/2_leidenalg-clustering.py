@@ -3,7 +3,7 @@
 '''
 title: SwipProteomics
 description: Leidenalg Clustering of the Enhanced Protein Covariation Network
-authors: Tyler W A Bradshaw
+author: Tyler W A Bradshaw
 '''
 
 

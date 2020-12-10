@@ -26,8 +26,8 @@ renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 # load data in root/data
-data(gene_map)
 data(swip_tmt)
+data(swip_gene_map)
 
 # imports
 suppressPackageStartupMessages({
@@ -41,8 +41,6 @@ suppressPackageStartupMessages({
 ## ---- create covariation network
 
 message("Generating covariation network...")
-
-data(swip_tmt)
 
 dm <- swip_tmt %>% 
 	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
@@ -76,11 +74,13 @@ ne_adjm <- neten(adjm) # result is robust to neten parameters
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","adjm.csv")
 data.table::fwrite(adjm_dt, myfile)
+message("saved: ", myfile)
 
 # coerce to data.table and write to file
 ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
 data.table::fwrite(ne_adjm_dt, myfile)
+message("saved: ", myfile)
 
 
 ## ---- save as rda
@@ -88,7 +88,9 @@ data.table::fwrite(ne_adjm_dt, myfile)
 # adjm
 myfile <- file.path(root,"rdata","adjm.rda")
 save(adjm, file=myfile,version=2)
+message("saved: ", myfile)
 
 # ne adjm
 myfile <- file.path(root,"rdata","ne_adjm.rda")
 save(ne_adjm, file=myfile,version=2)
+message("saved: ", myfile)

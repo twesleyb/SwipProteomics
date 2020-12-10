@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 # title: WASH iBioID Proteomics Analysis
-# description: Preprocessing and statistical analysis of WASH1 (Washc1) iBioID.
+# description: preprocessing and statistical analysis of WASH1 (Washc1) iBioID
+# experiment performed by JC
 # author: Tyler W A Bradshaw
 
 
@@ -529,14 +530,15 @@ results_df <- results_df %>%
 	dplyr::select(-sig,-up)
 
 # summary
-data.table("nSig"=sum(results_df$candidate)) %>% knitr::kable()
+data.table("nSig"=sum(results_df$candidate)) %>% 
+	knitr::kable()
 
 
 ## ---- save results
 bioid_results <- results_df
 
 # save results as excel
-myfile <- file.path(root,"tables","S1_WASH-BioID_Results.xlsx")
+myfile <- file.path(root,"tables","WASH-iBioID-QExactiveMS-Results.xlsx")
 write_excel(list("WASH-BioID"=bioid_results), myfile)
 message("saved: ", myfile)
 

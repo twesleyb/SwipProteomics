@@ -95,5 +95,7 @@ plot <- plot + scale_y_continuous(expand = c(0,0))
 
 
 ## ---- Save to file
+
 myfile <- file.path(figsdir,"sample_PCA.pdf")
 ggsave(myfile, plot, width=fig_width,height=fig_height)
+message("saved: ", myfile)

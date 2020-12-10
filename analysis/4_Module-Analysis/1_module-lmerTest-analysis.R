@@ -8,7 +8,6 @@
 
 # Input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "swip_partition"
 
 
 ## ---- Prepare the R environment
@@ -19,9 +18,9 @@ renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
-data(gene_map) 
 data(swip_tmt) 
-data(list=input_part) 
+data(swip_gene_map) 
+data(swip_partition)  # partition
 
 # imports
 suppressPackageStartupMessages({

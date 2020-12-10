@@ -6,86 +6,9 @@
 
 ## ---- Inputs 
 
-# Input data in root/data/
-# * msstats_prot
-
-input_part <- "swip_partition"
-input_colors <- "swip_colors"
 
 ## ---- Output 
 # * a single pdf with plots of all proteins
-
-
-## ---- Functions 
-
-plotProtein <- function(protein, prot_df, gene_map,
-			 sig_prots, legend=FALSE) {
-  # a function that generates the plot
-  # annotate title in red if protein has sig change in 'Mutant-Control' contrast
-  title_colors <- c("darkred"=TRUE,"black"=FALSE)
-  colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
-  	    "#942192","#B847B4","#DC6AD7") # Swip Purples
-  #r2 <- protein_gof %>% filter(Protein == protein) %>% 
-  #	select(R2.fixef) %>% as.numeric()
-  #title_anno <- paste0("(R2_fixef = ",round(r2,3),")")
-  # subset the data
-  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
-  title_color <- names(which(title_colors == (protein %in% sig_prots)))
-  df <- subset(prot_df,Protein == protein)
-  # insure factor levels are set correctly
-  df$BioFraction <- factor(df$BioFraction,
-  			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
-  df$Mixture <- factor(df$Mixture, levels=c("M1","M2","M3"))
-  df$Genotype <- factor(df$Genotype, levels=c("Control","Mutant"))
-  # collect FDR stats
-  stats_df <- df %>% group_by(Genotype,BioFraction) %>% 
-  		summarize(`Max Abundance` = max(Abundance),
-  			  FDR = unique(FDR),.groups="drop")
-  stats_df$ypos <- 1.02 * max(stats_df$`Max Abundance`)
-  stats_df <- stats_df %>% filter(Genotype == "Control")
-  stats_df$symbol <- ""
-  stats_df$symbol[stats_df$FDR<0.1] <- "."
-  stats_df$symbol[stats_df$FDR<0.05] <- "*"
-  stats_df$symbol[stats_df$FDR<0.005] <- "**"
-  stats_df$symbol[stats_df$FDR<0.0005] <- "***"
-  # generate the plot
-  plot <- ggplot(df)
-  plot <- plot + aes(x = BioFraction, y = Abundance)
-  plot <- plot + aes(group = interaction(Mixture,Genotype))
-  plot <- plot + aes(colour = interaction(Mixture,Genotype))
-  plot <- plot + aes(shape=Mixture)
-  plot <- plot + aes(group = interaction(Mixture,Genotype))
-  plot <- plot + aes(colour = interaction(Mixture,Genotype))
-  plot <- plot + geom_point(size=2)
-  plot <- plot + geom_line()
-  plot <- plot + ggtitle(paste(gene,"|",protein))
-  plot <- plot + theme(plot.title=element_text(color=title_color))
-  plot <- plot + ylab("log2(Protein Intensity)")
-  # annotate with significance stars
-  check <- all(is.na(stats_df$FDR))
-  any_sig <- any(stats_df$FDR<0.1)
-  if (!check & any_sig) { 
-    plot <- plot + annotate("text", 
-			    x=stats_df$BioFraction, 
-			    y=max(stats_df$ypos), 
-			    label=stats_df$symbol,size=7)
-  }
-  # add custom colors and modify legend title and labels
-  mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
-  plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
-  plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
-  plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-  plot <- plot + theme(axis.text.x = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
-  plot <- plot + theme(axis.text.y = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
-  plot <- plot + theme(panel.background = element_blank())
-  plot <- plot + theme(axis.line.x=element_line())
-  plot <- plot + theme(axis.line.y=element_line())
-  # remove legend
-  if (!legend) {
-	  plot <- plot + theme(legend.position = "none")
-  }
-  return(plot)
-} #EOF
 
 
 ## ---- Set-up the workspace 
@@ -99,14 +22,14 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip)
-data(gene_map)
-#data(sig_prots)
-#data(protein_gof)
-data(swip_tmt)
+data(swip_tmt) 
+data(swip_colors) # module_colors
 data(swip_results)
+data(msstats
+data(swip_gene_map) # gene_map
+data(swip_partition)  # partition
+data(msstats_sig_prots) # sig_prots
 
-data(list=input_colors)
-data(list=input_part)
 
 # imports
 suppressPackageStartupMessages({
@@ -127,6 +50,83 @@ if (! dir.exists(figsdir)) {
 # set theme for the plots:
 ggtheme()
 set_font("Arial", font_path=fontdir)
+
+
+## ---- Functions 
+
+plotProtein <- function(protein, prot_df, gene_map,
+			 sig_prots, legend=FALSE) {
+  # a function that generates the plot
+
+  # annotate title in red if protein has sig change in 'Mutant-Control' contrast
+  title_colors <- c("darkred"=TRUE,"black"=FALSE)
+  colors <- c("#000000","#303030","#5E5E5E", # WT Blacks
+  	    "#942192","#B847B4","#DC6AD7") # Swip Purples
+
+  # subset the data
+  gene <- gene_map$symbol[match(protein,gene_map$uniprot)]
+  title_color <- names(which(title_colors == (protein %in% sig_prots)))
+  df <- subset(prot_df,Protein == protein)
+
+  # insure factor levels are set correctly
+  df$BioFraction <- factor(df$BioFraction,
+  			      levels=c("F4","F5","F6","F7","F8","F9","F10"))
+  df$Mixture <- factor(df$Mixture, levels=c("M1","M2","M3"))
+  df$Genotype <- factor(df$Genotype, levels=c("Control","Mutant"))
+
+  # collect FDR stats
+  stats_df <- df %>% group_by(Genotype,BioFraction) %>% 
+  		summarize(`Max Abundance` = max(Abundance),
+  			  FDR = unique(FDR),.groups="drop")
+  stats_df$ypos <- 1.02 * max(stats_df$`Max Abundance`)
+  stats_df <- stats_df %>% filter(Genotype == "Control")
+  stats_df$symbol <- ""
+  stats_df$symbol[stats_df$FDR<0.1] <- "."
+  stats_df$symbol[stats_df$FDR<0.05] <- "*"
+  stats_df$symbol[stats_df$FDR<0.005] <- "**"
+  stats_df$symbol[stats_df$FDR<0.0005] <- "***"
+
+  # generate the plot
+  plot <- ggplot(df)
+  plot <- plot + aes(x = BioFraction, y = Abundance)
+  plot <- plot + aes(group = interaction(Mixture,Genotype))
+  plot <- plot + aes(colour = interaction(Mixture,Genotype))
+  plot <- plot + aes(shape=Mixture)
+  plot <- plot + aes(group = interaction(Mixture,Genotype))
+  plot <- plot + aes(colour = interaction(Mixture,Genotype))
+  plot <- plot + geom_point(size=2)
+  plot <- plot + geom_line()
+  plot <- plot + ggtitle(paste(gene,"|",protein))
+  plot <- plot + theme(plot.title=element_text(color=title_color))
+  plot <- plot + ylab("log2(Protein Intensity)")
+
+  # annotate with significance stars
+  check <- all(is.na(stats_df$FDR))
+  any_sig <- any(stats_df$FDR<0.1)
+  if (!check & any_sig) { 
+    plot <- plot + annotate("text", 
+			    x=stats_df$BioFraction, 
+			    y=max(stats_df$ypos), 
+			    label=stats_df$symbol,size=7)
+  }
+
+  # add custom colors and modify legend title and labels
+  mylabs <- paste(c(rep('Control',3),rep('Mutant',3)),c(1,2,3))
+  plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
+  plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
+  plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
+  plot <- plot + theme(axis.text.x = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
+  plot <- plot + theme(panel.background = element_blank())
+  plot <- plot + theme(axis.line.x=element_line())
+  plot <- plot + theme(axis.line.y=element_line())
+
+  # remove legend
+  if (!legend) {
+	  plot <- plot + theme(legend.position = "none")
+  }
+  return(plot)
+} #EOF
 
 
 ## ---- main 
@@ -163,16 +163,20 @@ plot_list <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 
 for (protein in sorted_prots) {
+
 	# generate a proteins plot
         plot <- plotProtein(protein, prot_df, gene_map, sig_prots)
+
 	# annotate with module assignment
 	plot_label <- paste("Module:", partition[protein])
 	yrange <- plot$data %>% dplyr::filter(Protein == protein) %>% 
 		select(Abundance) %>% range()
 	ypos <- yrange[1] - 0.1* diff(yrange)
 	plot <-  plot + annotate(geom="label", x=7, y=ypos, label=plot_label)
+
 	# store in list
 	plot_list[[protein]] <- plot
+
 	# update pbar
 	setTxtProgressBar(pbar, value=match(protein, sorted_prots))
 } #EOL
@@ -189,8 +193,10 @@ plot_legend <- cowplot::get_legend(plot)
 # legend
 myfile <- file.path(figsdir,"legend.pdf")
 ggsave(plot_legend, file=myfile, width=4.5, height=4.5)
+message("saved: ", myfile)
 
 # plot list
 message("\nSaving plots as a single pdf, this will take several minutes.")
 myfile <- file.path(figsdir, "proteins.pdf")
 ggsavePDF(plot_list, myfile)
+message("saved: ", myfile)

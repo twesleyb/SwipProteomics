@@ -10,7 +10,6 @@
 
 # input data in root/data/
 root = "~/projects/SwipProteomics"
-input_part = "swip_partition"
 
 
 ## ---- Prepare environment 
@@ -23,10 +22,10 @@ devtools::load_all(root, quiet=TRUE)
 # load the data
 data(swip)
 data(gene_map)
-data(sig_prots)
 data(swip_tmt)
 data(swip_results)
-data(list=input_part) # partition
+data(msstats_sig_prots) # sig_prots
+data(swip_partition) # partition
 
 # other imports
 suppressPackageStartupMessages({

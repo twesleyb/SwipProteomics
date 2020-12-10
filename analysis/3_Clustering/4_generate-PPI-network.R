@@ -105,6 +105,7 @@ ppi_adjm <- full_adjm[colnames(adjm),rownames(adjm)]
 ppi_dt <- as.data.table(ppi_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ppi_adjm.csv")
 data.table::fwrite(ppi_dt, myfile)
+message("saved: " myfile)
 
 
 ## ---- save as rda

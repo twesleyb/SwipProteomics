@@ -17,8 +17,8 @@ renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
-data(washc_prots)
 data(swip_tmt)
+data(washc_prots)
 
 # imports
 suppressPackageStartupMessages({
@@ -131,3 +131,4 @@ plot <- plotWASHC(swip_tmt)
 
 myfile <- file.path(figsdir,"WASHC_profile.pdf")
 ggsave(myfile, plot, height=5, width=5)
+message("saved: ", myfile)

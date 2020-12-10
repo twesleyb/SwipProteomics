@@ -10,9 +10,6 @@
 root = "~/projects/SwipProteomics"
 renv::load(root, quiet=TRUE)
 
-input_part = "swip_partition"
-input_results = "swip_module_results"
-
 
 ## ---- Prepare the R environment
 
@@ -21,9 +18,8 @@ devtools::load_all(root, quiet=TRUE)
 
 # load the data
 data(swip_tmt)
-
-data(list=input_part) # partition
-data(list=input_results) # swip_module_results
+data(swip_module_results) # module_results
+data(swip_partition) # partition
 
 # imports
 suppressPackageStartupMessages({
@@ -126,12 +122,16 @@ message("\nGenerating profile plots of ", length(modules), " modules.")
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() -1)
 
-#FIXME: title darkred if  sig
+#FIXME: title darkred if sig
 sig_modules <- unique(module_results$Module[module_results$candidate])
+
+# title = darkred if significant difference for overall comparison 
+title_colors <- c("darkred"=TRUE,"black"=FALSE)
 
 # loop to generate plots
 plot_list <- foreach(module = names(modules)) %dopar% {
-	plotModule(module, prots=modules[[module]], swip_tmt)
+	title_color <- names(which(title_colors==module %in% sig_modules))
+	plotModule(module, prots=modules[[module]], swip_tmt, title_color)
 } #EOL
 names(plot_list) <- names(modules)
 

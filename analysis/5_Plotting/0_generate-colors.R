@@ -9,7 +9,6 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-part_file = "swip_partition"
 
 NC_color = "#BEBEBE" # not clustered == "gray"
 
@@ -45,7 +44,7 @@ devtools::load_all(root, quiet=TRUE)
 # Load TMT data and partition
 data(swip)
 data(mut_color)
-data(list=part_file)
+data(swip_partition)
 
 
 ## ---- Generate Module colors 

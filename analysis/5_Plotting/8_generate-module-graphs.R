@@ -6,10 +6,6 @@
 
 ## ---- inputs
 
-input_part = "swip_partition"
-input_colors = "swip_colors"
-
-
 ## ---- functions
 
 is_connected <- function(graph, threshold) {
@@ -269,13 +265,15 @@ if (!dir.exists(netwdir)) {
 ## ---- Load the data in root/data
 
 # Load the data from root/data
-data(gene_map)
-data(sig_prots)
 data(swip_tmt)
 data(swip_results)
 data(wash_interactome)
-data(list=input_part)
-data(list=input_colors)
+data(msstats_sig_prots)
+data(swip_partition) # partition
+data(swip_gene_map) # gene_map
+data(swip_colors) # module_colors
+
+
 wash_prots <- wash_interactome
 
 

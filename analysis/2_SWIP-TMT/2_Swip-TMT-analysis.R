@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 # title: Swip TMT Proteomics
-# description: Preprocessing and statistical analysis of Swip TMT proteomics
+# description: preprocessing and statistical analysis of Swip TMT proteomics
+# experiment performed by JC
 # author: Tyler W A Bradshaw
 
 ## ---- input
@@ -393,7 +394,7 @@ save(swip_results,file=myfile,version=2)
 message("saved: ", myfile)
 
 # write as excel
-myfile <- file.path(root,"tables","SWIP-TMT-Protein-Results.xlsx")
+myfile <- file.path(root,"tables","SWIP-lmerTest-TMT-Results.xlsx")
 write_excel(all_results, myfile)
 message("saved: ", myfile)
 

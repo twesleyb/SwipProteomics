@@ -7,8 +7,6 @@
 ## ---- inputs
 
 root = "~/projects/SwipProteomics"
-input_part <- "swip_partition"
-input_colors <- "swip_colors"
 
 
 ## ---- functions
@@ -62,8 +60,10 @@ if (!dir.exists(netwdir)) {
 ## ---- Load the data
 
 # data in root/data
-data(list=input_part) # partition
-data(list=input_colors) # module_colors
+# partition
+# module_colors
+data(swip_partition)
+data(swip_colors)
 
 # ne_adjm in root/rdata
 myfile <- file.path(root,"rdata","ne_adjm.rda")
