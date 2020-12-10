@@ -1,7 +1,9 @@
 #' getVariance
-
+#'
+#' extract the fixed and mixed variance components from lmer
+#'
 #' @export getVariance
-
+#'
 #' @importFrom lme4 VarCorr fixef getME
 
 getVariance <- function(fm) {

@@ -2,13 +2,11 @@
 #'
 #' function for saving multiple ggplots to single pdf
 #'
-#' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
+#' @export ggsavePDF
 #'
-ggsavePDF <- function(plots, file) {
+#' @importFrom ggplotify as.ggplot
 
-  suppressPackageStartupMessages({
-	  library(ggplotify)
-  })
+ggsavePDF <- function(plots, file) {
 
   # If not a list, coerce to list.
   if (!inherits(plots, "list")) {
@@ -27,7 +25,7 @@ ggsavePDF <- function(plots, file) {
       print(plot)
       # if else, coerce to ggplot and print
     } else {
-      print(as.ggplot(plot))
+      print(ggplotify::as.ggplot(plot))
     }
   }
   invisible(dev.off())

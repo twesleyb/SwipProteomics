@@ -4,17 +4,17 @@
 \alias{write_excel}
 \title{Create an excel workbook.}
 \usage{
-write_excel(data, file, rowNames = FALSE, colNames = TRUE, ...)
+write_excel(mydata, myfile, rowNames = FALSE, colNames = TRUE, ...)
 }
 \arguments{
+\item{rowNames}{- should rownames of data be kept?}
+
+\item{colNames}{- should colnames of data be kept?}
+
 \item{data}{- named list of data frames (or equivalent) to be written to
 an excel document.}
 
 \item{file}{- output file name.}
-
-\item{rowNames}{- should rownames of data be kept?}
-
-\item{colNames}{- should colnames of data be kept?}
 
 \item{'...'}{- additional arguments passed to openxlsx::writeData()}
 }

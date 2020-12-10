@@ -1,8 +1,12 @@
 #' filtQC
+#'
+#' remove peptides with highly variable QC measurements
+#'
+#' @export filtQC
+#'
+#' @importFrom dplyr %>% filter group_by summarize 
 
 filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
-  # remove peptides with highly variable QC measurements
-  # importFrom dplyr %>% filter group_by summarize 
 
   # calculate ratios of QC peptides, grouped by Experiment
   ratio_data <- tp %>%

@@ -1,8 +1,10 @@
 #' lmerTestContrast
-#' @import lmerTest
-#' @importFrom dplyr %>%
+#'
 #' @export lmerTestContrast
-
+#'
+#' @import lmerTest
+#'
+#' @importFrom dplyr %>%
 
 lmerTestContrast <- function(fm, contrast,
                              df_prior = 0, s2_prior = 0) {

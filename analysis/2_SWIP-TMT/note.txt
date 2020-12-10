@@ -1,0 +1,16 @@
+## MSstatsTMT ~ 30 minutes
+
+munge to MSstatsTMT format: 1 min
+reformat 6.7 min
+summarize 10.5
+intra-biofraction 18.2
+mutant-control 10.5
+^ these steps could be done simultanteously provided the right contrast matrix
+total proteins: 6,976
+total time: 1 + 6.7  + 10.5 + 10.5 = 28.7 minutes
+NOTE: we modify MSstatsTMT to utilize parallel processing
+
+## me ~ 4 minutes
+Filtering step is very slow...
+real    3m50.207s
+NOTE: only statistical testing is parallel processed

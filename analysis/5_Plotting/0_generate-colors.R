@@ -9,8 +9,8 @@
 # input data in root/data
 root = "~/projects/SwipProteomics"
 
-
-NC_color = "#BEBEBE" # not clustered == "gray"
+# not clustered == "gray"
+NC_color = "#BEBEBE" 
 
 ## ---- OUTPUT 
 # * color assignments for every module in graph partition

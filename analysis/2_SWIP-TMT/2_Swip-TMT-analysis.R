@@ -183,7 +183,7 @@ filt_peptide <- filtQC(imputed_peptide,controls="SPQC", quiet=FALSE)
 ## ---- Summarize to protein level
 
 message("\nSummarizing proteins as the sum of their peptides.")
-proteins <- summarize_prot(filt_peptide)
+proteins <- sumProt(filt_peptide)
 
 # Perform SL normalization across all experiments (grouped by Sample).
 message("\nPerforming sample loading normalization between experiments.")

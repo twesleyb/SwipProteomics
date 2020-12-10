@@ -7,5 +7,5 @@
 getVariance(fm)
 }
 \description{
-getVariance
+extract the fixed and mixed variance components from lmer
 }

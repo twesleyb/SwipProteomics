@@ -2,6 +2,8 @@
 #'
 #' convert a color to its hexadecimal code
 #'
+#' @export col2hex
+#'
 #' @param color - character
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}

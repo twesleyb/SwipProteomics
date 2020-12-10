@@ -7,5 +7,5 @@
 tidyProt(raw_data, id.vars, species = NULL, samples = NULL, summary = FALSE)
 }
 \description{
-tidyProt
+description: a function to tidy proteomics data.
 }

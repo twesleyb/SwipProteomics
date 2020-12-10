@@ -1,7 +1,11 @@
 #' imputeKNNpep
 #'
-#' @import impute
+#' @export imputeKNNpep
+#'
+#' @importFrom impute impute.knn
+#'
 #' @importFrom dplyr %>%
+#'
 #' @importFrom data.table as.data.table
 
 imputeKNNpep <- function(tp, groupBy = NULL, samples_to_ignore = NULL,
@@ -76,7 +80,7 @@ imputeKNNpep <- function(tp, groupBy = NULL, samples_to_ignore = NULL,
     }
 
     # Perform KNN imputing, suppress messages with quiet.
-    knn_data <- impute.knn(dm[rows_to_impute, ],
+    knn_data <- impute::impute.knn(dm[rows_to_impute, ],
       k = 10, rowmax = 0.5, colmax = 0.8
     )
     

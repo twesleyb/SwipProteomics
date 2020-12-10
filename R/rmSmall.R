@@ -1,5 +1,4 @@
 #' rmSmall
-#' @importFrom dplyr %in%
 
 rmSmall <- function(partition, min_size=5) {
 	# set module membership of small modules to 0

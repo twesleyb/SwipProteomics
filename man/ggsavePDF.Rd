@@ -9,6 +9,3 @@ ggsavePDF(plots, file)
 \description{
 function for saving multiple ggplots to single pdf
 }
-\author{
-Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
-}

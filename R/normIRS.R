@@ -1,17 +1,30 @@
+#' normIRS
+#'
+#' perform IRS normalization
+#'
+#' @export normIRS
+#'
+#' @importFrom data.table as.data.table
+#'
+#' @importFrom dplyr %>% ungroup filter group_by select
+#'
+#' @importFrom dplyr summarize group_split left_join 
+
+
 normIRS <- function(tp, controls, robust = FALSE) {
-  requireNamespace("dplyr", quietly = TRUE)
-  requireNamespace("data.table", quietly = TRUE)
-  # Perform IRS Normalization.
-  # Calculate average of QC samples for each experiment (ExpMean).
-  tp <- ungroup(tp)
+  # perform IRS Normalization
+
+  # Calculate average of QC samples for each experiment (ExpMean)
+  tp <- dplyr::ungroup(tp)
   tp_list <- tp %>%
-    filter(Treatment == controls) %>%
-    group_by(Accession, Experiment) %>%
-    summarize(
+    dplyr::filter(Treatment == controls) %>%
+    dplyr::group_by(Accession, Experiment) %>%
+    dplyr::summarize(
       nQC = length(Intensity),
       ExpMean = mean(Intensity)
     ) %>%
-    group_split()
+    dplyr::group_split()
+
   # For every Protein, calculate the global mean of QC samples.
   # Calculate normalization factors to equalize GlobalMean and
   # ExpMean.
@@ -24,10 +37,12 @@ normIRS <- function(tp, controls, robust = FALSE) {
     x$RobustNormQC <- x$RobustNormFactor * x$ExpMean
     return(x)
   })
+
   # Collect the data in a df.
   df <- do.call(rbind, tp_list)
+
   # Use NormFactor's to normalize protein measurements.
-  tp_norm <- left_join(tp, df, by = c("Accession", "Experiment"))
+  tp_norm <- dplyr::left_join(tp, df, by = c("Accession", "Experiment"))
   if (robust == TRUE) {
     # Use Robust mean.
     tp_norm$Intensity <- tp_norm$Intensity * tp_norm$RobustNormFactor
@@ -35,7 +50,9 @@ normIRS <- function(tp, controls, robust = FALSE) {
     # Use Arithmetic mean.
     tp_norm$Intensity <- tp_norm$Intensity * tp_norm$NormFactor
   }
+
   tp_norm <- tp_norm %>% dplyr::select(colnames(tp))
-  tp_norm <- as.data.table(tp_norm)
+  tp_norm <- data.table::as.data.table(tp_norm)
+
   return(tp_norm)
 }

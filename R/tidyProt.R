@@ -1,7 +1,17 @@
 #' tidyProt
+#'
+#' description: a function to tidy proteomics data.
+#'
+#' @export tidyProt
+#'
+#' @importFrom reshape2 melt
+#'
+#' @importFrom dplyr %>% filter
+#'
+#' @importFrom data.table as.data.table
+
 tidyProt <- function(raw_data, id.vars, species = NULL,
                      samples = NULL, summary = FALSE) {
-  # description: a function to tidy proteomics data.
 
   lquote <- function(string, single = TRUE) {
     # Wrap a string in single or double quotes.
@@ -16,15 +26,8 @@ tidyProt <- function(raw_data, id.vars, species = NULL,
     }
   }
 
-  suppressPackageStartupMessages({
-    library(data.table)
-    # library(TBmiscr)
-    library(tibble)
-    library(dplyr)
-  })
-
   dt <- as.data.table(raw_data) %>%
-    melt(
+    reshape2::melt(
       id.vars = id.vars,
       variable.name = "Sample",
       value.name = "Intensity",
@@ -40,7 +43,7 @@ tidyProt <- function(raw_data, id.vars, species = NULL,
       "and will be removed."
     )
     warning(msg, call. = FALSE)
-    dt <- dt %>% filter(grepl(paste0("OS=", species), Description))
+    dt <- dt %>% dplyr::filter(grepl(paste0("OS=", species), Description))
   }
 
   # Insure zeros are NA.

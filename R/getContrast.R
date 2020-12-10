@@ -1,5 +1,9 @@
 #' getContrast
-
+#'
+#' create a contrast between a models coefficients
+#'
+#' @export getContrast
+#'
 #' @importFrom lme4 fixef
 
 getContrast <- function(fm, pos_coef, neg_coef) {

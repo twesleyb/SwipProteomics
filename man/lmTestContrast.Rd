@@ -9,6 +9,3 @@ lmTestContrast(fm, contrast, s2_prior = 0, df_prior = 0)
 \description{
 lmTestContrast
 }
-\author{
-twab
-}

@@ -19,13 +19,17 @@ renv::load(root,quiet=TRUE)
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
 
+
 # load the data
 data(swip)
-data(gene_map)
-data(swip_tmt)
-data(swip_results)
-data(msstats_sig_prots) # sig_prots
+data(swip_tmt) 
+data(swip_gene_map) # gene_map
 data(swip_partition) # partition
+
+# we annotate the plots with stats from MSstatsTMT
+data(msstats_results) 
+data(msstats_sig_prots) # sig_prots
+
 
 # other imports
 suppressPackageStartupMessages({
@@ -57,7 +61,7 @@ names(modules) <- paste0("M",names(modules))
 # combine msstats_results with msstats_prot
 # we use statistical results from intra-BioFraction comparisons to annotate
 # the plots
-filt_results <- swip_results %>% filter(Contrast != "Mutant-Control") %>%
+filt_results <- msstats_results %>% filter(Contrast != "Mutant-Control") %>%
 	mutate(BioFraction = sapply(strsplit(Contrast, "\\."),"[",3))
 shared_cols <- intersect(colnames(swip_tmt),colnames(filt_results))
 prot_df <- left_join(swip_tmt,filt_results,by=shared_cols)
@@ -73,7 +77,7 @@ prot_df <- prot_df %>% filter(Protein %in% names(partition)) %>%
 
 protein = sample(unique(swip_tmt$Protein),1)
 
-plotProfile <- function(protein, gene_map, swip_tmt, swip_results) {
+plotProfile <- function(protein, gene_map, swip_tmt, msstats_results) {
 
   # colors for plot
   wt_color <- "#47b2a4"
@@ -83,7 +87,7 @@ plotProfile <- function(protein, gene_map, swip_tmt, swip_results) {
   gene <- gene_map$symbol[match(protein, gene_map$uniprot)]
 
   # proteins with overall sig change
-  sig_prots <- swip_results %>% 
+  sig_prots <- msstats_results %>% 
 	filter(Contrast == 'Mutant-Control' & FDR<0.05) %>%  ungroup() %>%
 	select(Protein) %>% unlist() %>% as.character() %>% unique()
 
@@ -175,7 +179,7 @@ message("\nGenerating plots for ",
 plots <- list()
 pbar <- txtProgressBar(max=length(sorted_prots),style=3)
 for (protein in sorted_prots) {
-	plots[[protein]] <- plotProfile(protein, gene_map, swip_tmt, swip_results)
+	plots[[protein]] <- plotProfile(protein, gene_map, swip_tmt, msstats_results)
         setTxtProgressBar(pbar,value=match(protein,sorted_prots))
 } # EOL for proteins
 close(pbar)
@@ -184,5 +188,5 @@ close(pbar)
 ## ---- save results 
 
 message("\nSaving plots as a single pdf, this will take several minutes.")
-myfile = file.path(figsdir,"protein_profiles.pdf")
+myfile = file.path(figsdir,"SWIP-Protein-Profiles.pdf")
 ggsavePDF(plots, file=myfile)

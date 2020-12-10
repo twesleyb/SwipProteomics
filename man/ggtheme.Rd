@@ -7,8 +7,5 @@
 ggtheme()
 }
 \description{
-set a theme for ggplots
-}
-\author{
-Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
+set theme for ggplots
 }

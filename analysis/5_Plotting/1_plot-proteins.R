@@ -23,9 +23,8 @@ devtools::load_all(root, quiet=TRUE)
 # load the data
 data(swip)
 data(swip_tmt) 
+data(msstats_results) 
 data(swip_colors) # module_colors
-data(swip_results)
-data(msstats
 data(swip_gene_map) # gene_map
 data(swip_partition)  # partition
 data(msstats_sig_prots) # sig_prots
@@ -115,8 +114,12 @@ plotProtein <- function(protein, prot_df, gene_map,
   plot <- plot + scale_colour_manual(name="Subject", values=colors,labels=mylabs) 
   plot <- plot + ggtitle(paste(gene,protein,sep=" | "))
   plot <- plot + scale_y_continuous(breaks=scales::pretty_breaks(n=5))
-  plot <- plot + theme(axis.text.x = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
-  plot <- plot + theme(axis.text.y = element_text(color="black",size=11, angle = 0, hjust = 1, family = "Arial"))
+  plot <- plot + theme(axis.text.x = element_text(color="black",
+						  size=11, angle = 0, 
+						  hjust = 1, family = "Arial"))
+  plot <- plot + theme(axis.text.y = element_text(color="black",
+						  size=11, angle = 0, 
+						  hjust = 1, family = "Arial"))
   plot <- plot + theme(panel.background = element_blank())
   plot <- plot + theme(axis.line.x=element_line())
   plot <- plot + theme(axis.line.y=element_line())

@@ -1,9 +1,9 @@
 #' ggtheme
 #'
-#' set a theme for ggplots
+#' set theme for ggplots
 #'
-#' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
-#'
+#' @export ggtheme
+
 ggtheme <- function() {
 
   suppressPackageStartupMessages({
