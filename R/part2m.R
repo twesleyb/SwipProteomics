@@ -1,4 +1,4 @@
-#' @export part2m
+#' part2m
 
 part2m <- function(partition,module_prefix="M") {
 	modules <- split(names(partition),partition)

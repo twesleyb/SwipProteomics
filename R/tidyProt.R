@@ -1,5 +1,4 @@
 #' tidyProt
-#' @export tidyProt
 tidyProt <- function(raw_data, id.vars, species = NULL,
                      samples = NULL, summary = FALSE) {
   # description: a function to tidy proteomics data.

@@ -23,7 +23,6 @@
 #'
 #' @examples
 #' write.excel(data, file = "foo.xlsx")
-#' @export write_excel
 
 write_excel <- function(mydata, myfile, rowNames = FALSE, colNames = TRUE, ...) {
   # imports

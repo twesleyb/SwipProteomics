@@ -1,5 +1,4 @@
 #' set_font
-#' @export set_font
 set_font <- function(font, font_path = NULL) {
 
   # Use a custom font.

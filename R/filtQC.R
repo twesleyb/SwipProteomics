@@ -1,9 +1,8 @@
-#' @export filtQC
-
-#' @importFrom dplyr %>% filter group_by summarize 
+#' filtQC
 
 filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
   # remove peptides with highly variable QC measurements
+  # importFrom dplyr %>% filter group_by summarize 
 
   # calculate ratios of QC peptides, grouped by Experiment
   ratio_data <- tp %>%
@@ -18,7 +17,7 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
     )
   ratio_data <- ratio_data %>% filter(!Remove)
 
-  # Group ratio data into intensity bins.
+  # Group ratio data into intensity bins
   breaks <- quantile(ratio_data$Mean, seq(0, 1, length.out = nbins + 1),
     names = FALSE, na.rm = TRUE
   )
@@ -26,7 +25,7 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
     labels = FALSE, include.lowest = TRUE
   )
 
-  # Summarize intensity bins.
+  # Summarize intensity bins
   ratio_df <- ratio_data %>%
     group_by(Bin) %>%
     summarize(
@@ -38,7 +37,7 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
       "Max" = mean(Ratio, na.rm = TRUE) + (nSD * sd(Ratio))
     )
 
-  # Determine if QC measurement is outside percision limits.
+  # Determine if QC measurement is outside percision limits
   ratio_data$Min <- ratio_df$Min[ratio_data$Bin]
   ratio_data$Max <- ratio_df$Max[ratio_data$Bin]
   out_low <- ratio_data$Ratio < ratio_data$Min
@@ -46,13 +45,13 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
   out <- out_low | out_high
   ratio_data$isOutlier <- out
 
-  # Summarize number of outlies per bin.
+  # Summarize number of outlies per bin
   nOutliers <- ratio_data %>%
     group_by(Bin) %>%
     summarize(n = sum(isOutlier))
   ratio_df$nOutliers <- nOutliers[["n"]]
 
-  # Collect outlier peptides.
+  # Collect outlier peptides
   data_outliers <- ratio_data %>% filter(isOutlier)
   outlier_peptides <- paste(data_outliers$Experiment,
     data_outliers$Accession,
@@ -61,7 +60,7 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
     sep = "_"
   )
 
-  # Remove outlier peptides from data.
+  # Remove outlier peptides from data
   ids <- paste(tp$Experiment, tp$Accession,
     tp$Sequence, tp$Modifications,
     sep = "_"
@@ -70,7 +69,7 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
   tp_filt <- tp %>% filter(!is_outlier)
   tp_filt <- as.data.frame(tp_filt)
 
-  # Status report.
+  # Status report
   if (!quiet) {
     total_out <- sum(out, na.rm = TRUE)
     message(paste(
@@ -79,6 +78,6 @@ filtQC <- function(tp, controls = "SPQC", nbins = 5, nSD = 4, quiet = TRUE) {
     ))
   }
 
-  # Return tidy data.
+  # Return tidy data
   return(tp_filt)
 }

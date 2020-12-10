@@ -4,8 +4,6 @@
 
 #' @importFrom dplyr %>%
 
-#' @export lmerTestProtein 
-
 lmerTestProtein <- function(protein, fx, msstats_prot, contrasts) {
 
   getIndex <- function(namen, dm = lme4::fixef(fm)) {

@@ -23,10 +23,10 @@ datafile = "BioID_raw_protein.csv"
 ## ---- renv
 
 root <- "~/projects/SwipProteomics"
-renv::load(root)
+renv::load(root, quiet=TRUE)
 
 # library(SwipProteomics)
-devtools::load_all(root)
+devtools::load_all(root, quiet=TRUE)
 
 # JC's bioid annotations 
 data(bioid_anno)
@@ -538,10 +538,12 @@ bioid_results <- results_df
 # save results as excel
 myfile <- file.path(root,"tables","S1_WASH-BioID_Results.xlsx")
 write_excel(list("WASH-BioID"=bioid_results), myfile)
+message("saved: ", myfile)
 
 # save bioid results as rda
 myfile <- file.path(root,"data","bioid_results.rda")
 save(bioid_results, file = myfile, version = 2)
+message("saved: ", myfile)
 
 # collect sig enriched prots 
 wash_interactome <- bioid_results %>% 
@@ -553,52 +555,4 @@ wash_interactome <- bioid_results %>%
 # save as rda
 myfile <- file.path(root,"data","wash_interactome.rda")
 save(wash_interactome, file=myfile, version=2)
-
-
-quit()
-
-## ---- generate noa file for JC
-
-data(bioid_anno)
-
-library(getPPIs)
-data(musInteractome)
-
-wash_interactome
-
-data(bioid_results)
-
-colnames(bioid_results)
-
-anno <- dcast(bioid_anno, Protein ~ Annotation, value.var = "PMID")
-noa <- bioid_results %>% 
-	filter(Protein %in% wash_interactome) %>% 
-	left_join(anno, by="Protein") %>% 
-	mutate(Symbol = toupper(Symbol))
-fwrite(noa, "noa.csv")
-
-
-
-os_keep <- c(9606, 10116, 10090)
-
-data(bioid_gene_map)
-
-entrez <- mapID(wash_interactome,"uniprot","entrez")
-
-# collect interactions between swip and wash_interactome proteins
-wash_ppis <- musInteractome %>% 
-	filter(Interactor_A_Taxonomy %in% os_keep) %>% 
-	filter(Interactor_B_Taxonomy %in% os_keep) %>%
-	subset(osEntrezA %in% entrez & osEntrezB %in% entrez)
-edge_df <- wash_ppis %>% select(osEntrezA, osEntrezB, Publications)
-protA = mapID(edge_df$osEntrezA,'entrez','uniprot')
-protB = mapID(edge_df$osEntrezB,'entrez','uniprot')
-edge_df <- tibble::add_column(edge_df, protA, .before='osEntrezA')
-edge_df <- tibble::add_column(edge_df, protB, .after='protA')
-df1 = edge_df %>% select(protA, protB, Publications)
-df2 = data.table(protA=mapID("Washc1"),
-	   protB=wash_interactome,
-	   Publications='Courtland et al. 2020')
-edge_df = rbind(df1,df2)
-fwrite(edge_df, "edges.csv")
-
+message("saved: ", myfile)

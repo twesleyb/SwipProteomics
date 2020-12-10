@@ -4,8 +4,6 @@
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #'
-#' @export ggsavePDF
-
 ggsavePDF <- function(plots, file) {
 
   suppressPackageStartupMessages({

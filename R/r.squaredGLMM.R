@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-#' @export r.squaredGLMM.merMod
-
 # NOTE: from MuMin package utils-misc.R utils-models and r.squaredGLMM.R
 # Currently this is a mess, because I just pulled everything that
 # r.squaredGLMM.merMod required. Thus, much of the code below is not needed

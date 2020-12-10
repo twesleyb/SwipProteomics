@@ -1,7 +1,5 @@
 #' mapID
 
-#' @export mapID
-
 mapID <- function(id_in = "Washc4", identifiers = "symbol", new_ids = "uniprot") {
   # requires: env@gene_map
   # mapping between gene identifiers:

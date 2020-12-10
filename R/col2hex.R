@@ -6,8 +6,6 @@
 #'
 #' @author Tyler W Bradshaw, \email{tyler.w.bradshaw@duke.edu}
 #'
-#' @export col2hex
-#'
 col2hex <- function(color, maxValue = 255) {
   ## NOTE: this function no longer works...??? 11/2/20
 

@@ -1,4 +1,4 @@
-#' @export imputeKNNpep
+#' imputeKNNpep
 #'
 #' @import impute
 #' @importFrom dplyr %>%

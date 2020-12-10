@@ -1,4 +1,4 @@
-#' @export rmSmall
+#' rmSmall
 #' @importFrom dplyr %in%
 
 rmSmall <- function(partition, min_size=5) {

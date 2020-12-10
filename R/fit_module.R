@@ -1,7 +1,5 @@
 #' fit_module
 #'
-#' @export fit_module
-
 fit_module <- function(prots, msstats_prot, gene_map) {
 
   # subset data for all prots in a module

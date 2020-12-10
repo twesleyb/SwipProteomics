@@ -1,4 +1,4 @@
-#' @export getContrast
+#' getContrast
 
 #' @importFrom lme4 fixef
 

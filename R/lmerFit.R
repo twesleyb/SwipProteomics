@@ -1,4 +1,4 @@
-#' @export lmerFit
+#' lmerFit
 
 #' @importFrom lme4 lmerControl
 #' @importFrom lmerTest lmer

@@ -1,6 +1,4 @@
-#!/usr/bin/env Rscript
-
-#' @export rmOutlierPSM
+#' rmOutlierPSM
 
 rmOutlierPSM <- function(mixture, psm_df, nbins = 5, nSD = 4, nComplete = 2) {
 

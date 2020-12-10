@@ -1,4 +1,4 @@
-#' @export summarize_prot
+#' summarize_prot
 #' @import data.table dplyr
 
 summarize_prot <- function(tp) {
