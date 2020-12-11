@@ -538,7 +538,7 @@ data.table("nSig"=sum(results_df$candidate)) %>%
 bioid_results <- results_df
 
 # save results as excel
-myfile <- file.path(root,"tables","WASH-iBioID-QExactiveMS-Results.xlsx")
+myfile <- file.path(root,"tables","WASH-iBioID-Results.xlsx")
 write_excel(list("WASH-BioID"=bioid_results), myfile)
 message("saved: ", myfile)
 
