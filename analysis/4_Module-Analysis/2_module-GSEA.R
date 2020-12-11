@@ -196,12 +196,21 @@ sig_dt %>% filter(idx) %>%
 	knitr::kable()
 
 # modules with uniprot enrichment
+message("UniProt enriched: ")
 sig_dt %>% filter(grepl("Uniprot",Pathway)) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	knitr::kable()
 
+message("Sig Modules: ")
 sig_dt %>% 
 	subset(Module %in% sig_modules) %>%
+	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
+	arrange(as.numeric(gsub("M","",Module))) %>%
+	knitr::kable()
+
+message("NS Modules: ")
+sig_dt %>% 
+	subset(Module %notin% sig_modules) %>%
 	select(Module, Pathway, Padjust, `Fold enrichment`) %>% 
 	arrange(as.numeric(gsub("M","",Module))) %>%
 	knitr::kable()
@@ -220,12 +229,13 @@ myfile <- file.path(root, "data", "module_gsea.rda")
 save(module_gsea, file = myfile, version = 2)
 message("saved: ", myfile)
 
-# save as excel
 idx <- order(as.numeric(gsub("M","",sig_dt$Module)))
 sig_dt <- sig_dt[idx,] # sort by module
 tmp_df <- data.table(Pathway=names(gene_lists),
 	  Entrez = sapply(gene_lists,paste,collapse=";"))
 tmp_list <- list("Module GSEA" = sig_dt,"Pathways" = tmp_df)
+
+# save as excel
 myfile <- file.path(root,"tables", "SWIP-TMT-Module-GSEA.xlsx")
 write_excel(tmp_list,myfile)
 message("saved :", myfile)

@@ -6,6 +6,8 @@ devtools::load_all(root)
 
 data(swip_partition)
 data(swip_sig_prots); s <- sig_prots
+
+data(msstats_gene_map)
 data(msstats_sig_prots); m <- sig_prots
 
 library(dplyr)
@@ -20,8 +22,7 @@ sapply(M, sum) %>% knitr::kable()
 sapply(S, sum) %>% knitr::kable()
 
 modules <- split(names(partition),partition)[-1]
-
-data(msstats_gene_map)
+names(modules) <- paste0("M",names(modules))
 
 results <- list()
 for (i in c(1:length(modules))){
@@ -40,5 +41,6 @@ for (i in c(1:length(modules))){
   df <- data.table(current=sum(prots %in% s), to_label = sum(prots %in% m), to_rm = length(to_rm), to_add = length(to_add))
   results[[i]] <- list(summary = df, to_rm = to_rm, to_add = to_add)
 }
+names(results) <- names(modules)
 
-results
+results[c("M36","M38")]

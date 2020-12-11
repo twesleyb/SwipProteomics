@@ -3,9 +3,21 @@
 # load renv, project functions and data
 renv()
 
-data(gene_map)
-data(lopit_prots)
-data(ne_surprise_partition)
+data(gene_lists)
+data(swip_gene_map)
+data(swip_partition)
+
+namen <- names(gene_lists)
+
+path_entrez = gene_lists[["LopitDC: PM"]]
+path_uniprot = getPPIs::getIDs(path_entrez,"entrez","uniprot","mouse")
+length(path_uniprot)
+length(path_entrez)
+
+module = names(which(partition==4))
+sum(module %in% path_uniprot)
+
+x = gene_lists
 
 
 myfun <- function(path,m){

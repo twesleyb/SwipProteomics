@@ -351,6 +351,10 @@ for (i in c(1:ncol(noa))) {
 }
 
 
+fwrite(noa,"noa.csv")
+
+quit()
+
 ## ---- Create Cytoscape graphs
 
 # all modules
