@@ -47,6 +47,7 @@ data(list = "corum") # CORUM protein complexes [1]
 data(list = "takamori2006SV") # presynaptic proteome from Takamori et al. [3]
 data(list = "uniprotSubcell") # uniprot subcellular anno for network prots
 data(list = "lopitDCpredictions") # protein predicted subcellular locations [2]
+data(list = "itzhak2017") # protein predicted subcellular locations
 
 
 ## ---- Do work 
@@ -85,6 +86,9 @@ names(iPSD) <- paste("Uezu et al., 2016:", names(iPSD))
 # Clean-up ePSD names
 names(ePSD) <- paste("Uezu et al., 2016:", names(ePSD))
 
+# clean-up itzhak names
+names(itzhak2017) <- paste("Itzhak et al., 2017:", names(itzhak2017))
+
 # Collect list of entrez ids for pathways of interest
 gene_lists <- c(
   list("WASH-iBioID" = wash_genes), # 1
@@ -95,7 +99,8 @@ gene_lists <- c(
   iPSD, # 6
   ePSD, # 7
   uniprotSubcell,
-  list("SigProts" = sig_prots)
+  list("SigProts" = sig_prots),
+  itzhak2017
 )
 
 # Remove lists with less than 3 proteins
