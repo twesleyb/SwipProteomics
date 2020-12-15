@@ -4,6 +4,7 @@ local/
 work/
 figs/
 renv/
+refs/
 rdata/
 ARCHIVE/
 cache/
@@ -18,6 +19,8 @@ renv.lock
 sessionInfo.txt
 
 ## R.gitignore
+.Rprofile
+
 
 # History files
 .Rhistory
