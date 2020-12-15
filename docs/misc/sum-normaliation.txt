@@ -1,9 +1,0 @@
-The second aspect, and more specific to spatial proteomics data, is scaling all
-Before building the correlation network, we perform sum normalization to scale 
-module-profiles into the same intensity interval by dividing each protein
-intensity by the sum of all intensities for that protein.
-
-This transformation of the data assures
-cancellation of the effect of the absolute intensities of the quantitative
-features along the rows, and focus subsequent analyses on the relative profiles
-along the sub-cellular channels.  

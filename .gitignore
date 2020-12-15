@@ -1,6 +1,7 @@
 ## project specific directories to ignore
 ai/
 local/
+work/
 renv/
 rdata/
 ARCHIVE/
