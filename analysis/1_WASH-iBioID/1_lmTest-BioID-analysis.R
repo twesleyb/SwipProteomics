@@ -29,25 +29,8 @@ renv::load(root, quiet=TRUE)
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
 
-# JC's bioid annotations 
-data(bioid_anno)
-
 
 ## ---- Functions 
-
-lquote <- function(string, single = TRUE) {
-  # wrap a string in single or double quotes
-  single_quote <- "'"
-  double_quote <- "\""
-  if (single) {
-    # Single quote.
-    return(paste0(single_quote, string, single_quote))
-  } else {
-    # Double quote.
-    return(paste0(double_quote, string, double_quote))
-  }
-} #EOF
-
 
 check_group_CV <- function(tidy_prot) {
   # Check CV of WASH, Control, and SPQC groups.
@@ -73,11 +56,11 @@ check_group_CV <- function(tidy_prot) {
 tidyProt <- function(raw_data,id.vars,species=NULL,
 		     samples=NULL,summary=FALSE){
 	# description: a function to tidy proteomics data.
-	suppressPackageStartupMessages({
-		library(data.table)
-		library(tibble)
-		library(dplyr)
-	})
+#	suppressPackageStartupMessages({
+#		library(data.table)
+#		library(tibble)
+#		library(dplyr)
+#	})
 	dt <- as.data.table(raw_data) %>%
 		melt(id.vars = id.vars,
 		     variable.name="Sample",
@@ -100,10 +83,10 @@ tidyProt <- function(raw_data,id.vars,species=NULL,
 
 
 normSL <- function(tp, groupBy=NULL){
-	suppressPackageStartupMessages({
-		library(dplyr)
-		library(data.table)
-	})
+#	suppressPackageStartupMessages({
+#		library(dplyr)
+#		library(data.table)
+#	})
 	# Create an expression that will be evaluated to dynamically 
 	# group data based on user provided grouping factors. Default's
 	# to Sample -- every replicate.
@@ -131,10 +114,10 @@ normSL <- function(tp, groupBy=NULL){
 
 normSP <- function(tp, pool){
 	# perform normalization to pooled QC samples
-	# Store a copy of the data.
+	# store a copy of the data
 	tp <- ungroup(tp)
 	tp_copy <- tp
-	# Group pooled together.
+	# group pooled together
 	tp$Group <- as.numeric(grepl(paste(pool,collapse="|"),tp$Sample))
 	tp_list <- tp %>% group_by(Accession,Group) %>% 
 		dplyr::summarize(Mean_Intensity=mean(Intensity,na.rm=TRUE),
@@ -142,7 +125,7 @@ normSP <- function(tp, pool){
 	as.data.table() %>% 
 	arrange(Accession,Group) %>% 
 	group_by(Accession) %>% group_split()
-	# Loop to calculate normalization factors.
+	# loop to calculate normalization factors
         new_list <- list()
 	for (i in 1:length(tp_list)){
 		x <- tp_list[[i]]
@@ -151,16 +134,16 @@ normSP <- function(tp, pool){
 		new_list[[i]] <- x
 	}
 	tp_list <- new_list
-	# Collect in a df.
+	# collect in a df
 	df <- do.call(rbind,tp_list) %>% 
 		dplyr::select(Accession,Group,NormFactor)
-	# Merge with input data.
+	# merge with input data
 	tp_norm <- left_join(tp,df,by=c("Accession","Group"))
 	# Perform normalization step.
 	tp_norm$Intensity <- tp_norm$Intensity * tp_norm$NormFactor
 	tp_norm <- tp_norm %>% dplyr::select(colnames(tp_copy))
 	tp_norm <- as.data.table(tp_norm)
-	# Return the normalized data.
+	# return the normalized data
 	return(tp_norm)
 } #EOF
 
@@ -170,13 +153,12 @@ imputeKNNprot <- function(tidy_prot,ignore="QC",k=10,rowmax=0.5,colmax=0.8,
 	# Determine how many missing values each protein has,
 	# and then determine the permisible number of missing values 
 	# for any given protein.
-	# Imports.
-	suppressPackageStartupMessages({
-		library(impute)
-		library(dplyr)
-		library(tibble)
-		library(data.table)
-	})
+#	suppressPackageStartupMessages({
+#		library(impute)
+#		library(dplyr)
+#		library(tibble)
+#		library(data.table)
+#	})
 	# Store a copy of the input data.
 	tp <- tp_in <- tidy_prot
 	# How many missing values are there?
@@ -223,7 +205,7 @@ imputeKNNprot <- function(tidy_prot,ignore="QC",k=10,rowmax=0.5,colmax=0.8,
 	# Perform KNN imputing.
 		# 
 	if (quiet) {
-		# Suppress output from impute.knn.
+		# suppress output from impute.knn
 		silence({
 			data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
 					       k=k,colmax=colmax,rowmax=rowmax)
@@ -232,16 +214,16 @@ imputeKNNprot <- function(tidy_prot,ignore="QC",k=10,rowmax=0.5,colmax=0.8,
 		data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
 				       k=k,colmax=colmax,rowmax=rowmax)
 	}
-	# Collect the imputed data.
+	# Collect the imputed data
 	dm_knn <- dm
 	dm_knn[!rows_to_ignore,] <- 2^data_knn$data
-	# Melt into tidy df.
+	# Melt into tidy df
 	dt_knn <- as.data.table(dm_knn,keep.rownames="Accession")
 	tp_imputed <- melt(dt_knn,id.vars="Accession",
 			  variable.name="Sample",value.name="Intensity")
-	# Combine with any samples that were ignored.
+	# combine with any samples that were ignored
 	tp_imputed <- rbind(tp_ignore,tp_imputed)
-	# Combine with input meta data.
+	# combine with input meta data
 	tp_in$Intensity <- NULL
 	tp_in$Sample <- as.character(tp_in$Sample)
 	tp_imputed$Sample <- as.character(tp_imputed$Sample)
@@ -268,7 +250,7 @@ rdatdir <- file.path(root,"rdata") # temp data files
 tabsdir <- file.path(root,"tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
 
-# Create dirs if they dont exist
+# create dirs if they dont exist
 if (!dir.exists(datadir)){ dir.create(datadir) }
 if (!dir.exists(rdatdir)){ dir.create(rdatdir) }
 if (!dir.exists(tabsdir)){ dir.create(tabsdir) }
@@ -291,42 +273,47 @@ unlink(myfile,recursive=TRUE)
 unlink("./BioID", recursive=TRUE)
 
 # tidy-up the data
-message("\nLoading raw Swip BioID protein data.")
-
 tidy_prot <- tidyProt(raw_prot,species="Mus musculus",
 		      id.vars=c("Accession","Description","Peptides"))
 
-# insure that keratins have been removed
-idx <- grepl("Keratin|keratin",tidy_prot$Description)
-keratins <- tidy_prot %>% dplyr::filter(idx) %>% dplyr::select(Accession) %>% 
+## insure that keratins have been removed
+
+# collect vector or keratin proteins
+keratins <- tidy_prot %>% 
+	filter(grepl("Keratin|keratin",Description)) %>%
+	dplyr::select(Accession) %>% 
 	unlist() %>% unique()
 
-warning(paste(length(keratins),
-	      "Keratin proteins remain, and  will be removed."))
-tidy_prot <- tidy_prot %>% dplyr::filter(Accession %notin% keratins)
+# remove keratin prots
+tidy_prot <- tidy_prot %>% 
+	dplyr::filter(Accession %notin% keratins)
 
-# Load mitochondrial protein list from twesleyb/geneLists
-data(mitocarta2)
+## remove mitochondrial contaiminants
 
-# map entrez to uniprot
+# load mitochondrial protein list from twesleyb/geneLists
+
+data(list="mitocarta2", package = "geneLists")
+
+# collect mitocarta entrez ids
 mito_entrez <- unlist(mitocarta2, use.names=FALSE)
+
+# rm these additional mito prots
 hand_anno_mito <- c("Mtres1", "Gcdh", "Clpx", "Pdk3", "Mrps36","Hscb",
 	  "Aldh2","Shmt2","Ciapin1","Ssbp1","Bckdha","Dap3")
-mito <- c(mito_entrez, 
-	  getPPIs::getIDs(hand_anno_mito, 'symbol', 'entrez', 'mouse'))
+hand_anno_entrez <- getPPIs::getIDs(hand_anno_mito, 'symbol', 'entrez', 'mouse')
 
-# add some manually currated  mito prots
-tidy_prot <- tidy_prot <- tidy_prot %>% 
+# to be removed if in mito
+mito <- c(mito_entrez,hand_anno_entrez) 
+
+# annotate data with entrez ids
+tidy_prot <- tidy_prot %>% 
 	mutate(Entrez = getPPIs::getIDs(Accession,'uniprot','entrez','mouse'))
 
+# total number of mito prots to be removed
 nMito <- sum(mito %in% tidy_prot$Entrez)
-warning(paste(nMito,"mitochondrial proteins will be removed as contaminants."))
 
+# rm mito prots
 tidy_prot <- tidy_prot %>% dplyr::filter(Entrez %notin% mito)
-nProt <- length(unique(tidy_prot$Accession))
-
-message(paste0("\nTotal number of proteins quantified: ",
-	      formatC(nProt, big.mark=","),"."))
 
 # cast the tidy raw protein data into a matrix -- we will save this as part of
 # an excel workbook with the results
@@ -334,9 +321,8 @@ tidy_dm <- tidy_prot %>% as.data.table() %>%
 	dcast(Accession + Description + Peptides ~ Sample, 
 	      value.var = "Intensity")
 
-# status
-message("\nSummary of group CVs:")
-knitr::kable(check_group_CV(tidy_prot))
+#message("\nSummary of group CVs:")
+#knitr::kable(check_group_CV(tidy_prot))
 
 
 ## ---- create gene map 
@@ -359,32 +345,32 @@ stopifnot(!any(is.na(entrez)))
 # there should be no missing symbols
 stopifnot(!any(is.na(symbol)))
 
+# collect ids as a data.table
 gene_map <- data.table(uniprot, entrez, symbol)
 
 
 ## ---- sample loading normalization 
 
-message("\nPerforming sample loading normalization.")
+# munge to add Condition, Run, BioReplicate, Subject cols to data
+tidy_prot <- tidy_prot %>% 
+	mutate(Condition = sapply(strsplit(Sample,"\\ "),"[",2)) %>% 
+	mutate(Run = sapply(strsplit(Sample,"\\ "),"[",1)) %>%
+	mutate(BioReplicate = sapply(strsplit(Sample,"\\ "),"[",3)) %>%
+	mutate(Subject = interaction(Condition, BioReplicate))
 
-tidy_prot <- tidy_prot %>% mutate(Condition = sapply(strsplit(Sample,"\\ "),"[",2))
-tidy_prot <- tidy_prot %>% mutate(Run = sapply(strsplit(Sample,"\\ "),"[",1))
-tidy_prot <- tidy_prot %>% mutate(BioReplicate = sapply(strsplit(Sample,"\\ "),"[",3))
-tidy_prot <- tidy_prot %>% mutate(Subject = interaction(Condition,BioReplicate))
-
+# sl normalization
 SL_prot <- normSL(tidy_prot, groupBy="Sample")
 
-# Check, column sums should now be equal:
-message("Total intensity sums are equal after sample loading normalization:")
-df <- SL_prot %>% group_by(Sample) %>% 
-	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),.groups="drop")
-knitr::kable(df)
+# Check, column sums (Run total intensity) should now be equal:
+
+#df <- SL_prot %>% group_by(Sample) %>% 
+#	summarize("Total Intensity"=sum(Intensity,na.rm=TRUE),.groups="drop")
+#knitr::kable(df)
 
 
 ## ---- protein level filtering 
 
-message("\nFiltering proteins...")
-
-# Remove one hit wonders -- proteins identified by a single peptide.
+# Remove one hit wonders -- proteins identified by a single peptide
 one_hit_wonders <- unique(SL_prot$Accession[SL_prot$Peptides == 1])
 n_ohw <- length(one_hit_wonders)
 
@@ -400,10 +386,9 @@ dm <- SL_prot %>%
 idy <- grep("QC",colnames(dm))
 idx <- apply(dm[,idy], 1, function(x) any(is.na(x)))
 
+# number of missing:
 is_missing <- rownames(dm)[idx]
 n_miss <- length(is_missing[is_missing %notin% n_ohw])
-
-message(paste("... Number of proteins with missing QC values:", n_miss))
 
 # Remove proteins with more than 50% missingness as these cannot be imputed
 df <- SL_prot %>% 
@@ -411,28 +396,24 @@ df <- SL_prot %>%
 	group_by(Accession) %>%
 	summarize(N=length(Intensity),
 		  n_missing=sum(is.na(Intensity)),.groups="drop")
+
+# number of sparsly quantified proteins
 is_sparse <- unique(df$Accession[df$n_missing>0.5*df$N])
 n_sparse <- length(is_sparse)
 
-message(paste("... Number of proteins with too many missing values:",n_sparse))
-
-# subset
+# subset the data
 filt_prot <- SL_prot %>% 
 	dplyr::filter(Accession %notin% n_ohw) %>% 
 	filter(Accession %notin% is_missing) %>%
 	filter(Accession %notin% is_sparse)
 
-# status:
+# final number of quantified proteins
 prots <- unique(filt_prot$Accession)
 n_prot <- length(prots)
-message("\nFinal number of quantifiable proteins: ", 
-	formatC(n_prot,big.mark=","))
 
 
 ## ---- sample pool normalization 
 # perform normalization to QC samples
-
-message("\nPerforming sample pool normalization used pooled QC samples.")
 
 SPN_prot <- normSP(filt_prot, pool="QC")
 
@@ -458,16 +439,19 @@ swip <- gene_map$uniprot[match("Washc4",gene_map$symbol)]
 
 # simple linear model:
 fx <- log2(Intensity) ~ Condition
-fm <- lm(fx, wash_bioid %>% subset(Accession == swip) %>% filter(Condition != "QC"))
+
+# the data:
+df <- wash_bioid %>% subset(Accession == swip) %>% filter(Condition != "QC")
+
+# fit the model
+fm <- lm(fx, data = df)
 
 # create a contrast:
-LT <- coef(fm)
+LT <- coef(fm) # model coefficients
 LT[] <- 0
 LT['ConditionWASH'] <- 1
 
-#lmTestContrast(fm, LT) %>% 
-#	mutate(Pvalue=formatC(Pvalue)) %>% 
-#	knitr::kable()
+#lmTestContrast(fm, LT) %>% mutate(Pvalue=formatC(Pvalue)) %>% knitr::kable()
 
 
 ## ---- loop to perform test for all proteins
@@ -480,25 +464,29 @@ df_list <- list()
 # fit the models
 proteins <- unique(wash_bioid$Accession)
 for (prot in proteins) {
-	fm <- lm(fx, wash_bioid %>% subset(Accession == prot) %>% filter(Condition != "QC"))
+	df <- wash_bioid %>% 
+		subset(Accession == prot) %>% 
+		filter(Condition != "QC")
+	fm <- lm(fx, data = df)
 	fm_list[[prot]] <- fm
 	s2_list[[prot]] <- sigma(fm)^2 # calculate sigma2 for moderation
-	df_list[[prot]] <- fm$df.residual
+	df_list[[prot]] <- fm$df.residual # get df for moderation
 }
 
-# t-statistic moderation
+# perform t-statistic moderation
 eb_var <- limma::squeezeVar(unlist(s2_list), unlist(df_list))
 df_prior <- eb_var$df.prior
 s2_prior <- eb_var$s2.prior
 if (is.null(s2_prior)) { s2_prior <- 0 }
 
 # examine SWIP's result with moderation
-fx <- log2(Intensity) ~ Condition
-fm <- lm(fx, wash_bioid %>% subset(Accession == swip) %>% filter(Condition != "QC"))
-#lmTestContrast(fm, LT, s2_prior, df_prior) %>% 
-#	mutate(Pvalue=formatC(Pvalue)) %>% knitr::kable()
+df <- wash_bioid %>% subset(Accession == swip) %>% filter(Condition != "QC")
+fm <- lm(fx, data=df)
 
-# loop to perform moderated comparisons
+#lmTestContrast(fm, LT, s2_prior, df_prior) %>% mutate(Pvalue=formatC(Pvalue)) %>% 
+#	knitr::kable()
+
+# loop to moderate comparisons for all proteins
 result_list <- list()
 
 for (prot in proteins) {
@@ -529,17 +517,20 @@ results_df <- results_df %>%
 	arrange(desc(sig), desc(up), Pvalue, desc(log2FC)) %>%
 	dplyr::select(-sig,-up)
 
-# summary
-data.table("nSig"=sum(results_df$candidate)) %>% 
-	knitr::kable()
+#data.table("nSig"=sum(results_df$candidate)) %>% knitr::kable()
 
 
 ## ---- save results
-bioid_results <- results_df
 
-# save results as excel
+# save statistical results as excel
+bioid_results <- results_df
 myfile <- file.path(root,"tables","WASH-iBioID-Results.xlsx")
 write_excel(list("WASH-BioID"=bioid_results), myfile)
+message("saved: ", myfile)
+
+# save final normalized protein as rda
+myfile <- file.path(root,"data","wash_bioid.rda")
+save(wash_bioid, file=myfile, version=2)
 message("saved: ", myfile)
 
 # save bioid results as rda
@@ -554,7 +545,7 @@ wash_interactome <- bioid_results %>%
 	unlist(use.names=FALSE) %>% 
 	unique()
 
-# save as rda
+# save wash_interactome as rda
 myfile <- file.path(root,"data","wash_interactome.rda")
 save(wash_interactome, file=myfile, version=2)
 message("saved: ", myfile)
