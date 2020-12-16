@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
 
-#renv
-devtools::load_all()
+renv::load()
 
-library(SwipProteomics)
+devtools::load_all()
+#library(SwipProteomics)
+
 
 data(wash_bioid)
-
 data(bioid_gene_map)
 
 
