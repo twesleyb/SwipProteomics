@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript 
+#!/usr/bin/env Rscript
 
 # title: SwipProteomics
 # description: MSstatsTMT analysis of SWIP-TMT Proteomics
@@ -26,8 +26,8 @@ renv::load(root)
 devtools::load_all(root)
 
 # load data in root/data
-data(pd_psm) 
-data(gene_map)
+data(pd_psm)
+data(swip_gene_map)
 data(pd_annotation)
 data(mut_vs_control) # 'Mutant-Control' comparison
 data(msstats_contrasts) # 'intra-BioFraction' comparisons
@@ -81,15 +81,15 @@ suppressMessages({ # verbosity
   )
 })
 
-message("\nTime to reformat PSM data: ", 
+message("\nTime to reformat PSM data: ",
 	round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
 ## ---- protein-level summarization and normalization
 # perform protein summarization for each run with MSstatsTMT
 
-# NOTE: my fork allows you to pass additional args to underlying MSstats 
-# dataProcess function  -- speed things up by specifying the number of cores to 
+# NOTE: my fork allows you to pass additional args to underlying MSstats
+# dataProcess function  -- speed things up by specifying the number of cores to
 # be used for parallel processing.
 
 message("\nPerforming normalization and protein summarization using MSstatsTMT.")
@@ -100,10 +100,10 @@ t0 <- Sys.time()
 
 suppressMessages({ # verbosity
   msstats_prot <- proteinSummarization(msstats_psm,
-    method = "msstats", 
+    method = "msstats",
     remove_norm_channel = remove_norm_channel,
     global_norm = global_norm, # perform global norm using 'norm' condition
-    MBimpute = MBimpute, 
+    MBimpute = MBimpute,
     reference_norm = reference_norm,
     clusters = n_cores
   )
@@ -126,7 +126,7 @@ message(
 # We specify Condition as Genotype.BioFraction for all intra-fraction
 # comparisons. T-statistics are moderated using ebayes methods in limma.
 
-# We perform the two analyses seperately so we can specify moderated = TRUE for 
+# We perform the two analyses seperately so we can specify moderated = TRUE for
 # intra-BioFraction comparisons and moderated = FALSE for overall
 # 'Mutant-Control' comparison.
 
@@ -146,8 +146,8 @@ suppressWarnings({ # about closing clusters FIXME:
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
-  "\nTime to perform 8 'intra-BioFraction' comparisons for ", 
-  formatC(length(proteins),big.mark=","), " proteins: ", 
+  "\nTime to perform 8 'intra-BioFraction' comparisons for ",
+  formatC(length(proteins),big.mark=","), " proteins: ",
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
@@ -159,15 +159,15 @@ t0 <- Sys.time()
 # contrast.matrix should be a matrix!
 suppressWarnings({ # about closing clusters FIXME:
   suppressMessages({ # verbosity FIXME:
-    results2 <- groupComparisonTMT(msstats_prot, 
+    results2 <- groupComparisonTMT(msstats_prot,
 				   contrast.matrix = mut_vs_control,
 				   moderated = FALSE) })
 })
 
 # This takes about 21 minutes for 8.5 k proteins
 message(
-  "\nTime to perform 'Mutant-Control' comparison for ", 
-  formatC(length(proteins),big.mark=","), " proteins: ", 
+  "\nTime to perform 'Mutant-Control' comparison for ",
+  formatC(length(proteins),big.mark=","), " proteins: ",
   round(difftime(Sys.time(), t0, units = "min"), 3), " minutes.")
 
 
@@ -192,7 +192,7 @@ msstats_prot <- msstats_prot %>% subset(!is.na(Abundance))
 # map uniprot to gene symbols and entrez ids
 proteins <- unique(as.character(msstats_prot$Protein))
 idx <- match(msstats_prot$Protein,gene_map$uniprot)
-msstats_prot <- msstats_prot %>% 
+msstats_prot <- msstats_prot %>%
 	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
 	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
 
@@ -200,7 +200,7 @@ msstats_prot <- msstats_prot %>%
 ## ---- format msstats_results for downstream analysis
 
 # drop NA pvals and remove SingleMeasurePerCondition
-msstats_results <- msstats_results %>% 
+msstats_results <- msstats_results %>%
 	filter(!is.na(adj.pvalue)) %>% filter(is.na(issue)) %>% select(-issue)
 colnames(msstats_results)[colnames(msstats_results) == "Label"] <- "Contrast"
 colnames(msstats_results)[colnames(msstats_results) == "pvalue"] <- "Pvalue"
@@ -208,7 +208,7 @@ colnames(msstats_results)[colnames(msstats_results) == "adj.pvalue"] <- "FDR"
 
 # annotate with gene Symbols and Entrez ids
 idx <- match(msstats_results$Protein,gene_map$uniprot)
-msstats_results <- msstats_results %>% 
+msstats_results <- msstats_results %>%
 	tibble::add_column(Symbol = gene_map$symbol[idx],.after="Protein") %>%
 	tibble::add_column(Entrez = gene_map$entrez[idx],.after="Symbol")
 
@@ -242,11 +242,11 @@ results_list <- results_list[idx]
 class(results_list) <- "list"
 
 # summarize results
-lapply(results_list, summarize, sum(FDR<0.05)) %>% 
+lapply(results_list, summarize, sum(FDR<0.05)) %>%
 	bind_rows(.id="Contrast") %>% knitr::kable()
 
 
-## ---- save results 
+## ---- save results
 
 # save results as excel document
 myfile <- file.path(root,"tables","SWIP-MSstatsTMT-Results.xlsx")
