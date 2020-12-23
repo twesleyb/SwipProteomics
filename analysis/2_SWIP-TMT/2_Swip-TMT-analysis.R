@@ -99,7 +99,6 @@ uniprot <- unique(peptides$Accession)
 
 # map Uniprot IDs to Entrez using online MGI batch query function
 entrez <- geneLists::queryMGI(uniprot)
-
 names(entrez) <- uniprot
 
 # Map any remaining missing IDs by hand.
@@ -113,12 +112,12 @@ check <- sum(is.na(entrez)) == 0
 if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
 
 # Map entrez ids to gene symbols using twesleyb/getPPIs.
-symbols <- geneLists::getIDs(entrez,from="entrez",to="symbol",species="mouse")
+gene_symbols <- geneLists::getIDs(entrez,from="entrez",to="symbol",species="mouse")
 
 # Create gene identifier mapping data.table.
 gene_map <- data.table(uniprot = names(entrez),
                        entrez = entrez,
-	               symbol = symbols)
+	               symbol = gene_symbols)
 gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 
 
@@ -349,7 +348,7 @@ results_list <- foreach(prot = proteins) %dopar% {
 	res <- lmerTestContrast(fm,LT)
 	res_list[[res$Contrast]] <- res
   }
-  # collect resuults for each intra-BioFraction comparison
+  # collect results for all intra-BioFraction comparisons
   prot_results <- do.call(rbind, res_list) %>% mutate(Protein = prot)
   return(prot_results)
 } #EOL
@@ -357,7 +356,7 @@ results_list <- foreach(prot = proteins) %dopar% {
 
 ## ---- collect results for all intra-Biofraction comparisons
 
-# collect results
+# collect results for all proteins
 df <- dplyr::bind_rows(results_list) %>%
 	group_by(Contrast) %>%
 	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
@@ -380,6 +379,9 @@ names(results) <- shorter
 all_results <- results[biofractions]
 class(all_results) <- "list"
 all_results[["Mutant-Control"]] <- mut_wt_results
+
+# sort
+all_results <- lapply(all_results, function(x) x %>% arrange(Pvalue))
 
 # summary of sig results
 sapply(all_results,function(x) sum(x$FDR<FDR_alpha)) %>%

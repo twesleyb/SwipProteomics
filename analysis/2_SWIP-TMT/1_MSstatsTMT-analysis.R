@@ -16,7 +16,6 @@ remove_norm_channel <- TRUE # rm norm condition (SPQC) data?
 ## threshold for protein significance
 FDR_alpha = 0.05 # FDR = Benjamini Hochberg FDR
 
-
 ## ---- prepare the working R environment
 
 root <- "~/projects/SwipProteomics"
