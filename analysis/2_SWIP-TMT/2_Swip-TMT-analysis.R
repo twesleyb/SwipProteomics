@@ -39,8 +39,8 @@ renv::load(root, quiet=TRUE)
 # Load required packages and functions
 suppressPackageStartupMessages({
 	library(dplyr) # for manipulating data
-	library(getPPIs) # for PPIs
-	library(geneLists) # for mapping gene IDs
+	library(getPPIs) # twesleyb/getPPIs for mouse PPIs
+	library(geneLists) # twesleyb/geneLists for gene mapping fun
 	library(data.table) # for working with tables
 	library(doParallel) # for parallel processing
 })
@@ -112,6 +112,8 @@ check <- sum(is.na(entrez)) == 0
 if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
 
 # Map entrez ids to gene symbols using twesleyb/getPPIs.
+# NOTE: getIDs is just an easier to use wrapper around AnnotationDbi mapIDs
+# NOTE: you need the org.Mm.eg.db package for mapping mouse genes
 gene_symbols <- geneLists::getIDs(entrez,from="entrez",to="symbol",species="mouse")
 
 # Create gene identifier mapping data.table.
@@ -272,7 +274,8 @@ swip_tmt <- filt_protein %>%
 	mutate(BioFraction = Fraction) %>%
 	mutate(Abundance = log2(Intensity)) %>%
 	mutate(Condition = interaction(Genotype,BioFraction)) %>%
-	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Intensity,Abundance)
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject, Intensity,Abundance)
 
 
 ## ---- statistical analysis for overall Mutant-Controll contrast
@@ -280,10 +283,17 @@ swip_tmt <- filt_protein %>%
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores() - 1)
 
-# loop through all proteins
+# loop through all proteins, fit the model:
+#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
+#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
+
+# Subject is nested within Mixture
+fx <- log2(Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
+#fx <- log2(Intensity) ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
+# FIXME: getContrast does not work for intercepts!
+
 proteins <- unique(swip_tmt$Protein)
 results_list <- foreach(prot = proteins) %dopar% {
-  fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
   df <- swip_tmt %>%
 	subset(Protein == prot) %>%
 	mutate(rel_Intensity = Intensity/sum(Intensity))
@@ -296,6 +306,7 @@ results_list <- foreach(prot = proteins) %dopar% {
 	     unique()
   return(result)
 } #EOL
+
 
 ## collect results
 df <- dplyr::bind_rows(results_list) %>%
@@ -322,9 +333,6 @@ mut_wt_results <- df
 ## ---- intra-BioFraction statistical analysis
 
 doParallel::registerDoParallel(parallel::detectCores() - 1)
-
-# same LMM:
-fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
 
 # all mut and wt conditions
 biofractions <- c("F4","F5","F6","F7","F8","F9","F10")
@@ -363,8 +371,8 @@ df <- dplyr::bind_rows(results_list) %>%
 	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
 	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
 	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
-	dplyr::select(Protein,Symbol,Entrez,Contrast,log2FC,percentControl,
-		      SE,Tstatistic,Pvalue,DF,S2,FDR,Padjust,isSingular)
+	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular)
 
 # collect as named list
 results <- df %>% group_by(Contrast) %>% group_split()
@@ -387,10 +395,8 @@ all_results <- lapply(all_results, function(x) x %>% arrange(Pvalue))
 sapply(all_results,function(x) sum(x$FDR<FDR_alpha)) %>%
 	t() %>% knitr::kable()
 
-
 # all statistical results!
 swip_results <-  do.call(rbind, all_results)
-
 
 # sig_prots
 temp_df <- swip_results %>% filter(Contrast=='Mutant-Control')

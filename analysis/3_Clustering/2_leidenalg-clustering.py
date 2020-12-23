@@ -11,14 +11,18 @@ author: Tyler W A Bradshaw
 
 root = "~/projects/SwipProteomics"
 
-# There is only one piece of input data, an input NxN adjacency matrix saved as
-# a csv file in  root/rdata/.
+# There is only one piece of input data, an input NxN adjacency
+# matrix saved as a csv file in  root/rdata/.
 adjm_file = 'ne_adjm.csv'
 
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
-recursive = False  # If module_size > max_size, then cluster recursively.
-output_name = 'alt' # Prefix out output partition, saved as .csv.
+
+# If module_size > max_size, then cluster recursively.
+recursive = False
+
+# Prefix out output partition, saved as .csv.
+output_name = 'alt'
 
 # Parameters for multiresolution methods:
 rmin = 1 # Min resolution for multi-resolution methods.
@@ -36,7 +40,8 @@ n_iterations = -1
 # [output_name]_partitions.csv
 # * a partition of the network saved in root/rdata
 
-## NOTE: some params may not be used if not required by optimization_method
+## NOTE: some params may not be used if not required
+## by optimization_method
 
 import numpy as np
 from igraph import Graph
@@ -63,7 +68,6 @@ from pandas import read_csv, DataFrame
 # project Directories:
 rdatdir = os.path.join(root,"rdata")
 funcdir = os.path.join(root,"Py")
-
 
 
 ## ---- Functions
