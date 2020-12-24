@@ -69,11 +69,11 @@ unzip(myfile, exdir=downdir) # unzip into root/downloads/
 
 # Read TMT.csv data into R with data.table::fread
 myfile <- file.path(downdir, tools::file_path_sans_ext(zip_file), input_data)
-peptides <- fread(myfile)
+peptides <- data.table::fread(myfile)
 
 # Load sample information
 myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
-samples <- fread(myfile)
+samples <- data.table::fread(myfile)
 
 # format cfg force column -- this is the Force in g's used to obtain
 # the subcellular fraction.

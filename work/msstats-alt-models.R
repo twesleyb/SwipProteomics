@@ -21,12 +21,20 @@ data(swip_gene_map)
 msstats_prot = msstats_prot %>%
 	dplyr::mutate(Subject = as.numeric(interaction(Mixture, Genotype)))
 
+## ---- functions
+
+printFun <- function(fx,msg="fit: ") {
+  fx_str <- as.character(fx)
+  message(paste(msg, fx_str[2], fx_str[1], fx_str[3]))
+}
+
 
 ## ---- linear model
 
 prot <- swip
 
 fx0 <- Abundance ~ Condition
+printFun(fx0)
 
 fm0 <- lm(fx0, data = msstats_prot %>% subset(Protein == prot))
 LT <- getContrast(fm0, "Mutant","Control")
@@ -36,6 +44,7 @@ lmTestContrast(fm0, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique(
 ## ---- mixed-model with Mixture
 
 fx1 <- Abundance ~ 1 + Condition + (1|Mixture)
+printFun(fx1)
 
 fm1 <- lmerTest::lmer(fx1, data = msstats_prot %>% subset(Protein == prot))
 LT <- getContrast(fm1, "Mutant","Control")
@@ -44,6 +53,7 @@ lmerTestContrast(fm1, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% uniqu
 ## ---- mixed-model with Mixture and Subject
 
 fx2 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Subject)
+printFun(fx2)
 
 fm2 <- lmerTest::lmer(fx2, data = msstats_prot %>% subset(Protein == prot))
 LT <- getContrast(fm2, "Mutant","Control")
@@ -52,6 +62,7 @@ lmerTestContrast(fm2, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% uniqu
 ## ---- mixed-model with Mixture and Subject nested within Mixture
 
 fx3 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
+printFun(fx3)
 
 fm3 <- lmerTest::lmer(fx3, data = msstats_prot %>% subset(Protein == prot))
 LT <- getContrast(fm3, "Mutant","Control")
@@ -70,6 +81,7 @@ lmerTestContrast(fm3, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% uniqu
 ## ---- mixed-model with only Subject
 
 fx5 <- Abundance ~ 1 + Condition + (1|Subject)
+printFun(fx5)
 
 fm5 <- lmerTest::lmer(fx5, data = msstats_prot %>% subset(Protein == prot))
 LT <- getContrast(fm5, "Mutant","Control")
