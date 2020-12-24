@@ -1,7 +1,6 @@
 ## project specific directories to ignore
 ai/
 local/
-work/
 figs/
 renv/
 refs/
