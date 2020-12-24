@@ -75,18 +75,16 @@ peptides <- fread(myfile)
 myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
 samples <- fread(myfile)
 
-# Format Cfg force column -- this is the Force in g's used to obtain
+# format cfg force column -- this is the Force in g's used to obtain
 # the subcellular fraction.
 samples$"Cfg Force (xg)" <- formatC(samples$"Cfg Force (xg)",big.mark=",")
 
 
-## ---- Map all Uniprot accession numbers to stable entrez IDs
+## ---- map all Uniprot accession numbers to stable entrez IDs
 
-# Map Uniprot IDs to Entrez using MGI batch query function.
-# Map Entrez IDs to gene symbols using getPPIs::getIDs().
 message("\nCreating gene identifier map.")
 
-# First, remove any non-mouse proteins from the data.
+# first, remove any non-mouse proteins from the data
 peptides <- peptides %>% filter(grepl("OS=Mus musculus",Description))
 
 # remove these Immunoglobin proteins:
@@ -171,13 +169,13 @@ imputed_peptide <- imputeKNNpep(sl_peptide, groupBy="Experiment",
 
 ## ---- Examine reproducibility of QC measurements
 
-# Assess reproducibility of QC measurements and remove QC samples
+# Assess reproducibility of QC measurements and remove QC peptide measurments
 # that are irreproducible.
 # This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
-# For each experiment, the ratio of QC measurments is calculated.
+# For each experiment, the ratio of SPQC tech replicates is calculated.
 # These ratios are then binned based on average Intensity into
-# 5 bins. For each bin, measuremnts that are outside
-# +/- 4x standard deviations from the bin's mean are removed.
+# 5 bins. For each bin, ratios that are outside
+# +/- 4x standard deviation from the bin's mean (should be centered at 0) are removed
 
 message("\nRemoving peptides with irreproducible QC measurements.")
 filt_peptide <- filtQC(imputed_peptide,controls="SPQC", quiet=FALSE)
@@ -203,15 +201,15 @@ message(paste("\nStandardizing protein measurements between",
 	      "experiments by IRS normalization."))
 irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 
-## Check, protein-wise QC measurements are now equal in a random protein.
-## Generate list of QC proteins, and check the average of the three Exps.
-#qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
-#	group_by(Accession,Experiment) %>%
-#	dplyr::summarize(Treatment = unique(Treatment),
-#		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
-#		  .groups = "drop") %>% group_by(Accession) %>% group_split()
-#message("\nIntra-experimental QC means are equal after IRS normalization:")
-#knitr::kable(sample(qc_proteins,1))
+# Check, protein-wise QC measurements are now equal in a random protein.
+# Generate list of QC proteins, and check the average of the three Exps.
+qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
+	group_by(Accession,Experiment) %>%
+	dplyr::summarize(Treatment = unique(Treatment),
+		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
+		  .groups = "drop") %>% group_by(Accession) %>% group_split()
+message("\nIntra-experimental QC means are equal after IRS normalization:")
+knitr::kable(sample(qc_proteins,1))
 
 
 ## ---- Perform Sample Pool Normalization.
@@ -254,7 +252,7 @@ knitr::kable(df)
 #FIXME: filtProt is slow!
 
 message(paste("\nFiltering proteins, this may take several minutes."))
-filt_protein <- filtProt(spn_protein,
+filt_protein <- filtProt(irs_protein, # or spn_protein
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
 
 # At this point there are no remaining missing values
@@ -275,30 +273,50 @@ swip_tmt <- filt_protein %>%
 	mutate(Abundance = log2(Intensity)) %>%
 	mutate(Condition = interaction(Genotype,BioFraction)) %>%
 	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
-	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject, Intensity,Abundance)
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject, Intensity,Abundance) %>%
+	group_by(Protein) %>%
+	mutate(rel_Intensity = Intensity / sum(Intensity))
 
 
 ## ---- statistical analysis for overall Mutant-Controll contrast
 
+# working with SL + IRS + SPN + (filt) + relative Intensity data
+# ^ could be summarized as 4 key normalization steps + protein summarization (by sum,
+# but could easily be changed to median) + peptide and protein level filtering
+
 # register parallel backend
-doParallel::registerDoParallel(parallel::detectCores() - 1)
+doParallel::registerDoParallel(parallel::detectCores()-1)
 
 # loop through all proteins, fit the model:
 #fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
-#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
 
-# Subject is nested within Mixture
-fx <- log2(Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
-#fx <- log2(Intensity) ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
-# FIXME: getContrast does not work for intercepts!
+# modeling subject as nested within mixture or seperately does not seem to have an effect on the results in this case
+#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject) + (1|Subject)
 
+## these seem to yield equivalent results...
+fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
+#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Subject)
+
+# NOTE:
+# adding the additional term SUBJECT changes our interpretation of the DF and variance
+# fold change is the same
+
+# example, fit the model to washc4 aka swip
+swip <- gene_map$uniprot[grepl("Washc4", gene_map$symbol)]
+fm <- lmerTest::lmer(fx, swip_tmt %>% subset(Protein == swip))
+
+LT <- getContrast(fm,"Mutant","Control")
+lmerTestContrast(fm,LT) %>%
+	mutate(Contrast='Mutant-Control') %>%
+	mutate(Protein = swip) %>%
+        unique() %>% knitr::kable()
+
+
+# loop to fit all proteins
 proteins <- unique(swip_tmt$Protein)
 results_list <- foreach(prot = proteins) %dopar% {
-  df <- swip_tmt %>%
-	subset(Protein == prot) %>%
-	mutate(rel_Intensity = Intensity/sum(Intensity))
   lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
-  fm <- lmerTest::lmer(fx, df, control = lmer_control)
+  fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
   LT <- getContrast(fm,"Mutant","Control")
   result = lmerTestContrast(fm,LT) %>%
   	     mutate(Contrast='Mutant-Control') %>%
@@ -308,14 +326,15 @@ results_list <- foreach(prot = proteins) %dopar% {
 } #EOL
 
 
-## collect results
+# collect results
 df <- dplyr::bind_rows(results_list) %>%
 	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
 	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
 	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
 	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
 	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
-		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular)
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular) %>%
+	arrange(Pvalue)
 
 
 # check washc prot results
@@ -326,8 +345,124 @@ df %>% filter(Protein %in% washc_prots) %>%
 	dplyr::select(Protein, Symbol, Contrast, log2FC, SE, Tstatistic, Pvalue, FDR, DF) %>%
 	knitr::kable()
 
+
+# check nsig
+sum(df$FDR<0.05)
+
+head(df$Symbol)
+
+
 # results for overall WT v MUT comparison
 mut_wt_results <- df
+
+
+## ---- FIT MODELS WITH SUBJECT TERM
+
+swip_tmt <- swip_tmt %>% mutate(Subject = as.numeric(interaction(Mixture,Genotype)))
+
+fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Subject)
+
+fx <- log2(Intensity) ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
+
+
+# loop
+results_list <- foreach(prot = proteins) %dopar% {
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
+  LT <- getContrast(fm,"Mutant","Control")
+  result = lmerTestContrast(fm,LT) %>%
+  	     mutate(Contrast='Mutant-Control') %>%
+	     mutate(Protein = prot) %>%
+	     unique()
+  return(result)
+} #EOL
+
+# collect results
+df <- dplyr::bind_rows(results_list) %>%
+	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
+	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
+	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
+	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
+	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular) %>%
+	arrange(Pvalue)
+
+
+# check nsig
+sum(df$FDR<0.05)
+
+# check top sig
+head(df$Symbol)
+
+
+## ---- what happens if SUBJECT is random?
+
+swip_tmt <- swip_tmt %>% mutate(Subject = as.numeric(interaction(Mixture,Genotype)))
+
+# randomize
+swip_tmt$Subject <- sample(swip_tmt$Subject)
+
+# loop
+results_list <- foreach(prot = proteins) %dopar% {
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
+  LT <- getContrast(fm,"Mutant","Control")
+  result = lmerTestContrast(fm,LT) %>%
+  	     mutate(Contrast='Mutant-Control') %>%
+	     mutate(Protein = prot) %>%
+	     unique()
+  return(result)
+} #EOL
+
+# collect results
+df <- dplyr::bind_rows(results_list) %>%
+	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
+	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
+	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
+	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
+	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular) %>%
+	arrange(Pvalue)
+
+# check nsig
+sum(df$FDR<0.05)
+
+# randomizing subject is equivalent to NOT including subject, makes sense
+
+
+## ---- model SUBJECT nested within Mixture
+
+swip_tmt <- swip_tmt %>% mutate(Subject = as.numeric(interaction(Mixture,Genotype)))
+
+# nested model
+fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
+
+# loop
+results_list <- foreach(prot = proteins) %dopar% {
+  lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+  fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
+  LT <- getContrast(fm,"Mutant","Control")
+  result = lmerTestContrast(fm,LT) %>%
+  	     mutate(Contrast='Mutant-Control') %>%
+	     mutate(Protein = prot) %>%
+	     unique()
+  return(result)
+} #EOL
+
+# collect results
+df <- dplyr::bind_rows(results_list) %>%
+	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
+	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
+	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
+	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
+	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular) %>%
+	arrange(Pvalue)
+
+# check nsig
+# nested Subject within Mixture
+sum(df$FDR<0.05) # ~ not nested!
+
 
 
 ## ---- intra-BioFraction statistical analysis
