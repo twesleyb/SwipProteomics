@@ -145,6 +145,25 @@ df <- data.frame("Samples"=as.character(n_samples),
 knitr::kable(df)
 
 
+##
+sl_prot <- sl_peptide %>%
+	group_by(Accession, Sample) %>%
+	summarize(Intensity = sum(Intensity,na.rm=TRUE),.groups="drop") %>%
+	filter(!is.na(Intensity)) %>% filter(Intensity != 0) %>%
+	mutate(Abundance = log2(Intensity)) %>%
+	left_join(samples, by="Sample") %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile = file.path(root,"rdata","sl_prot.rda")
+save(sl_prot,file=myfile,version=2)
+
+
 ## ---- Perform sample loading normalization
 
 # Perform sample normalization. Normalization is done for each
@@ -154,6 +173,26 @@ knitr::kable(df)
 message("\nPerforming sample loading normalization.")
 sl_peptide <- normSL(tidy_peptide, groupBy=c("Experiment","Sample"))
 
+
+## SAVE
+cols <- intersect(colnames(samples),colnames(sl_peptide))
+sl_prot <- sl_peptide %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile = file.path(root,"rdata","sl_prot.rda")
+save(sl_prot,file=myfile,version=2)
+
+
+quit()
 
 ## ---- Impute missing peptide values
 
