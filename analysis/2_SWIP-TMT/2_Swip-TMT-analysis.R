@@ -448,37 +448,82 @@ save(sig_prots, file=myfile,version=2)
 message("saved: ", myfile)
 
 
-##
-#sl_prot <- sl_peptide %>%
-#	group_by(Accession, Sample) %>%
-#	summarize(Intensity = sum(Intensity,na.rm=TRUE),.groups="drop") %>%
-#	filter(!is.na(Intensity)) %>% filter(Intensity != 0) %>%
-#	mutate(Abundance = log2(Intensity)) %>%
-#	left_join(samples, by="Sample") %>%
-#	filter(Treatment != "SPQC") %>%
-#	mutate(Genotype = Treatment) %>%
-#	mutate(Protein = Accession) %>%
-#	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
-#	mutate(BioFraction = Fraction) %>%
-#	mutate(Condition = interaction(Genotype,BioFraction)) %>%
-#	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
-#	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
-#myfile = file.path(root,"rdata","sl_prot.rda")
-#save(sl_prot,file=myfile,version=2)
+## save other intermediate datasets in root/rdata
+
+## save raw prot
+cols <- intersect(colnames(samples),colnames(tidy_peptide))
+raw_prot <- tidy_peptide %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	group_by(Accession, Sample) %>%
+	summarize(Intensity = sum(Intensity,na.rm=TRUE),.groups="drop") %>%
+	filter(!is.na(Intensity)) %>% filter(Intensity != 0) %>%
+	mutate(Abundance = log2(Intensity)) %>%
+	left_join(samples, by="Sample") %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","raw_prot.rda")
+save(raw_prot,file=myfile,version=2)
+message("saved: ", myfile)
 
 ## SAVE
-#cols <- intersect(colnames(samples),colnames(sl_peptide))
-#sl_prot <- sl_peptide %>%
-#	left_join(samples,  by = cols) %>%
-#	filter(Treatment != "SPQC") %>%
-#	mutate(Genotype = Treatment) %>%
-#	mutate(Protein = Accession) %>%
-#	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
-#	mutate(BioFraction = Fraction) %>%
-#	mutate(Condition = interaction(Genotype,BioFraction)) %>%
-#	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
-#	group_by(Protein, Mixture, Genotype, BioFraction) %>%
-#	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
-#	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
-#myfile = file.path(root,"rdata","sl_prot.rda")
-#save(sl_prot,file=myfile,version=2)
+cols <- intersect(colnames(samples),colnames(sl_peptide))
+sl_prot <- sl_peptide %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","sl_prot.rda")
+save(sl_prot,file=myfile,version=2)
+message("saved: ", myfile)
+
+## SAVE irs
+cols <- intersect(colnames(samples),colnames(irs_protein))
+irs_prot <- irs_protein %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","irs_prot.rda")
+save(irs_prot,file=myfile,version=2)
+message("saved: ", myfile)
+
+## SAVE spn
+cols <- intersect(colnames(samples),colnames(spn_protein))
+spn_prot <- spn_protein %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","spn_prot.rda")
+save(spn_prot,file=myfile,version=2)
+message("saved: ", myfile)

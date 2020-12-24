@@ -12,42 +12,42 @@ devtools::load_all(root)
 ## ---- load the data
 
 data(swip)
-data(swip_tmt)
-data(washc_prots)
 data(msstats_prot)
+data(swip_gene_map)
+
+# add subject annot and calc rel intensity
+swip_tmt <- msstats_prot %>%
+	dplyr::mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein) %>%
+	dplyr::mutate(rel_Intensity = Intensity/sum(Intensity))
 
 
-## ---- the model to be fit
+## ---- linear model
+
+# NOTE: swip_tmt is msstats_prot!
 
 prot <- swip
 
-#full <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject) + (1|Subject)
-#swip_tmt = msstats_prot %>%
-#	dplyr::mutate(Subject = as.numeric(interaction(Mixture, Genotype)))
+fx0 <- log2(rel_Intensity) ~ 0 + Condition
 
-proteins = unique(swip_tmt$Protein)
-#prot = sample(proteins,1)
-
-# Linear model
-fx0 <- Abundance ~ Condition
 fm0 <- lm(fx0, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm0, "Mutant","Control")
 lmTestContrast(fm0, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # mixed-model with Mixture
-fx1 <- Abundance ~ 1 + Condition + (1|Mixture)
+fx1 <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
 fm1 <- lmerTest::lmer(fx1, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm1, "Mutant","Control")
 lmerTestContrast(fm1, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # mixed-model with Mixture and Subject
-fx2 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Subject)
+fx2 <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Subject)
 fm2 <- lmerTest::lmer(fx2, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm2, "Mutant","Control")
 lmerTestContrast(fm2, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # mixed-model with Mixture and Subject nested within Mixture
-fx3 <- Abundance ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
+fx3 <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
 fm3 <- lmerTest::lmer(fx3, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm3, "Mutant","Control")
 lmerTestContrast(fm3, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
@@ -60,25 +60,26 @@ lmerTestContrast(fm3, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% uniqu
 #lmerTestContrast(fm4, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # mixed-model with only Subject
-fx5 <- Abundance ~ 1 + Condition + (1|Subject)
+fx5 <- log2(rel_Intensity) ~ 0 + Condition + (1|Subject)
 
 fm5 <- lmerTest::lmer(fx5, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm5, "Mutant","Control")
 lmerTestContrast(fm5, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
 
 # mixed-model with Subject nested within mixture
-fx6 <- Abundance ~ 1 + Condition + (1|Mixture:Subject)
+fx6 <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture:Subject)
 
 fm6 <- lmerTest::lmer(fx6, data = swip_tmt %>% subset(Protein == prot))
 LT <- getContrast(fm6, "Mutant","Control")
 lmerTestContrast(fm6, LT) %>% dplyr::mutate(Contrast='Mutant-Control') %>% unique() %>% knitr::kable()
+
 
 # anova analysis
 anova(fm6, fm5, fm3, fm2, fm1, fm0)
 
 
 # loop for all prots
-# many singular...
+proteins <- unique(swip_tmt$Protein)
 pbar <- txtProgressBar(max=length(proteins),style=3)
 lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
 results_list <- list()
@@ -93,7 +94,12 @@ for (prot in proteins) {
 close(pbar)
 
 # collect results and calc FDR
-df <- bind_rows(results_list,.id="Protein") %>%
-	dplyr::mutate(FDR = p.adjust(Pvalue, method = "fdr"))
+df <- dplyr::bind_rows(results_list,.id="Protein") %>%
+	dplyr::mutate(FDR = p.adjust(Pvalue, method = "fdr")) %>%
+	dplyr::mutate(Symbol = gene_map$symbol[match(Protein, gene_map$uniprot)]) %>%
+	dplyr::arrange(Pvalue)
+
 
 sum(df$FDR<0.05)
+
+head(df$Symbol)
