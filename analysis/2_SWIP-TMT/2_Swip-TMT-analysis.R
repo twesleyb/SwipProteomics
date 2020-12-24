@@ -448,9 +448,9 @@ save(sig_prots, file=myfile,version=2)
 message("saved: ", myfile)
 
 
-## save other intermediate datasets in root/rdata
+## ---- save other intermediate datasets in root/rdata
 
-## save raw prot
+# save raw_prot.rda
 cols <- intersect(colnames(samples),colnames(tidy_peptide))
 raw_prot <- tidy_peptide %>%
 	subset(Accession %in% swip_tmt$Protein) %>%
@@ -471,7 +471,7 @@ myfile <- file.path(root,"rdata","raw_prot.rda")
 save(raw_prot,file=myfile,version=2)
 message("saved: ", myfile)
 
-## SAVE
+# save sl_prot.rda
 cols <- intersect(colnames(samples),colnames(sl_peptide))
 sl_prot <- sl_peptide %>%
 	subset(Accession %in% swip_tmt$Protein) %>%
@@ -490,7 +490,7 @@ myfile <- file.path(root,"rdata","sl_prot.rda")
 save(sl_prot,file=myfile,version=2)
 message("saved: ", myfile)
 
-## SAVE irs
+# save irs_prot.rda
 cols <- intersect(colnames(samples),colnames(irs_protein))
 irs_prot <- irs_protein %>%
 	subset(Accession %in% swip_tmt$Protein) %>%
@@ -509,7 +509,7 @@ myfile <- file.path(root,"rdata","irs_prot.rda")
 save(irs_prot,file=myfile,version=2)
 message("saved: ", myfile)
 
-## SAVE spn
+# save spn_prot.rda
 cols <- intersect(colnames(samples),colnames(spn_protein))
 spn_prot <- spn_protein %>%
 	subset(Accession %in% swip_tmt$Protein) %>%
@@ -524,6 +524,7 @@ spn_prot <- spn_protein %>%
 	group_by(Protein, Mixture, Genotype, BioFraction) %>%
 	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
 	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+
 myfile <- file.path(root,"rdata","spn_prot.rda")
 save(spn_prot,file=myfile,version=2)
 message("saved: ", myfile)

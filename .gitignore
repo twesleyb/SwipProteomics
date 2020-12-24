@@ -9,6 +9,7 @@ ARCHIVE/
 cache/
 *.notes
 *.note
+docs/
 
 ## project specific files to ignore
 *.email
