@@ -42,20 +42,19 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-# summarize median of three mixtures (biological replicates)
-#dm <- swip_tmt %>%
-	#filter(Protein %in% proteins) %>%
-#	group_by(Protein,Condition) %>%
-#	summarize(med_Abundance = log2(median(Intensity)),.groups="drop") %>%
-#	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>%
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein")
-
-# no summarization of bioreplicates
-dm <- swip_tmt %>%
-	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>%
+# summarize three Bioreplicates as the median of three mixtures
+dm <- swip_tmt %>% filter(Protein %in% proteins) %>%
+	group_by(Protein, Condition) %>% # e.g. median(F4.WT.M1, F4.WT.M2, F4.WT.M3)
+	summarize(med_Abundance = log2(median(Intensity)),.groups="drop") %>%
+	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>%
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
+
+# no median summarization of bioreplicates
+#dm <- swip_tmt %>%
+#	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>%
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein")
 
 
 # there are a small number proteins with some missing vals
@@ -72,22 +71,23 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 
 ## ---- network enhancement
-# REF: Wang et al., 2018 (Nature Communications)
+
+# Wang et al., 2018 (Nature Communications)
 
 message("Performing network enhancement...")
 
 ne_adjm <- neten(adjm) # result is robust to neten parameters
 
 
-## ---- save network
+## ---- save networks as csv in rdata
 
-# coerce to data.table and write to file
+# coerce to data.table and save adjm.csv
 adjm_dt <- as.data.table(adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","adjm.csv")
 data.table::fwrite(adjm_dt, myfile)
 message("saved: ", myfile)
 
-# coerce to data.table and write to file
+# coerce to data.table and save ne_adjm.csv
 ne_adjm_dt <- as.data.table(ne_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ne_adjm.csv")
 data.table::fwrite(ne_adjm_dt, myfile)

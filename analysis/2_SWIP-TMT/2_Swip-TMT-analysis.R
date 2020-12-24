@@ -75,18 +75,16 @@ peptides <- fread(myfile)
 myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
 samples <- fread(myfile)
 
-# Format Cfg force column -- this is the Force in g's used to obtain
+# format cfg force column -- this is the Force in g's used to obtain
 # the subcellular fraction.
 samples$"Cfg Force (xg)" <- formatC(samples$"Cfg Force (xg)",big.mark=",")
 
 
-## ---- Map all Uniprot accession numbers to stable entrez IDs
+## ---- map all Uniprot accession numbers to stable entrez IDs
 
-# Map Uniprot IDs to Entrez using MGI batch query function.
-# Map Entrez IDs to gene symbols using getPPIs::getIDs().
 message("\nCreating gene identifier map.")
 
-# First, remove any non-mouse proteins from the data.
+# first, remove any non-mouse proteins from the data
 peptides <- peptides %>% filter(grepl("OS=Mus musculus",Description))
 
 # remove these Immunoglobin proteins:
@@ -147,6 +145,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 knitr::kable(df)
 
 
+
 ## ---- Perform sample loading normalization
 
 # Perform sample normalization. Normalization is done for each
@@ -157,7 +156,7 @@ message("\nPerforming sample loading normalization.")
 sl_peptide <- normSL(tidy_peptide, groupBy=c("Experiment","Sample"))
 
 
-## ---- Impute missing peptide values
+## ---- Impute peptide-level missingness
 
 # Impute missing peptide values with k-nearest neighbors (KNN) algorithm.
 # * Missing QC values will not be imputed.
@@ -171,13 +170,13 @@ imputed_peptide <- imputeKNNpep(sl_peptide, groupBy="Experiment",
 
 ## ---- Examine reproducibility of QC measurements
 
-# Assess reproducibility of QC measurements and remove QC samples
+# Assess reproducibility of QC measurements and remove QC peptide measurments
 # that are irreproducible.
 # This strategy was adapted from Ping et al., 2018 (pmid: 29533394).
-# For each experiment, the ratio of QC measurments is calculated.
+# For each experiment, the ratio of SPQC tech replicates is calculated.
 # These ratios are then binned based on average Intensity into
-# 5 bins. For each bin, measuremnts that are outside
-# +/- 4x standard deviations from the bin's mean are removed.
+# 5 bins. For each bin, ratios that are outside
+# +/- 4x standard deviation from the bin's mean (should be centered at 0) are removed
 
 message("\nRemoving peptides with irreproducible QC measurements.")
 filt_peptide <- filtQC(imputed_peptide,controls="SPQC", quiet=FALSE)
@@ -203,15 +202,15 @@ message(paste("\nStandardizing protein measurements between",
 	      "experiments by IRS normalization."))
 irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 
-## Check, protein-wise QC measurements are now equal in a random protein.
-## Generate list of QC proteins, and check the average of the three Exps.
-#qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
-#	group_by(Accession,Experiment) %>%
-#	dplyr::summarize(Treatment = unique(Treatment),
-#		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
-#		  .groups = "drop") %>% group_by(Accession) %>% group_split()
-#message("\nIntra-experimental QC means are equal after IRS normalization:")
-#knitr::kable(sample(qc_proteins,1))
+# Check, protein-wise QC measurements are now equal in a random protein.
+# Generate list of QC proteins, and check the average of the three Exps.
+qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
+	group_by(Accession,Experiment) %>%
+	dplyr::summarize(Treatment = unique(Treatment),
+		  "Mean(Intensity)" = mean(Intensity,na.rm=TRUE),
+		  .groups = "drop") %>% group_by(Accession) %>% group_split()
+message("\nIntra-experimental QC means are equal after IRS normalization:")
+knitr::kable(sample(qc_proteins,1))
 
 
 ## ---- Perform Sample Pool Normalization
@@ -228,7 +227,7 @@ message(paste("\nThe mean of biological replicates and",
 	      "pooled QC samples are now equal:"))
 protein_list <- spn_protein %>% group_by(Accession) %>% group_split()
 
-# Drop any proteins with NA.
+# drop any proteins with NA.
 idx <- sapply(protein_list,function(x) any(is.na(x)))
 protein_list <- protein_list[!idx]
 
@@ -254,7 +253,8 @@ knitr::kable(df)
 #FIXME: filtProt is slow!
 
 message(paste("\nFiltering proteins, this may take several minutes."))
-filt_protein <- filtProt(spn_protein,
+
+filt_protein <- filtProt(spn_protein, # or spn_protein
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
 
 # At this point there are no remaining missing values
@@ -275,30 +275,45 @@ swip_tmt <- filt_protein %>%
 	mutate(Abundance = log2(Intensity)) %>%
 	mutate(Condition = interaction(Genotype,BioFraction)) %>%
 	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
-	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject, Intensity,Abundance)
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject, Intensity,Abundance) %>%
+	group_by(Protein) %>%
+	mutate(rel_Intensity = Intensity / sum(Intensity))
 
 
 ## ---- statistical analysis for overall Mutant-Controll contrast
 
+# working with SL + IRS + SPN data, we normalize each protein to its Intensity sum
+# (sum normalization), this is refered to as relative_Intensity
+
+# ^ could be summarized as 4 key normalization steps + protein summarization (by sum,
+# but could easily be changed to median) + peptide and protein level filtering
+
 # register parallel backend
-doParallel::registerDoParallel(parallel::detectCores() - 1)
+doParallel::registerDoParallel(parallel::detectCores()-1)
 
 # loop through all proteins, fit the model:
-#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
-#fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
+fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
 
-# Subject is nested within Mixture
-fx <- log2(Intensity) ~ 0 + Condition + (1|Mixture) + (1|Mixture:Subject)
-#fx <- log2(Intensity) ~ 1 + Condition + (1|Mixture) + (1|Mixture:Subject)
-# FIXME: getContrast does not work for intercepts!
+# NOTE:
+# adding the additional term SUBJECT changes our interpretation of the DF and variance
+# fold change is the same
 
+# example, fit the model to washc4 aka swip
+swip <- gene_map$uniprot[grepl("Washc4", gene_map$symbol)]
+fm <- lmerTest::lmer(fx, swip_tmt %>% subset(Protein == swip))
+
+LT <- getContrast(fm,"Mutant","Control")
+lmerTestContrast(fm,LT) %>%
+	mutate(Contrast='Mutant-Control') %>%
+	mutate(Protein = swip) %>%
+        unique() %>% knitr::kable()
+
+
+# loop to fit all proteins
 proteins <- unique(swip_tmt$Protein)
 results_list <- foreach(prot = proteins) %dopar% {
-  df <- swip_tmt %>%
-	subset(Protein == prot) %>%
-	mutate(rel_Intensity = Intensity/sum(Intensity))
   lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
-  fm <- lmerTest::lmer(fx, df, control = lmer_control)
+  fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
   LT <- getContrast(fm,"Mutant","Control")
   result = lmerTestContrast(fm,LT) %>%
   	     mutate(Contrast='Mutant-Control') %>%
@@ -308,14 +323,15 @@ results_list <- foreach(prot = proteins) %dopar% {
 } #EOL
 
 
-## collect results
+# collect results
 df <- dplyr::bind_rows(results_list) %>%
 	mutate(FDR = p.adjust(Pvalue, method = "BH")) %>%
 	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
 	mutate(Symbol = gene_map$symbol[match(Protein,gene_map$uniprot)]) %>%
 	mutate(Entrez = gene_map$entrez[match(Protein,gene_map$uniprot)]) %>%
 	dplyr::select(Protein, Symbol, Entrez, Contrast, log2FC, percentControl,
-		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular)
+		      SE, Tstatistic, Pvalue, DF, S2, FDR, Padjust, isSingular) %>%
+	arrange(Pvalue)
 
 
 # check washc prot results
@@ -325,6 +341,7 @@ df %>% filter(Protein %in% washc_prots) %>%
 	mutate(Pvalue=formatC(Pvalue)) %>%
 	dplyr::select(Protein, Symbol, Contrast, log2FC, SE, Tstatistic, Pvalue, FDR, DF) %>%
 	knitr::kable()
+
 
 # results for overall WT v MUT comparison
 mut_wt_results <- df
@@ -428,4 +445,85 @@ message("saved: ", myfile)
 # save sig_prots
 myfile <- file.path(datadir,"swip_sig_prots.rda")
 save(sig_prots, file=myfile,version=2)
+message("saved: ", myfile)
+
+
+## save other intermediate datasets in root/rdata
+
+## save raw prot
+cols <- intersect(colnames(samples),colnames(tidy_peptide))
+raw_prot <- tidy_peptide %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	group_by(Accession, Sample) %>%
+	summarize(Intensity = sum(Intensity,na.rm=TRUE),.groups="drop") %>%
+	filter(!is.na(Intensity)) %>% filter(Intensity != 0) %>%
+	mutate(Abundance = log2(Intensity)) %>%
+	left_join(samples, by="Sample") %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","raw_prot.rda")
+save(raw_prot,file=myfile,version=2)
+message("saved: ", myfile)
+
+## SAVE
+cols <- intersect(colnames(samples),colnames(sl_peptide))
+sl_prot <- sl_peptide %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","sl_prot.rda")
+save(sl_prot,file=myfile,version=2)
+message("saved: ", myfile)
+
+## SAVE irs
+cols <- intersect(colnames(samples),colnames(irs_protein))
+irs_prot <- irs_protein %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","irs_prot.rda")
+save(irs_prot,file=myfile,version=2)
+message("saved: ", myfile)
+
+## SAVE spn
+cols <- intersect(colnames(samples),colnames(spn_protein))
+spn_prot <- spn_protein %>%
+	subset(Accession %in% swip_tmt$Protein) %>%
+	left_join(samples,  by = cols) %>%
+	filter(Treatment != "SPQC") %>%
+	mutate(Genotype = Treatment) %>%
+	mutate(Protein = Accession) %>%
+	mutate(Mixture = gsub("Exp","M", Experiment)) %>%
+	mutate(BioFraction = Fraction) %>%
+	mutate(Condition = interaction(Genotype,BioFraction)) %>%
+	mutate(Subject = as.numeric(interaction(Mixture,Genotype))) %>%
+	group_by(Protein, Mixture, Genotype, BioFraction) %>%
+	mutate(Abundance = log2(sum(Intensity,na.rm=TRUE))) %>%
+	dplyr::select(Protein,Mixture,Genotype,BioFraction,Condition,Subject,Abundance)
+myfile <- file.path(root,"rdata","spn_prot.rda")
+save(spn_prot,file=myfile,version=2)
 message("saved: ", myfile)

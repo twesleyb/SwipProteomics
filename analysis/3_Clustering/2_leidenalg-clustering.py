@@ -13,7 +13,7 @@ root = "~/projects/SwipProteomics"
 
 # There is only one piece of input data, an input NxN adjacency
 # matrix saved as a csv file in  root/rdata/.
-adjm_file = 'ne_adjm.csv'
+adjm_file = 'adjm.csv'
 
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
