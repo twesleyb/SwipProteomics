@@ -5,7 +5,7 @@
 # description: clean-up results from from running leidenalg executable
 
 ## input in root/rdata
-input_part <- "swip_partition.csv"
+input_part <- "alt_partition.csv"
 
 ## output is [input_part].rda
 output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
@@ -31,7 +31,7 @@ df <- data.table::fread(myfile,drop=1)
 partition_list <- unlist(apply(df,1,function(x) list(x)),
 			 recursive=FALSE, use.names=FALSE)
 
-# add 1 bc python is 0-based 
+# add 1 bc python is 0-based
 part <- partition_list[[1]] + 1
 
 # set small modules to 0

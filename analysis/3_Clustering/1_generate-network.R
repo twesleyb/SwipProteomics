@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript 
+#!/usr/bin/env Rscript
 
 # title: SwipProteomics
 # description: generate protein co-variation (correlation) network
@@ -42,19 +42,30 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-dm <- swip_tmt %>% 
-	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>% 
+# summarize median of three mixtures (biological replicates)
+#dm <- swip_tmt %>%
+	#filter(Protein %in% proteins) %>%
+#	group_by(Protein,Condition) %>%
+#	summarize(med_Abundance = log2(median(Intensity)),.groups="drop") %>%
+#	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>%
+#	as.data.table() %>%
+#	as.matrix(rownames="Protein")
+
+# no summarization of bioreplicates
+dm <- swip_tmt %>%
+	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>%
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
 
 
-# there are a small number proteins with some missing vals 
+# there are a small number proteins with some missing vals
 # e.g. Q9QUN7 = low abundance only quantified in 4/7 fractions
 # remove these proteins
 idx <- apply(dm,1,function(x) any(is.na(x)))
 warning(sum(idx)," proteins with any missing values are removed.")
 filt_dm <- dm[!idx,]
 
+stopifnot(!any(filt_dm<0))
 
 ## calculate coorrelation matrix
 adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
@@ -63,7 +74,7 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 ## ---- network enhancement
 # REF: Wang et al., 2018 (Nature Communications)
 
-message("Performing network enhancement")
+message("Performing network enhancement...")
 
 ne_adjm <- neten(adjm) # result is robust to neten parameters
 
