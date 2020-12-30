@@ -4,18 +4,17 @@
 # author: twab
 # description: clean-up results from from running leidenalg executable
 
+## project root dir
+root <- "~/projects/SwipProteomics"
+
 ## input in root/rdata
-input_part <- "alt_partition.csv"
+input_part <- "swip_partition.csv"
 
 ## output is [input_part].rda
 output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
 
 
 ## ---- prepare the R env
-
-root <- "~/projects/SwipProteomics"
-renv::load(root)
-
 
 suppressPackageStartupMessages({
   library(dplyr)

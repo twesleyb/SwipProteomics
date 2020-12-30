@@ -20,13 +20,11 @@ devtools::load_all(root, quiet=TRUE)
 # load the data
 data(swip_tmt)
 data(swip_gene_map)
-#data(swip_partition)  # partition
-data(alt_partition)  # partition
+data(swip_partition)  # partition
 
 # imports
 suppressPackageStartupMessages({
 	library(dplyr)
-	library(geneLists)
 	library(data.table)
 	library(doParallel)
 })

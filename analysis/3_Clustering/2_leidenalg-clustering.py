@@ -4,6 +4,13 @@
 title: SwipProteomics
 description: Leidenalg Clustering of the Enhanced Protein Covariation Network
 author: Tyler W A Bradshaw
+
+This script does the work of clustering a network provided as an adjacency
+matrix using the Leiden algorithm and the Python Leidenalg library. 
+
+Leidenalg is the work of Vincent Traag:
+http://dx.doi.org/10.1038/s41598-019-41695-z
+
 '''
 
 
@@ -13,7 +20,7 @@ root = "~/projects/SwipProteomics"
 
 # There is only one piece of input data, an input NxN adjacency
 # matrix saved as a csv file in  root/rdata/.
-adjm_file = 'adjm.csv'
+adjm_file = 'ne_adjm.csv'
 
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
@@ -22,7 +29,7 @@ optimization_method = recursive_method = 'Surprise'
 recursive = False
 
 # Prefix out output partition, saved as .csv.
-output_name = 'alt'
+output_name = 'swip'
 
 # Parameters for multiresolution methods:
 rmin = 1 # Min resolution for multi-resolution methods.

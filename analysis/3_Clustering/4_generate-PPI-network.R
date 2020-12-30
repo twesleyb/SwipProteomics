@@ -23,11 +23,10 @@ stopifnot(file.exists(input_adjm))
 
 ## ---- prepare the working environment
 
-# load renv
-renv::load(root, quiet=TRUE)
-
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
+
+# load data in root/data
 data(gene_map)
 
 # load data in root/rdata
