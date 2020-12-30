@@ -29,12 +29,10 @@ FDR_alpha = 0.05
 ## normalization more cumbersome and computationally costly.
 
 
-# ---- Prepare the workspace
+# ---- prepare the workspace
 
-# Prepare the R workspace for the analysis.
+# prepare the R workspace for the analysis
 
-# Load renv -- use renv::load NOT activate!
-renv::load(root, quiet=TRUE)
 
 # Load required packages and functions
 suppressPackageStartupMessages({
@@ -105,35 +103,33 @@ missing <- entrez[is.na(entrez)]
 mapped_by_hand <- c(P05214=22144, P0CG14=214987, P84244=15078)
 entrez[names(mapped_by_hand)] <- mapped_by_hand
 
-# Check: Have we successfully mapped all Uniprot IDs to Entrez?
+# check: Have we successfully mapped all Uniprot IDs to Entrez?
 check <- sum(is.na(entrez)) == 0
 if (!check) { stop("Unable to map all UniprotIDs to Entrez.") }
 
-# Map entrez ids to gene symbols using twesleyb/getPPIs.
-# NOTE: getIDs is just an easier to use wrapper around AnnotationDbi mapIDs
-# NOTE: you need the org.Mm.eg.db package for mapping mouse genes
+# map entrez ids to gene symbols using twesleyb/getPPIs
+# NOTE: getIDs is just an easier-to-use wrapper around AnnotationDbi::mapIDs
+# NOTE: you need the org.Mm.eg.db package from Bioconductor for mapping mouse genes
 gene_symbols <- geneLists::getIDs(entrez,from="entrez",to="symbol",species="mouse")
 
-# Create gene identifier mapping data.table.
+# create gene identifier mapping data.table
 gene_map <- data.table(uniprot = names(entrez),
                        entrez = entrez,
 	               symbol = gene_symbols)
 gene_map$id <- paste(gene_map$symbol,gene_map$uniprot,sep="|")
 
 
-## ---- Tidy-up the input data from Proteome Discover
+## ---- tidy-up the input data from Proteome Discover
 
-# Convert PD df into tidy df.
-# Samples should contain the following columns:
-# Treatment, Channel, Sample, Experiment
+# convert PD df into tidy data.frame
 message("\nLoading raw data from Proteome Discover (PD2.2).")
 cols <- colnames(peptides)[!grepl("Abundance",colnames(peptides))]
-tidy_peptide <- tidyProt(peptides,id.vars=cols)
+tidy_peptide <- tidyProt(peptides, id.vars=cols)
 
-# Annotate tidy data with additional meta data from samples.
+# annotate tidy data with additional meta data from samples
 tidy_peptide <- left_join(tidy_peptide,samples,by="Sample")
 
-# Summary of peptide/protein quantification:
+# summary of peptide/protein quantification:
 message(paste("\nSummary of initial peptide/protein quantification",
 	      "after removing contaiminants:"))
 n_samples <- length(unique(tidy_peptide$Sample))
@@ -145,8 +141,7 @@ df <- data.frame("Samples"=as.character(n_samples),
 knitr::kable(df)
 
 
-
-## ---- Perform sample loading normalization
+## ---- perform sample loading normalization
 
 # Perform sample normalization. Normalization is done for each
 # experiment independently (group by Experiment:Sample).
@@ -156,7 +151,7 @@ message("\nPerforming sample loading normalization.")
 sl_peptide <- normSL(tidy_peptide, groupBy=c("Experiment","Sample"))
 
 
-## ---- Impute peptide-level missingness
+## ---- impute peptide-level missingness
 
 # Impute missing peptide values with k-nearest neighbors (KNN) algorithm.
 # * Missing QC values will not be imputed.
@@ -182,7 +177,7 @@ message("\nRemoving peptides with irreproducible QC measurements.")
 filt_peptide <- filtQC(imputed_peptide,controls="SPQC", quiet=FALSE)
 
 
-## ---- Summarize to protein level
+## ---- summarize to protein level
 
 message("\nSummarizing proteins as the sum of their peptides.")
 proteins <- sumProt(filt_peptide)
@@ -192,18 +187,21 @@ message("\nPerforming sample loading normalization between experiments.")
 sl_protein <- normSL(proteins, groupBy="Sample")
 
 
-## ---- Perform IRS Normalization
+## ---- perform IRS normalization
 
-# Equalize QC measurements between experiments. Adjusts protein
-# measurements of biological replicates simultaneously.
-# Accounts for protein quantification by different peptides in
-# each experiment.
+# equalize QC measurements between experiments. Adjusts protein
+# measurements of biological replicates simultaneously
+
+# accounts for protein quantification by different peptides in
+# each experiment
+
 message(paste("\nStandardizing protein measurements between",
 	      "experiments by IRS normalization."))
+
 irs_protein <- normIRS(sl_protein,controls="SPQC",robust=TRUE)
 
-# Check, protein-wise QC measurements are now equal in a random protein.
-# Generate list of QC proteins, and check the average of the three Exps.
+# check, protein-wise QC measurements are now equal in a random protein
+# generate list of QC proteins, and check the average of the three Exps
 qc_proteins <- irs_protein %>% filter(Treatment == "SPQC") %>%
 	group_by(Accession,Experiment) %>%
 	dplyr::summarize(Treatment = unique(Treatment),
@@ -213,48 +211,19 @@ message("\nIntra-experimental QC means are equal after IRS normalization:")
 knitr::kable(sample(qc_proteins,1))
 
 
-## ---- Perform Sample Pool Normalization
-
-# QC samples were generated by pooling all biological replicates.
-# Normalize mean of all QC samples to be equal to the mean of all
-# biological replicates.
-message(paste("\nAccounting for experimental batch effect by",
-	      "performing sample pool normalization."))
-spn_protein <- normSP(irs_protein,pool=c("Control","Mutant"))
-
-# Check, the mean of sample pool and biological replicates are now equal.
-message(paste("\nThe mean of biological replicates and",
-	      "pooled QC samples are now equal:"))
-protein_list <- spn_protein %>% group_by(Accession) %>% group_split()
-
-# drop any proteins with NA.
-idx <- sapply(protein_list,function(x) any(is.na(x)))
-protein_list <- protein_list[!idx]
-
-# Get a random protein's data as an example
-protein <- sample(protein_list,1)[[1]]
-protein$Sample_Pool <- protein$Treatment == "SPQC"
-df <- protein %>% group_by(Sample_Pool) %>%
-	dplyr::summarize(Accession = unique(Accession),
-		  Treatement=paste(unique(Treatment),collapse=" + "),
-		  "Mean(Intensity)"=mean(Intensity), .groups="drop")
-knitr::kable(df)
-
-
-## ---- Protein level filtering
+## ---- protein level filtering
 
 # Remove proteins that:
-# * Were identified by a single peptide.
-# * Contain too many (>50%) missing values.
-# * Contain any missing QC values.
+# * Were identified by a single peptide
+# * Contain too many (>50%) missing values
+# * Contain any missing QC values
 # * Have outlier protein measurements:
 #       mean(logRatio(replicates)) outside +/- nSD * mean(binned logRatio))
 
 #FIXME: filtProt is slow!
-
 message(paste("\nFiltering proteins, this may take several minutes."))
 
-filt_protein <- filtProt(spn_protein, # or spn_protein
+filt_protein <- filtProt(irs_protein, 
 			 controls="SPQC",nbins=5,nSD=4,summary=TRUE)
 
 # At this point there are no remaining missing values
@@ -282,11 +251,8 @@ swip_tmt <- filt_protein %>%
 
 ## ---- statistical analysis for overall Mutant-Controll contrast
 
-# working with SL + IRS + SPN data, we normalize each protein to its Intensity sum
+# working with SL + IRS data, we normalize each protein to its Intensity sum
 # (sum normalization), this is refered to as relative_Intensity
-
-# ^ could be summarized as 4 key normalization steps + protein summarization (by sum,
-# but could easily be changed to median) + peptide and protein level filtering
 
 # register parallel backend
 doParallel::registerDoParallel(parallel::detectCores()-1)
@@ -302,7 +268,10 @@ fx <- log2(rel_Intensity) ~ 0 + Condition + (1|Mixture)
 swip <- gene_map$uniprot[grepl("Washc4", gene_map$symbol)]
 fm <- lmerTest::lmer(fx, swip_tmt %>% subset(Protein == swip))
 
+# create a contast
 LT <- getContrast(fm,"Mutant","Control")
+
+# assess contrast with lmerTestContrast
 lmerTestContrast(fm,LT) %>%
 	mutate(Contrast='Mutant-Control') %>%
 	mutate(Protein = swip) %>%
@@ -312,7 +281,9 @@ lmerTestContrast(fm,LT) %>%
 # loop to fit all proteins
 proteins <- unique(swip_tmt$Protein)
 results_list <- foreach(prot = proteins) %dopar% {
+
   lmer_control <- lme4::lmerControl(check.conv.singular="ignore")
+
   fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Protein == prot), control = lmer_control)
   LT <- getContrast(fm,"Mutant","Control")
   result = lmerTestContrast(fm,LT) %>%
@@ -420,7 +391,7 @@ temp_df <- swip_results %>% filter(Contrast=='Mutant-Control')
 sig_prots <- unique(temp_df$Protein[temp_df$FDR<FDR_alpha])
 
 
-## ----  Save key results
+## ----  save key results
 
 # save results as rda
 myfile <- file.path(root,"data","swip_results.rda")
