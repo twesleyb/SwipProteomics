@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 
-# title: SwipProteomics
-# description: generate protein co-variation (correlation) network
 # author: twab
+# title: SwipProteomics
+# description: generate protein co-variation (correlation) network and perform
+#   network enhancement
 
 ## ---- Input:
 root <- "~/projects/SwipProteomics"
@@ -14,13 +15,10 @@ root <- "~/projects/SwipProteomics"
 
 # * ne_adjm.csv --> for leidenalg clustering!
 
-# NOTE: large ouput files saved in root/rdata bc too big to be tracked by git
+# NOTE: large ouput files (>100mb) saved in root/rdata bc too big to be tracked by git
 
 
 ## ---- prepare the working environment
-
-# load renv
-renv::load(root, quiet=TRUE)
 
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
@@ -42,19 +40,12 @@ suppressPackageStartupMessages({
 
 message("Generating covariation network...")
 
-# summarize three Bioreplicates as the median of three mixtures
-dm <- swip_tmt %>% filter(Protein %in% proteins) %>%
-	group_by(Protein, Condition) %>% # e.g. median(F4.WT.M1, F4.WT.M2, F4.WT.M3)
-	summarize(med_Abundance = log2(median(Intensity)),.groups="drop") %>%
-	reshape2::dcast(Protein ~ Condition, value.var = "med_Abundance") %>%
+# no median summarization of bioreplicates
+# network is constructed from log2(Intensity) ~ Abundance
+dm <- swip_tmt %>%
+	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>%
 	as.data.table() %>%
 	as.matrix(rownames="Protein")
-
-# no median summarization of bioreplicates
-#dm <- swip_tmt %>%
-#	reshape2::dcast(Protein ~ Mixture + Condition, value.var = "Abundance") %>%
-#	as.data.table() %>%
-#	as.matrix(rownames="Protein")
 
 
 # there are a small number proteins with some missing vals
@@ -72,10 +63,11 @@ adjm <- cor(t(filt_dm), method="pearson",use="complete.obs")
 
 ## ---- network enhancement
 
-# Wang et al., 2018 (Nature Communications)
+# Wang et al., 2018 (Nature Communications; PMID:30082777)
 
 message("Performing network enhancement...")
 
+# FIXME: is there any room for speed improvements here? Probably...
 ne_adjm <- neten(adjm) # result is robust to neten parameters
 
 
@@ -94,7 +86,13 @@ data.table::fwrite(ne_adjm_dt, myfile)
 message("saved: ", myfile)
 
 
-## ---- save as rda
+## ---- save data as rda
+
+# NOTE: data are saved in root/rdata
+# adjm could be make smaller by melting to edge list
+# but it is still too big at ~ 150 mb
+# ne_adjm is smaller bc it is sparse, but still to large to be easily tracked by
+# git
 
 # adjm
 myfile <- file.path(root,"rdata","adjm.rda")
