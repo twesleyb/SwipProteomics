@@ -10,7 +10,7 @@
 # project's root directory
 root = "~/projects/SwipProteomics"
 
-# INPUT data is in root/data/
+# INPUT data is zipped up in root/data/
 zip_file = "TMT.zip"
 input_meta = "TMT-samples.csv"
 input_data = "TMT-raw-peptide.csv"
