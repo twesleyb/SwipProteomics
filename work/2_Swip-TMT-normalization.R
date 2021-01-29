@@ -33,9 +33,12 @@ peptides <- fread(list.files("TMT", pattern="peptide",full.names=T))
 # load sample information
 samples <- fread(list.files("TMT", pattern="samples",full.names=T))
 
-# this fragment of code does it all
+## ---- tidy the data
+
+# melt abundance matrix into long format
 abundance_cols <- grepl("Abundance",colnames(peptides))
 id_variables <- colnames(peptides)[!abundance_cols]
+
 tidy_pep <- peptides %>% 
 	# melt the Abundance columns into a tidy df
 	reshape2::melt(id.var=id_variables, 
@@ -47,10 +50,6 @@ tidy_pep <- peptides %>%
 # NOTE: samples should contain the following cols:
 # col Sample - should match Abundance columns
 stopifnot(all(colnames(peptides)[abundance_cols] %in% samples$Sample))
-
-# The tidy data is tidy, but LARGE! this is why its stored the way it is in the
-# PD export -- its the most efficient
-print(object.size(tidy_pep), units="auto")
 
 # perform SL normalization
 sl_peptide <- normSL(tidy_pep)
@@ -81,6 +80,8 @@ LT <- getContrast(fm, "Mutant","Control")
 # assess the statistical comparison
 lmerTestContrast(fm, contrast = LT) %>% knitr::kable()
 
+
+## ---- end
 
 # before performing stats for all proteins, we should remove any with missing
 # values... cast the data into a matrix and then check for prots w/ missing vals
