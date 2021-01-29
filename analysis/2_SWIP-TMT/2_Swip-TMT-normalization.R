@@ -147,9 +147,12 @@ knitr::kable(df)
 # NOTE: Grouping by Experiment, Channel does't work because
 # Sample TMT channels (e.g. 126N were used in different expirements)
 
+
 message("\nPerforming sample loading normalization.")
 
 sl_peptide <- normSL(tidy_peptide, groupBy=c("Experiment","Sample"))
+save(sl_peptide,file="sl_peptide.rda",version=2)
+stop()
 
 
 ## ---- impute peptide-level missingness
