@@ -5,44 +5,35 @@
 # experiment performed by JC
 # author: Tyler W A Bradshaw
 
-## ---- input
+## ---- imports
 
-library(tidyProt) # twesleyb/tidyProt for statistical fun
-library(geneLists) # twesleyb/geneLists for gene mapping fun
-
-# input data from twesleyb/SwipProteomics:
-system.file("extdata", "TMT.zip", package = "SwipProteomics")
-
-## ---- prepare the R workspace
-
-# load required packages and functions
 suppressPackageStartupMessages({
 	library(dplyr) # for manipulating data
 	library(data.table) # for working with tables
 	library(doParallel) # for parallel processing
 })
 
-## ---- load the raw data and sample info
+## ---- input
 
-# datadir [1] ~/projects/SwipProteomics/data"
+library(tidyProt) # soderling-lab/tidyProt for statistical fun
+library(geneLists) # soderling-lab/geneLists for gene mapping fun
 
-# extract the raw TMT data from zipped file
-unzip(myfile, exdir=downdir) # unzip into root/downloads/
+data(swip,package="SwipProteomics")
+
+## ---- load the raw data
+
+# input data from soderling-lab/SwipProteomics:
+datadir <- system.file("extdata", "TMT.zip", package = "SwipProteomics")
+
+unzip(datadir) # unzip into cwd
 
 # read TMT.csv data into R with data.table::fread
-myfile <- file.path(downdir, tools::file_path_sans_ext(zip_file), input_data)
-peptides <- data.table::fread(myfile)
-
-# THIS IS THE RAW DATA FROM PD! 
-# The file size is fairly large once unzipped.
-o = object.size(peptides)
-message("object.size(peptides):"); print(o, units="auto")
+peptides <- fread(list.files("TMT", pattern="peptide",full.names=T))
 
 # load sample information
-myfile <- file.path(downdir,tools::file_path_sans_ext(zip_file),input_meta)
-samples <- data.table::fread(myfile)
+samples <- fread(list.files("TMT", pattern="samples",full.names=T))
 
-# This fragment of code does it all
+# this fragment of code does it all
 abundance_cols <- grepl("Abundance",colnames(peptides))
 id_variables <- colnames(peptides)[!abundance_cols]
 tidy_pep <- peptides %>% 
@@ -78,41 +69,46 @@ filt_prot <- norm_prot %>% subset(Peptides > 1)
 # drop QC before fitting models
 swip_tmt <- filt_prot %>% subset(Condition != "SPQC")
 
-library(tidyProt)
-
+# the linear mixed model to be fit:
 fx <- log2(Intensity) ~ 0 + Condition + (1|BioFraction) + (1|Mixture)
 
+# fit the model with lmerTest
 fm <- lmerTest::lmer(fx, data = swip_tmt %>% subset(Accession == swip))
 
+# get a contrast
 LT <- getContrast(fm, "Mutant","Control")
+
+# assess the statistical comparison
 lmerTestContrast(fm, contrast = LT) %>% knitr::kable()
 
-# why does that feel too easy...
 
+# before performing stats for all proteins, we should remove any with missing
+# values... cast the data into a matrix and then check for prots w/ missing vals
 dm = swip_tmt %>% dcast(Mixture + Condition + BioFraction ~ Accession, 
 			value.var = "Intensity") %>% 
                   mutate(Sample = paste(Mixture,Condition,BioFraction)) %>%
 		  select(-Mixture, - Condition, - BioFraction) %>%
 		  select(Sample,everything()) %>% as.data.table() %>%
 		  as.matrix(rownames="Sample")
-
 missing_vals <- names(which(apply(dm,2,function(x) any(is.na(x)))))
 
-# need to account for missing values?
 
 swip_tmt <- swip_tmt %>% filter(!(Accession %in% missing_vals))
+
+
+## ---- loop to test all prots
 
 prots <- unique(swip_tmt$Accession)
 n <- length(prots)
 
+# fit the model with some lmer control
 lmer_control <- lme4::lmerControl(check.conv.singular="ignore", 
 				  check.conv.grad="ignore")
-library(doParallel)
+
+# register parallel backend
 registerDoParallel(parallel::detectCores()-1)
 
 # this is computationally intense...
-# its like my computer used to be able to handle it but not its more
-# diffucult...
 res_list <- foreach(prot = prots) %dopar% {
 	fm <- lmerTest::lmer(fx, control = lmer_control,
 			     data = swip_tmt %>% subset(Accession == prot))
@@ -121,12 +117,18 @@ res_list <- foreach(prot = prots) %dopar% {
 }
 names(res_list) <- prots
 
+# collect the results
 results <- bind_rows(res_list, .id = "Protein") %>%
+	# calc padjust and FDR
 	mutate(Padjust = p.adjust(Pvalue, method = "bonferroni")) %>%
 	mutate(FDR = p.adjust(Pvalue, method = "hochberg")) %>%
+	# annot with geneLists::getIDs
        	mutate(Symbol = getIDs(Protein, "uniprot", "symbol", "mouse")) %>%
+	# sort
 	arrange(FDR) 
 
+# check top results
 head(results) %>% knitr::kable()
 
+# check n sig at FDR < 0.05
 knitr::kable(data.table(nsig = sum(results$FDR < 0.05)))
