@@ -4,6 +4,13 @@
 title: SwipProteomics
 description: Leidenalg Clustering of the Enhanced Protein Covariation Network
 author: Tyler W A Bradshaw
+
+This script does the work of clustering a network provided as an adjacency
+matrix using the Leiden algorithm and the Python Leidenalg library. 
+
+Leidenalg is the work of Vincent Traag:
+http://dx.doi.org/10.1038/s41598-019-41695-z
+
 '''
 
 
@@ -11,14 +18,18 @@ author: Tyler W A Bradshaw
 
 root = "~/projects/SwipProteomics"
 
-# There is only one piece of input data, an input NxN adjacency matrix saved as
-# a csv file in  root/rdata/. 
-adjm_file = 'ne_adjm.csv' 
+# There is only one piece of input data, an input NxN adjacency
+# matrix saved as a csv file in  root/rdata/.
+adjm_file = 'ne_adjm.csv'
 
 # Optimization methods:
 optimization_method = recursive_method = 'Surprise'
-recursive = False  # If module_size > max_size, then cluster recursively.
-output_name = 'swip' # Prefix out output partition, saved as .csv.
+
+# If module_size > max_size, then cluster recursively.
+recursive = False
+
+# Prefix out output partition, saved as .csv.
+output_name = 'swip'
 
 # Parameters for multiresolution methods:
 rmin = 1 # Min resolution for multi-resolution methods.
@@ -29,14 +40,19 @@ max_size = 100 # Maximum allowable size of a module.
 ## Optimization parameters
 # Not the number of recursive iterations, but the number
 # of optimization iterations.
-n_iterations = -1  
+n_iterations = -1
 
 ## Output
 # Saved in root/rdata/
 # [output_name]_partitions.csv
 # * a partition of the network saved in root/rdata
 
-## NOTE: some params may not be used if not required by optimization_method
+## NOTE: some params may not be used if not required
+## by optimization_method
+
+import numpy as np
+from igraph import Graph
+from pandas import DataFrame
 
 
 ## ---- Prepare the workspace
@@ -60,10 +76,19 @@ from pandas import read_csv, DataFrame
 rdatdir = os.path.join(root,"rdata")
 funcdir = os.path.join(root,"Py")
 
-# Load user defined functions.
-sys.path.append(root)
-from myfun import * # try putting SwipProtomics in bashrc's python path
-#from Py.myfun import *
+
+## ---- Functions
+
+def graph_from_adjm(adjm,weighted=True,signed=True):
+    if not signed: adjm = abs(adjm)
+    edges = adjm.stack().reset_index()
+    edges.columns = ['nodeA','nodeB','weight']
+    edges = edges[edges.weight != 0]
+    edge_tuples = list(zip(edges.nodeA,edges.nodeB,edges.weight))
+    if weighted: g = Graph.TupleList(edge_tuples,weights=True)
+    if not weighted: g = Graph.TupleList(edge_tuples,weights=False)
+    return g
+#EOF
 
 
 ## ---- Leidenalg qualitity metrics
@@ -199,7 +224,7 @@ if parameters.pop('multi_resolution') is True:
               new_params['partition_type'] = getattr(import_module('leidenalg'), new_method)
             else:
               new_params['partition_type'] = new_method
-            if 'resolution_parameter' in new_params.keys(): 
+            if 'resolution_parameter' in new_params.keys():
               new_params.pop('resolution_parameter')
             # get modules to be split
             subgraphs = partition.subgraphs()

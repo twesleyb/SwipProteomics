@@ -23,11 +23,10 @@ stopifnot(file.exists(input_adjm))
 
 ## ---- prepare the working environment
 
-# load renv
-renv::load(root, quiet=TRUE)
-
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
+
+# load data in root/data
 data(gene_map)
 
 # load data in root/rdata
@@ -105,7 +104,7 @@ ppi_adjm <- full_adjm[colnames(adjm),rownames(adjm)]
 ppi_dt <- as.data.table(ppi_adjm,keep.rownames="Protein")
 myfile <- file.path(root,"rdata","ppi_adjm.csv")
 data.table::fwrite(ppi_dt, myfile)
-message("saved: " myfile)
+message("saved: ", myfile)
 
 
 ## ---- save as rda

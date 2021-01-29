@@ -12,10 +12,13 @@
 root <- "~/projects/SwipProteomics"
 
 # NOTE: the raw data is 75 mb and is too large to be managed by git.
-# After preprocessing by this script the PSM-level data is saved as 
+# After preprocessing by this script the PSM-level data is saved as
 # pd_psm.rda in root/data (~46 MB). pd_psm.rda is converted to MSstatsTMT's
 # format and analyzed with MSstatsTMT.
 input_dir <- "rdata/PSM.zip"
+
+# need local copy of the raw data (too big for git)
+stopifnot(file.exists(file.path(root,input_dir)))
 
 # PSM.zip contains:
 input_psm <- "PSM/5359_PSM_Report.xlsx" # the data exported from PD
@@ -34,17 +37,12 @@ input_samples <- "PSM/5359_Sample_Report.xlsx" # MS run and sample info
 #       information
 # * msstats_contrasts - a matrix specifying all pairwise intrafraction contrasts
 #       between Control and SWIP P1019R homozygous Mutant mice.
-# * mut_vs_control - contrast specifying the MUT versus control comparison 
+# * mut_vs_control - contrast specifying the MUT versus control comparison
 #       between Control and SWIP P1019R homozygous Mutant mice.
 # * swip - WASHC4's uniprot ID
 
 ## ---- Functions
 # misc functions utilized herein
-
-squote <- function(string) {
-  # wrap a string in singular quotation marks (')
-  return(paste0("'", string, "'"))
-}
 
 
 mkdir <- function(..., warn = TRUE, report = FALSE) {
@@ -121,8 +119,8 @@ renv::load(root, quiet = TRUE)
 suppressPackageStartupMessages({
   library(dplyr)
   library(data.table)
-  library(getPPIs) # twesleyb/getPPIs for mapping gene identifiers
-  library(MSstatsTMT) # twesleyb/MSstatsTMT
+  library(geneLists) # twesleyb/geneLists for mapping gene ids
+  library(MSstatsTMT) # twesleyb/MSstats and twesleyb/MSstatsTMT
 })
 
 # load functions in root/R
@@ -133,7 +131,7 @@ devtools::load_all(quiet = TRUE)
 
 # unzip data into downloads
 unzip(file.path(root, input_dir), exdir = downdir)
-message("\nUnzipped ", squote(input_dir), " into ", squote(downdir), ".")
+message("\nUnzipped ", input_dir, " into ", downdir, ".")
 
 
 ## ---- read PSM data from excel
@@ -163,7 +161,7 @@ samples <- readxl::read_excel(myfile, col_names = col_names)
 # clean-up
 mydir <- file.path(downdir, tools::file_path_sans_ext(basename(input_dir)))
 unlink(mydir, recursive = TRUE)
-message("\nRemoved ", squote(mydir), ".")
+message("\nRemoved ", mydir, ".")
 
 
 ## ---- re-format sample metadata annotations for MSstats
@@ -230,7 +228,7 @@ uniprot <- unique(filt_pd$Master.Protein.Accessions)
 ## ---- create gene map by mapping uniprot to entrez
 
 # all entrez gene ids
-entrez <- getPPIs::mgi_batch_query(uniprot)
+entrez <- geneLists::queryMGI(uniprot)
 names(entrez) <- uniprot
 
 # Map any remaining missing IDs by hand.
@@ -250,7 +248,7 @@ if (!check) {
 }
 
 # map entrez ids to gene symbols using twesleyb/getPPIs
-symbols <- getPPIs::getIDs(entrez, "entrez", "symbol", species = "mouse")
+symbols <- geneLists::getIDs(entrez, "entrez", "symbol", species = "mouse")
 
 # check there should be no missing gene symbols
 if (any(is.na(symbols))) {
@@ -353,7 +351,7 @@ comp <- paste(paste("Mutant", paste0("F", seq(4, 10)), sep = "."),
 
 # create a contrast matrix for given comparisons
 conditions <- unique(annotation_dt$Condition)
-conditions <- conditions[conditions != "Norm"] 
+conditions <- conditions[conditions != "Norm"]
 
 # utilizes internal function made available by my fork to generate a contrast
 # matrix for all pairwise comparisions defined by comp

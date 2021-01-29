@@ -18,8 +18,8 @@ renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 # load the data
-data(swip_tmt) 
-data(swip_gene_map) 
+data(swip_tmt)
+data(swip_gene_map)
 data(swip_partition)  # partition
 
 # imports
@@ -39,15 +39,15 @@ fitModule <- function(prots, tidy_prot, fx) {
   # build list of input args for lmerTest
   lmer_args <- list()
   lmer_args[["formula"]] <- fx
-  lmer_args[["data"]] <- tidy_prot %>% subset(Protein %in% prots) 
+  lmer_args[["data"]] <- tidy_prot %>% subset(Protein %in% prots)
   # fit the model with some lmer control
   lmer_args[["control"]] <- lme4::lmerControl(check.conv.singular="ignore")
   fm <- do.call(lmerTest::lmer, lmer_args)
   # assess overall contrast and collect results
   LT <- getContrast(fm,"Mutant","Control")
-  result <- lmerTestContrast(fm,LT) %>% 
-	  mutate(Contrast='Mutant-Control') %>% unique() %>% 
-	  mutate('nProts'=length(prots)) 
+  result <- lmerTestContrast(fm,LT) %>%
+	  mutate(Contrast='Mutant-Control') %>% unique() %>%
+	  mutate('nProts'=length(prots))
   return(result)
 } #EOF
 
@@ -64,17 +64,19 @@ message("k Modules: ", length(modules))
 ## ---- loop to fit module-level models and assess contrast
 
 # scale Intensity
-tidy_prot <- swip_tmt %>% 
-	group_by(Protein) %>% 
+tidy_prot <- swip_tmt %>%
+	group_by(Protein) %>%
 	mutate(rel_Intensity=Intensity/sum(Intensity))
 
 # examine fit of wash complex proteins
-washc_prots <- mapID("Washc*")
+washc_prots <- gene_map$uniprot[grepl("Washc*", gene_map$symbol)]
 prots = washc_prots[washc_prots %in% tidy_prot$Protein]
+
 fm = lmerTest::lmer(fx, tidy_prot %>% subset(Protein %in% prots))
 LT = getContrast(fm,"Mutant","Control")
-lmerTestContrast(fm,LT) %>% 
-	mutate(Contrast = 'Mutant-Control') %>% 
+
+lmerTestContrast(fm,LT) %>%
+	mutate(Contrast = 'Mutant-Control') %>%
 	mutate(Pvalue = formatC(Pvalue)) %>%
 	mutate(nProts = length(prots)) %>%
 	unique() %>% knitr::kable()
@@ -92,23 +94,23 @@ names(results_list) <- names(modules)
 ## collect results
 results_df <- bind_rows(results_list, .id="Module") %>%
 	mutate(FDR = p.adjust(Pvalue,method="BH")) %>%
-	mutate(Padjust = p.adjust(Pvalue,method="bonferroni")) %>% 
+	mutate(Padjust = p.adjust(Pvalue,method="bonferroni")) %>%
 	arrange(Pvalue)
 
 
 ## ---- save results
 
-# drop singular col 
+# drop singular col
 results_df$isSingular <- NULL
 
 # re-arrange column order
-results_df <- results_df %>% 
-dplyr::select(Module, nProts, Contrast, log2FC, 
-		percentControl, SE, Tstatistic, 
+results_df <- results_df %>%
+dplyr::select(Module, nProts, Contrast, log2FC,
+		percentControl, SE, Tstatistic,
 		Pvalue, FDR, Padjust, DF, S2)
 
 # annotate candidate sig modules (Bonferroni padjust < 0.05)
-results_df <- results_df %>% 
+results_df <- results_df %>%
 	mutate(candidate = Padjust < 0.05) %>%
 	arrange(desc(candidate))
 
@@ -119,7 +121,7 @@ message("n Sig modules: ", sum(results_df$candidate))
 
 # data.frame describing network partition
 idx <- match(names(partition),gene_map$uniprot)
-df <-  data.table(UniProt = names(partition), 
+df <-  data.table(UniProt = names(partition),
 	 Entrez = gene_map$entrez[idx],
 	 Symbol = gene_map$symbol[idx],
 	 Membership = partition)
@@ -127,7 +129,7 @@ df <-  data.table(UniProt = names(partition),
 # results list:
 results_list <- list()
 results_list[["Partition"]] <- df %>% arrange(Membership)
-results_list[["Module Results"]] <- results_df 
+results_list[["Module Results"]] <- results_df
 
 # save in root/tables
 myfile <- file.path(root,"tables","SWIP-TMT-Module-Results.xlsx")

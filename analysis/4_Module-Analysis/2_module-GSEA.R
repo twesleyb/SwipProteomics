@@ -13,9 +13,8 @@ save_results <- TRUE
 
 ## ---- Set-up the workspace 
 
-# load renv
+# project root dir
 root <- "~/projects/SwipProteomics"
-renv::load(root, quiet = TRUE)
 
 # imports
 suppressPackageStartupMessages({
@@ -28,7 +27,7 @@ suppressPackageStartupMessages({
 devtools::load_all(root, quiet = TRUE)
 
 # load the data from root/data
-data(sig_modules)
+data(sig_modules) 
 data(swip_gene_map) # gene_map
 data(swip_partition) # partition
 data(wash_interactome) # == wash iBioID sig_prots

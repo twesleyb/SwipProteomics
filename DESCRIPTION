@@ -10,5 +10,5 @@ Authors@R:
 Description: WASH BioID and SWIP TMT proteomics data from Courtland et al., 2020.
 License: CC4
 Encoding: UTF-8
-LazyData: false
+LazyData: true
 RoxygenNote: 7.1.1

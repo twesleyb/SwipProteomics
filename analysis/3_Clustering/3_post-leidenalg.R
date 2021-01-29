@@ -4,6 +4,9 @@
 # author: twab
 # description: clean-up results from from running leidenalg executable
 
+## project root dir
+root <- "~/projects/SwipProteomics"
+
 ## input in root/rdata
 input_part <- "swip_partition.csv"
 
@@ -12,10 +15,6 @@ output_part <- paste0(tools::file_path_sans_ext(input_part),".rda")
 
 
 ## ---- prepare the R env
-
-root <- "~/projects/SwipProteomics"
-renv::load(root)
-
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -31,7 +30,7 @@ df <- data.table::fread(myfile,drop=1)
 partition_list <- unlist(apply(df,1,function(x) list(x)),
 			 recursive=FALSE, use.names=FALSE)
 
-# add 1 bc python is 0-based 
+# add 1 bc python is 0-based
 part <- partition_list[[1]] + 1
 
 # set small modules to 0
