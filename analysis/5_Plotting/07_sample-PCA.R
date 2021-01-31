@@ -14,9 +14,6 @@ fig_height = 5
 
 ## ---- Prepare the workspace 
 
-# Load renv
-renv::load(root, quiet=TRUE)
-
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
 
@@ -35,6 +32,8 @@ figsdir <- file.path(root,"figs","Samples")
 if (!dir.exists(figsdir)) {
 	dir.create(figsdir)
 }
+
+## ---- insert parse raw here
 
 ## ---- Prepare the data for ploting 
 

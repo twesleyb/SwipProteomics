@@ -18,7 +18,7 @@ suppressPackageStartupMessages({
 library(tidyProt) # soderling-lab/tidyProt for statistical fun
 library(geneLists) # soderling-lab/geneLists for gene mapping fun
 
-data(swip,package="SwipProteomics")
+data(swip, package="SwipProteomics")
 
 ## ---- load the raw data
 
@@ -46,6 +46,12 @@ tidy_pep <- peptides %>%
 				 value.name="Intensity") %>%
         # merge with sample data by column 'Sample'
         left_join(samples, by = "Sample")
+
+dm = tidy_pep %>% 
+	reshape2::dcast(Sample ~ Accession + Sequence, value.var="Intensity", 
+			fun="sum") %>%
+	as.data.table() %>% as.matrix(rownames="Sample")
+pca(
 
 # NOTE: samples should contain the following cols:
 # col Sample - should match Abundance columns
