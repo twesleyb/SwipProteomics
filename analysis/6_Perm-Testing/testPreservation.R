@@ -26,6 +26,7 @@ dataB = "mut_protein.csv"
 
 # number of threads for parallel processing
 nThreads = parallel::detectCores() - 1
+message("utilizing: ", nThreads, " cores for parallel processing")
 
 
 ## ---- description of NetRep permutation statistics:
@@ -74,8 +75,9 @@ rmSmall <- function(part, min_size=5) {
 	return(part)
 }
 
+
 compilePermResults <- function(res) {
-  # collect permutation statistics from NetRep
+  # a function that collects permutation statistics from NetRep
   dt_pval <- res$p.values %>% as.data.table(keep.rownames="Module") %>% 
   	melt(id.vars="Module",variable.name="Statistic",value.name="p.value")
   dt_obs <- res$observed %>% as.data.table(keep.rownames="Module") %>% 
@@ -97,7 +99,8 @@ compilePermResults <- function(res) {
   return(df)
 }
 
-## ---- set-up the workspace
+
+## ---- set-up the R env
 
 suppressPackageStartupMessages({
 	library(dplyr) 
@@ -106,12 +109,13 @@ suppressPackageStartupMessages({
 })
 
 
-
 ## ---- parse inputs
 
 # all data are in root/rdata
 
 root = getrd()
+
+# full paths to input data
 
 input_adjm = c(discovery=file.path(root,"rdata",adjmA),
 	       test=file.path(root,"rdata", adjmB))
@@ -132,13 +136,15 @@ input_data = c(discovery=file.path(root,"rdata", dataA),
 # 1. Load expression data (dm)
 stopifnot(all(file.exists(as.character(input_data))))
 data_list <- lapply(input_data, function(x) {
-			    fread(x) %>% as.matrix(rownames=rownames_col)
+			    fread(x, nThread = nThreads) %>% 
+				    as.matrix(rownames=rownames_col)
 })
 
 # 2. load correlation matrices (adjm)
 stopifnot(all(file.exists(as.character(input_adjm))))
 adjm_list <- lapply(input_adjm, function(x) {
-			    fread(x) %>% as.matrix(rownames=rownames_col)
+			    fread(x, nThread = nThreads) %>% 
+				    as.matrix(rownames=rownames_col)
 })
 
 # check, adjm rownames == colnames?
@@ -149,7 +155,8 @@ invisible(lapply(adjm_list, function(x) {
 
 # 3. load interaction networks (netw)
 netw_list <- lapply(input_netw, function(x) {
-			    fread(x) %>% as.matrix(rownames=rownames_col)
+			    fread(x, nThread = nThreads) %>% 
+				    as.matrix(rownames=rownames_col)
 })
 
 # FIXME: why not utilize multiple threads?
@@ -181,7 +188,9 @@ B <- names(part_list[[2]])
 
 stopifnot(length(A) == length(B))
 
-stopifnot(all(A == B))
+stopifnot(all(A %in% B & B %in% A))
+
+# sort the input
 
 nodes <- A # == B
 
@@ -190,6 +199,8 @@ data_list <- lapply(data_list, function(x) t(x[nodes, ]))
 adjm_list <- lapply(adjm_list, function(x) x[nodes, nodes])
 
 netw_list <- lapply(netw_list, function(x) x[nodes, nodes])
+
+part_list <- lapply(part_list, function(x) x[nodes])
 
 
 ## ---- perform permutation testing
@@ -206,7 +217,7 @@ netw_list <- lapply(netw_list, function(x) x[nodes, nodes])
 #  evidence of divergence if 
 # * observed < NULL 
 
-results <- NetRep::modulePreservation(
+res_list <- NetRep::modulePreservation(
     network = netw_list,
     data = data_list,
     correlation = adjm_list,
@@ -225,9 +236,10 @@ results <- NetRep::modulePreservation(
   )
 
 # can analyze WT modules in KO network or MUT modules in 
-res1 <- compilePermResults(results[[1]])
+results <- lapply(res_list, compilePermResults)
+res1 <- results[[1]]
+res2 <- results[[2]]
 
-res2 <- compilePermResults(results[[2]])
   
 # check preservation and divergence for res1
 pres1 <- res1 %>% group_by(Module) %>% 
