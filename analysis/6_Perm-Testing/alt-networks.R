@@ -77,6 +77,18 @@ mut_netw <- neten(mut_adjm)
 
 ## ---- save networks as csv in rdata
 
+# save WT data
+myfile <- file.path(root,"rdata","wt_protein.csv")
+wt_dm %>% as.data.table(keep.rownames="Protein") %>% 
+	data.table::fwrite(myfile)
+message("saved: ", myfile)
+
+# save MUT data
+myfile <- file.path(root,"rdata","mut_protein.csv")
+mut_dm %>% as.data.table(keep.rownames="Protein") %>% 
+	data.table::fwrite(myfile)
+message("saved: ", myfile)
+
 # save WT adjm
 myfile <- file.path(root,"rdata","wt_adjm.csv")
 wt_adjm %>% as.data.table(keep.rownames="Protein") %>% 
