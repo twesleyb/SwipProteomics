@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# FIXME: if CPM only one resolution is anlyzed -- add capability to loop through
+# FIXME: only a single resolution is supported
 # resolution range
 
 '''
@@ -41,11 +41,10 @@ options:
 '''
 
 
-## imports --------------------------------------------------------------------
+## ---- imports 
 
 import sys
 import numpy
-import pickle
 import igraph
 import pandas
 import argparse
@@ -54,24 +53,7 @@ import leidenalg
 import __main__ as main
 
 
-## functions ------------------------------------------------------------------
-
-def interactive():
-    ''' check if python is being run interactively '''
-    # @import __main__ as main
-    # if executable, then main will have attr '__file__'
-    is_interactive = not hasattr(main,'__file__')
-    return is_interactive
-#EOF
-
-
-def pickle_args(args,args_file='.args.pickle'):
-    ''' pickle argument dictionary returned by argparse '''
-    # @import pickle
-    with open(args_file,'wb') as stream:
-        pickle.dump(args,stream,protocol=pickle.HIGHEST_PROTOCOL)
-#EOF
-
+## ---- functions 
 
 def check_input(args):
     ''' check that an optimization method was specified for each input graph '''
@@ -95,15 +77,6 @@ def check_methods(args,methods):
 #EOF
 
 
-def load_args(args_file='.args.pickle'):
-    ''' load pickled args '''
-    # @import pickle
-    with open (args_file, 'rb') as stream:
-        args = pickle.load(stream)
-    return args
-#EOF
-
-
 def parse_args():
     ''' Parse command line input with argparse.ArgumentParser '''
     # @import argparse
@@ -119,9 +92,9 @@ def parse_args():
     # options:
     ap.add_argument('-n','--niter',type = int, default = -1,
             help = 'the number of optimization iterations')
-    #ap.add_argument('-r','--resolution', nargs='+',
-    #        default=[1], type=float, help = '''the resolution
-    #        parameter for multiresolution methods''')
+    ap.add_argument('-g','--resolution', nargs='+',
+            default=[0], type=float, help = '''the resolution
+            parameter for multiresolution methods''')
     ap.add_argument('-o', '--output', type=str,
             default='partition.csv', help =  'output filename')
     ap.add_argument('-r', '--recursive', type=bool,
@@ -129,7 +102,7 @@ def parse_args():
     ap.add_argument('-s','--size', type=int,default=100,
             help = """
             For recursive methods, the maximum allowable
-            'size' of a module. Modules larger than 'max_size' will
+            size of a module. Modules larger than 'max_size' will
             be split recursively.
             """)
     ap.add_argument('-m', '--multiplex', type=bool, default=False,
@@ -215,73 +188,81 @@ def is_connected(adjm):
 # EOF
 
 
-## define leidenalg methods dictionary -----------------------------------------
+## ---- define dict of leidenalg methods  
+
 # NOTE: input 'methods' should match the methods dictionary keys
 # NOTE: utilizes load_LA_class() to dynamically load the partition class
 
 # Leidenalg supports the following clustering methods:
 methods = {
-        'Modularity' : { # optimization of modularity for weighted graphs
+        # optimization of modularity for weighted graphs
+        'Modularity' : { 
             'partition_type' : load_LA_class('ModularityVertexPartition'),
-            'weighted' : True, # The graph can be weighted
-            'signed' : False, # The graph cannot contain negative edges
-            'multi_resolution' : False}, # Single resolution only
-        'Surprise' : { # optimization of Surprise for weighted graphs
+            'weighted' : True, 
+            'signed' : False, 
+            'multi_resolution' : False}, 
+        # optimization of Surprise for weighted graphs
+        'Surprise' : { 
             'partition_type' : load_LA_class('SurpriseVertexPartition'),
-            'weighted' : True, # The graph can be weighted
-            'signed' : False, # The graph can NOT be signed
-            'multi_resolution' : False}, # Single resolution only
-        'RBConfiguration' : { # RBC for weighted, multiresolution graphs
+            'weighted' : True, 
+            'signed' : False, 
+            'multi_resolution' : False},
+        # RBConfig for weighted, multiresolution graphs
+        'RBConfiguration' : { 
             'partition_type' : load_LA_class('RBConfigurationVertexPartition'),
-            'weighted' : True, # The graph can be weighted
-            'signed' : False, # The graph can NOT be signed
-            'multi_resolution' : True}, # multi-resolution
-        'RBER' : { # optimization of RBER for weighted, multiresolution graphs
+            'weighted' : True,
+            'signed' : False,
+            'multi_resolution' : True},
+        # optimization of RBER for weighted, multiresolution graphs
+        'RBER' : { 
             'partition_type' : load_LA_class('RBERVertexPartition'),
-            'weighted' : True, # The graph can be weighted
-            'signed' : False, # The graph cannot be signed.
-            'multi_resolution' : True}, # multi-resolution
-        'CPM' : { # optimization of cpm for weighted, multiresolution graphs
+            'weighted' : True,
+            'signed' : False,
+            'multi_resolution' : True},
+        # optimization of cpm for weighted, multiresolution graphs
+        'CPM' : { 
             'partition_type' : load_LA_class('CPMVertexPartition'),
-            'weighted' : True, # The graph cannot be weighted.
-            'signed' : True, # The graph can be signed.
-            'multi_resolution' : True}, # multi-resolution
-        'Significance' : { # optimization of significance for unweighted graphs
+            'weighted' : True,
+            'signed' : True,
+            'multi_resolution' : True},
+        # optimization of significance for unweighted graphs
+        'Significance' : { 
             'partition_type' :  load_LA_class('SignificanceVertexPartition'),
-            'weighted' :  False, # The graph cannot be weighted
-            'signed' : False, # The graph cannot be signed
-            'multi_resolution' : False} # single resolution only
+            'weighted' :  False, 
+            'signed' : False,
+            'multi_resolution' : False}
         }
 
 
-## parse input, get clustering params -----------------------------------------
+## ---- parse input, get clustering params 
+
+## perform some checks on the input
+# user should specify an optimization method for each graph
+# user specified methods should match methods.keys()
 
 # parse input
-if interactive(): 
-    args = load_args()
-else:
-    args = parse_args()
-    pickle_args(args)
-#EIS
+args = parse_args()
 
-# perform some checks on the input
-check_input(args) # user should specify an optimization method for each graph
-check_methods(args, methods) # user specified methods should match methods.keys()
+check_input(args) 
 
-# Get clustering parameters for each input graph
+check_methods(args, methods) 
+
+# get leidenalg clustering parameters for a given type of input
 # each object in the 'clustering_params' list is a dictionary containing the
-# clustering parameters for a given graph that will be passed to leidenalg
+# clustering parameters for a given quality stat that will be passed to leidenalg
 params = get_clustering_parameters(args, methods)
 
 
-## load all adjacency matrices from file ---------------------------------------
+## ---- load all adjacency matrices from file 
+
 # FIXME: enforce assertion:
 # NOTE: expect a csv with both a header row and an index column
 
 adjms = [ pandas.read_csv(adjm,header=0,index_col=0) for adjm in args['adjms'] ]
 
 
-## insure input adjms match ----------------------------------------------------
+## ---- insure input adjms vertices match 
+
 # if there are multiple graphs, only the union of their nodes will be analyzed,
 # subset the graphs keeping overlapping nodes:
 
@@ -292,7 +273,8 @@ adjms = [ subset_adjm(adjm,subset=nodes) for adjm in adjms ]
 assert all([a.shape[0] == len(nodes) for a in adjms])
 
 
-## identify unconnected nodes ------------------------------------------------
+## ---- identify unconnected nodes 
+
 # if nodes are unconnected, then this creates problems
 # ensure that only connected nodes are kept, by finding all connected nodes
 
@@ -300,7 +282,8 @@ k = [is_connected(a).tolist() for a in adjms]
 keep = list(set(k[0]).intersection(*k)) # finds union of nodes in list k
 
 
-## build input graphs ----------------------------------------------------------
+## ---- build input graphs 
+
 # loop to build graphs for each set of parameters
 # NOTE: this step can be time consuming
 
@@ -318,19 +301,17 @@ for i in range(len(adjms)):
 #EOL
 
 
-## perform clustering of the individual graphs --------------------------------
+## ----- perform clustering of the individual graphs 
 
-parts_list = list() # add partition for each graph in params to parts_list
-i=0
+# loop through input adjms and cluster them
+# add partition for each graph in params to parts_list
+parts_list = list() 
 
 for i in range(len(adjms)):
-
     p = params[i].copy() 
-
     if p.pop('multi_resolution') is True:
-        # multiresolutiion methods:
         # NOTE: currently only supports analyzing a single resolution
-        p.update({'resolution_parameter' : 1})
+        p.update({'resolution_parameter' : args.get('resolution')[0]})
         partition = leidenalg.find_partition(**p)
         optimiser = leidenalg.Optimiser()
         diff = optimiser.optimise_partition(partition,n_iterations=args['niter'])
@@ -394,10 +375,11 @@ df.columns = g0.vs['name']
 df.to_csv(args['output'])
 
 
-## Optimize Multiplex partition ------------------------------------------------
+## ---- optimization of multiplex partition 
 
-# Given multiple partitions, optimize multiplex.
-# NOTE: INPUT GRAPHS MUST BE DEFINED ON THE SAME VERTICES.
+# Given multiple partitions, optimize multiplex
+# NOTE: INPUT GRAPHS MUST BE DEFINED ON THE SAME VERTICES
+
 if args.get('multiplex') is True:
     assert len(parts_list) > 1 # there needs to be multiple partitions
     print("\nOptimizing multiplex partition.")
@@ -409,7 +391,7 @@ if args.get('multiplex') is True:
             layer_weights=[1 for i in range(len(params))], # all == 1
             n_iterations=args['niter'])
 
-    # The input partitions will be updated.
+    # The input partitions will be updated
     partition = parts_list[0]
     print("Final multiplex partition: {}".format(partition.summary()))
     print('Modularity: {}'.format(partition.recalculate_modularity()))
