@@ -1,7 +1,12 @@
 # SwipProteomics
-This repository contains the proteomics [data](./data/README.md) and source
-[code](./analysis/README.md) for the analyses performed by 
+
+This repository is an archive of the proteomics [data](./data/README.md) and
+source [code](./analysis/README.md) used in the analyses by 
 [Courtland _et al._, 2021](./docs/SWIP-eLife-paper.pdf).
+
+Please see
+[soderling-lab/SwipProteomics](https://github.com/soderling-lab/SwipProteomics)
+for an extant version of this code.
 
 ![wash-module](./elife-image.png)
 
