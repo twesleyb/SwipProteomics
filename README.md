@@ -9,7 +9,7 @@ This repository contains the proteomics [data](./data/README.md) and source
 
 ```R 
 # download the repository as an R package
-devtools::install_github("twesleyb/SwipProteomics")
+devtools::install_github("soderling-lab/SwipProteomics")
 
 library(dplyr)
 library(SwipProteomics)
