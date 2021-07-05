@@ -7,20 +7,20 @@
 ## ---- prepare the R env
 
 root <- "~/projects/SwipProteomics"
-renv::load(root, quiet=TRUE)
+#renv::load(root, quiet=TRUE)
 devtools::load_all(root, quiet=TRUE)
 
 
 ## ---- load the data
 
 #library(SwipProteomics)
-data(bioid_anno)
+data(bioid_anno) # from JC?
 data(bioid_results)
 data(bioid_gene_map)
 data(wash_interactome)
 
 library(dplyr)
-library(getPPIs) # twesleyb/getPPIs
+library(getPPIs) # soderling-lab/getPPIs
 
 data(musInteractome) # mouse PPIs from HitPredict
 

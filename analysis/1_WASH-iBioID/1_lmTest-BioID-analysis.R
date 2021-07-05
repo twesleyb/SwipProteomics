@@ -207,11 +207,11 @@ imputeKNNprot <- function(tidy_prot,ignore="QC",k=10,rowmax=0.5,colmax=0.8,
 	if (quiet) {
 		# suppress output from impute.knn
 		silence({
-			data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
+			data_knn <- impute::impute.knn(log2(dm[!rows_to_ignore,]),
 					       k=k,colmax=colmax,rowmax=rowmax)
 		})
 	} else {
-		data_knn <- impute.knn(log2(dm[!rows_to_ignore,]),
+		data_knn <- impute::impute.knn(log2(dm[!rows_to_ignore,]),
 				       k=k,colmax=colmax,rowmax=rowmax)
 	}
 	# Collect the imputed data
@@ -245,7 +245,8 @@ suppressPackageStartupMessages({
 
 
 # project directories:
-datadir <- file.path(root,"data") # key datasets
+rawddir <- file.path(root,"inst","extdata") # raw data
+datadir <- file.path(root,"data") # key data saved as R objects
 rdatdir <- file.path(root,"rdata") # temp data files
 tabsdir <- file.path(root,"tables") # final xlsx tables
 downdir <- file.path(root,"downloads") # misc/temp files
@@ -260,7 +261,7 @@ if (!dir.exists(downdir)){ dir.create(downdir) }
 ## ---- Load the raw proteomics data 
 
 # extract the raw data from zipped file
-myfile <- file.path(datadir, zipfile)
+myfile <- file.path(rawddir, zipfile)
 unzip(myfile) # unzip 
 
 # read into R with data.table::fread
@@ -491,7 +492,7 @@ result_list <- list()
 
 for (prot in proteins) {
 	fm <- fm_list[[prot]]
-	result_list[[prot]] <- lmTestContrast(fm,LT,s2_prior,df_prior)
+	result_list[[prot]] <- tidyProt::lmTestContrast(fm,LT,s2_prior,df_prior)
 }
 
 # collect results
@@ -525,7 +526,7 @@ results_df <- results_df %>%
 # save statistical results as excel
 bioid_results <- results_df
 myfile <- file.path(root,"tables","WASH-iBioID-Results.xlsx")
-write_excel(list("WASH-BioID"=bioid_results), myfile)
+writeExcel(list("WASH-BioID"=bioid_results), myfile)
 message("saved: ", myfile)
 
 # save final normalized protein as rda
@@ -549,3 +550,9 @@ wash_interactome <- bioid_results %>%
 myfile <- file.path(root,"data","wash_interactome.rda")
 save(wash_interactome, file=myfile, version=2)
 message("saved: ", myfile)
+
+# save gene map as rda
+myfile <- file.path(root,"data","bioid_gene_map")
+save(wash_interactome, file=myfile, version=2)
+message("saved: ", myfile)
+
