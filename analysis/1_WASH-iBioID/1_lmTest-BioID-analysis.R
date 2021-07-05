@@ -300,14 +300,14 @@ mito_entrez <- unlist(mitocarta2, use.names=FALSE)
 # rm these additional mito prots
 hand_anno_mito <- c("Mtres1", "Gcdh", "Clpx", "Pdk3", "Mrps36","Hscb",
 	  "Aldh2","Shmt2","Ciapin1","Ssbp1","Bckdha","Dap3")
-hand_anno_entrez <- getPPIs::getIDs(hand_anno_mito, 'symbol', 'entrez', 'mouse')
+hand_anno_entrez <- geneLists::getIDs(hand_anno_mito, 'symbol', 'entrez', 'mouse')
 
 # to be removed if in mito
 mito <- c(mito_entrez,hand_anno_entrez) 
 
 # annotate data with entrez ids
 tidy_prot <- tidy_prot %>% 
-	mutate(Entrez = getPPIs::getIDs(Accession,'uniprot','entrez','mouse'))
+	mutate(Entrez = geneLists::getIDs(Accession,'uniprot','entrez','mouse'))
 
 # total number of mito prots to be removed
 nMito <- sum(mito %in% tidy_prot$Entrez)
@@ -329,7 +329,7 @@ tidy_dm <- tidy_prot %>% as.data.table() %>%
 
 # map uniprot to entrez
 uniprot <- unique(tidy_prot$Accession)
-entrez <- mgi_batch_query(uniprot)
+entrez <- geneLists::queryMGI(uniprot)
 
 # fix missing
 entrez[is.na(entrez)]
@@ -337,7 +337,7 @@ missing_entrez <- c("P10853" = 319180)
 entrez[names(missing_entrez)] <- missing_entrez
 
 # map entrez to symbols
-symbol <- getPPIs::getIDs(entrez, from="Entrez", to="Symbol", species="mouse")
+symbol <- geneLists::getIDs(entrez, from="Entrez", to="Symbol", species="mouse")
 
 # there should be no missing entrez
 stopifnot(!any(is.na(entrez)))
