@@ -21,10 +21,10 @@ datafile = "BioID_raw_protein.csv"
 ## Output in root/data:
 # * wash_interactome.rda -- the WASH iBioID proteome (sig enriched prots)
 
-## ---- renv
+## ---- prepare the R env
 
 root <- "~/projects/SwipProteomics"
-renv::load(root, quiet=TRUE)
+#renv::load(root, quiet=TRUE)
 
 # library(SwipProteomics)
 devtools::load_all(root, quiet=TRUE)
@@ -70,8 +70,8 @@ tidyProt <- function(raw_data,id.vars,species=NULL,
 	idx <- grepl(paste0("OS=",species),dt$Description)
 	if (!all(idx)) {
 		n_out <- length(unique(dt$Accession[!idx]))
-		msg <- paste(n_out,"proteins are not from", lquote(species),
-			     "and will be removed.")
+		msg <- paste(n_out,"proteins are not from ", species,
+			     " and will be removed.")
 		warning(msg,call.=FALSE)
 		dt <- dt %>% filter(grepl(paste0("OS=",species),Description))
 	}
