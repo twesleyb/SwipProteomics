@@ -14,7 +14,7 @@ os_keep = c(9606, 10116, 10090)
 
 
 ## ---- Output:
-# ppi_adjm.rda
+# * ppi_adjm saved as: root/rdata/ppi_adjm.rda
 
 # NOTE: large ouput files saved in root/rdata bc too big to be tracked by git
 
@@ -37,6 +37,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(igraph)
   library(getPPIs) # twesleyb/getPPIs
+  library(miscR) # twesleyb/miscR
   library(data.table)
 })
 
@@ -65,7 +66,8 @@ ppi_df <- musInteractome %>%
 idx <- match(ppi_df$osEntrezA,gene_map$entrez)
 idy <- match(ppi_df$osEntrezB,gene_map$entrez)
 ppi_dm <- ppi_df %>% 
-	dplyr::mutate(ProtA = gene_map$uniprot[idx], ProtB = gene_map$uniprot[idy]) %>%
+	dplyr::mutate(ProtA = gene_map$uniprot[idx], 
+		      ProtB = gene_map$uniprot[idy]) %>%
 	dplyr::select(ProtA,ProtB) %>% 
 	as.matrix()
 
